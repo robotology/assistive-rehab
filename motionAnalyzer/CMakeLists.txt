@@ -1,3 +1,7 @@
+# Copyright: (C) 2016 2016 iCub Facility - Istituto Italiano di Tecnologia
+# Authors: Valentina Vasco
+# CopyPolicy: Released under the terms of the GNU GPL v2.0.
+
 cmake_minimum_required(VERSION 2.8.9)
 
 project(motionAnalyzer)
@@ -25,3 +29,5 @@ add_executable(${PROJECT_NAME} src/main.cpp src/idl.thrift ${IDL_GEN_FILES})
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 yarp_install(FILES ${PROJECT_NAME}.xml DESTINATION ${ICUBCONTRIB_MODULES_INSTALL_DIR})
+
+add_subdirectory(app)
