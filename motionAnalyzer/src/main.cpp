@@ -28,6 +28,9 @@ class Manager : public RFModule,
                 public motionAnalyzer_IDL
 {
 
+    RpcClient opcPort;
+    RpcServer rpcPort;
+
     ResourceFinder *rf;
 
     struct listEntry
@@ -123,6 +126,10 @@ public:
 
         string robot = rf.check("robot", Value("icub")).asString();
 
+        opcPort.open(("/" + getName() + "/opc:i").c_str());
+        rpcPort.open(("/" + getName() + "/cmd").c_str());
+        attach(rpcPort);
+
         if(!load())
             return false;
 
@@ -132,6 +139,9 @@ public:
     /********************************************************/
     bool close()
     {
+        opcPort.close();
+        rpcPort.close();
+
         return true;
     }
 
