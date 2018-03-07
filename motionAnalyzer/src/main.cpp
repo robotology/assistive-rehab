@@ -16,11 +16,13 @@
 */
 
 #include <yarp/os/all.h>
+#include <yarp/sig/Vector.h>
 
 #include "motionAnalyzer_IDL.h"
 
 using namespace std;
 using namespace yarp::os;
+using namespace yarp::sig;
 
 
 /********************************************************/
@@ -41,6 +43,8 @@ class Manager : public RFModule,
         int max;
     };
     map<string, listEntry> motion_list;
+
+    Vector j_3d;
 
     /********************************************************/
     bool load()
@@ -98,7 +102,7 @@ class Manager : public RFModule,
     /********************************************************/
     void print_list()
     {
-        yInfo() << "Loaded parameters:\n";
+        yInfo() << "Loaded motion list:\n";
         for (map<string, listEntry>::iterator it = motion_list.begin(); it!= motion_list.end(); it++)
         {
             listEntry &entry = it->second;
@@ -107,6 +111,79 @@ class Manager : public RFModule,
             yInfo() << "id joint = " << entry.id_joint;
             yInfo() << "Min = " << entry.min;
             yInfo() << "Max = " << entry.max << "\n";
+        }
+    }
+
+    /********************************************************/
+    bool getJoint(string &joint, listEntry &entry)
+    {
+        joint = entry.tag;
+        return true;
+    }
+
+    /********************************************************/
+    bool getSkeleton(string joint_name)
+    {
+        if(opcPort.getOutputCount() > 0)
+        {
+            yInfo() << "Get skeleton value for" << joint_name;
+
+            //ask for the property id
+            Bottle cmd, reply;
+            cmd.addVocab(Vocab::encode("ask"));
+            Bottle &content = cmd.addList().addList();
+            content.addString("body");
+
+//            yInfo() << "Query opc: " << cmd.toString();
+            opcPort.write(cmd, reply);
+//            yInfo() << "Reply from opc:" << reply.toString();
+
+            if(reply.size() > 1)
+            {
+                if(reply.get(0).asVocab() == Vocab::encode("ack"))
+                {
+                    if(Bottle *idField = reply.get(1).asList())
+                    {
+                        if(Bottle *idValues = idField->get(1).asList())
+                        {
+                            int id = idValues->get(6).asInt();
+//                            yInfo() << id;
+
+                            //given the id, get the value of the property
+                            cmd.clear();
+                            cmd.addVocab(Vocab::encode("get"));
+                            Bottle &content = cmd.addList().addList();
+                            content.addString("id");
+                            content.addInt(id);
+                            Bottle replyProp;
+
+//                            yInfo() << "Command sent to the port: " << cmd.toString();
+                            opcPort.write(cmd, replyProp);
+//                            yInfo() << "Reply from opc:" << replyProp.toString();
+
+                            if(replyProp.get(0).asVocab() == Vocab::encode("ack"))
+                            {
+                                if(Bottle *propField = replyProp.get(1).asList())
+                                {
+                                    if(Bottle *propSubField = propField->find("body").asList())
+                                    {
+//                                       yInfo() << propSubField->get(0).asString();
+//                                        yInfo() << joint_name+"Right";
+                                       if(Bottle *joint_3d = propSubField->find(joint_name+"Right").asList())
+                                       {
+                                           j_3d.resize(3);
+                                           j_3d[0] = joint_3d->get(0).asDouble();
+                                           j_3d[1] = joint_3d->get(1).asDouble();
+                                           j_3d[2] = joint_3d->get(2).asDouble();
+                                           yInfo() << j_3d[0] << " " << j_3d[1] << " " << j_3d[2];
+                                       }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -126,7 +203,7 @@ public:
 
         string robot = rf.check("robot", Value("icub")).asString();
 
-        opcPort.open(("/" + getName() + "/opc:i").c_str());
+        opcPort.open(("/" + getName() + "/opc").c_str());
         rpcPort.open(("/" + getName() + "/cmd").c_str());
         attach(rpcPort);
 
@@ -154,6 +231,15 @@ public:
     /********************************************************/
     bool updateModule()
     {
+        string joint_name;
+        for (map<string, listEntry>::iterator it = motion_list.begin(); it!= motion_list.end(); it++)
+        {
+            listEntry &entry = it->second;
+            getJoint(joint_name, entry);
+
+            getSkeleton(joint_name);
+        }
+
         return true;
     }
 
