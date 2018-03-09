@@ -15,8 +15,13 @@
  * Public License for more details
 */
 
+#include <vector>
+
 #include <yarp/os/all.h>
 #include <yarp/sig/Vector.h>
+#include <yarp/sig/Matrix.h>
+
+#include <Extractor.h>
 
 #include "motionAnalyzer_IDL.h"
 
@@ -32,19 +37,18 @@ class Manager : public RFModule,
 
     RpcClient opcPort;
     RpcServer rpcPort;
+    BufferedPort<Bottle> scopePort;
 
     ResourceFinder *rf;
 
     struct listEntry
     {
-        string tag;
-        int id_joint;
+        vector<string> tag;
+//        int id_joint;
         int min;
         int max;
     };
     map<string, listEntry> motion_list;
-
-    Vector j_3d;
 
     /********************************************************/
     bool load()
@@ -60,6 +64,7 @@ class Manager : public RFModule,
         if(!bGeneral.isNull())
         {
             int nmovements = bGeneral.find("number_movements").asInt();
+            string side = bGeneral.find("side").asString();
 
             if(Bottle *motion_tag = bGeneral.find("motion_tag").asList())
             {
@@ -77,8 +82,10 @@ class Manager : public RFModule,
                             {
                                 if(Bottle *bJoint = bMotion.find("tag").asList())
                                 {
-                                    motion_list[curr_tag+"_"+to_string(j)].tag = bJoint->get(0).asString();
-                                    motion_list[curr_tag+"_"+to_string(j)].id_joint = bJoint->get(1).asInt();
+                                    motion_list[curr_tag+"_"+to_string(j)].tag.resize(bJoint->size());
+                                    for(int k=0; k<bJoint->size(); k++)
+                                        motion_list[curr_tag+"_"+to_string(j)].tag[k] = bJoint->get(k).asString()+side;
+//                                    motion_list[curr_tag+"_"+to_string(j)].id_joint = bJoint->get(1).asInt();
                                     motion_list[curr_tag+"_"+to_string(j)].min = bMotion.check("min",Value(-1)).asInt();
                                     motion_list[curr_tag+"_"+to_string(j)].max = bMotion.check("max",Value(-1)).asInt();
                                 }
@@ -103,80 +110,88 @@ class Manager : public RFModule,
     void print_list()
     {
         yInfo() << "Loaded motion list:\n";
-        for (map<string, listEntry>::iterator it = motion_list.begin(); it!= motion_list.end(); it++)
+        for(map<string, listEntry>::iterator it = motion_list.begin(); it!= motion_list.end(); it++)
         {
             listEntry &entry = it->second;
             yInfo() << "[" << it->first << "]";
-            yInfo() << "Tag = " << entry.tag;
-            yInfo() << "id joint = " << entry.id_joint;
+            for(int i=0; i<entry.tag.size(); i++)
+                yInfo() << "Tag = " << entry.tag[i];
+//            yInfo() << "id joint = " << entry.id_joint;
             yInfo() << "Min = " << entry.min;
             yInfo() << "Max = " << entry.max << "\n";
         }
     }
 
     /********************************************************/
-    bool getJoint(string &joint, listEntry &entry)
+    bool getJoint(vector<string> &joints, listEntry &entry)
     {
-        joint = entry.tag;
+        joints.resize(entry.tag.size());
+        for(int i=0; i<entry.tag.size(); i++)
+        {
+            joints[i] = entry.tag[i];
+        }
+
         return true;
     }
 
     /********************************************************/
-    bool getSkeleton(string joint_name)
+    bool getSkeleton(vector<string> joint_names, Matrix &joint_3d_position)
     {
-        if(opcPort.getOutputCount() > 0)
+
+        //            yInfo() << "Get skeleton value for" << joint_name;
+
+        //ask for the property id
+        Bottle cmd, reply;
+        cmd.addVocab(Vocab::encode("ask"));
+        Bottle &content = cmd.addList().addList();
+        content.addString("body");
+
+        //            yInfo() << "Query opc: " << cmd.toString();
+        opcPort.write(cmd, reply);
+        //            yInfo() << "Reply from opc:" << reply.toString();
+
+        if(reply.size() > 1)
         {
-            yInfo() << "Get skeleton value for" << joint_name;
-
-            //ask for the property id
-            Bottle cmd, reply;
-            cmd.addVocab(Vocab::encode("ask"));
-            Bottle &content = cmd.addList().addList();
-            content.addString("body");
-
-//            yInfo() << "Query opc: " << cmd.toString();
-            opcPort.write(cmd, reply);
-//            yInfo() << "Reply from opc:" << reply.toString();
-
-            if(reply.size() > 1)
+            if(reply.get(0).asVocab() == Vocab::encode("ack"))
             {
-                if(reply.get(0).asVocab() == Vocab::encode("ack"))
+                if(Bottle *idField = reply.get(1).asList())
                 {
-                    if(Bottle *idField = reply.get(1).asList())
+                    if(Bottle *idValues = idField->get(1).asList())
                     {
-                        if(Bottle *idValues = idField->get(1).asList())
+                        int id = idValues->get(9).asInt();
+//                        yInfo() << id;
+
+                        //given the id, get the value of the property
+                        cmd.clear();
+                        cmd.addVocab(Vocab::encode("get"));
+                        Bottle &content = cmd.addList().addList();
+                        content.addString("id");
+                        content.addInt(id);
+                        Bottle replyProp;
+
+                        //                            yInfo() << "Command sent to the port: " << cmd.toString();
+                        opcPort.write(cmd, replyProp);
+                        //                            yInfo() << "Reply from opc:" << replyProp.toString();
+
+                        if(replyProp.get(0).asVocab() == Vocab::encode("ack"))
                         {
-                            int id = idValues->get(6).asInt();
-//                            yInfo() << id;
-
-                            //given the id, get the value of the property
-                            cmd.clear();
-                            cmd.addVocab(Vocab::encode("get"));
-                            Bottle &content = cmd.addList().addList();
-                            content.addString("id");
-                            content.addInt(id);
-                            Bottle replyProp;
-
-//                            yInfo() << "Command sent to the port: " << cmd.toString();
-                            opcPort.write(cmd, replyProp);
-//                            yInfo() << "Reply from opc:" << replyProp.toString();
-
-                            if(replyProp.get(0).asVocab() == Vocab::encode("ack"))
+                            if(Bottle *propField = replyProp.get(1).asList())
                             {
-                                if(Bottle *propField = replyProp.get(1).asList())
+                                if(Bottle *propSubField = propField->find("body").asList())
                                 {
-                                    if(Bottle *propSubField = propField->find("body").asList())
+                                    //                                       yInfo() << propSubField->get(0).asString();
+                                    //                                        yInfo() << joint_name+"Right";
+                                    for(int i=0; i<joint_names.size(); i++)
                                     {
-//                                       yInfo() << propSubField->get(0).asString();
-//                                        yInfo() << joint_name+"Right";
-                                       if(Bottle *joint_3d = propSubField->find(joint_name+"Right").asList())
-                                       {
-                                           j_3d.resize(3);
-                                           j_3d[0] = joint_3d->get(0).asDouble();
-                                           j_3d[1] = joint_3d->get(1).asDouble();
-                                           j_3d[2] = joint_3d->get(2).asDouble();
-                                           yInfo() << j_3d[0] << " " << j_3d[1] << " " << j_3d[2];
-                                       }
+                                        if(Bottle *joint_3d = propSubField->find(joint_names[i]).asList())
+                                        {
+                                            joint_3d_position.resize(3, joint_names.size());
+                                            joint_3d_position(0, i) = joint_3d->get(0).asDouble();
+                                            joint_3d_position(1, i) = joint_3d->get(1).asDouble();
+                                            joint_3d_position(2, i) = joint_3d->get(2).asDouble();
+                                            yInfo() << joint_names[i] << " " << joint_3d_position(0, i) << " "
+                                                    << joint_3d_position(1, i) << " " << joint_3d_position(2, i);
+                                        }
                                     }
                                 }
                             }
@@ -185,6 +200,7 @@ class Manager : public RFModule,
                 }
             }
         }
+        cout << "\n";
     }
 
     /********************************************************/
@@ -204,6 +220,7 @@ public:
         string robot = rf.check("robot", Value("icub")).asString();
 
         opcPort.open(("/" + getName() + "/opc").c_str());
+        scopePort.open(("/" + getName() + "/scope").c_str());
         rpcPort.open(("/" + getName() + "/cmd").c_str());
         attach(rpcPort);
 
@@ -217,6 +234,7 @@ public:
     bool close()
     {
         opcPort.close();
+        scopePort.close();
         rpcPort.close();
 
         return true;
@@ -231,13 +249,30 @@ public:
     /********************************************************/
     bool updateModule()
     {
-        string joint_name;
-        for (map<string, listEntry>::iterator it = motion_list.begin(); it!= motion_list.end(); it++)
+        //if we query the database
+        if(opcPort.getOutputCount() > 0)
         {
-            listEntry &entry = it->second;
-            getJoint(joint_name, entry);
+            Extractor extractor;
 
-            getSkeleton(joint_name);
+            vector<string> joint_names;
+            for (map<string, listEntry>::iterator it = motion_list.begin(); it!= motion_list.end(); it++)
+            {
+                listEntry &entry = it->second;
+                getJoint(joint_names, entry);
+
+                Matrix j_pos;
+                getSkeleton(joint_names, j_pos);
+
+                //extract metric
+                extractor.configure(j_pos);
+                double rom = extractor.computeRom();
+
+                //write it on the output
+                Bottle &scopebottleout = scopePort.prepare();
+                scopebottleout.clear();
+                scopebottleout.addDouble(rom);
+                scopePort.write();
+            }
         }
 
         return true;
