@@ -29,24 +29,25 @@ void Manager::init()
     kneeRight_init.resize(3);
 
     //joint vectors
-    //last value = 0 => stationary joint
-    //last value = 1 => mobile joint
-    elbowLeft.resize(4);
-    elbowRight.resize(4);
-    handLeft.resize(4);
-    handRight.resize(4);
-    head.resize(4);
-    shoulderCenter.resize(4);
-    shoulderLeft.resize(4);
-    shoulderRight.resize(4);
-    hipLeft.resize(4);
-    hipRight.resize(4);
-    kneeLeft.resize(4);
-    kneeRight.resize(4);
+    //index = 3, value = 0/1              => stationary/mobile joint
+    //index = 4, value = 0/max azimuth    => stationary/mobile joint
+    //index = 5, value = 0/max elevation  => stationary/mobile joint
+    elbowLeft.resize(6);
+    elbowRight.resize(6);
+    handLeft.resize(6);
+    handRight.resize(6);
+    head.resize(6);
+    shoulderCenter.resize(6);
+    shoulderLeft.resize(6);
+    shoulderRight.resize(6);
+    hipLeft.resize(6);
+    hipRight.resize(6);
+    kneeLeft.resize(6);
+    kneeRight.resize(6);
 
 }
 
-bool Manager::load()
+bool Manager::loadInitialConf()
 {
     ResourceFinder rf;
     rf.setVerbose();
@@ -172,7 +173,22 @@ bool Manager::load()
         processor = new Processor(elbowLeft_init, elbowRight_init, handLeft_init, handRight_init,
                                   head_init, shoulderCenter_init, shoulderLeft_init, shoulderRight_init,
                                   hipLeft_init, hipRight_init, kneeLeft_init, kneeRight_init);
+    }
 
+}
+
+bool Manager::load()
+{
+    ResourceFinder rf;
+    rf.setVerbose();
+    rf.setDefaultContext(this->rf->getContext().c_str());
+    rf.setDefaultConfigFile(this->rf->find("configuration-file").asString().c_str());
+    rf.configure(0, NULL);
+
+    Bottle &bGeneral = rf.findGroup("GENERAL");
+
+    if(!bGeneral.isNull())
+    {
         if(Bottle *motion_tag = bGeneral.find("motion_tag").asList())
         {
             if(Bottle *n_motion_tag = bGeneral.find("number_motion").asList())
@@ -190,7 +206,6 @@ bool Manager::load()
                             if(Bottle *bJoint = bMotion.find("tag_joint").asList())
                             {
                                 Metric *cMetric = NULL;
-                                double az, el;
                                 if(curr_tag == "ROM")
                                 {
                                     string tag_joint = bJoint->get(0).asString();
@@ -205,12 +220,17 @@ bool Manager::load()
                                         string eLC = elbowLC->get(0).asString();
                                         if(eLC == "mobile")
                                         {
-                                            az = elbowLC->get(1).asDouble();
-                                            el = elbowLC->get(2).asDouble();
                                             elbowLeft[3] = 1;
+                                            elbowLeft[4] = elbowLC->get(1).asDouble();
+                                            elbowLeft[5] = elbowLC->get(2).asDouble();
                                         }
                                         else
+                                        {
                                             elbowLeft[3] = 0;
+                                            elbowLeft[4] = 0;
+                                            elbowLeft[5] = 0;
+                                        }
+
                                     }
                                     else
                                         yError() << "Could not load elbow left configuration";
@@ -221,12 +241,16 @@ bool Manager::load()
                                         string eRC = elbowRC->get(0).asString();
                                         if(eRC == "mobile")
                                         {
-                                            az = elbowRC->get(1).asDouble();
-                                            el = elbowRC->get(2).asDouble();
                                             elbowRight[3] = 1;
+                                            elbowRight[4] = elbowRC->get(1).asDouble();
+                                            elbowRight[5] = elbowRC->get(2).asDouble();
                                         }
                                         else
+                                        {
                                             elbowRight[3] = 0;
+                                            elbowRight[4] = 0;
+                                            elbowRight[5] = 0;
+                                        }
                                     }
                                     else
                                         yError() << "Could not load elbow right configuration";
@@ -237,12 +261,17 @@ bool Manager::load()
                                         string hnLC = handLC->get(0).asString();
                                         if(hnLC == "mobile")
                                         {
-                                            az = handLC->get(1).asDouble();
-                                            el = handLC->get(2).asDouble();
                                             handLeft[3] = 1;
+                                            handLeft[4] = handLC->get(1).asDouble();
+                                            handLeft[5] = handLC->get(2).asDouble();
                                         }
                                         else
+                                        {
                                             handLeft[3] = 0;
+                                            handLeft[4] = 0;
+                                            handLeft[5] = 0;
+                                        }
+
                                     }
                                     else
                                         yError() << "Could not load hand left configuration";
@@ -253,12 +282,17 @@ bool Manager::load()
                                         string hnRC = handLC->get(0).asString();
                                         if(hnRC == "mobile")
                                         {
-                                            az = handRC->get(1).asDouble();
-                                            el = handRC->get(2).asDouble();
                                             handRight[3] = 1;
+                                            handRight[4] = handRC->get(1).asDouble();
+                                            handRight[5] = handRC->get(2).asDouble();
                                         }
                                         else
+                                        {
                                             handRight[3] = 0;
+                                            handRight[4] = 0;
+                                            handRight[5] = 0;
+                                        }
+
                                     }
                                     else
                                         yError() << "Could not load hand right configuration";
@@ -269,12 +303,17 @@ bool Manager::load()
                                         string hC = headC->get(0).asString();
                                         if(hC == "mobile")
                                         {
-                                            az = headC->get(1).asDouble();
-                                            el = headC->get(2).asDouble();
                                             head[3] = 1;
+                                            head[4] = headC->get(1).asDouble();
+                                            head[5] = headC->get(2).asDouble();
                                         }
                                         else
+                                        {
                                             head[3] = 0;
+                                            head[4] = 0;
+                                            head[5] = 0;
+                                        }
+
                                     }
                                     else
                                         yError() << "Could not load head configuration";
@@ -285,12 +324,18 @@ bool Manager::load()
                                         string sCC = shoulderCC->get(0).asString();
                                         if(sCC == "mobile")
                                         {
-                                            az = shoulderCC->get(1).asDouble();
-                                            el = shoulderCC->get(2).asDouble();
                                             shoulderCenter[3] = 1;
+                                            shoulderCenter[4] = shoulderCC->get(1).asDouble();
+                                            shoulderCenter[5] = shoulderCC->get(2).asDouble();
+
                                         }
                                         else
+                                        {
                                             shoulderCenter[3] = 0;
+                                            shoulderCenter[4] = 0;
+                                            shoulderCenter[5] = 0;
+                                        }
+
                                     }
                                     else
                                         yError() << "Could not load shoulder center configuration";
@@ -301,12 +346,16 @@ bool Manager::load()
                                         string sLC = shoulderLC->get(0).asString();
                                         if(sLC == "mobile")
                                         {
-                                            az = shoulderLC->get(1).asDouble();
-                                            el = shoulderLC->get(2).asDouble();
                                             shoulderLeft[3] = 1;
+                                            shoulderLeft[4] = shoulderLC->get(1).asDouble();
+                                            shoulderLeft[5] = shoulderLC->get(2).asDouble();
                                         }
                                         else
+                                        {
                                             shoulderLeft[3] = 0;
+                                            shoulderLeft[4] = 0;
+                                            shoulderLeft[5] = 0;
+                                        }
 
                                     }
                                     else
@@ -318,12 +367,16 @@ bool Manager::load()
                                         string sRC = shoulderRC->get(0).asString();
                                         if(sRC == "mobile")
                                         {
-                                            az = shoulderRC->get(1).asDouble();
-                                            el = shoulderRC->get(2).asDouble();
                                             shoulderRight[3] = 1;
+                                            shoulderRight[4] = shoulderRC->get(1).asDouble();
+                                            shoulderRight[5] = shoulderRC->get(2).asDouble();
                                         }
                                         else
+                                        {
                                             shoulderRight[3] = 0;
+                                            shoulderRight[4] = 0;
+                                            shoulderRight[5] = 0;
+                                        }
                                     }
                                     else
                                         yError() << "Could not load shoulder right configuration";
@@ -334,12 +387,16 @@ bool Manager::load()
                                             string hLC = hipLC->get(0).asString();
                                             if(hLC == "mobile")
                                             {
-                                                az = hipLC->get(1).asDouble();
-                                                el = hipLC->get(2).asDouble();
                                                 hipLeft[3] = 1;
+                                                hipLeft[4] = hipLC->get(1).asDouble();
+                                                hipLeft[5] = hipLC->get(2).asDouble();
                                             }
                                             else
+                                            {
                                                 hipLeft[3] = 0;
+                                                hipLeft[4] = 0;
+                                                hipLeft[5] = 0;
+                                            }
                                         }
                                         else
                                             yError() << "Could not load hip left configuration";
@@ -350,12 +407,16 @@ bool Manager::load()
                                             string hRC = hipRC->get(0).asString();
                                             if(hRC == "mobile")
                                             {
-                                                az = hipRC->get(1).asDouble();
-                                                el = hipRC->get(2).asDouble();
                                                 hipRight[3] = 1;
+                                                hipRight[4] = hipRC->get(1).asDouble();
+                                                hipRight[5] = hipRC->get(2).asDouble();
                                             }
                                             else
+                                            {
                                                 hipRight[3] = 0;
+                                                hipRight[4] = 0;
+                                                hipRight[5] = 0;
+                                            }
                                         }
                                         else
                                             yError() << "Could not load hip right configuration";
@@ -366,12 +427,16 @@ bool Manager::load()
                                         string kLC = kneeLC->get(0).asString();
                                         if(kLC == "mobile")
                                         {
-                                            az = kneeLC->get(1).asDouble();
-                                            el = kneeLC->get(2).asDouble();
                                             kneeLeft[3] = 1;
+                                            kneeLeft[4] = kneeLC->get(1).asDouble();
+                                            kneeLeft[5] = kneeLC->get(2).asDouble();
                                         }
                                         else
+                                        {
                                             kneeLeft[3] = 0;
+                                            kneeLeft[4] = 0;
+                                            kneeLeft[5] = 0;
+                                        }
                                     }
                                     else
                                         yError() << "Could not load knee left configuration";
@@ -382,25 +447,29 @@ bool Manager::load()
                                         string kRC = kneeRC->get(0).asString();
                                         if(kRC == "mobile")
                                         {
-                                            az = kneeRC->get(1).asDouble();
-                                            el = kneeRC->get(2).asDouble();
                                             kneeRight[3] = 1;
+                                            kneeRight[4] = kneeRC->get(1).asDouble();
+                                            kneeRight[5] = kneeRC->get(2).asDouble();
                                         }
                                         else
+                                        {
                                             kneeRight[3] = 0;
+                                            kneeRight[3] = 0;
+                                            kneeRight[3] = 0;
+                                        }
                                     }
                                     else
                                         yError() << "Could not load knee right configuration";
 
-                                    Rom *rom = new Rom(tag_joint, id_joint, n_motion, min, max,
-                                                       az, el, elbowLeft, elbowRight, handLeft, handRight,
-                                                       head, shoulderCenter, shoulderLeft, shoulderRight,
-                                                       hipLeft, hipRight, kneeLeft, kneeRight);
+                                    rom = new Rom(tag_joint, id_joint, n_motion, min, max,
+                                                  elbowLeft, elbowRight, handLeft, handRight,
+                                                  head, shoulderCenter, shoulderLeft, shoulderRight,
+                                                  hipLeft, hipRight, kneeLeft, kneeRight);
                                     cMetric = rom;
                                 }
 
                                 motion_list.insert(pair<string, Metric*>(curr_tag+"_"+to_string(j), cMetric));
-                                motion_list[curr_tag+"_"+to_string(j)]->print();
+//                                motion_list[curr_tag+"_"+to_string(j)]->print();
 
                             }
                         }
@@ -427,9 +496,9 @@ void Manager::getKeyframes()
     Bottle &content = cmd.addList().addList();
     content.addString("body");
 
-    yInfo() << "Query opc: " << cmd.toString();
+//    yInfo() << "Query opc: " << cmd.toString();
     opcPort.write(cmd, reply);
-    yInfo() << "Reply from opc:" << reply.toString();
+//    yInfo() << "Reply from opc:" << reply.toString();
 
     if(reply.size() > 1)
     {
@@ -466,7 +535,7 @@ void Manager::getKeyframes()
                                     elbowLeft[0] = elbowLeftB->get(0).asDouble();
                                     elbowLeft[1] = elbowLeftB->get(1).asDouble();
                                     elbowLeft[2] = elbowLeftB->get(2).asDouble();
-                                    yInfo() << elbowLeft[0] << elbowLeft[1] << elbowLeft[2];
+//                                    yInfo() << elbowLeft[0] << elbowLeft[1] << elbowLeft[2];
                                 }
                                 else
                                     yError() << "Could not read elbow left";
@@ -476,7 +545,7 @@ void Manager::getKeyframes()
                                     elbowRight[0] = elbowRightB->get(0).asDouble();
                                     elbowRight[1] = elbowRightB->get(1).asDouble();
                                     elbowRight[2] = elbowRightB->get(2).asDouble();
-                                    yInfo() << elbowRight[0] << elbowRight[1] << elbowRight[2];
+//                                    yInfo() << elbowRight[0] << elbowRight[1] << elbowRight[2];
                                 }
                                 else
                                     yError() << "Could not read elbow right";
@@ -486,7 +555,7 @@ void Manager::getKeyframes()
                                     handLeft[0] = handLeftB->get(0).asDouble();
                                     handLeft[1] = handLeftB->get(1).asDouble();
                                     handLeft[2] = handLeftB->get(2).asDouble();
-                                    yInfo() << handLeft[0] << handLeft[1] << handLeft[2];
+//                                    yInfo() << handLeft[0] << handLeft[1] << handLeft[2];
                                 }
                                 else
                                     yError() << "Could not read hand left";
@@ -496,7 +565,7 @@ void Manager::getKeyframes()
                                     handRight[0] = handRightB->get(0).asDouble();
                                     handRight[1] = handRightB->get(1).asDouble();
                                     handRight[2] = handRightB->get(2).asDouble();
-                                    yInfo() << handRight[0] << handRight[1] << handRight[2];
+//                                    yInfo() << handRight[0] << handRight[1] << handRight[2];
                                 }
                                 else
                                     yError() << "Could not read hand right";
@@ -506,7 +575,7 @@ void Manager::getKeyframes()
                                     head[0] = headB->get(0).asDouble();
                                     head[1] = headB->get(1).asDouble();
                                     head[2] = headB->get(2).asDouble();
-                                    yInfo() << head[0] << head[1] << head[2];
+//                                    yInfo() << head[0] << head[1] << head[2];
                                 }
                                 else
                                     yError() << "Could not read hand left";
@@ -516,7 +585,7 @@ void Manager::getKeyframes()
                                     shoulderCenter[0] = shoulderCenterB->get(0).asDouble();
                                     shoulderCenter[1] = shoulderCenterB->get(1).asDouble();
                                     shoulderCenter[2] = shoulderCenterB->get(2).asDouble();
-                                    yInfo() << shoulderCenter[0] << shoulderCenter[1] << shoulderCenter[2];
+//                                    yInfo() << shoulderCenter[0] << shoulderCenter[1] << shoulderCenter[2];
                                 }
                                 else
                                     yError() << "Could not read shoulder center";
@@ -526,7 +595,7 @@ void Manager::getKeyframes()
                                     shoulderLeft[0] = shoulderLeftB->get(0).asDouble();
                                     shoulderLeft[1] = shoulderLeftB->get(1).asDouble();
                                     shoulderLeft[2] = shoulderLeftB->get(2).asDouble();
-                                    yInfo() << shoulderLeft[0] << shoulderLeft[1] << shoulderLeft[2];
+//                                    yInfo() << shoulderLeft[0] << shoulderLeft[1] << shoulderLeft[2];
                                 }
                                 else
                                     yError() << "Could not read shoulder left";
@@ -536,7 +605,7 @@ void Manager::getKeyframes()
                                     shoulderRight[0] = shoulderRightB->get(0).asDouble();
                                     shoulderRight[1] = shoulderRightB->get(1).asDouble();
                                     shoulderRight[2] = shoulderRightB->get(2).asDouble();
-                                    yInfo() << shoulderRight[0] << shoulderRight[1] << shoulderRight[2];
+//                                    yInfo() << shoulderRight[0] << shoulderRight[1] << shoulderRight[2];
                                 }
                                 else
                                     yError() << "Could not read shoulder right";
@@ -546,7 +615,7 @@ void Manager::getKeyframes()
                                     hipLeft[0] = hipLeftB->get(0).asDouble();
                                     hipLeft[1] = hipLeftB->get(1).asDouble();
                                     hipLeft[2] = hipLeftB->get(2).asDouble();
-                                    yInfo() << hipLeft[0] << hipLeft[1] << hipLeft[2];
+//                                    yInfo() << hipLeft[0] << hipLeft[1] << hipLeft[2];
                                 }
                                 else
                                     yError() << "Could not read hip left";
@@ -556,7 +625,7 @@ void Manager::getKeyframes()
                                     hipRight[0] = hipRightB->get(0).asDouble();
                                     hipRight[1] = hipRightB->get(1).asDouble();
                                     hipRight[2] = hipRightB->get(2).asDouble();
-                                    yInfo() << hipRight[0] << hipRight[1] << hipRight[2];
+//                                    yInfo() << hipRight[0] << hipRight[1] << hipRight[2];
                                 }
                                 else
                                     yError() << "Could not read hip right";
@@ -566,7 +635,7 @@ void Manager::getKeyframes()
                                     kneeLeft[0] = kneeLeftB->get(0).asDouble();
                                     kneeLeft[1] = kneeLeftB->get(1).asDouble();
                                     kneeLeft[2] = kneeLeftB->get(2).asDouble();
-                                    yInfo() << kneeLeft[0] << kneeLeft[1] << kneeLeft[2];
+//                                    yInfo() << kneeLeft[0] << kneeLeft[1] << kneeLeft[2];
                                 }
                                 else
                                     yError() << "Could not read knee left";
@@ -576,7 +645,7 @@ void Manager::getKeyframes()
                                     kneeRight[0] = kneeRightB->get(0).asDouble();
                                     kneeRight[1] = kneeRightB->get(1).asDouble();
                                     kneeRight[2] = kneeRightB->get(2).asDouble();
-                                    yInfo() << kneeRight[0] << kneeRight[1] << kneeRight[2];
+//                                    yInfo() << kneeRight[0] << kneeRight[1] << kneeRight[2];
                                 }
                                 else
                                     yError() << "Could not read knee right";
@@ -590,69 +659,82 @@ void Manager::getKeyframes()
     }
 }
 
-    /********************************************************/
-    bool Manager::attach(RpcServer &source)
+/********************************************************/
+void Manager::mapKeyframesToStandard()
+{
+
+}
+
+/********************************************************/
+bool Manager::attach(RpcServer &source)
+{
+    return this->yarp().attachAsServer(source);
+}
+
+/********************************************************/
+bool Manager::configure(ResourceFinder &rf)
+{
+    this->rf = &rf;
+    string moduleName = rf.check("name", Value("motionAnalyzer")).asString();
+    setName(moduleName.c_str());
+
+    string robot = rf.check("robot", Value("icub")).asString();
+
+    opcPort.open(("/" + getName() + "/opc").c_str());
+    scopePort.open(("/" + getName() + "/scope").c_str());
+    rpcPort.open(("/" + getName() + "/cmd").c_str());
+    attach(rpcPort);
+
+    init();
+    loadInitialConf();
+    if(!load())
+        return false;
+
+    return true;
+}
+
+/********************************************************/
+bool Manager::close()
+{
+    delete rom;
+    delete processor;
+
+    opcPort.close();
+    scopePort.close();
+    rpcPort.close();
+
+    return true;
+}
+
+/********************************************************/
+double Manager::getPeriod()
+{
+    return 1.0;
+}
+
+/********************************************************/
+bool Manager::updateModule()
+{
+    //if we query the database
+    if(opcPort.getOutputCount() > 0)
     {
-        return this->yarp().attachAsServer(source);
+        getKeyframes();
+//        mapKeyframesToStandard();
+        rom->update(elbowLeft, elbowRight, handLeft, handRight,
+                    head, shoulderCenter, shoulderLeft, shoulderRight,
+                    hipLeft, hipRight, kneeLeft, kneeRight);
+//        rom->print();
+
+        Rom_Processor rom_processor(rom);
+//        rom_processor.checkDeviationFromIntialPose();
+
+        //                    //write it on the output
+        //                    Bottle &scopebottleout = scopePort.prepare();
+        //                    scopebottleout.clear();
+        //                    scopebottleout.addDouble(rom);
+        //                    scopePort.write();
     }
 
-    /********************************************************/
-    bool Manager::configure(ResourceFinder &rf)
-    {
-        this->rf = &rf;
-        string moduleName = rf.check("name", Value("motionAnalyzer")).asString();
-        setName(moduleName.c_str());
-
-        string robot = rf.check("robot", Value("icub")).asString();
-
-        opcPort.open(("/" + getName() + "/opc").c_str());
-        scopePort.open(("/" + getName() + "/scope").c_str());
-        rpcPort.open(("/" + getName() + "/cmd").c_str());
-        attach(rpcPort);
-
-        init();
-        if(!load())
-            return false;
-
-        return true;
-    }
-
-    /********************************************************/
-    bool Manager::close()
-    {
-        delete processor;
-
-        opcPort.close();
-        scopePort.close();
-        rpcPort.close();
-
-        return true;
-    }
-
-    /********************************************************/
-    double Manager::getPeriod()
-    {
-        return 1.0;
-    }
-
-    /********************************************************/
-    bool Manager::updateModule()
-    {
-        //if we query the database
-        if(opcPort.getOutputCount() > 0)
-        {
-            getKeyframes();
-
-            //            Rom_Processor rom_processor();
-            //            rom_processor.checkDeviationFromIntialPose();
-
-            //                    //write it on the output
-            //                    Bottle &scopebottleout = scopePort.prepare();
-            //                    scopebottleout.clear();
-            //                    scopebottleout.addDouble(rom);
-            //                    scopePort.write();
-        }
-
-        return true;
-    }
+    return true;
+}
 

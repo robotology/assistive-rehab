@@ -65,11 +65,15 @@ class Manager : public RFModule,
     Vector kneeLeft;
     Vector kneeRight;
 
+    Rom *rom;
+
     Processor *processor;
 
     void init();
+    bool loadInitialConf();
     bool load();
     void getKeyframes();
+    void mapKeyframesToStandard(); //to map detected skeleton to standard skeleton
     bool attach(RpcServer &source);
 
 public:
