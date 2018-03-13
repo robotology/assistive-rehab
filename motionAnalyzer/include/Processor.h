@@ -15,7 +15,13 @@ using namespace yarp::sig;
 
 class Processor
 {
-protected:
+
+public:
+    Processor() {;}
+    Processor(Vector &elbowLeft_init_, Vector &elbowRight_init_, Vector &handLeft_init_, Vector &handRight_init_,
+              Vector &head_init_, Vector &shoulderCenter_init_,  Vector &shoulderLeft_init_, Vector &shoulderRight_init_,
+              Vector &hipLeft_init_, Vector &hipRight_init_, Vector &kneeLeft_init_, Vector &kneeRight_init_);
+
     Vector elbowLeft_init;
     Vector elbowRight_init;
     Vector handLeft_init;
@@ -29,12 +35,6 @@ protected:
     Vector kneeLeft_init;
     Vector kneeRight_init;
 
-public:
-    Processor() {;}
-    Processor(Vector &elbowLeft_, Vector &elbowRight_, Vector &handLeft_, Vector &handRight_,
-              Vector &head_, Vector &shoulderCenter_,  Vector &shoulderLeft_, Vector &shoulderRight_,
-              Vector &hipLeft_, Vector &hipRight_, Vector &kneeLeft_, Vector &kneeRight_);
-
 };
 
 class Rom_Processor : public Processor
@@ -44,11 +44,8 @@ class Rom_Processor : public Processor
 
 public:
 
-    Rom_Processor();
-    bool checkDeviationFromIntialPose(Vector &elbowLeft_, Vector &elbowRight_, Vector &handLeft_,
-                                      Vector &handRight_, Vector &head_, Vector &shoulderCenter_,
-                                      Vector &shoulderLeft_, Vector &shoulderRight_, Vector &hipLeft_,
-                                      Vector &hipRight_, Vector &kneeLeft_, Vector &kneeRight_);
+    Rom_Processor(Rom *rom_);
+    bool checkDeviationFromIntialPose();
     double computeRom();
 
 };
