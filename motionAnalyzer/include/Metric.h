@@ -28,8 +28,6 @@ public:
     int n_movements;
     double min;
     double max;
-    double az;
-    double el;
 
     Vector elbowLeft;
     Vector elbowRight;
@@ -47,10 +45,14 @@ public:
     Rom() {;}
     Rom(const Rom &rom);
     Rom(const string &tag_joint_, int &id_joint_, int &n_movements_,
-        double &min_, double &max_, double &az_, double &el_,
-        Vector &elbowLeft_, Vector &elbowRight_, Vector &handLeft_, Vector &handRight_,
-        Vector &head_, Vector &shoulderCenter_, Vector &shoulderLeft_, Vector &shoulderRight_,
-        Vector &hipLeft_, Vector &hipRight_, Vector &kneeLeft_, Vector &kneeRight_);
+        double &min_, double &max_, Vector &elbowLeft_, Vector &elbowRight_,
+        Vector &handLeft_, Vector &handRight_, Vector &head_, Vector &shoulderCenter_,
+        Vector &shoulderLeft_, Vector &shoulderRight_, Vector &hipLeft_,
+        Vector &hipRight_, Vector &kneeLeft_, Vector &kneeRight_);
+    void update(Vector &elbowLeft_, Vector &elbowRight_, Vector &handLeft_,
+                Vector &handRight_, Vector &head_, Vector &shoulderCenter_,
+                Vector &shoulderLeft_, Vector &shoulderRight_, Vector &hipLeft_,
+                Vector &hipRight_, Vector &kneeLeft_, Vector &kneeRight_);
     void print();
 
 };
