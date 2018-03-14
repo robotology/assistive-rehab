@@ -1,3 +1,15 @@
+/******************************************************************************
+ *                                                                            *
+ * Copyright (C) 2018 Fondazione Istituto Italiano di Tecnologia (IIT)        *
+ * All Rights Reserved.                                                       *
+ *                                                                            *
+ ******************************************************************************/
+
+/**
+ * @file Manager.h
+ * @authors: Valentina Vasco <valentina.vasco@iit.it>
+ */
+
 #ifndef __MANAGER_H__
 #define __MANAGER_H__
 
@@ -8,6 +20,7 @@
 #include <Manager.h>
 #include <Processor.h>
 #include <Metric.h>
+#include <skeleton.h>
 
 #include "motionAnalyzer_IDL.h"
 
@@ -39,6 +52,11 @@ class Manager : public RFModule,
 
     map<string,Metric*> motion_list;
 
+    vector<pair<string,Vector>> initial_keypoints;
+//    vector<Vector> curr_keypoints;
+    vector<pair<string,Vector>> curr_keypoints;
+    SkeletonStd initial_skeleton;
+
     Vector elbowLeft_init;
     Vector elbowRight_init;
     Vector handLeft_init;
@@ -51,6 +69,8 @@ class Manager : public RFModule,
     Vector hipRight_init;
     Vector kneeLeft_init;
     Vector kneeRight_init;
+    Vector ankleLeft_init;
+    Vector ankleRight_init;
 
     Vector elbowLeft;
     Vector elbowRight;
@@ -64,14 +84,33 @@ class Manager : public RFModule,
     Vector hipRight;
     Vector kneeLeft;
     Vector kneeRight;
+    Vector ankleLeft;
+    Vector ankleRight;
 
-    Rom *rom;
+    Vector elbowLeft_conf;
+    Vector elbowRight_conf;
+    Vector handLeft_conf;
+    Vector handRight_conf;
+    Vector head_conf;
+    Vector shoulderCenter_conf;
+    Vector shoulderLeft_conf;
+    Vector shoulderRight_conf;
+    Vector hipLeft_conf;
+    Vector hipRight_conf;
+    Vector kneeLeft_conf;
+    Vector kneeRight_conf;
+    Vector ankleLeft_conf;
+    Vector ankleRight_conf;
+    vector<Vector> keypoints_conf;
+
+    Rom* crom;
+    vector<Rom*> rom;
 
     Processor *processor;
 
     void init();
     bool loadInitialConf();
-    bool load();
+    bool loadMotionList();
     void getKeyframes();
     void mapKeyframesToStandard(); //to map detected skeleton to standard skeleton
     bool attach(RpcServer &source);
