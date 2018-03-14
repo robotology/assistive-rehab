@@ -1,3 +1,15 @@
+/******************************************************************************
+ *                                                                            *
+ * Copyright (C) 2018 Fondazione Istituto Italiano di Tecnologia (IIT)        *
+ * All Rights Reserved.                                                       *
+ *                                                                            *
+ ******************************************************************************/
+
+/**
+ * @file Metric.h
+ * @authors: Valentina Vasco <valentina.vasco@iit.it>
+ */
+
 #ifndef __METRIC_H__
 #define __METRIC_H__
 
@@ -6,53 +18,39 @@
 #include <yarp/os/all.h>
 #include <yarp/sig/Vector.h>
 
+#include <skeleton.h>
+
 using namespace std;
 using namespace yarp::sig;
+using namespace assist_rehab;
 
 class Metric
 {
 
 public:
-//    Metric();
-//    virtual ~Metric();
-    virtual void print() {;}
+    Metric() {;}
+    virtual ~Metric() {;}
+    virtual void print() = 0;
 };
 
 class Rom : public Metric
 {
-
-public:
-
     string tag_joint;
     int id_joint;
     int n_movements;
     double min;
     double max;
 
-    Vector elbowLeft;
-    Vector elbowRight;
-    Vector handLeft;
-    Vector handRight;
-    Vector head;
-    Vector shoulderCenter;
-    Vector shoulderLeft;
-    Vector shoulderRight;
-    Vector hipLeft;
-    Vector hipRight;
-    Vector kneeLeft;
-    Vector kneeRight;
+    SkeletonStd skeleton;
 
-    Rom() {;}
-    Rom(const Rom &rom);
-    Rom(const string &tag_joint_, int &id_joint_, int &n_movements_,
-        double &min_, double &max_, Vector &elbowLeft_, Vector &elbowRight_,
-        Vector &handLeft_, Vector &handRight_, Vector &head_, Vector &shoulderCenter_,
-        Vector &shoulderLeft_, Vector &shoulderRight_, Vector &hipLeft_,
-        Vector &hipRight_, Vector &kneeLeft_, Vector &kneeRight_);
-    void update(Vector &elbowLeft_, Vector &elbowRight_, Vector &handLeft_,
-                Vector &handRight_, Vector &head_, Vector &shoulderCenter_,
-                Vector &shoulderLeft_, Vector &shoulderRight_, Vector &hipLeft_,
-                Vector &hipRight_, Vector &kneeLeft_, Vector &kneeRight_);
+public:
+    Rom();
+    Rom(const string &tag_joint_, const unsigned int id_joint_, const unsigned int n_movements_,
+        const double &min_, const double &max_);
+    bool update(const SkeletonStd& skeleton_);
+    SkeletonStd getSkeleton() const { return skeleton; }
+
+    int getIdJoint() const { return id_joint; }
     void print();
 
 };
