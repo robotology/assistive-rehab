@@ -2,23 +2,85 @@
 
 using namespace std;
 using namespace yarp::math;
+using namespace assist_rehab;
 
-Processor::Processor(Vector &elbowLeft_init_, Vector &elbowRight_init_, Vector &handLeft_init_, Vector &handRight_init_,
-                     Vector &head_init_, Vector &shoulderCenter_init_, Vector &shoulderLeft_init_, Vector &shoulderRight_init_,
-                     Vector &hipLeft_init_, Vector &hipRight_init_, Vector &kneeLeft_init_, Vector &kneeRight_init_)
+Processor::Processor(const SkeletonStd &skeleton_init_)
 {
-    elbowLeft_init = elbowLeft_init_;
-    elbowRight_init = elbowRight_init_;
-    handLeft_init = handLeft_init_;
-    handRight_init = handRight_init_;
-    head_init = head_init_;
-    shoulderCenter_init = shoulderCenter_init_;
-    shoulderLeft_init = shoulderLeft_init_;
-    shoulderRight_init = shoulderRight_init_;
-    hipLeft_init = hipLeft_init_;
-    hipRight_init = hipRight_init_;
-    kneeLeft_init = kneeLeft_init_;
-    kneeRight_init = kneeRight_init_;
+    skeleton_init = skeleton_init_;
+}
+
+bool Processor::isDeviatingFromIntialPose(SkeletonStd& curr_skeleton)
+{
+    bool isDeviating = false;
+    for(int i=0; i<curr_skeleton.getNumKeyPoints(); i++)
+    {
+        //get current keypoint
+        const KeyPoint* keypoint = curr_skeleton[i];
+        const KeyPoint* keypoint_init = skeleton_init[i];
+
+//        if(keypoint->isStationary() && isDeviatingFromIntialPose(*keypoint, *keypoint_init))
+        if(isDeviatingFromIntialPose(*keypoint, *keypoint_init))
+        {
+            isDeviating = true;
+            yWarning() << "keypoint" << keypoint->getTag() << "is deviating from initial pose";
+        }
+    }
+
+    return isDeviating;
+}
+
+bool Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyPoint& keypoint_init)
+{
+    bool isDeviating = false;
+    Vector curr_kp, curr_kp_parent, curr_kp_child,
+            curr_kp_init, curr_kp_parent_init, curr_kp_child_init;
+    curr_kp.resize(3);
+    curr_kp_parent.resize(3);
+    curr_kp_child.resize(3);
+    curr_kp_init.resize(3);
+    curr_kp_parent_init.resize(3);
+    curr_kp_child_init.resize(3);
+
+    curr_kp = keypoint.getPoint();
+    curr_kp_init = keypoint_init.getPoint();
+
+    int nParents = keypoint.getNumParent();
+    int nChildren = keypoint.getNumChild();
+    if(nParents)
+    {
+        for(int j=0; j<nParents; j++)
+        {
+            //standard skeleton
+            const KeyPoint* keypoint_parent = keypoint.getParent(j);
+            curr_kp_parent = keypoint_parent->getPoint();
+
+            //initial standard skeleton
+            const KeyPoint* keypoint_parent_init = keypoint_init.getParent(j);
+            curr_kp_parent_init = keypoint_parent_init->getPoint();
+
+            if(nChildren)
+            {
+                for(int k=0; k<nChildren; k++)
+                {
+                    const KeyPoint* keypoint_child = keypoint.getChild(k);
+                    curr_kp_child = keypoint_child->getPoint();
+
+                    const KeyPoint* keypoint_child_init = keypoint_init.getChild(k);
+                    curr_kp_child_init = keypoint_child_init->getPoint();
+                }
+            }
+
+            //compute deviation from initial pose
+            Vector curr_pose = curr_kp + curr_kp_parent + curr_kp_child;
+            Vector initial_pose = curr_kp_init + curr_kp_parent_init + curr_kp_child_init;
+            Vector deviation = curr_pose - initial_pose;
+
+            if((deviation[0]+deviation[1]+deviation[2]) > 1)
+                isDeviating = true;
+        }
+    }
+
+    return isDeviating;
 }
 
 /********************************************************/
@@ -27,125 +89,36 @@ Rom_Processor::Rom_Processor(Rom *rom_)
     rom = rom_;
 }
 
-
-bool Rom_Processor::checkDeviationFromIntialPose()
-{
-    //if joint is stationary
-    yInfo() << elbowLeft_init[0] << elbowLeft_init[1] << elbowLeft_init[2];
-
-    if(rom->elbowLeft[3] == 0)
-    {
-//        if(norm(rom->elbowLeft.subVector(0,2) - elbowLeft_init) > 1)
-//        {
-//            yInfo() << "elbow left deviating from initial pose";
-//        }
-    }
-
-//    if(rom->elbowRight[3] == 0)
-//    {
-//        if(norm(rom->elbowRight.subVector(0,2) - elbowRight_init) > 1)
-//        {
-//            yInfo() << "elbow right deviating from initial pose";
-//        }
-//    }
-
-//    if(rom->handLeft[3] == 0)
-//    {
-//        if(norm(rom->handLeft.subVector(0,2) - handLeft_init) > 1)
-//        {
-//            yInfo() << "hand left deviating from initial pose";
-//        }
-//    }
-
-//    if(rom->handRight[3] == 0)
-//    {
-//        if(norm(rom->handRight.subVector(0,2) - handRight_init) > 1)
-//        {
-//            yInfo() << "hand right deviating from initial pose";
-//        }
-//    }
-
-//    if(rom->head[3] == 0)
-//    {
-//        if(norm(rom->head.subVector(0,2) - head_init) > 1)
-//        {
-//            yInfo() << "head deviating from initial pose";
-//        }
-//    }
-
-//    if(rom->shoulderCenter[3] == 0)
-//    {
-//        if(norm(rom->shoulderCenter.subVector(0,2) - shoulderCenter_init) > 1)
-//        {
-//            yInfo() << "shoulder center deviating from initial pose";
-//        }
-//    }
-
-//    if(rom->shoulderLeft[3] == 0)
-//    {
-//        if(norm(rom->shoulderLeft.subVector(0,2) - shoulderLeft_init) > 1)
-//        {
-//            yInfo() << "shoulder left deviating from initial pose";
-//        }
-//    }
-
-//    if(rom->shoulderRight[3] == 0)
-//    {
-//        if(norm(rom->shoulderRight.subVector(0,2) - shoulderRight_init) > 1)
-//        {
-//            yInfo() << "shoulder right deviating from initial pose";
-//        }
-//    }
-
-//    if(rom->hipLeft[3] == 0)
-//    {
-//        if(norm(rom->hipLeft.subVector(0,2) - hipLeft_init) > 1)
-//        {
-//            yInfo() << "hip left deviating from initial pose";
-//        }
-//    }
-
-//    if(rom->hipRight[3] == 0)
-//    {
-//        if(norm(rom->hipRight.subVector(0,2) - hipRight_init) > 1)
-//        {
-//            yInfo() << "hip right deviating from initial pose";
-//        }
-//    }
-
-//    if(rom->kneeLeft[3] == 0)
-//    {
-//        if(norm(rom->kneeLeft.subVector(0,2) - kneeLeft_init) > 1)
-//        {
-//            yInfo() << "knee left deviating from initial pose";
-//        }
-//    }
-
-//    if(rom->kneeRight[3] == 0)
-//    {
-//        if(norm(rom->kneeRight.subVector(0,2) - kneeRight_init) > 1)
-//        {
-//            yInfo() << "knee right deviating from initial pose";
-//        }
-//    }
-
-    return true;
-
-}
-
 double Rom_Processor::computeRom()
 {
+    //get keypoint from skeleton
+    int id = rom->getIdJoint();
+//    KeyPoint *keypoint = rom->getSkeleton()[id];
+//    Vector kp = keypoint->getPoint();
 
-    //    if(j1.size() && j2.size() && j3.size())
-    //    {
-    //        double a_norm = norm(j1-j2);
-    //        double b_norm = norm(j1-j3);
+//    Vector kp_parent, kp_child;
 
-    //        double dot_p = dot(j1-j2, j1-j3);
+//    //get child and parent
+//    if(id == 0 || id == 1) //if shoulder: change id with id shoulder
+//    {
+//        KeyPoint *keypoint_parent = keypoint->getParent(1);
+//        kp_parent = keypoint_parent->getPoint();
+//        KeyPoint *keypoint_child = keypoint->getChild(0);
+//        kp_child = keypoint_child->getPoint();
+//    }
+//    else if(id == 2) //if elbow
+//    {
+//        KeyPoint *keypoint_parent = keypoint->getParent(0);
+//        kp_parent = keypoint_parent->getPoint();
+//        KeyPoint *keypoint_child = keypoint->getChild(0);
+//        kp_child = keypoint_child->getPoint();
+//    }
 
-    //        return ( acos(dot_p/(a_norm*b_norm)) * (180/M_PI) );
-    //    }
-    //    else
-    //        return 0.0;
+//    double a_norm = norm(kp-kp_parent);
+//    double b_norm = norm(kp-kp_child);
+
+//    double dot_p = dot(kp-kp_parent, kp-kp_child);
+
+//    return ( acos(dot_p/(a_norm*b_norm)) * (180/M_PI) );
 
 }
