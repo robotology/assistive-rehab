@@ -22,8 +22,7 @@ using namespace assistive_rehab;
 
 void print_hierarchy(const KeyPoint *k)
 {
-    cout<<"keypoint["<<k->getId()<<"]; \""
-        <<k->getTag()<<"\": ("
+    cout<<"keypoint[\""<<k->getTag()<<"\"]; ("
         <<k->getPoint().toString(3,3)<<") "
         <<(k->isUpdated()?"updated":"stale")<<endl;
     for (unsigned int i=0; i<k->getNumChild(); i++)
@@ -33,7 +32,7 @@ void print_hierarchy(const KeyPoint *k)
 int main()
 {
     cout<<"### Defining the Skeleton"<<endl;
-    SkeletonStd skeleton;
+    SkeletonWaist skeleton;
 
     cout<<"### Printing the Skeleton's structure (internal method)"<<endl;
     skeleton.print();
