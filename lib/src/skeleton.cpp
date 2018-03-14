@@ -23,7 +23,7 @@ using namespace assistive_rehab;
 namespace assistive_rehab
 {
 
-namespace KeyPointNum
+namespace KeyPointId
 {
 const unsigned int shoulder_center=0;
 const unsigned int head=1;
@@ -128,20 +128,20 @@ void Skeleton::print() const
 
 SkeletonStd::SkeletonStd()
 {
-    id2tag[KeyPointNum::shoulder_center]=KeyPointTag::shoulder_center;
-    id2tag[KeyPointNum::head]=KeyPointTag::head;
-    id2tag[KeyPointNum::shoulder_left]=KeyPointTag::shoulder_left;
-    id2tag[KeyPointNum::elbow_left]=KeyPointTag::elbow_left;
-    id2tag[KeyPointNum::hand_left]=KeyPointTag::hand_left;
-    id2tag[KeyPointNum::shoulder_right]=KeyPointTag::shoulder_right;
-    id2tag[KeyPointNum::elbow_right]=KeyPointTag::elbow_right;
-    id2tag[KeyPointNum::hand_right]=KeyPointTag::hand_right;
-    id2tag[KeyPointNum::hip_left]=KeyPointTag::hip_left;
-    id2tag[KeyPointNum::knee_left]=KeyPointTag::knee_left;
-    id2tag[KeyPointNum::ankle_left]=KeyPointTag::ankle_left;
-    id2tag[KeyPointNum::hip_right]=KeyPointTag::hip_right;
-    id2tag[KeyPointNum::knee_right]=KeyPointTag::knee_right;
-    id2tag[KeyPointNum::ankle_right]=KeyPointTag::ankle_right;
+    id2tag[KeyPointId::shoulder_center]=KeyPointTag::shoulder_center;
+    id2tag[KeyPointId::head]=KeyPointTag::head;
+    id2tag[KeyPointId::shoulder_left]=KeyPointTag::shoulder_left;
+    id2tag[KeyPointId::elbow_left]=KeyPointTag::elbow_left;
+    id2tag[KeyPointId::hand_left]=KeyPointTag::hand_left;
+    id2tag[KeyPointId::shoulder_right]=KeyPointTag::shoulder_right;
+    id2tag[KeyPointId::elbow_right]=KeyPointTag::elbow_right;
+    id2tag[KeyPointId::hand_right]=KeyPointTag::hand_right;
+    id2tag[KeyPointId::hip_left]=KeyPointTag::hip_left;
+    id2tag[KeyPointId::knee_left]=KeyPointTag::knee_left;
+    id2tag[KeyPointId::ankle_left]=KeyPointTag::ankle_left;
+    id2tag[KeyPointId::hip_right]=KeyPointTag::hip_right;
+    id2tag[KeyPointId::knee_right]=KeyPointTag::knee_right;
+    id2tag[KeyPointId::ankle_right]=KeyPointTag::ankle_right;
 
     for (auto &it:id2tag)
     {

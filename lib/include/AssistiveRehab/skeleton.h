@@ -22,7 +22,7 @@
 namespace assistive_rehab
 {
 
-namespace KeyPointNum
+namespace KeyPointId
 {
 extern const unsigned int shoulder_center;
 extern const unsigned int head;
