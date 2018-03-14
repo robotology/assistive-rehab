@@ -29,14 +29,15 @@ using namespace assistive_rehab;
 
 class Processor
 {
-
     SkeletonStd skeleton_init;
+    map<string, string> keypoints2conf;
 
 public:
-    Processor() {;}
-    Processor(const SkeletonStd& skeleton_init_);
+    Processor();
     virtual ~Processor() {;}
-    virtual bool isDeviatingFromIntialPose(SkeletonStd& curr_skeleton);
+    virtual void setInitialConf(const SkeletonStd& skeleton_init_, const map<string, string>& keypoints2conf_);
+    virtual bool isStatic(const KeyPoint& keypoint);
+    virtual bool isDeviatingFromIntialPose(const SkeletonStd& curr_skeleton);
     virtual bool isDeviatingFromIntialPose(const KeyPoint &keypoint, const KeyPoint &keypoint_init);
 //    virtual string getMetricTag() {;}
 

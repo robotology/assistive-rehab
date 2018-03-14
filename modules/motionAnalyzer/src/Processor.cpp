@@ -12,16 +12,32 @@
 
 #include "Processor.h"
 
+#define MAX_DEVIATION_FROM_INITIAL_POSE 1
+
 using namespace std;
 using namespace yarp::math;
 using namespace assistive_rehab;
 
-Processor::Processor(const SkeletonStd &skeleton_init_)
+Processor::Processor()
 {
-    skeleton_init = skeleton_init_;
+
 }
 
-bool Processor::isDeviatingFromIntialPose(SkeletonStd& curr_skeleton)
+void Processor::setInitialConf(const SkeletonStd &skeleton_init_, const map<string, string> &keypoints2conf_)
+{
+    skeleton_init = skeleton_init_;
+    keypoints2conf = keypoints2conf_;
+}
+
+bool Processor::isStatic(const KeyPoint& keypoint)
+{
+    if(keypoints2conf[keypoint.getTag()] == "static")
+        return true;
+    else
+        return false;
+}
+
+bool Processor::isDeviatingFromIntialPose(const SkeletonStd& curr_skeleton)
 {
     bool isDeviating = false;
     for(unsigned int i=0; i<curr_skeleton.getNumKeyPoints(); i++)
@@ -30,11 +46,10 @@ bool Processor::isDeviatingFromIntialPose(SkeletonStd& curr_skeleton)
         const KeyPoint* keypoint = curr_skeleton[i];
         const KeyPoint* keypoint_init = skeleton_init[i];
 
-//        if(keypoint->isStationary() && isDeviatingFromIntialPose(*keypoint, *keypoint_init))
-        if(isDeviatingFromIntialPose(*keypoint, *keypoint_init))
+        if(isStatic(*keypoint) && isDeviatingFromIntialPose(*keypoint, *keypoint_init))
         {
             isDeviating = true;
-            yWarning() << "keypoint" << keypoint->getTag() << "is deviating from initial pose";
+//            yWarning() << "Deviating from initial pose";
         }
     }
 
@@ -79,16 +94,30 @@ bool Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyPoi
 
                     const KeyPoint* keypoint_child_init = keypoint_init.getChild(k);
                     curr_kp_child_init = keypoint_child_init->getPoint();
+
+                    //compute deviation from initial pose
+                    Vector curr_pose = curr_kp + curr_kp_parent + curr_kp_child;
+                    Vector initial_pose = curr_kp_init + curr_kp_parent_init + curr_kp_child_init;
+                    double deviation = fabs(fabs(curr_pose[0]+curr_pose[1]+curr_pose[2])-fabs(initial_pose[0]+initial_pose[1]+initial_pose[2]));
+
+                    if((deviation) > MAX_DEVIATION_FROM_INITIAL_POSE)
+                    {
+                        isDeviating = true;
+                    }
                 }
             }
+            else
+            {
+                //compute deviation from initial pose
+                Vector curr_pose = curr_kp + curr_kp_parent + curr_kp_child;
+                Vector initial_pose = curr_kp_init + curr_kp_parent_init + curr_kp_child_init;
+                double deviation = fabs(fabs(curr_pose[0]+curr_pose[1]+curr_pose[2])-fabs(initial_pose[0]+initial_pose[1]+initial_pose[2]));
 
-            //compute deviation from initial pose
-            Vector curr_pose = curr_kp + curr_kp_parent + curr_kp_child;
-            Vector initial_pose = curr_kp_init + curr_kp_parent_init + curr_kp_child_init;
-            Vector deviation = curr_pose - initial_pose;
-
-            if((deviation[0]+deviation[1]+deviation[2]) > 1)
-                isDeviating = true;
+                if((deviation) > MAX_DEVIATION_FROM_INITIAL_POSE)
+                {
+                    isDeviating = true;
+                }
+            }
         }
     }
 
