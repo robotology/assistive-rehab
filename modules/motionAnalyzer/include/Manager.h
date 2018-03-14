@@ -50,12 +50,14 @@ class Manager : public RFModule,
 //    };
 //    map<string, listEntry> motion_list;
 
-    map<string,Metric*> motion_list;
+    map<string,Metric*> motion_repertoire;
 
     vector<pair<string,Vector>> initial_keypoints;
 //    vector<Vector> curr_keypoints;
     vector<pair<string,Vector>> curr_keypoints;
     SkeletonStd initial_skeleton;
+
+    map<string, string> keypoints2conf;
 
     Vector elbowLeft_init;
     Vector elbowRight_init;
@@ -86,22 +88,6 @@ class Manager : public RFModule,
     Vector kneeRight;
     Vector ankleLeft;
     Vector ankleRight;
-
-    Vector elbowLeft_conf;
-    Vector elbowRight_conf;
-    Vector handLeft_conf;
-    Vector handRight_conf;
-    Vector head_conf;
-    Vector shoulderCenter_conf;
-    Vector shoulderLeft_conf;
-    Vector shoulderRight_conf;
-    Vector hipLeft_conf;
-    Vector hipRight_conf;
-    Vector kneeLeft_conf;
-    Vector kneeRight_conf;
-    Vector ankleLeft_conf;
-    Vector ankleRight_conf;
-    vector<Vector> keypoints_conf;
 
     Rom* crom;
     vector<Rom*> rom;

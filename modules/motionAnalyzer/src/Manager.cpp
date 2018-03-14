@@ -62,26 +62,20 @@ void Manager::init()
 
     curr_keypoints.resize(14);
 
-    //tag2key configuration
-    //index = 0, value = 0/1              => stationary/mobile joint
-    //index = 1, value = 0/max azimuth    => stationary/mobile joint
-    //index = 2, value = 0/max elevation  => stationary/mobile joint
-    elbowLeft_conf.resize(3);
-    elbowRight_conf.resize(3);
-    handLeft_conf.resize(3);
-    handRight_conf.resize(3);
-    head_conf.resize(3);
-    shoulderCenter_conf.resize(3);
-    shoulderLeft_conf.resize(3);
-    shoulderRight_conf.resize(3);
-    hipLeft_conf.resize(3);
-    hipRight_conf.resize(3);
-    kneeLeft_conf.resize(3);
-    kneeRight_conf.resize(3);
-    ankleLeft_conf.resize(3);
-    ankleRight_conf.resize(3);
-
-    keypoints_conf.resize(14);
+    keypoints2conf[KeyPointTag::shoulder_center]="static";
+    keypoints2conf[KeyPointTag::head]="static";
+    keypoints2conf[KeyPointTag::shoulder_left]="static";
+    keypoints2conf[KeyPointTag::elbow_left]="static";
+    keypoints2conf[KeyPointTag::hand_left]="static";
+    keypoints2conf[KeyPointTag::shoulder_right]="static";
+    keypoints2conf[KeyPointTag::elbow_right]="static";
+    keypoints2conf[KeyPointTag::hand_right]="static";
+    keypoints2conf[KeyPointTag::hip_left]="static";
+    keypoints2conf[KeyPointTag::knee_left]="static";
+    keypoints2conf[KeyPointTag::ankle_left]="static";
+    keypoints2conf[KeyPointTag::hip_right]="static";
+    keypoints2conf[KeyPointTag::knee_right]="static";
+    keypoints2conf[KeyPointTag::ankle_right]="static";
 
 }
 
@@ -240,11 +234,6 @@ bool Manager::loadInitialConf()
             yError() << "Could not load initial configuration for ankle right";
 
         initial_skeleton.update(initial_keypoints);
-
-//        processor = new Processor(elbowLeft_init, elbowRight_init, handLeft_init, handRight_init,
-//                                  head_init, shoulderCenter_init, shoulderLeft_init, shoulderRight_init,
-//                                  hipLeft_init, hipRight_init, kneeLeft_init, kneeRight_init);
-        processor = new Processor(initial_skeleton);
     }
 
 }
@@ -292,10 +281,7 @@ bool Manager::loadMotionList()
                                         string eLC = elbowLC->get(0).asString();
                                         if(eLC == "mobile")
                                         {
-                                            elbowLeft_conf[0] = 1;
-                                            elbowLeft_conf[1] = elbowLC->get(1).asDouble();
-                                            elbowLeft_conf[2] = elbowLC->get(2).asDouble();
-                                            keypoints_conf.push_back(elbowLeft_conf);
+                                            keypoints2conf[KeyPointTag::elbow_left] = "mobile";
                                         }
                                     }
                                     else
@@ -307,10 +293,7 @@ bool Manager::loadMotionList()
                                         string eRC = elbowRC->get(0).asString();
                                         if(eRC == "mobile")
                                         {
-                                            elbowRight_conf[0] = 1;
-                                            elbowRight_conf[1] = elbowRC->get(1).asDouble();
-                                            elbowRight_conf[2] = elbowRC->get(2).asDouble();
-                                            keypoints_conf.push_back(elbowRight_conf);
+                                            keypoints2conf[KeyPointTag::elbow_right] = "mobile";
                                         }
                                     }
                                     else
@@ -322,10 +305,7 @@ bool Manager::loadMotionList()
                                         string hnLC = handLC->get(0).asString();
                                         if(hnLC == "mobile")
                                         {
-                                            handLeft_conf[0] = 1;
-                                            handLeft_conf[1] = handLC->get(1).asDouble();
-                                            handLeft_conf[2] = handLC->get(2).asDouble();
-                                            keypoints_conf.push_back(handLeft_conf);
+                                            keypoints2conf[KeyPointTag::hand_left] = "mobile";
                                         }
                                     }
                                     else
@@ -334,13 +314,10 @@ bool Manager::loadMotionList()
                                     Bottle *handRC = bMotion.find("hand_right_configuration").asList();
                                     if(handRC)
                                     {
-                                        string hnRC = handLC->get(0).asString();
+                                        string hnRC = handRC->get(0).asString();
                                         if(hnRC == "mobile")
                                         {
-                                            handRight_conf[0] = 1;
-                                            handRight_conf[1] = handRC->get(1).asDouble();
-                                            handRight_conf[2] = handRC->get(2).asDouble();
-                                            keypoints_conf.push_back(handRight_conf);
+                                            keypoints2conf[KeyPointTag::hand_right] = "mobile";
                                         }
                                     }
                                     else
@@ -352,10 +329,7 @@ bool Manager::loadMotionList()
                                         string hC = headC->get(0).asString();
                                         if(hC == "mobile")
                                         {
-                                            head_conf[0] = 1;
-                                            head_conf[1] = headC->get(1).asDouble();
-                                            head_conf[2] = headC->get(2).asDouble();
-                                            keypoints_conf.push_back(head_conf);
+                                            keypoints2conf[KeyPointTag::head] = "mobile";
                                         }
                                     }
                                     else
@@ -367,10 +341,7 @@ bool Manager::loadMotionList()
                                         string sCC = shoulderCC->get(0).asString();
                                         if(sCC == "mobile")
                                         {
-                                            shoulderCenter_conf[0] = 1;
-                                            shoulderCenter_conf[1] = shoulderCC->get(1).asDouble();
-                                            shoulderCenter_conf[2] = shoulderCC->get(2).asDouble();
-                                            keypoints_conf.push_back(shoulderCenter_conf);
+                                            keypoints2conf[KeyPointTag::shoulder_center] = "mobile";
                                         }
                                     }
                                     else
@@ -382,10 +353,7 @@ bool Manager::loadMotionList()
                                         string sLC = shoulderLC->get(0).asString();
                                         if(sLC == "mobile")
                                         {
-                                            shoulderLeft_conf[0] = 1;
-                                            shoulderLeft_conf[1] = shoulderLC->get(1).asDouble();
-                                            shoulderLeft_conf[2] = shoulderLC->get(2).asDouble();
-                                            keypoints_conf.push_back(shoulderLeft_conf);
+                                            keypoints2conf[KeyPointTag::shoulder_left] = "mobile";
                                         }
                                     }
                                     else
@@ -397,10 +365,7 @@ bool Manager::loadMotionList()
                                         string sRC = shoulderRC->get(0).asString();
                                         if(sRC == "mobile")
                                         {
-                                            shoulderRight_conf[0] = 1;
-                                            shoulderRight_conf[1] = shoulderRC->get(1).asDouble();
-                                            shoulderRight_conf[2] = shoulderRC->get(2).asDouble();
-                                            keypoints_conf.push_back(shoulderRight_conf);
+                                            keypoints2conf[KeyPointTag::shoulder_right] = "mobile";
                                         }
                                     }
                                     else
@@ -412,10 +377,7 @@ bool Manager::loadMotionList()
                                             string hLC = hipLC->get(0).asString();
                                             if(hLC == "mobile")
                                             {
-                                                hipLeft_conf[0] = 1;
-                                                hipLeft_conf[1] = hipLC->get(1).asDouble();
-                                                hipLeft_conf[2] = hipLC->get(2).asDouble();
-                                                keypoints_conf.push_back(hipLeft_conf);
+                                                keypoints2conf[KeyPointTag::hip_left] = "mobile";
                                             }
                                         }
                                         else
@@ -427,10 +389,7 @@ bool Manager::loadMotionList()
                                             string hRC = hipRC->get(0).asString();
                                             if(hRC == "mobile")
                                             {
-                                                hipRight_conf[0] = 1;
-                                                hipRight_conf[1] = hipRC->get(1).asDouble();
-                                                hipRight_conf[2] = hipRC->get(2).asDouble();
-                                                keypoints_conf.push_back(hipRight_conf);
+                                                keypoints2conf[KeyPointTag::hip_right] = "mobile";
                                             }
                                         }
                                         else
@@ -442,10 +401,7 @@ bool Manager::loadMotionList()
                                         string kLC = kneeLC->get(0).asString();
                                         if(kLC == "mobile")
                                         {
-                                            kneeLeft_conf[0] = 1;
-                                            kneeLeft_conf[1] = kneeLC->get(1).asDouble();
-                                            kneeLeft_conf[2] = kneeLC->get(2).asDouble();
-                                            keypoints_conf.push_back(kneeLeft_conf);
+                                            keypoints2conf[KeyPointTag::knee_left] = "mobile";
                                         }
                                     }
                                     else
@@ -457,10 +413,7 @@ bool Manager::loadMotionList()
                                         string kRC = kneeRC->get(0).asString();
                                         if(kRC == "mobile")
                                         {
-                                            kneeRight_conf[0] = 1;
-                                            kneeRight_conf[1] = kneeRC->get(1).asDouble();
-                                            kneeRight_conf[2] = kneeRC->get(2).asDouble();
-                                            keypoints_conf.push_back(kneeRight_conf);
+                                            keypoints2conf[KeyPointTag::knee_right] = "mobile";
                                         }
                                     }
                                     else
@@ -472,10 +425,7 @@ bool Manager::loadMotionList()
                                         string aLC = ankleLC->get(0).asString();
                                         if(aLC == "mobile")
                                         {
-                                            ankleLeft_conf[0] = 1;
-                                            ankleLeft_conf[1] = ankleLC->get(1).asDouble();
-                                            ankleLeft_conf[2] = ankleLC->get(2).asDouble();
-                                            keypoints_conf.push_back(ankleLeft_conf);
+                                            keypoints2conf[KeyPointTag::ankle_left] = "mobile";
                                         }
                                     }
                                     else
@@ -487,10 +437,7 @@ bool Manager::loadMotionList()
                                         string aRC = ankleRC->get(0).asString();
                                         if(aRC == "mobile")
                                         {
-                                            ankleRight_conf[0] = 1;
-                                            ankleRight_conf[1] = ankleRC->get(1).asDouble();
-                                            ankleRight_conf[2] = ankleRC->get(2).asDouble();
-                                            keypoints_conf.push_back(ankleRight_conf);
+                                            keypoints2conf[KeyPointTag::ankle_right] = "mobile";
                                         }
                                     }
                                     else
@@ -501,8 +448,10 @@ bool Manager::loadMotionList()
                                     cMetric = crom;
                                 }
 
-                                motion_list.insert(pair<string, Metric*>(curr_tag+"_"+to_string(j), cMetric));
-//                                motion_list[curr_tag+"_"+to_string(j)]->print();
+                                motion_repertoire.insert(pair<string, Metric*>(curr_tag+"_"+to_string(j), cMetric));
+//                                motion_repertoire[curr_tag+"_"+to_string(j)]->print();
+
+                                processor->setInitialConf(initial_skeleton, keypoints2conf);
 
                             }
                         }
@@ -814,7 +763,7 @@ bool Manager::updateModule()
         //        mapKeyframesToStandard();
 
         if(processor->isDeviatingFromIntialPose(skeleton))
-            cout << "Deviating\n" << endl;
+            yWarning() << "Deviating from initial pose\n";
 
 //        Vector rom_result;
 //        rom_result.resize(rom.size());
