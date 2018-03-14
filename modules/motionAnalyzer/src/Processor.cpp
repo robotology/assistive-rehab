@@ -1,8 +1,20 @@
+/******************************************************************************
+ *                                                                            *
+ * Copyright (C) 2018 Fondazione Istituto Italiano di Tecnologia (IIT)        *
+ * All Rights Reserved.                                                       *
+ *                                                                            *
+ ******************************************************************************/
+
+/**
+ * @file Processor.cpp
+ * @authors: Valentina Vasco <valentina.vasco@iit.it>
+ */
+
 #include "Processor.h"
 
 using namespace std;
 using namespace yarp::math;
-using namespace assist_rehab;
+using namespace assistive_rehab;
 
 Processor::Processor(const SkeletonStd &skeleton_init_)
 {
@@ -12,7 +24,7 @@ Processor::Processor(const SkeletonStd &skeleton_init_)
 bool Processor::isDeviatingFromIntialPose(SkeletonStd& curr_skeleton)
 {
     bool isDeviating = false;
-    for(int i=0; i<curr_skeleton.getNumKeyPoints(); i++)
+    for(unsigned int i=0; i<curr_skeleton.getNumKeyPoints(); i++)
     {
         //get current keypoint
         const KeyPoint* keypoint = curr_skeleton[i];
@@ -121,4 +133,5 @@ double Rom_Processor::computeRom()
 
 //    return ( acos(dot_p/(a_norm*b_norm)) * (180/M_PI) );
 
+    return true;
 }

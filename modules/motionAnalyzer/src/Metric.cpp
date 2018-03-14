@@ -1,3 +1,15 @@
+/******************************************************************************
+ *                                                                            *
+ * Copyright (C) 2018 Fondazione Istituto Italiano di Tecnologia (IIT)        *
+ * All Rights Reserved.                                                       *
+ *                                                                            *
+ ******************************************************************************/
+
+/**
+ * @file Metric.cpp
+ * @authors: Valentina Vasco <valentina.vasco@iit.it>
+ */
+
 #include "Metric.h"
 
 Rom::Rom(const string &tag_joint_, const unsigned int id_joint_, const unsigned int n_movements_,
@@ -13,6 +25,7 @@ Rom::Rom(const string &tag_joint_, const unsigned int id_joint_, const unsigned 
 bool Rom::update(const SkeletonStd &skeleton_)
 {
     skeleton = skeleton_;
+    return true;
 }
 
 void Rom::print()

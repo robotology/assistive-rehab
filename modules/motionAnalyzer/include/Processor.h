@@ -20,12 +20,12 @@
 
 #include <math.h>
 
-#include <skeleton.h>
-#include <Metric.h>
+#include <AssistiveRehab/skeleton.h>
+#include "Metric.h"
 
 using namespace std;
 using namespace yarp::sig;
-using namespace assist_rehab;
+using namespace assistive_rehab;
 
 class Processor
 {

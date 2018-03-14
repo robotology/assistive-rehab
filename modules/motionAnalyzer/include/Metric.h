@@ -18,11 +18,11 @@
 #include <yarp/os/all.h>
 #include <yarp/sig/Vector.h>
 
-#include <skeleton.h>
+#include <AssistiveRehab/skeleton.h>
 
 using namespace std;
 using namespace yarp::sig;
-using namespace assist_rehab;
+using namespace assistive_rehab;
 
 class Metric
 {

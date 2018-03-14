@@ -17,12 +17,12 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
 
-#include <Manager.h>
-#include <Processor.h>
-#include <Metric.h>
-#include <skeleton.h>
+#include <AssistiveRehab/skeleton.h>
 
-#include "motionAnalyzer_IDL.h"
+#include "Manager.h"
+#include "Processor.h"
+#include "Metric.h"
+#include "src/motionAnalyzer_IDL.h"
 
 using namespace std;
 using namespace yarp::os;

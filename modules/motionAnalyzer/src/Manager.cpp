@@ -1,18 +1,29 @@
+/******************************************************************************
+ *                                                                            *
+ * Copyright (C) 2018 Fondazione Istituto Italiano di Tecnologia (IIT)        *
+ * All Rights Reserved.                                                       *
+ *                                                                            *
+ ******************************************************************************/
+
+/**
+ * @file Manager.cpp
+ * @authors: Valentina Vasco <valentina.vasco@iit.it>
+ */
+
 #include <yarp/os/all.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
 
-#include <Manager.h>
-//#include <Skeleton.h>
-#include <Metric.h>
-#include <Processor.h>
+#include "Manager.h"
+#include "Metric.h"
+#include "Processor.h"
 
-//#include "motionAnalyzer_IDL.h"
+#include "src/motionAnalyzer_IDL.h"
 
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
-using namespace assist_rehab;
+using namespace assistive_rehab;
 
 void Manager::init()
 {
