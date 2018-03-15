@@ -18,6 +18,18 @@ using namespace std;
 using namespace yarp::math;
 using namespace assistive_rehab;
 
+const string Rom_Processor::motion_type = "ROM";
+
+Processor* createProcessor(const string& motion_tag, const Metric* metric_)
+{
+    if(motion_tag == Rom_Processor::motion_type)
+    {
+        yInfo() << "Creating processor for" << Rom_Processor::motion_type << "\n";
+        return new Rom_Processor(metric_);
+    }
+}
+
+/********************************************************/
 Processor::Processor()
 {
 
@@ -125,15 +137,26 @@ bool Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyPoi
 }
 
 /********************************************************/
-Rom_Processor::Rom_Processor(Rom *rom_)
+Rom_Processor::Rom_Processor()
 {
-    rom = rom_;
+
+}
+
+Rom_Processor::Rom_Processor(const Metric *rom_)
+{
+    rom = (Rom*)rom_;
+//    cout << "processing rom id " << rom->getIdJoint() << endl;
+}
+
+void Rom_Processor::configure()
+{
+
 }
 
 double Rom_Processor::computeRom()
 {
     //get keypoint from skeleton
-    int id = rom->getIdJoint();
+//    int id = rom->getIdJoint();
 //    KeyPoint *keypoint = rom->getSkeleton()[id];
 //    Vector kp = keypoint->getPoint();
 

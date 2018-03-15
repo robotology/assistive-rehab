@@ -27,32 +27,43 @@ using namespace std;
 using namespace yarp::sig;
 using namespace assistive_rehab;
 
+class Processor;
+
+Processor* createProcessor(const string& motion_tag, const Metric* metric_);
+
 class Processor
 {
+
+protected:
     SkeletonStd skeleton_init;
     map<string, string> keypoints2conf;
+    const Metric* metric;
 
 public:
     Processor();
     virtual ~Processor() {;}
+//    virtual string getMotionType();
     virtual void setInitialConf(const SkeletonStd& skeleton_init_, const map<string, string>& keypoints2conf_);
+//    virtual void setCurrMetric(const Metric* metric_);
     virtual bool isStatic(const KeyPoint& keypoint);
     virtual bool isDeviatingFromIntialPose(const SkeletonStd& curr_skeleton);
     virtual bool isDeviatingFromIntialPose(const KeyPoint &keypoint, const KeyPoint &keypoint_init);
-//    virtual string getMetricTag() {;}
 
 };
 
 class Rom_Processor : public Processor
 {
-
-    Rom *rom;
+    const Rom* rom;
 
 public:
 
-    Rom_Processor(Rom *rom_);
+    Rom_Processor();
+    Rom_Processor(const Metric *rom_);
+    void configure();
     double computeRom();
-//    virtual string getMetricTag();
+
+    static const string motion_type;
+
 
 };
 
