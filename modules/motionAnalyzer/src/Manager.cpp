@@ -27,7 +27,7 @@ using namespace assistive_rehab;
 
 void Manager::init()
 {
-    //keypoints initial configuration
+    //tag2key initial configuration
     elbowLeft_init.resize(3);
     elbowRight_init.resize(3);
     handLeft_init.resize(3);
@@ -62,7 +62,7 @@ void Manager::init()
 
     curr_keypoints.resize(14);
 
-    //keypoints configuration
+    //tag2key configuration
     //index = 0, value = 0/1              => stationary/mobile joint
     //index = 1, value = 0/max azimuth    => stationary/mobile joint
     //index = 2, value = 0/max elevation  => stationary/mobile joint

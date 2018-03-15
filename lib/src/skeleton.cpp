@@ -12,34 +12,18 @@
 
 #include <algorithm>
 #include <iostream>
+#include <yarp/math/Math.h>
 #include "AssistiveRehab/skeleton.h"
 
 using namespace std;
 using namespace yarp::sig;
 using namespace yarp::os;
+using namespace yarp::math;
 using namespace assistive_rehab;
 
 
 namespace assistive_rehab
 {
-
-namespace KeyPointId
-{
-const unsigned int shoulder_center=0;
-const unsigned int head=1;
-const unsigned int shoulder_left=2;
-const unsigned int elbow_left=3;
-const unsigned int hand_left=4;
-const unsigned int shoulder_right=5;
-const unsigned int elbow_right=6;
-const unsigned int hand_right=7;
-const unsigned int hip_left=8;
-const unsigned int knee_left=9;
-const unsigned int ankle_left=10;
-const unsigned int hip_right=11;
-const unsigned int knee_right=12;
-const unsigned int ankle_right=13;
-}
 
 namespace KeyPointTag
 {
@@ -51,6 +35,7 @@ const string hand_left="handLeft";
 const string shoulder_right="shoulderRight";
 const string elbow_right="elbowRight";
 const string hand_right="handRight";
+const string hip_center="hipCenter";
 const string hip_left="hipLeft";
 const string knee_left="kneeLeft";
 const string ankle_left="ankleLeft";
@@ -61,16 +46,12 @@ const string ankle_right="ankleRight";
 
 }
 
-KeyPoint::KeyPoint() : updated(false), id(-1), tag(""), point(3,0.0)
+KeyPoint::KeyPoint() : updated(false), tag(""), point(3,0.0)
 {
 }
 
-KeyPoint::KeyPoint(const int id_, const string &tag_, const Vector &point_, const bool updated_) :
-   updated(updated_), id(id_), tag(tag_), point(point_)
-{
-}
-
-KeyPoint::~KeyPoint()
+KeyPoint::KeyPoint(const string &tag_, const Vector &point_, const bool updated_) :
+   updated(updated_), tag(tag_), point(point_)
 {
 }
 
@@ -99,57 +80,109 @@ const KeyPoint *KeyPoint::getChild(const unsigned int i) const
 
 Skeleton::~Skeleton()
 {
-    for (auto &it:keypoints)
-        delete it;
+    for (auto &k:keypoints)
+        delete k;
 }
 
-const KeyPoint *Skeleton::operator[](const unsigned int id) const
-{
-    auto it=id2key.find(id);
-    return (it!=id2key.end())?it->second:nullptr;
-}
-
-const KeyPoint *Skeleton::operator[](const string &tag) const
+const KeyPoint *Skeleton::operator [](const string &tag) const
 {
     auto it=tag2key.find(tag);
     return (it!=tag2key.end())?it->second:nullptr;
 }
 
+const KeyPoint *Skeleton::operator [](const unsigned int i) const
+{
+    return (i<keypoints.size())?keypoints[i]:nullptr;
+}
+
+vector<Vector> Skeleton::get_ordered() const
+{
+    vector<Vector> ordered;
+    for (auto &k:keypoints)
+        ordered.push_back(k->getPoint());
+    return ordered;
+}
+
+vector<pair<string, Vector>> Skeleton::get_unordered() const
+{
+    vector<pair<string, Vector>> unordered;
+    for (auto &it:tag2key)
+        unordered.push_back(make_pair(it.first,it.second->getPoint()));
+    return unordered;
+}
+
+void Skeleton::normalize(KeyPoint* k, const vector<Vector> &helperpoints)
+{
+    if (k!=nullptr)
+    {
+        for (auto &c:k->child)
+        {
+            Vector dir=helperpoints[key2id[c]]-helperpoints[key2id[k]];
+            double n=norm(dir);
+            if (n>0.0)
+                dir/=norm(dir);
+            c->point=k->point+dir;
+            normalize(c,helperpoints);
+        }
+    }
+}
+
+void Skeleton::normalize()
+{
+    if (keypoints.size()>0)
+    {
+        vector<Vector> helperpoints;
+        for (auto &k:keypoints)
+            helperpoints.push_back(k->getPoint());
+        normalize(keypoints[0],helperpoints);
+    }
+}
+
 void Skeleton::print() const
 {
-    for (auto &it:keypoints)
+    for (auto &k:keypoints)
     {
-        cout<<"keypoint["<<it->getId()<<"]; \""
-           <<it->getTag()<<"\": ("
-           <<it->getPoint().toString(3,3)<<") "
-           <<(it->isUpdated()?"updated":"stale")<<endl;
+        cout<<"keypoint[\""<<k->getTag()<<"\"]; ("
+            <<k->getPoint().toString(3,3)<<") "
+            <<(k->isUpdated()?"updated":"stale")<<endl;
     }
 }
 
 SkeletonStd::SkeletonStd()
 {
-    id2tag[KeyPointId::shoulder_center]=KeyPointTag::shoulder_center;
-    id2tag[KeyPointId::head]=KeyPointTag::head;
-    id2tag[KeyPointId::shoulder_left]=KeyPointTag::shoulder_left;
-    id2tag[KeyPointId::elbow_left]=KeyPointTag::elbow_left;
-    id2tag[KeyPointId::hand_left]=KeyPointTag::hand_left;
-    id2tag[KeyPointId::shoulder_right]=KeyPointTag::shoulder_right;
-    id2tag[KeyPointId::elbow_right]=KeyPointTag::elbow_right;
-    id2tag[KeyPointId::hand_right]=KeyPointTag::hand_right;
-    id2tag[KeyPointId::hip_left]=KeyPointTag::hip_left;
-    id2tag[KeyPointId::knee_left]=KeyPointTag::knee_left;
-    id2tag[KeyPointId::ankle_left]=KeyPointTag::ankle_left;
-    id2tag[KeyPointId::hip_right]=KeyPointTag::hip_right;
-    id2tag[KeyPointId::knee_right]=KeyPointTag::knee_right;
-    id2tag[KeyPointId::ankle_right]=KeyPointTag::ankle_right;
+    tag2key[KeyPointTag::shoulder_center]=new KeyPoint(KeyPointTag::shoulder_center);
+    tag2key[KeyPointTag::head]=new KeyPoint(KeyPointTag::head);
+    tag2key[KeyPointTag::shoulder_left]=new KeyPoint(KeyPointTag::shoulder_left);
+    tag2key[KeyPointTag::elbow_left]=new KeyPoint(KeyPointTag::elbow_left);
+    tag2key[KeyPointTag::hand_left]=new KeyPoint(KeyPointTag::hand_left);
+    tag2key[KeyPointTag::shoulder_right]=new KeyPoint(KeyPointTag::shoulder_right);
+    tag2key[KeyPointTag::elbow_right]=new KeyPoint(KeyPointTag::elbow_right);
+    tag2key[KeyPointTag::hand_right]=new KeyPoint(KeyPointTag::hand_right);
+    tag2key[KeyPointTag::hip_left]=new KeyPoint(KeyPointTag::hip_left);
+    tag2key[KeyPointTag::knee_left]=new KeyPoint(KeyPointTag::knee_left);
+    tag2key[KeyPointTag::ankle_left]=new KeyPoint(KeyPointTag::ankle_left);
+    tag2key[KeyPointTag::hip_right]=new KeyPoint(KeyPointTag::hip_right);
+    tag2key[KeyPointTag::knee_right]=new KeyPoint(KeyPointTag::knee_right);
+    tag2key[KeyPointTag::ankle_right]=new KeyPoint(KeyPointTag::ankle_right);
 
-    for (auto &it:id2tag)
-    {
-        KeyPoint *keypoint=new KeyPoint(it.first,it.second);
-        id2key[it.first]=keypoint;
-        tag2key[it.second]=keypoint;
-        keypoints.push_back(keypoint);
-    }
+    keypoints.push_back(tag2key[KeyPointTag::shoulder_center]);
+    keypoints.push_back(tag2key[KeyPointTag::head]);
+    keypoints.push_back(tag2key[KeyPointTag::shoulder_left]);
+    keypoints.push_back(tag2key[KeyPointTag::elbow_left]);
+    keypoints.push_back(tag2key[KeyPointTag::hand_left]);
+    keypoints.push_back(tag2key[KeyPointTag::shoulder_right]);
+    keypoints.push_back(tag2key[KeyPointTag::elbow_right]);
+    keypoints.push_back(tag2key[KeyPointTag::hand_right]);
+    keypoints.push_back(tag2key[KeyPointTag::hip_left]);
+    keypoints.push_back(tag2key[KeyPointTag::knee_left]);
+    keypoints.push_back(tag2key[KeyPointTag::ankle_left]);
+    keypoints.push_back(tag2key[KeyPointTag::hip_right]);
+    keypoints.push_back(tag2key[KeyPointTag::knee_right]);
+    keypoints.push_back(tag2key[KeyPointTag::ankle_right]);
+
+    unsigned int id=0;
+    for (auto &k:keypoints)
+        key2id[k]=id++;
 
     // shoulderCenter
     tag2key[KeyPointTag::shoulder_center]->child.push_back(tag2key[KeyPointTag::head]);
@@ -208,20 +241,20 @@ SkeletonStd::SkeletonStd()
 
 void SkeletonStd::update(const vector<Vector> &ordered)
 {
-    int i=0;
-    for (auto &it:keypoints)
+    unsigned int i=0;
+    for (auto &k:keypoints)
     {
-        it->stale();
+        k->stale();
         if (i<ordered.size())
-            it->setPoint(ordered[i]);
+            k->setPoint(ordered[i]);
         i++;
     }
 }
 
 void SkeletonStd::update(const vector<pair<string, Vector>> &unordered)
 {
-    for (auto &it:keypoints)
-        it->stale();
+    for (auto &k:keypoints)
+        k->stale();
 
     for (auto &it1:unordered)
     {
@@ -231,15 +264,58 @@ void SkeletonStd::update(const vector<pair<string, Vector>> &unordered)
     }
 }
 
-void SkeletonStd::update(const vector<pair<unsigned int, Vector>> &unordered)
+SkeletonWaist::SkeletonWaist() : SkeletonStd()
 {
-    for (auto &it:keypoints)
-        it->stale();
+    waist_pos=7;
+    tag2key[KeyPointTag::hip_center]=new KeyPoint(KeyPointTag::hip_center);
+    keypoints.insert(keypoints.begin()+waist_pos+1,tag2key[KeyPointTag::hip_center]);
 
-    for (auto &it1:unordered)
-    {
-        auto it2=id2key.find(get<0>(it1));
-        if (it2!=id2key.end())
-            it2->second->setPoint(get<1>(it1));
-    }
+    key2id.clear();
+    unsigned int id=0;
+    for (auto &k:keypoints)
+        key2id[k]=id++;
+
+    // shoulderCenter
+    tag2key[KeyPointTag::shoulder_center]->child.pop_back();
+    tag2key[KeyPointTag::shoulder_center]->child.pop_back();
+    tag2key[KeyPointTag::shoulder_center]->child.push_back(tag2key[KeyPointTag::hip_center]);
+
+    // hipCenter
+    tag2key[KeyPointTag::hip_center]->parent.push_back(tag2key[KeyPointTag::shoulder_center]);
+    tag2key[KeyPointTag::hip_center]->child.push_back(tag2key[KeyPointTag::hip_left]);
+    tag2key[KeyPointTag::hip_center]->child.push_back(tag2key[KeyPointTag::hip_right]);
+
+    // hipLeft
+    tag2key[KeyPointTag::hip_left]->parent[0]=tag2key[KeyPointTag::hip_center];
+
+    // hipRight
+    tag2key[KeyPointTag::hip_right]->parent[0]=tag2key[KeyPointTag::hip_center];
 }
+
+void SkeletonWaist::update_fromstd(const vector<Vector> &ordered)
+{
+    unsigned int i=0;
+    for (auto &k:keypoints)
+    {
+        k->stale();
+        if (i<ordered.size())
+        {
+            unsigned int pos=(i<waist_pos)?i:i+1;
+            k->setPoint(ordered[pos]);
+        }
+        i++;
+    }
+
+    if (tag2key[KeyPointTag::hip_left]->isUpdated() || tag2key[KeyPointTag::hip_right]->isUpdated())
+        tag2key[KeyPointTag::hip_center]->setPoint(0.5*(tag2key[KeyPointTag::hip_left]->getPoint()+
+                                                        tag2key[KeyPointTag::hip_right]->getPoint()));
+}
+
+void SkeletonWaist::update_fromstd(const vector<pair<string, Vector>> &unordered)
+{
+    update(unordered);
+    if (tag2key[KeyPointTag::hip_left]->isUpdated() || tag2key[KeyPointTag::hip_right]->isUpdated())
+        tag2key[KeyPointTag::hip_center]->setPoint(0.5*(tag2key[KeyPointTag::hip_left]->getPoint()+
+                                                        tag2key[KeyPointTag::hip_right]->getPoint()));
+}
+
