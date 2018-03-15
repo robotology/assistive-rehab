@@ -42,14 +42,65 @@ int main()
     print_hierarchy(skeleton[0]);
     cout<<endl;
 
-    Vector p1(3,1.0), p2(3,2.0);
     vector<pair<string, Vector>> unordered;
-    unordered.push_back(make_pair(KeyPointTag::elbow_right,p1));
-    unordered.push_back(make_pair(KeyPointTag::elbow_left,p2));
+    {
+        Vector p(3,0.0); p[0]=0.0; p[1]=0.0; p[2]=0.0;
+        unordered.push_back(make_pair(KeyPointTag::shoulder_center,p));
+    }
+    {
+        Vector p(3,0.0); p[0]=0.0; p[1]=0.1; p[2]=0.0;
+        unordered.push_back(make_pair(KeyPointTag::head,p));
+    }
+    {
+        Vector p(3,0.0); p[0]=-0.1; p[1]=0.0; p[2]=0.0;
+        unordered.push_back(make_pair(KeyPointTag::shoulder_left,p));
+    }
+    {
+        Vector p(3,0.0); p[0]=-0.2; p[1]=0.0; p[2]=0.0;
+        unordered.push_back(make_pair(KeyPointTag::elbow_left,p));
+    }
+    {
+        Vector p(3,0.0); p[0]=-0.3; p[1]=0.0; p[2]=0.0;
+        unordered.push_back(make_pair(KeyPointTag::hand_left,p));
+    }
+    {
+        Vector p(3,0.0); p[0]=0.1; p[1]=0.0; p[2]=0.0;
+        unordered.push_back(make_pair(KeyPointTag::shoulder_right,p));
+    }
+    {
+        Vector p(3,0.0); p[0]=0.2; p[1]=0.0; p[2]=0.0;
+        unordered.push_back(make_pair(KeyPointTag::elbow_right,p));
+    }
+    {
+        Vector p(3,0.0); p[0]=0.3; p[1]=0.0; p[2]=0.0;
+        unordered.push_back(make_pair(KeyPointTag::hand_right,p));
+    }
+    {
+        Vector p(3,0.0); p[0]=-0.1; p[1]=-0.1; p[2]=0.0;
+        unordered.push_back(make_pair(KeyPointTag::hip_left,p));
+    }
+    {
+        Vector p(3,0.0); p[0]=-0.1; p[1]=-0.2; p[2]=0.0;
+        unordered.push_back(make_pair(KeyPointTag::knee_left,p));
+    }
+    {
+        Vector p(3,0.0); p[0]=0.1; p[1]=-0.1; p[2]=0.0;
+        unordered.push_back(make_pair(KeyPointTag::hip_right,p));
+    }
+    {
+        Vector p(3,0.0); p[0]=0.1; p[1]=-0.2; p[2]=0.0;
+        unordered.push_back(make_pair(KeyPointTag::knee_right,p));
+    }
 
     cout<<"### Updating Skeleton's structure"<<endl;
-    skeleton.update(unordered);
+    skeleton.update_fromstd(unordered);
     skeleton.print();
+    cout<<endl;
+
+    cout<<"### Normalizing Skeleton's structure"<<endl;
+    skeleton.normalize();
+    skeleton.print();
+    cout<<endl;
 
     return EXIT_SUCCESS;
 }

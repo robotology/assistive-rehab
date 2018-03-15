@@ -41,11 +41,13 @@ extern const std::string knee_right;
 extern const std::string ankle_right;
 }
 
+class Skeleton;
 class SkeletonStd;
 class SkeletonWaist;
 
 class KeyPoint
 {
+    friend class Skeleton;
     friend class SkeletonStd;
     friend class SkeletonWaist;
 
@@ -61,7 +63,7 @@ public:
     KeyPoint();
     KeyPoint(const std::string &tag_, const yarp::sig::Vector &point_=yarp::sig::Vector(3,0.0),
              const bool updated_=false);
-    virtual ~KeyPoint();
+    virtual ~KeyPoint() { }
 
     bool isUpdated() const { return updated; }
     std::string getTag() const { return tag; }
@@ -80,6 +82,9 @@ class Skeleton
 protected:
     std::vector<KeyPoint*> keypoints;
     std::unordered_map<std::string, KeyPoint*> tag2key;
+    std::unordered_map<KeyPoint*, unsigned int> key2id;
+
+    void normalize(KeyPoint* k, const std::vector<yarp::sig::Vector> &helperpoints);
 
 public:
     virtual ~Skeleton();
@@ -87,9 +92,14 @@ public:
     virtual void update(const std::vector<yarp::sig::Vector> &ordered) = 0;
     virtual void update(const std::vector<std::pair<std::string, yarp::sig::Vector>> &unordered) = 0;
 
+    virtual std::vector<yarp::sig::Vector> get_ordered() const;
+    virtual std::vector<std::pair<std::string, yarp::sig::Vector>> get_unordered() const;
+
     unsigned int getNumKeyPoints() const { return (unsigned int)keypoints.size(); }
     const KeyPoint*operator [](const std::string &tag) const;
     const KeyPoint*operator [](const unsigned int i) const;
+
+    void normalize();
     void print() const;
 };
 

@@ -55,10 +55,6 @@ KeyPoint::KeyPoint(const string &tag_, const Vector &point_, const bool updated_
 {
 }
 
-KeyPoint::~KeyPoint()
-{
-}
-
 bool KeyPoint::setPoint(const Vector &point)
 {
     unsigned int len=(unsigned int)std::min(this->point.length(),point.length());
@@ -88,9 +84,9 @@ Skeleton::~Skeleton()
         delete k;
 }
 
-const KeyPoint *Skeleton::operator[](const string &tag) const
+const KeyPoint *Skeleton::operator [](const string &tag) const
 {
-    auto &it=tag2key.find(tag);
+    auto it=tag2key.find(tag);
     return (it!=tag2key.end())?it->second:nullptr;
 }
 
@@ -99,13 +95,56 @@ const KeyPoint *Skeleton::operator [](const unsigned int i) const
     return (i<keypoints.size())?keypoints[i]:nullptr;
 }
 
+vector<Vector> Skeleton::get_ordered() const
+{
+    vector<Vector> ordered;
+    for (auto &k:keypoints)
+        ordered.push_back(k->getPoint());
+    return ordered;
+}
+
+vector<pair<string, Vector>> Skeleton::get_unordered() const
+{
+    vector<pair<string, Vector>> unordered;
+    for (auto &it:tag2key)
+        unordered.push_back(make_pair(it.first,it.second->getPoint()));
+    return unordered;
+}
+
+void Skeleton::normalize(KeyPoint* k, const vector<Vector> &helperpoints)
+{
+    if (k!=nullptr)
+    {
+        for (auto &c:k->child)
+        {
+            Vector dir=helperpoints[key2id[c]]-helperpoints[key2id[k]];
+            double n=norm(dir);
+            if (n>0.0)
+                dir/=norm(dir);
+            c->point=k->point+dir;
+            normalize(c,helperpoints);
+        }
+    }
+}
+
+void Skeleton::normalize()
+{
+    if (keypoints.size()>0)
+    {
+        vector<Vector> helperpoints;
+        for (auto &k:keypoints)
+            helperpoints.push_back(k->getPoint());
+        normalize(keypoints[0],helperpoints);
+    }
+}
+
 void Skeleton::print() const
 {
     for (auto &k:keypoints)
     {
         cout<<"keypoint[\""<<k->getTag()<<"\"]; ("
-           <<k->getPoint().toString(3,3)<<") "
-           <<(k->isUpdated()?"updated":"stale")<<endl;
+            <<k->getPoint().toString(3,3)<<") "
+            <<(k->isUpdated()?"updated":"stale")<<endl;
     }
 }
 
@@ -140,6 +179,10 @@ SkeletonStd::SkeletonStd()
     keypoints.push_back(tag2key[KeyPointTag::hip_right]);
     keypoints.push_back(tag2key[KeyPointTag::knee_right]);
     keypoints.push_back(tag2key[KeyPointTag::ankle_right]);
+
+    unsigned int id=0;
+    for (auto &k:keypoints)
+        key2id[k]=id++;
 
     // shoulderCenter
     tag2key[KeyPointTag::shoulder_center]->child.push_back(tag2key[KeyPointTag::head]);
@@ -215,7 +258,7 @@ void SkeletonStd::update(const vector<pair<string, Vector>> &unordered)
 
     for (auto &it1:unordered)
     {
-        auto &it2=tag2key.find(get<0>(it1));
+        auto it2=tag2key.find(get<0>(it1));
         if (it2!=tag2key.end())
             it2->second->setPoint(get<1>(it1));
     }
@@ -226,6 +269,11 @@ SkeletonWaist::SkeletonWaist() : SkeletonStd()
     waist_pos=7;
     tag2key[KeyPointTag::hip_center]=new KeyPoint(KeyPointTag::hip_center);
     keypoints.insert(keypoints.begin()+waist_pos+1,tag2key[KeyPointTag::hip_center]);
+
+    key2id.clear();
+    unsigned int id=0;
+    for (auto &k:keypoints)
+        key2id[k]=id++;
 
     // shoulderCenter
     tag2key[KeyPointTag::shoulder_center]->child.pop_back();
