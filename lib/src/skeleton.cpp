@@ -12,11 +12,13 @@
 
 #include <algorithm>
 #include <iostream>
+#include <yarp/math/Math.h>
 #include "AssistiveRehab/skeleton.h"
 
 using namespace std;
 using namespace yarp::sig;
 using namespace yarp::os;
+using namespace yarp::math;
 using namespace assistive_rehab;
 
 
@@ -196,7 +198,7 @@ SkeletonStd::SkeletonStd()
 
 void SkeletonStd::update(const vector<Vector> &ordered)
 {
-    int i=0;
+    unsigned int i=0;
     for (auto &k:keypoints)
     {
         k->stale();
@@ -221,8 +223,9 @@ void SkeletonStd::update(const vector<pair<string, Vector>> &unordered)
 
 SkeletonWaist::SkeletonWaist() : SkeletonStd()
 {
+    waist_pos=7;
     tag2key[KeyPointTag::hip_center]=new KeyPoint(KeyPointTag::hip_center);
-    keypoints.insert(keypoints.begin()+8,tag2key[KeyPointTag::hip_center]);
+    keypoints.insert(keypoints.begin()+waist_pos+1,tag2key[KeyPointTag::hip_center]);
 
     // shoulderCenter
     tag2key[KeyPointTag::shoulder_center]->child.pop_back();
@@ -240,3 +243,31 @@ SkeletonWaist::SkeletonWaist() : SkeletonStd()
     // hipRight
     tag2key[KeyPointTag::hip_right]->parent[0]=tag2key[KeyPointTag::hip_center];
 }
+
+void SkeletonWaist::update_fromstd(const vector<Vector> &ordered)
+{
+    unsigned int i=0;
+    for (auto &k:keypoints)
+    {
+        k->stale();
+        if (i<ordered.size())
+        {
+            unsigned int pos=(i<waist_pos)?i:i+1;
+            k->setPoint(ordered[pos]);
+        }
+        i++;
+    }
+
+    if (tag2key[KeyPointTag::hip_left]->isUpdated() || tag2key[KeyPointTag::hip_right]->isUpdated())
+        tag2key[KeyPointTag::hip_center]->setPoint(0.5*(tag2key[KeyPointTag::hip_left]->getPoint()+
+                                                        tag2key[KeyPointTag::hip_right]->getPoint()));
+}
+
+void SkeletonWaist::update_fromstd(const vector<pair<string, Vector>> &unordered)
+{
+    update(unordered);
+    if (tag2key[KeyPointTag::hip_left]->isUpdated() || tag2key[KeyPointTag::hip_right]->isUpdated())
+        tag2key[KeyPointTag::hip_center]->setPoint(0.5*(tag2key[KeyPointTag::hip_left]->getPoint()+
+                                                        tag2key[KeyPointTag::hip_right]->getPoint()));
+}
+

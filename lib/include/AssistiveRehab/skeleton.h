@@ -104,8 +104,14 @@ public:
 
 class SkeletonWaist : public SkeletonStd
 {
+protected:
+    unsigned int waist_pos;
+
 public:
     SkeletonWaist();
+
+    void update_fromstd(const std::vector<yarp::sig::Vector> &ordered);
+    void update_fromstd(const std::vector<std::pair<std::string, yarp::sig::Vector>> &unordered);
 };
 
 }
