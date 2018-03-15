@@ -264,16 +264,18 @@ bool Manager::loadMotionList()
                         Bottle &bMotion = rf.findGroup(curr_tag+"_"+to_string(j));
                         if(!bMotion.isNull())
                         {
-                            if(Bottle *bJoint = bMotion.find("tag_joint").asList())
+                            if(curr_tag == Rom_Processor::motion_type)
                             {
-                                Metric *cMetric = NULL;
-                                if(curr_tag == "ROM")
+                                if(Bottle *bJoint = bMotion.find("tag_joint").asList())
                                 {
                                     string tag_joint = bJoint->get(0).asString();
                                     int id_joint = bJoint->get(1).asInt();
                                     int n_motion = motion_number;
                                     double min = bMotion.find("min").asDouble();
                                     double max = bMotion.find("max").asDouble();
+
+                                    Metric* newMetric = new Rom(tag_joint, id_joint, n_motion, min, max);
+                                    metrics.push_back(newMetric);
 
                                     Bottle *elbowLC = bMotion.find("elbow_left_configuration").asList();
                                     if(elbowLC)
@@ -442,18 +444,17 @@ bool Manager::loadMotionList()
                                     }
                                     else
                                         yError() << "Could not load ankle right configuration";
-
-                                    crom = new Rom(tag_joint, id_joint, n_motion, min, max);
-                                    rom.push_back(crom);
-                                    cMetric = crom;
                                 }
-
-                                motion_repertoire.insert(pair<string, Metric*>(curr_tag+"_"+to_string(j), cMetric));
-//                                motion_repertoire[curr_tag+"_"+to_string(j)]->print();
-
-                                processor->setInitialConf(initial_skeleton, keypoints2conf);
-
                             }
+
+                            //add the current metric to the repertoire
+                            motion_repertoire.insert(pair<string, Metric*>(curr_tag+"_"+to_string(j), metrics[j]));
+                            motion_repertoire[curr_tag+"_"+to_string(j)]->print();
+
+                            //create a new processor for each metric of each motion type
+                            Processor* newProcessor = createProcessor(curr_tag, metrics[j]);
+                            newProcessor->setInitialConf(initial_skeleton, keypoints2conf);
+                            processors.push_back(newProcessor);
                         }
                     }
                 }
@@ -728,8 +729,12 @@ bool Manager::configure(ResourceFinder &rf)
 /********************************************************/
 bool Manager::close()
 {
-    delete crom;
-    delete processor;
+
+    for(int j=0; j<metrics.size(); j++)
+        delete metrics[j];
+
+    for(int i=0; i<processors.size(); i++)
+        delete processors[i];
 
     opcPort.close();
     scopePort.close();
@@ -762,8 +767,12 @@ bool Manager::updateModule()
         //transform detected skeleton into standard
         //        mapKeyframesToStandard();
 
-        if(processor->isDeviatingFromIntialPose(skeleton))
-            yWarning() << "Deviating from initial pose\n";
+//        yInfo() << processors.size();
+        for(int i=0; i<processors.size(); i++)
+        {
+            if(processors[i]->isDeviatingFromIntialPose(skeleton))
+                yWarning() << "Deviating from initial pose\n";
+        }
 
 //        Vector rom_result;
 //        rom_result.resize(rom.size());

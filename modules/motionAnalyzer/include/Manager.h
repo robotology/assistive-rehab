@@ -89,10 +89,11 @@ class Manager : public RFModule,
     Vector ankleLeft;
     Vector ankleRight;
 
-    Rom* crom;
-    vector<Rom*> rom;
+//    Rom* crom;
+//    vector<Rom*> rom;
 
-    Processor *processor;
+    vector<Metric*> metrics;
+    vector<Processor*> processors;
 
     void init();
     bool loadInitialConf();
