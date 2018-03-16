@@ -49,7 +49,12 @@ bool Processor::isStatic(const KeyPoint& keypoint)
         return false;
 }
 
-bool Processor::isDeviatingFromIntialPose(const SkeletonStd& curr_skeleton)
+void Processor::update(const SkeletonStd &curr_skeleton_)
+{
+    curr_skeleton = curr_skeleton_;
+}
+
+bool Processor::isDeviatingFromIntialPose()
 {
     bool isDeviating = false;
     for(unsigned int i=0; i<curr_skeleton.getNumKeyPoints(); i++)
@@ -148,42 +153,44 @@ Rom_Processor::Rom_Processor(const Metric *rom_)
 //    cout << "processing rom id " << rom->getIdJoint() << endl;
 }
 
-void Rom_Processor::configure()
+double Rom_Processor::computeMetric()
 {
+    //get reference keypoint from skeleton
+    int id = rom->getIdJoint();
+    string tag_joint = rom->getTagJoint();
+    const KeyPoint *keypoint_ref = curr_skeleton[tag_joint];
+    Vector kp_ref = keypoint_ref->getPoint();
+    Vector dir_ref(3, 0.0);
 
-}
+    Vector v1, v2;
+    if(keypoint_ref->getNumChild())
+    {
+        const KeyPoint *keypoint_child = keypoint_ref->getChild(0);
+        Vector kp_child = keypoint_child->getPoint();
+        v1 = kp_child-kp_ref;
 
-double Rom_Processor::computeRom()
-{
-    //get keypoint from skeleton
-//    int id = rom->getIdJoint();
-//    KeyPoint *keypoint = rom->getSkeleton()[id];
-//    Vector kp = keypoint->getPoint();
+        if(rom->getMotionType() == "abduction") //abduction/adduction
+        {
+            dir_ref[0] = -1.0;
+            dir_ref[1] = -1.0;
+            v2 = dir_ref-kp_ref;
+        }
+        else if(rom->getMotionType() == "flexion") //flexion/extension
+        {
+            dir_ref[1] = -1.0;
+            dir_ref[2] = 1.0;
+            v2 = dir_ref-kp_ref;
+        }
+        else if(rom->getMotionType() == "rotation") //internal/external rotation
+        {
+            const KeyPoint *keypoint_parent = keypoint_ref->getParent(0);
+            Vector kp_parent = keypoint_parent->getPoint();
+            v2 = kp_ref-kp_parent;
+        }
 
-//    Vector kp_parent, kp_child;
-
-//    //get child and parent
-//    if(id == 0 || id == 1) //if shoulder: change id with id shoulder
-//    {
-//        KeyPoint *keypoint_parent = keypoint->getParent(1);
-//        kp_parent = keypoint_parent->getPoint();
-//        KeyPoint *keypoint_child = keypoint->getChild(0);
-//        kp_child = keypoint_child->getPoint();
-//    }
-//    else if(id == 2) //if elbow
-//    {
-//        KeyPoint *keypoint_parent = keypoint->getParent(0);
-//        kp_parent = keypoint_parent->getPoint();
-//        KeyPoint *keypoint_child = keypoint->getChild(0);
-//        kp_child = keypoint_child->getPoint();
-//    }
-
-//    double a_norm = norm(kp-kp_parent);
-//    double b_norm = norm(kp-kp_child);
-
-//    double dot_p = dot(kp-kp_parent, kp-kp_child);
-
-//    return ( acos(dot_p/(a_norm*b_norm)) * (180/M_PI) );
-
-    return true;
+        double v1_norm = norm(v1);
+        double v2_norm = norm(v2);
+        double dot_p = dot(v1, v2);
+        return ( acos(dot_p/(v1_norm*v2_norm)) * (180/M_PI) );
+    }
 }

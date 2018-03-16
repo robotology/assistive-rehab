@@ -37,17 +37,19 @@ class Processor
 protected:
     SkeletonStd skeleton_init;
     map<string, string> keypoints2conf;
+    SkeletonStd curr_skeleton;
     const Metric* metric;
 
 public:
     Processor();
     virtual ~Processor() {;}
 //    virtual string getMotionType();
-    virtual void setInitialConf(const SkeletonStd& skeleton_init_, const map<string, string>& keypoints2conf_);
-//    virtual void setCurrMetric(const Metric* metric_);
-    virtual bool isStatic(const KeyPoint& keypoint);
-    virtual bool isDeviatingFromIntialPose(const SkeletonStd& curr_skeleton);
-    virtual bool isDeviatingFromIntialPose(const KeyPoint &keypoint, const KeyPoint &keypoint_init);
+    void setInitialConf(const SkeletonStd& skeleton_init_, const map<string, string>& keypoints2conf_);
+    bool isStatic(const KeyPoint& keypoint);
+    void update(const SkeletonStd &curr_skeleton_);
+    bool isDeviatingFromIntialPose();
+    bool isDeviatingFromIntialPose(const KeyPoint &keypoint, const KeyPoint &keypoint_init);
+    virtual double computeMetric() {;}
 
 };
 
@@ -59,8 +61,7 @@ public:
 
     Rom_Processor();
     Rom_Processor(const Metric *rom_);
-    void configure();
-    double computeRom();
+    double computeMetric();
 
     static const string motion_type;
 

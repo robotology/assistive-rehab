@@ -37,20 +37,19 @@ class Rom : public Metric
 {
     string tag_joint;
     int id_joint;
+    string motion_type;
     int n_movements;
     double min;
     double max;
 
-    SkeletonStd skeleton;
-
 public:
     Rom();
-    Rom(const string &tag_joint_, const unsigned int id_joint_, const unsigned int n_movements_,
-        const double &min_, const double &max_);
-    bool update(const SkeletonStd& skeleton_);
-    SkeletonStd getSkeleton() const { return skeleton; }
+    Rom(const string &tag_joint_, const unsigned int id_joint_, const string &motion_type_,
+        const unsigned int n_movements_, const double &min_, const double &max_);
 
     int getIdJoint() const { return id_joint; }
+    string getTagJoint() const { return tag_joint; }
+    string getMotionType() const { return motion_type; }
     void print();
 
 };

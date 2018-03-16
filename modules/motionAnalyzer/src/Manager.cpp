@@ -270,11 +270,12 @@ bool Manager::loadMotionList()
                                 {
                                     string tag_joint = bJoint->get(0).asString();
                                     int id_joint = bJoint->get(1).asInt();
+                                    string motion_type = bMotion.find("motion_type").asString();
                                     int n_motion = motion_number;
                                     double min = bMotion.find("min").asDouble();
                                     double max = bMotion.find("max").asDouble();
 
-                                    Metric* newMetric = new Rom(tag_joint, id_joint, n_motion, min, max);
+                                    Metric* newMetric = new Rom(tag_joint, id_joint, motion_type, n_motion, min, max);
                                     metrics.push_back(newMetric);
 
                                     Bottle *elbowLC = bMotion.find("elbow_left_configuration").asList();
@@ -768,30 +769,24 @@ bool Manager::updateModule()
         //        mapKeyframesToStandard();
 
 //        yInfo() << processors.size();
+
+        //prepare output port
+        Bottle &scopebottleout = scopePort.prepare();
+        scopebottleout.clear();
+
         for(int i=0; i<processors.size(); i++)
         {
-            if(processors[i]->isDeviatingFromIntialPose(skeleton))
+            processors[i]->update(skeleton);
+            if(processors[i]->isDeviatingFromIntialPose())
                 yWarning() << "Deviating from initial pose\n";
+
+            double result = processors[i]->computeMetric();
+
+            //add result to output bottle
+            scopebottleout.addDouble(result);
         }
 
-//        Vector rom_result;
-//        rom_result.resize(rom.size());
-
-//        //prepare output port
-//        Bottle &scopebottleout = scopePort.prepare();
-//        scopebottleout.clear();
-
-//        for(int i=0; i<rom.size(); i++)
-//        {
-//            rom[i]->update(skeleton);
-//            Rom_Processor rom_processor(rom[i]);
-//            rom_result[i] = rom_processor.computeRom();
-
-//            //add result to output bottle
-//            scopebottleout.addDouble(rom_result[i]);
-//        }
-
-//        scopePort.write();
+        scopePort.write();
 
     }
 
