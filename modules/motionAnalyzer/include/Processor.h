@@ -14,11 +14,11 @@
 #define __PROCESSOR_H__
 
 #include <iostream>
+#include <map>
+#include <math.h>
 
 #include <yarp/sig/Matrix.h>
 #include <yarp/math/Math.h>
-
-#include <math.h>
 
 #include <AssistiveRehab/skeleton.h>
 #include "Metric.h"
@@ -39,6 +39,8 @@ protected:
     map<string, string> keypoints2conf;
     SkeletonStd curr_skeleton;
     const Metric* metric;
+    Vector xy_normal;
+    Vector yz_normal;
 
 public:
     Processor();

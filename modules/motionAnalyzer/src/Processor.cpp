@@ -32,7 +32,10 @@ Processor* createProcessor(const string& motion_tag, const Metric* metric_)
 /********************************************************/
 Processor::Processor()
 {
-
+    xy_normal.resize(3);
+    yz_normal.resize(3);
+    xy_normal[0] = 0.0; xy_normal[1] = 0.0; xy_normal[2] = 1.0;
+    yz_normal[0] = 1.0; yz_normal[1] = 0.0; yz_normal[2] = 0.0;
 }
 
 void Processor::setInitialConf(const SkeletonStd &skeleton_init_, const map<string, string> &keypoints2conf_)
@@ -161,6 +164,9 @@ double Rom_Processor::computeMetric()
     const KeyPoint *keypoint_ref = curr_skeleton[tag_joint];
     Vector kp_ref = keypoint_ref->getPoint();
     Vector dir_ref(3, 0.0);
+    dir_ref[0] = 0.0;
+    dir_ref[1] = -1.0;
+    dir_ref[2] = 0.0;
 
     Vector v1, v2;
     if(keypoint_ref->getNumChild())
@@ -171,21 +177,27 @@ double Rom_Processor::computeMetric()
 
         if(rom->getMotionType() == "abduction") //abduction/adduction
         {
-            dir_ref[0] = -1.0;
-            dir_ref[1] = -1.0;
-            v2 = dir_ref-kp_ref;
+            //project vector onto xy plane
+            double dist = dot(v1, xy_normal);
+            v1 = v1-dist*xy_normal;
+            v2 = dir_ref;
         }
         else if(rom->getMotionType() == "flexion") //flexion/extension
         {
-            dir_ref[1] = -1.0;
-            dir_ref[2] = 1.0;
-            v2 = dir_ref-kp_ref;
+            //project vector onto yz plane
+            double dist = dot(v1, yz_normal);
+            v1 = v1-dist*yz_normal;
+            v2 = dir_ref;
         }
         else if(rom->getMotionType() == "rotation") //internal/external rotation
         {
             const KeyPoint *keypoint_parent = keypoint_ref->getParent(0);
             Vector kp_parent = keypoint_parent->getPoint();
             v2 = kp_ref-kp_parent;
+
+            //project vector onto xy plane
+            double dist = dot(v1, xy_normal);
+            v1 = v1-dist*xy_normal;
         }
 
         double v1_norm = norm(v1);
