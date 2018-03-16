@@ -12,11 +12,10 @@
 
 #include "Metric.h"
 
-Rom::Rom(const string &tag_joint_, const unsigned int id_joint_, const string &motion_type_,
+Rom::Rom(const string &tag_joint_, const string &motion_type_,
          const unsigned int n_movements_, const double &min_, const double &max_)
 {
     tag_joint = tag_joint_;
-    id_joint = id_joint_;
     motion_type = motion_type_;
     n_movements = n_movements_;
     min = min_;
@@ -26,7 +25,6 @@ Rom::Rom(const string &tag_joint_, const unsigned int id_joint_, const string &m
 void Rom::print()
 {
     yInfo() << "Tag joint = " << tag_joint;
-    yInfo() << "id joint = " << id_joint;
     yInfo() << "Number of movements = " << n_movements;
     yInfo() << "Min = " << min;
     yInfo() << "Max = " << max;

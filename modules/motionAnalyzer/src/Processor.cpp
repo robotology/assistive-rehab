@@ -159,7 +159,6 @@ Rom_Processor::Rom_Processor(const Metric *rom_)
 double Rom_Processor::computeMetric()
 {
     //get reference keypoint from skeleton
-    int id = rom->getIdJoint();
     string tag_joint = rom->getTagJoint();
     const KeyPoint *keypoint_ref = curr_skeleton[tag_joint];
     Vector kp_ref = keypoint_ref->getPoint();

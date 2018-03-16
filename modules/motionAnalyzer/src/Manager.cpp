@@ -266,16 +266,17 @@ bool Manager::loadMotionList()
                         {
                             if(curr_tag == Rom_Processor::motion_type)
                             {
-                                if(Bottle *bJoint = bMotion.find("tag_joint").asList())
-                                {
-                                    string tag_joint = bJoint->get(0).asString();
-                                    int id_joint = bJoint->get(1).asInt();
+//                                if(Bottle *bJoint = bMotion.find("tag_joint").asList())
+//                                {
+                                    string tag_joint = bMotion.find("tag_joint").asString();
+//                                    int id_joint = bJoint->get(1).asInt();
+                                    int id_joint = 4;
                                     string motion_type = bMotion.find("motion_type").asString();
                                     int n_motion = motion_number;
                                     double min = bMotion.find("min").asDouble();
                                     double max = bMotion.find("max").asDouble();
 
-                                    Metric* newMetric = new Rom(tag_joint, id_joint, motion_type, n_motion, min, max);
+                                    Metric* newMetric = new Rom(tag_joint, motion_type, n_motion, min, max);
                                     metrics.push_back(newMetric);
 
                                     Bottle *elbowLC = bMotion.find("elbow_left_configuration").asList();
@@ -445,7 +446,7 @@ bool Manager::loadMotionList()
                                     }
                                     else
                                         yError() << "Could not load ankle right configuration";
-                                }
+//                                }
                             }
 
                             //add the current metric to the repertoire
