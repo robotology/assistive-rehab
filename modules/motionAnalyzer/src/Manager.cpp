@@ -266,187 +266,203 @@ bool Manager::loadMotionList()
                         {
                             if(curr_tag == Rom_Processor::motion_type)
                             {
-//                                if(Bottle *bJoint = bMotion.find("tag_joint").asList())
-//                                {
-                                    string tag_joint = bMotion.find("tag_joint").asString();
-//                                    int id_joint = bJoint->get(1).asInt();
-                                    int id_joint = 4;
-                                    string motion_type = bMotion.find("motion_type").asString();
-                                    int n_motion = motion_number;
-                                    double min = bMotion.find("min").asDouble();
-                                    double max = bMotion.find("max").asDouble();
+                                string motion_type = bMotion.find("motion_type").asString();
+                                string tag_joint = bMotion.find("tag_joint").asString();
+//                                Bottle *bRefdir = bMotion.find("ref_dir").asList();
+//                                Bottle *bPlane = bMotion.find("plane_normal").asList();
+//                                int n_motion = motion_number;
+                                double min = bMotion.find("min").asDouble();
+                                double max = bMotion.find("max").asDouble();
 
-                                    Metric* newMetric = new Rom(tag_joint, motion_type, n_motion, min, max);
-                                    metrics.push_back(newMetric);
+                                Vector ref_dir;
+                                ref_dir.resize(3);
+                                if(Bottle *bRefdir = bMotion.find("ref_dir").asList())
+                                {
+                                    ref_dir[0] = bRefdir->get(0).asDouble();
+                                    ref_dir[1] = bRefdir->get(1).asDouble();
+                                    ref_dir[2] = bRefdir->get(2).asDouble();
+                                }
 
-                                    Bottle *elbowLC = bMotion.find("elbow_left_configuration").asList();
-                                    if(elbowLC)
+                                Vector plane_normal;
+                                plane_normal.resize(3);
+                                if(Bottle *bPlane = bMotion.find("plane_normal").asList())
+                                {
+                                    plane_normal[0] = bPlane->get(0).asDouble();
+                                    plane_normal[1] = bPlane->get(1).asDouble();
+                                    plane_normal[2] = bPlane->get(2).asDouble();
+                                }
+
+                                Metric* newMetric = new Rom(motion_type, tag_joint, ref_dir, plane_normal, min, max);
+                                metrics.push_back(newMetric);
+
+                                Bottle *elbowLC = bMotion.find("elbow_left_configuration").asList();
+                                if(elbowLC)
+                                {
+                                    string eLC = elbowLC->get(0).asString();
+                                    if(eLC == "mobile")
                                     {
-                                        string eLC = elbowLC->get(0).asString();
-                                        if(eLC == "mobile")
+                                        keypoints2conf[KeyPointTag::elbow_left] = "mobile";
+                                    }
+                                }
+                                else
+                                    yError() << "Could not load elbow left configuration";
+
+                                Bottle *elbowRC = bMotion.find("elbow_right_configuration").asList();
+                                if(elbowRC)
+                                {
+                                    string eRC = elbowRC->get(0).asString();
+                                    if(eRC == "mobile")
+                                    {
+                                        keypoints2conf[KeyPointTag::elbow_right] = "mobile";
+                                    }
+                                }
+                                else
+                                    yError() << "Could not load elbow right configuration";
+
+                                Bottle *handLC = bMotion.find("hand_left_configuration").asList();
+                                if(handLC)
+                                {
+                                    string hnLC = handLC->get(0).asString();
+                                    if(hnLC == "mobile")
+                                    {
+                                        keypoints2conf[KeyPointTag::hand_left] = "mobile";
+                                    }
+                                }
+                                else
+                                    yError() << "Could not load hand left configuration";
+
+                                Bottle *handRC = bMotion.find("hand_right_configuration").asList();
+                                if(handRC)
+                                {
+                                    string hnRC = handRC->get(0).asString();
+                                    if(hnRC == "mobile")
+                                    {
+                                        keypoints2conf[KeyPointTag::hand_right] = "mobile";
+                                    }
+                                }
+                                else
+                                    yError() << "Could not load hand right configuration";
+
+                                Bottle *headC = bMotion.find("head_configuration").asList();
+                                if(headC)
+                                {
+                                    string hC = headC->get(0).asString();
+                                    if(hC == "mobile")
+                                    {
+                                        keypoints2conf[KeyPointTag::head] = "mobile";
+                                    }
+                                }
+                                else
+                                    yError() << "Could not load head configuration";
+
+                                Bottle *shoulderCC = bMotion.find("shoulder_center_configuration").asList();
+                                if(shoulderCC)
+                                {
+                                    string sCC = shoulderCC->get(0).asString();
+                                    if(sCC == "mobile")
+                                    {
+                                        keypoints2conf[KeyPointTag::shoulder_center] = "mobile";
+                                    }
+                                }
+                                else
+                                    yError() << "Could not load shoulder center configuration";
+
+                                Bottle *shoulderLC = bMotion.find("shoulder_left_configuration").asList();
+                                if(shoulderLC)
+                                {
+                                    string sLC = shoulderLC->get(0).asString();
+                                    if(sLC == "mobile")
+                                    {
+                                        keypoints2conf[KeyPointTag::shoulder_left] = "mobile";
+                                    }
+                                }
+                                else
+                                    yError() << "Could not load shoulder left configuration";
+
+                                Bottle *shoulderRC = bMotion.find("shoulder_right_configuration").asList();
+                                if(shoulderRC)
+                                {
+                                    string sRC = shoulderRC->get(0).asString();
+                                    if(sRC == "mobile")
+                                    {
+                                        keypoints2conf[KeyPointTag::shoulder_right] = "mobile";
+                                    }
+                                }
+                                else
+                                    yError() << "Could not load shoulder right configuration";
+
+                                Bottle *hipLC = bMotion.find("hip_left_configuration").asList();                                        if(shoulderCC)
+                                    if(hipLC)
+                                    {
+                                        string hLC = hipLC->get(0).asString();
+                                        if(hLC == "mobile")
                                         {
-                                            keypoints2conf[KeyPointTag::elbow_left] = "mobile";
+                                            keypoints2conf[KeyPointTag::hip_left] = "mobile";
                                         }
                                     }
                                     else
-                                        yError() << "Could not load elbow left configuration";
+                                        yError() << "Could not load hip left configuration";
 
-                                    Bottle *elbowRC = bMotion.find("elbow_right_configuration").asList();
-                                    if(elbowRC)
+                                Bottle *hipRC = bMotion.find("hip_right_configuration").asList();                                        if(shoulderRC)
+                                    if(hipRC)
                                     {
-                                        string eRC = elbowRC->get(0).asString();
-                                        if(eRC == "mobile")
+                                        string hRC = hipRC->get(0).asString();
+                                        if(hRC == "mobile")
                                         {
-                                            keypoints2conf[KeyPointTag::elbow_right] = "mobile";
+                                            keypoints2conf[KeyPointTag::hip_right] = "mobile";
                                         }
                                     }
                                     else
-                                        yError() << "Could not load elbow right configuration";
+                                        yError() << "Could not load hip right configuration";
 
-                                    Bottle *handLC = bMotion.find("hand_left_configuration").asList();
-                                    if(handLC)
+                                Bottle *kneeLC = bMotion.find("knee_left_configuration").asList();
+                                if(kneeLC)
+                                {
+                                    string kLC = kneeLC->get(0).asString();
+                                    if(kLC == "mobile")
                                     {
-                                        string hnLC = handLC->get(0).asString();
-                                        if(hnLC == "mobile")
-                                        {
-                                            keypoints2conf[KeyPointTag::hand_left] = "mobile";
-                                        }
+                                        keypoints2conf[KeyPointTag::knee_left] = "mobile";
                                     }
-                                    else
-                                        yError() << "Could not load hand left configuration";
+                                }
+                                else
+                                    yError() << "Could not load knee left configuration";
 
-                                    Bottle *handRC = bMotion.find("hand_right_configuration").asList();
-                                    if(handRC)
+                                Bottle *kneeRC = bMotion.find("knee_right_configuration").asList();
+                                if(kneeRC)
+                                {
+                                    string kRC = kneeRC->get(0).asString();
+                                    if(kRC == "mobile")
                                     {
-                                        string hnRC = handRC->get(0).asString();
-                                        if(hnRC == "mobile")
-                                        {
-                                            keypoints2conf[KeyPointTag::hand_right] = "mobile";
-                                        }
+                                        keypoints2conf[KeyPointTag::knee_right] = "mobile";
                                     }
-                                    else
-                                        yError() << "Could not load hand right configuration";
+                                }
+                                else
+                                    yError() << "Could not load knee right configuration";
 
-                                    Bottle *headC = bMotion.find("head_configuration").asList();
-                                    if(headC)
+                                Bottle *ankleLC = bMotion.find("ankle_left_configuration").asList();
+                                if(ankleLC)
+                                {
+                                    string aLC = ankleLC->get(0).asString();
+                                    if(aLC == "mobile")
                                     {
-                                        string hC = headC->get(0).asString();
-                                        if(hC == "mobile")
-                                        {
-                                            keypoints2conf[KeyPointTag::head] = "mobile";
-                                        }
+                                        keypoints2conf[KeyPointTag::ankle_left] = "mobile";
                                     }
-                                    else
-                                        yError() << "Could not load head configuration";
+                                }
+                                else
+                                    yError() << "Could not load ankle left configuration";
 
-                                    Bottle *shoulderCC = bMotion.find("shoulder_center_configuration").asList();
-                                    if(shoulderCC)
+                                Bottle *ankleRC = bMotion.find("ankle_right_configuration").asList();
+                                if(ankleRC)
+                                {
+                                    string aRC = ankleRC->get(0).asString();
+                                    if(aRC == "mobile")
                                     {
-                                        string sCC = shoulderCC->get(0).asString();
-                                        if(sCC == "mobile")
-                                        {
-                                            keypoints2conf[KeyPointTag::shoulder_center] = "mobile";
-                                        }
+                                        keypoints2conf[KeyPointTag::ankle_right] = "mobile";
                                     }
-                                    else
-                                        yError() << "Could not load shoulder center configuration";
-
-                                    Bottle *shoulderLC = bMotion.find("shoulder_left_configuration").asList();
-                                    if(shoulderLC)
-                                    {
-                                        string sLC = shoulderLC->get(0).asString();
-                                        if(sLC == "mobile")
-                                        {
-                                            keypoints2conf[KeyPointTag::shoulder_left] = "mobile";
-                                        }
-                                    }
-                                    else
-                                        yError() << "Could not load shoulder left configuration";
-
-                                    Bottle *shoulderRC = bMotion.find("shoulder_right_configuration").asList();
-                                    if(shoulderRC)
-                                    {
-                                        string sRC = shoulderRC->get(0).asString();
-                                        if(sRC == "mobile")
-                                        {
-                                            keypoints2conf[KeyPointTag::shoulder_right] = "mobile";
-                                        }
-                                    }
-                                    else
-                                        yError() << "Could not load shoulder right configuration";
-
-                                    Bottle *hipLC = bMotion.find("hip_left_configuration").asList();                                        if(shoulderCC)
-                                        if(hipLC)
-                                        {
-                                            string hLC = hipLC->get(0).asString();
-                                            if(hLC == "mobile")
-                                            {
-                                                keypoints2conf[KeyPointTag::hip_left] = "mobile";
-                                            }
-                                        }
-                                        else
-                                            yError() << "Could not load hip left configuration";
-
-                                    Bottle *hipRC = bMotion.find("hip_right_configuration").asList();                                        if(shoulderRC)
-                                        if(hipRC)
-                                        {
-                                            string hRC = hipRC->get(0).asString();
-                                            if(hRC == "mobile")
-                                            {
-                                                keypoints2conf[KeyPointTag::hip_right] = "mobile";
-                                            }
-                                        }
-                                        else
-                                            yError() << "Could not load hip right configuration";
-
-                                    Bottle *kneeLC = bMotion.find("knee_left_configuration").asList();
-                                    if(kneeLC)
-                                    {
-                                        string kLC = kneeLC->get(0).asString();
-                                        if(kLC == "mobile")
-                                        {
-                                            keypoints2conf[KeyPointTag::knee_left] = "mobile";
-                                        }
-                                    }
-                                    else
-                                        yError() << "Could not load knee left configuration";
-
-                                    Bottle *kneeRC = bMotion.find("knee_right_configuration").asList();
-                                    if(kneeRC)
-                                    {
-                                        string kRC = kneeRC->get(0).asString();
-                                        if(kRC == "mobile")
-                                        {
-                                            keypoints2conf[KeyPointTag::knee_right] = "mobile";
-                                        }
-                                    }
-                                    else
-                                        yError() << "Could not load knee right configuration";
-
-                                    Bottle *ankleLC = bMotion.find("ankle_left_configuration").asList();
-                                    if(ankleLC)
-                                    {
-                                        string aLC = ankleLC->get(0).asString();
-                                        if(aLC == "mobile")
-                                        {
-                                            keypoints2conf[KeyPointTag::ankle_left] = "mobile";
-                                        }
-                                    }
-                                    else
-                                        yError() << "Could not load ankle left configuration";
-
-                                    Bottle *ankleRC = bMotion.find("ankle_right_configuration").asList();
-                                    if(ankleRC)
-                                    {
-                                        string aRC = ankleRC->get(0).asString();
-                                        if(aRC == "mobile")
-                                        {
-                                            keypoints2conf[KeyPointTag::ankle_right] = "mobile";
-                                        }
-                                    }
-                                    else
-                                        yError() << "Could not load ankle right configuration";
-//                                }
+                                }
+                                else
+                                    yError() << "Could not load ankle right configuration";
+                                //                                }
                             }
 
                             //add the current metric to the repertoire
@@ -695,12 +711,6 @@ void Manager::getKeyframes()
 }
 
 /********************************************************/
-void Manager::mapKeyframesToStandard()
-{
-
-}
-
-/********************************************************/
 bool Manager::attach(RpcServer &source)
 {
     return this->yarp().attachAsServer(source);
@@ -767,7 +777,7 @@ bool Manager::updateModule()
 //        skeleton.print();
 
         //transform detected skeleton into standard
-        //        mapKeyframesToStandard();
+        skeleton.normalize();
 
 //        yInfo() << processors.size();
 

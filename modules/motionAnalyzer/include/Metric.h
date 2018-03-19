@@ -35,19 +35,22 @@ public:
 
 class Rom : public Metric
 {
-    string tag_joint;
     string motion_type;
-    int n_movements;
+    string tag_joint;
+    Vector ref_dir;
+    Vector plane_normal;
     double min;
     double max;
 
 public:
     Rom();
-    Rom(const string &tag_joint_, const string &motion_type_,
-        const unsigned int n_movements_, const double &min_, const double &max_);
+    Rom(const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
+        const Vector &plane_normal_, const double &min_, const double &max_);
 
     string getTagJoint() const { return tag_joint; }
     string getMotionType() const { return motion_type; }
+    Vector getRefDir() const { return ref_dir; }
+    Vector getPlane() const { return plane_normal; }
     void print();
 
 };

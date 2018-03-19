@@ -120,6 +120,14 @@ bool Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyPoi
                     Vector initial_pose = curr_kp_init + curr_kp_parent_init + curr_kp_child_init;
                     double deviation = fabs(fabs(curr_pose[0]+curr_pose[1]+curr_pose[2])-fabs(initial_pose[0]+initial_pose[1]+initial_pose[2]));
 
+//                    cout << keypoint.getTag() << " " << keypoint_child->getTag() << " " << keypoint_parent->getTag() << " "
+//                         << "(" << curr_kp[0] << " " << curr_kp[1] << " " << curr_kp[2] << ") "
+//                         << "(" << curr_kp_child[0] << " " << curr_kp_child[1] << " " << curr_kp_child[2] << ") "
+//                         << "(" << curr_kp_parent[0] << " " << curr_kp_parent[1] << " " << curr_kp_parent[2] << ") "
+//                         << curr_pose[0] << " " << curr_pose[1] << " " << curr_pose[2] << " "
+//                         << initial_pose[0] << " " << initial_pose[1] << " " << initial_pose[2]
+//                         << " " << deviation << endl;
+
                     if((deviation) > MAX_DEVIATION_FROM_INITIAL_POSE)
                     {
                         isDeviating = true;
@@ -133,6 +141,8 @@ bool Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyPoi
                 Vector initial_pose = curr_kp_init + curr_kp_parent_init + curr_kp_child_init;
                 double deviation = fabs(fabs(curr_pose[0]+curr_pose[1]+curr_pose[2])-fabs(initial_pose[0]+initial_pose[1]+initial_pose[2]));
 
+//                cout << keypoint.getTag() << " " << deviation << endl;
+
                 if((deviation) > MAX_DEVIATION_FROM_INITIAL_POSE)
                 {
                     isDeviating = true;
@@ -140,6 +150,7 @@ bool Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyPoi
             }
         }
     }
+//    cout << endl;
 
     return isDeviating;
 }
@@ -162,46 +173,25 @@ double Rom_Processor::computeMetric()
     string tag_joint = rom->getTagJoint();
     const KeyPoint *keypoint_ref = curr_skeleton[tag_joint];
     Vector kp_ref = keypoint_ref->getPoint();
-    Vector dir_ref(3, 0.0);
-    dir_ref[0] = 0.0;
-    dir_ref[1] = -1.0;
-    dir_ref[2] = 0.0;
 
-    Vector v1, v2;
+    Vector v1;
     if(keypoint_ref->getNumChild())
     {
         const KeyPoint *keypoint_child = keypoint_ref->getChild(0);
         Vector kp_child = keypoint_child->getPoint();
+
+        Vector plane_normal = rom->getPlane();
         v1 = kp_child-kp_ref;
+        double dist = dot(v1, plane_normal);
+        v1 = v1-dist*plane_normal;
 
-        if(rom->getMotionType() == "abduction") //abduction/adduction
-        {
-            //project vector onto xy plane
-            double dist = dot(v1, xy_normal);
-            v1 = v1-dist*xy_normal;
-            v2 = dir_ref;
-        }
-        else if(rom->getMotionType() == "flexion") //flexion/extension
-        {
-            //project vector onto yz plane
-            double dist = dot(v1, yz_normal);
-            v1 = v1-dist*yz_normal;
-            v2 = dir_ref;
-        }
-        else if(rom->getMotionType() == "rotation") //internal/external rotation
-        {
-            const KeyPoint *keypoint_parent = keypoint_ref->getParent(0);
-            Vector kp_parent = keypoint_parent->getPoint();
-            v2 = kp_ref-kp_parent;
-
-            //project vector onto xy plane
-            double dist = dot(v1, xy_normal);
-            v1 = v1-dist*xy_normal;
-        }
+        Vector ref_dir = rom->getRefDir();
 
         double v1_norm = norm(v1);
-        double v2_norm = norm(v2);
-        double dot_p = dot(v1, v2);
+        double v2_norm = norm(ref_dir);
+        double dot_p = dot(v1, ref_dir);
         return ( acos(dot_p/(v1_norm*v2_norm)) * (180/M_PI) );
     }
+    else
+        yError() << "The keypoint does not have a child ";
 }

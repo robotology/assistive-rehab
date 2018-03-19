@@ -89,9 +89,6 @@ class Manager : public RFModule,
     Vector ankleLeft;
     Vector ankleRight;
 
-//    Rom* crom;
-//    vector<Rom*> rom;
-
     vector<Metric*> metrics;
     vector<Processor*> processors;
 
@@ -99,7 +96,6 @@ class Manager : public RFModule,
     bool loadInitialConf();
     bool loadMotionList();
     void getKeyframes();
-    void mapKeyframesToStandard(); //to map detected skeleton to standard skeleton
     bool attach(RpcServer &source);
 
 public:
