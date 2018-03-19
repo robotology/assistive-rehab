@@ -91,8 +91,7 @@ bool Manager::loadInitialConf()
 
     if(!bGeneral.isNull())
     {
-        nmovements = bGeneral.find("number_movements").asInt();
-
+//        nmovements = bGeneral.find("number_movements").asInt();
         if(Bottle *bElbowLeft_init = bGeneral.find("elbow_left_init_pose").asList())
         {
             elbowLeft_init[0] = bElbowLeft_init->get(0).asDouble();
@@ -101,7 +100,7 @@ bool Manager::loadInitialConf()
             initial_keypoints.push_back(make_pair(KeyPointTag::elbow_left,elbowLeft_init));
         }
         else
-            yError() << "Could not load initial configuration for elbow left";
+            yError() << "Could not load initial pose for elbow left";
 
         if(Bottle *bElbowRight_init = bGeneral.find("elbow_right_init_pose").asList())
         {
@@ -111,7 +110,7 @@ bool Manager::loadInitialConf()
             initial_keypoints.push_back(make_pair(KeyPointTag::elbow_right,elbowRight_init));
         }
         else
-            yError() << "Could not load initial configuration for elbow right";
+            yError() << "Could not load initial pose for elbow right";
 
         if(Bottle *bHandLeft_init = bGeneral.find("hand_left_init_pose").asList())
         {
@@ -121,7 +120,7 @@ bool Manager::loadInitialConf()
             initial_keypoints.push_back(make_pair(KeyPointTag::hand_left,handLeft_init));
         }
         else
-            yError() << "Could not load initial configuration for hand left";
+            yError() << "Could not load initial pose for hand left";
 
         if(Bottle *bHandRight_init = bGeneral.find("hand_right_init_pose").asList())
         {
@@ -131,7 +130,7 @@ bool Manager::loadInitialConf()
             initial_keypoints.push_back(make_pair(KeyPointTag::hand_right,handRight_init));
         }
         else
-            yError() << "Could not load initial configuration for hand right";
+            yError() << "Could not load initial pose for hand right";
 
         if(Bottle *bHead_init = bGeneral.find("head_init_pose").asList())
         {
@@ -141,7 +140,7 @@ bool Manager::loadInitialConf()
             initial_keypoints.push_back(make_pair(KeyPointTag::head,head_init));
         }
         else
-            yError() << "Could not load initial configuration for hand left";
+            yError() << "Could not load initial pose for hand left";
 
         if(Bottle *bShoulderCenter_init = bGeneral.find("shoulder_center_init_pose").asList())
         {
@@ -151,7 +150,7 @@ bool Manager::loadInitialConf()
             initial_keypoints.push_back(make_pair(KeyPointTag::shoulder_center,shoulderCenter_init));
         }
         else
-            yError() << "Could not load initial configuration for shoulder center";
+            yError() << "Could not load initial pose for shoulder center";
 
         if(Bottle *bShoulderLeft_init = bGeneral.find("shoulder_left_init_pose").asList())
         {
@@ -161,7 +160,7 @@ bool Manager::loadInitialConf()
             initial_keypoints.push_back(make_pair(KeyPointTag::shoulder_left,shoulderLeft_init));
         }
         else
-            yError() << "Could not load initial configuration for shoulder left";
+            yError() << "Could not load initial pose for shoulder left";
 
         if(Bottle *bShoulderRight_init = bGeneral.find("shoulder_right_init_pose").asList())
         {
@@ -171,7 +170,7 @@ bool Manager::loadInitialConf()
             initial_keypoints.push_back(make_pair(KeyPointTag::shoulder_right,shoulderRight_init));
         }
         else
-            yError() << "Could not load initial configuration for shoulder right";
+            yError() << "Could not load initial pose for shoulder right";
 
         if(Bottle *bHipLeft_init = bGeneral.find("hip_left_init_pose").asList())
         {
@@ -181,7 +180,7 @@ bool Manager::loadInitialConf()
             initial_keypoints.push_back(make_pair(KeyPointTag::hip_left,hipLeft_init));
         }
         else
-            yError() << "Could not load initial configuration for hip left";
+            yError() << "Could not load initial pose for hip left";
 
         if(Bottle *bhipRight_init = bGeneral.find("hip_right_init_pose").asList())
         {
@@ -191,7 +190,7 @@ bool Manager::loadInitialConf()
             initial_keypoints.push_back(make_pair(KeyPointTag::hip_right,hipRight_init));
         }
         else
-            yError() << "Could not load initial configuration for hip right";
+            yError() << "Could not load initial pose for hip right";
 
         if(Bottle *bKneeLeft_init = bGeneral.find("knee_left_init_pose").asList())
         {
@@ -201,7 +200,7 @@ bool Manager::loadInitialConf()
             initial_keypoints.push_back(make_pair(KeyPointTag::knee_left,kneeLeft_init));
         }
         else
-            yError() << "Could not load initial configuration for knee left";
+            yError() << "Could not load initial pose for knee left";
 
         if(Bottle *bKneeRight_init = bGeneral.find("knee_right_init_pose").asList())
         {
@@ -211,7 +210,7 @@ bool Manager::loadInitialConf()
             initial_keypoints.push_back(make_pair(KeyPointTag::knee_right,kneeRight_init));
         }
         else
-            yError() << "Could not load initial configuration for knee right";
+            yError() << "Could not load initial pose for knee right";
 
         if(Bottle *bAnkleLeft_init = bGeneral.find("ankle_left_init_pose").asList())
         {
@@ -221,7 +220,7 @@ bool Manager::loadInitialConf()
             initial_keypoints.push_back(make_pair(KeyPointTag::ankle_left,ankleLeft_init));
         }
         else
-            yError() << "Could not load initial configuration for ankle left";
+            yError() << "Could not load initial pose for ankle left";
 
         if(Bottle *bAnkleRight_init = bGeneral.find("ankle_right_init_pose").asList())
         {
@@ -231,11 +230,211 @@ bool Manager::loadInitialConf()
             initial_keypoints.push_back(make_pair(KeyPointTag::ankle_right,ankleRight_init));
         }
         else
-            yError() << "Could not load initial configuration for ankle right";
+            yError() << "Could not load initial pose for ankle right";
 
         initial_skeleton.update(initial_keypoints);
     }
+}
 
+bool Manager::loadInitialConf(const Bottle& b)
+{
+    if(Bottle *bElbowLeft_init = b.find("elbow_left_init_pose").asList())
+    {
+        elbowLeft_init[0] = bElbowLeft_init->get(0).asDouble();
+        elbowLeft_init[1] = bElbowLeft_init->get(1).asDouble();
+        elbowLeft_init[2] = bElbowLeft_init->get(2).asDouble();
+
+        for(int i=0; i<initial_keypoints.size(); i++)
+        {
+            if(initial_keypoints[i].first == KeyPointTag::elbow_left)
+                initial_keypoints[i] = make_pair(KeyPointTag::elbow_left,elbowLeft_init);
+        }
+        yInfo() << "Updated initial pose for elbow left";
+    }
+
+    if(Bottle *bElbowRight_init = b.find("elbow_right_init_pose").asList())
+    {
+        elbowRight_init[0] = bElbowRight_init->get(0).asDouble();
+        elbowRight_init[1] = bElbowRight_init->get(1).asDouble();
+        elbowRight_init[2] = bElbowRight_init->get(2).asDouble();
+
+        for(int i=0; i<initial_keypoints.size(); i++)
+        {
+            if(initial_keypoints[i].first == KeyPointTag::elbow_right)
+                initial_keypoints[i] = make_pair(KeyPointTag::elbow_right,elbowRight_init);
+        }
+        yInfo() << "Updated initial pose for elbow right";
+    }
+
+    if(Bottle *bHandLeft_init = b.find("hand_left_init_pose").asList())
+    {
+        handLeft_init[0] = bHandLeft_init->get(0).asDouble();
+        handLeft_init[1] = bHandLeft_init->get(1).asDouble();
+        handLeft_init[2] = bHandLeft_init->get(2).asDouble();
+
+        for(int i=0; i<initial_keypoints.size(); i++)
+        {
+            if(initial_keypoints[i].first == KeyPointTag::hand_left)
+                initial_keypoints[i] = make_pair(KeyPointTag::hand_left,handLeft_init);
+        }
+        yInfo() << "Updated initial pose for hand left";
+    }
+
+    if(Bottle *bHandRight_init = b.find("hand_right_init_pose").asList())
+    {
+        handRight_init[0] = bHandRight_init->get(0).asDouble();
+        handRight_init[1] = bHandRight_init->get(1).asDouble();
+        handRight_init[2] = bHandRight_init->get(2).asDouble();
+
+        for(int i=0; i<initial_keypoints.size(); i++)
+        {
+            if(initial_keypoints[i].first == KeyPointTag::hand_right)
+                initial_keypoints[i] = make_pair(KeyPointTag::hand_right,handRight_init);
+        }
+        yInfo() << "Updated initial pose for hand right";
+    }
+
+    if(Bottle *bHead_init = b.find("head_init_pose").asList())
+    {
+        head_init[0] = bHead_init->get(0).asDouble();
+        head_init[1] = bHead_init->get(1).asDouble();
+        head_init[2] = bHead_init->get(2).asDouble();
+
+        for(int i=0; i<initial_keypoints.size(); i++)
+        {
+            if(initial_keypoints[i].first == KeyPointTag::head)
+                initial_keypoints[i] = make_pair(KeyPointTag::head,head_init);
+        }
+        yInfo() << "Updated initial pose for head";
+    }
+
+    if(Bottle *bShoulderCenter_init = b.find("shoulder_center_init_pose").asList())
+    {
+        shoulderCenter_init[0] = bShoulderCenter_init->get(0).asDouble();
+        shoulderCenter_init[1] = bShoulderCenter_init->get(1).asDouble();
+        shoulderCenter_init[2] = bShoulderCenter_init->get(2).asDouble();
+
+        for(int i=0; i<initial_keypoints.size(); i++)
+        {
+            if(initial_keypoints[i].first == KeyPointTag::shoulder_center)
+                initial_keypoints[i] = make_pair(KeyPointTag::shoulder_center,shoulderCenter_init);
+        }
+        yInfo() << "Updated initial pose for shoulder center";
+    }
+
+    if(Bottle *bShoulderLeft_init = b.find("shoulder_left_init_pose").asList())
+    {
+        shoulderLeft_init[0] = bShoulderLeft_init->get(0).asDouble();
+        shoulderLeft_init[1] = bShoulderLeft_init->get(1).asDouble();
+        shoulderLeft_init[2] = bShoulderLeft_init->get(2).asDouble();
+
+        for(int i=0; i<initial_keypoints.size(); i++)
+        {
+            if(initial_keypoints[i].first == KeyPointTag::shoulder_left)
+                initial_keypoints[i] = make_pair(KeyPointTag::shoulder_left,shoulderLeft_init);
+        }
+        yInfo() << "Updated initial pose for shoulder left";
+    }
+
+    if(Bottle *bShoulderRight_init = b.find("shoulder_right_init_pose").asList())
+    {
+        shoulderRight_init[0] = bShoulderRight_init->get(0).asDouble();
+        shoulderRight_init[1] = bShoulderRight_init->get(1).asDouble();
+        shoulderRight_init[2] = bShoulderRight_init->get(2).asDouble();
+
+        for(int i=0; i<initial_keypoints.size(); i++)
+        {
+            if(initial_keypoints[i].first == KeyPointTag::shoulder_right)
+                initial_keypoints[i] = make_pair(KeyPointTag::shoulder_right,shoulderRight_init);
+        }
+        yInfo() << "Updated initial pose for shoulder right";
+    }
+
+    if(Bottle *bHipLeft_init = b.find("hip_left_init_pose").asList())
+    {
+        hipLeft_init[0] = bHipLeft_init->get(0).asDouble();
+        hipLeft_init[1] = bHipLeft_init->get(1).asDouble();
+        hipLeft_init[2] = bHipLeft_init->get(2).asDouble();
+
+        for(int i=0; i<initial_keypoints.size(); i++)
+        {
+            if(initial_keypoints[i].first == KeyPointTag::hip_left)
+                initial_keypoints[i] = make_pair(KeyPointTag::hip_left,hipLeft_init);
+        }
+        yInfo() << "Updated initial pose for hip left";
+    }
+
+    if(Bottle *bhipRight_init = b.find("hip_right_init_pose").asList())
+    {
+        hipRight_init[0] = bhipRight_init->get(0).asDouble();
+        hipRight_init[1] = bhipRight_init->get(1).asDouble();
+        hipRight_init[2] = bhipRight_init->get(2).asDouble();
+
+        for(int i=0; i<initial_keypoints.size(); i++)
+        {
+            if(initial_keypoints[i].first == KeyPointTag::hip_right)
+                initial_keypoints[i] = make_pair(KeyPointTag::hip_right,hipRight_init);
+        }
+        yInfo() << "Updated initial pose for hip right";
+    }
+
+    if(Bottle *bKneeLeft_init = b.find("knee_left_init_pose").asList())
+    {
+        kneeLeft_init[0] = bKneeLeft_init->get(0).asDouble();
+        kneeLeft_init[1] = bKneeLeft_init->get(1).asDouble();
+        kneeLeft_init[2] = bKneeLeft_init->get(2).asDouble();
+
+        for(int i=0; i<initial_keypoints.size(); i++)
+        {
+            if(initial_keypoints[i].first == KeyPointTag::knee_left)
+                initial_keypoints[i] = make_pair(KeyPointTag::knee_left,kneeLeft_init);
+        }
+        yInfo() << "Updated initial pose for knee left";
+    }
+
+    if(Bottle *bKneeRight_init = b.find("knee_right_init_pose").asList())
+    {
+        kneeRight_init[0] = bKneeRight_init->get(0).asDouble();
+        kneeRight_init[1] = bKneeRight_init->get(1).asDouble();
+        kneeRight_init[2] = bKneeRight_init->get(2).asDouble();
+
+        for(int i=0; i<initial_keypoints.size(); i++)
+        {
+            if(initial_keypoints[i].first == KeyPointTag::knee_right)
+                initial_keypoints[i] = make_pair(KeyPointTag::knee_right,kneeRight_init);
+        }
+        yInfo() << "Updated initial pose for knee right";
+    }
+
+    if(Bottle *bAnkleLeft_init = b.find("ankle_left_init_pose").asList())
+    {
+        ankleLeft_init[0] = bAnkleLeft_init->get(0).asDouble();
+        ankleLeft_init[1] = bAnkleLeft_init->get(1).asDouble();
+        ankleLeft_init[2] = bAnkleLeft_init->get(2).asDouble();
+
+        for(int i=0; i<initial_keypoints.size(); i++)
+        {
+            if(initial_keypoints[i].first == KeyPointTag::ankle_left)
+                initial_keypoints[i] = make_pair(KeyPointTag::ankle_left,ankleLeft_init);
+        }
+        yInfo() << "Updated initial pose for ankle left";
+    }
+
+    if(Bottle *bAnkleRight_init = b.find("ankle_right_init_pose").asList())
+    {
+        ankleRight_init[0] = bAnkleRight_init->get(0).asDouble();
+        ankleRight_init[1] = bAnkleRight_init->get(1).asDouble();
+        ankleRight_init[2] = bAnkleRight_init->get(2).asDouble();
+
+        for(int i=0; i<initial_keypoints.size(); i++)
+        {
+            if(initial_keypoints[i].first == KeyPointTag::ankle_right)
+                initial_keypoints[i] = make_pair(KeyPointTag::ankle_right,ankleRight_init);
+        }
+        yInfo() << "Updated initial pose for ankle right";
+    }
+
+    initial_skeleton.update(initial_keypoints);
 }
 
 bool Manager::loadMotionList()
@@ -268,9 +467,6 @@ bool Manager::loadMotionList()
                             {
                                 string motion_type = bMotion.find("motion_type").asString();
                                 string tag_joint = bMotion.find("tag_joint").asString();
-//                                Bottle *bRefdir = bMotion.find("ref_dir").asList();
-//                                Bottle *bPlane = bMotion.find("plane_normal").asList();
-//                                int n_motion = motion_number;
                                 double min = bMotion.find("min").asDouble();
                                 double max = bMotion.find("max").asDouble();
 
@@ -282,6 +478,8 @@ bool Manager::loadMotionList()
                                     ref_dir[1] = bRefdir->get(1).asDouble();
                                     ref_dir[2] = bRefdir->get(2).asDouble();
                                 }
+                                else
+                                    yError() << "Could not find reference direction";
 
                                 Vector plane_normal;
                                 plane_normal.resize(3);
@@ -291,9 +489,14 @@ bool Manager::loadMotionList()
                                     plane_normal[1] = bPlane->get(1).asDouble();
                                     plane_normal[2] = bPlane->get(2).asDouble();
                                 }
+                                else
+                                    yError() << "Could not find reference plane";
 
                                 Metric* newMetric = new Rom(motion_type, tag_joint, ref_dir, plane_normal, min, max);
                                 metrics.push_back(newMetric);
+
+                                //overwrites initial configuration if different
+                                loadInitialConf(bMotion);
 
                                 Bottle *elbowLC = bMotion.find("elbow_left_configuration").asList();
                                 if(elbowLC)
@@ -391,29 +594,29 @@ bool Manager::loadMotionList()
                                 else
                                     yError() << "Could not load shoulder right configuration";
 
-                                Bottle *hipLC = bMotion.find("hip_left_configuration").asList();                                        if(shoulderCC)
-                                    if(hipLC)
+                                Bottle *hipLC = bMotion.find("hip_left_configuration").asList();
+                                if(hipLC)
+                                {
+                                    string hLC = hipLC->get(0).asString();
+                                    if(hLC == "mobile")
                                     {
-                                        string hLC = hipLC->get(0).asString();
-                                        if(hLC == "mobile")
-                                        {
-                                            keypoints2conf[KeyPointTag::hip_left] = "mobile";
-                                        }
+                                        keypoints2conf[KeyPointTag::hip_left] = "mobile";
                                     }
-                                    else
-                                        yError() << "Could not load hip left configuration";
+                                }
+                                else
+                                    yError() << "Could not load hip left configuration";
 
-                                Bottle *hipRC = bMotion.find("hip_right_configuration").asList();                                        if(shoulderRC)
-                                    if(hipRC)
+                                Bottle *hipRC = bMotion.find("hip_right_configuration").asList();
+                                if(hipRC)
+                                {
+                                    string hRC = hipRC->get(0).asString();
+                                    if(hRC == "mobile")
                                     {
-                                        string hRC = hipRC->get(0).asString();
-                                        if(hRC == "mobile")
-                                        {
-                                            keypoints2conf[KeyPointTag::hip_right] = "mobile";
-                                        }
+                                        keypoints2conf[KeyPointTag::hip_right] = "mobile";
                                     }
-                                    else
-                                        yError() << "Could not load hip right configuration";
+                                }
+                                else
+                                    yError() << "Could not load hip right configuration";
 
                                 Bottle *kneeLC = bMotion.find("knee_left_configuration").asList();
                                 if(kneeLC)
@@ -462,12 +665,11 @@ bool Manager::loadMotionList()
                                 }
                                 else
                                     yError() << "Could not load ankle right configuration";
-                                //                                }
                             }
 
                             //add the current metric to the repertoire
                             motion_repertoire.insert(pair<string, Metric*>(curr_tag+"_"+to_string(j), metrics[j]));
-                            motion_repertoire[curr_tag+"_"+to_string(j)]->print();
+//                            motion_repertoire[curr_tag+"_"+to_string(j)]->print();
 
                             //create a new processor for each metric of each motion type
                             Processor* newProcessor = createProcessor(curr_tag, metrics[j]);

@@ -94,6 +94,7 @@ class Manager : public RFModule,
 
     void init();
     bool loadInitialConf();
+    bool loadInitialConf(const Bottle& b);
     bool loadMotionList();
     void getKeyframes();
     bool attach(RpcServer &source);

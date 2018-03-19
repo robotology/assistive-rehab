@@ -32,17 +32,14 @@ Processor* createProcessor(const string& motion_tag, const Metric* metric_)
 /********************************************************/
 Processor::Processor()
 {
-    xy_normal.resize(3);
-    yz_normal.resize(3);
-    xy_normal[0] = 0.0; xy_normal[1] = 0.0; xy_normal[2] = 1.0;
-    yz_normal[0] = 1.0; yz_normal[1] = 0.0; yz_normal[2] = 0.0;
+
 }
 
-void Processor::setInitialConf(const SkeletonStd &skeleton_init_, const map<string, string> &keypoints2conf_)
-{
-    skeleton_init = skeleton_init_;
-    keypoints2conf = keypoints2conf_;
-}
+//void Processor::setInitialConf(const SkeletonStd &skeleton_init_, const map<string, string> &keypoints2conf_)
+//{
+//    skeleton_init = skeleton_init_;
+//    keypoints2conf = keypoints2conf_;
+//}
 
 bool Processor::isStatic(const KeyPoint& keypoint)
 {
@@ -165,6 +162,15 @@ Rom_Processor::Rom_Processor(const Metric *rom_)
 {
     rom = (Rom*)rom_;
 //    cout << "processing rom id " << rom->getIdJoint() << endl;
+}
+
+void Rom_Processor::setInitialConf(const SkeletonStd &skeleton_init_, const map<string, string> &keypoints2conf_)
+{
+    skeleton_init = skeleton_init_;
+    keypoints2conf = keypoints2conf_;
+
+//    yInfo() << rom->getMotionType();
+//    skeleton_init.print();
 }
 
 double Rom_Processor::computeMetric()

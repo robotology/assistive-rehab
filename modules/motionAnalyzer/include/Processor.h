@@ -39,14 +39,12 @@ protected:
     map<string, string> keypoints2conf;
     SkeletonStd curr_skeleton;
     const Metric* metric;
-    Vector xy_normal;
-    Vector yz_normal;
 
 public:
     Processor();
     virtual ~Processor() {;}
 //    virtual string getMotionType();
-    void setInitialConf(const SkeletonStd& skeleton_init_, const map<string, string>& keypoints2conf_);
+    virtual void setInitialConf(const SkeletonStd& skeleton_init_, const map<string, string>& keypoints2conf_) = 0;
     bool isStatic(const KeyPoint& keypoint);
     void update(const SkeletonStd &curr_skeleton_);
     bool isDeviatingFromIntialPose();
@@ -63,6 +61,7 @@ public:
 
     Rom_Processor();
     Rom_Processor(const Metric *rom_);
+    void setInitialConf(const SkeletonStd& skeleton_init_, const map<string, string>& keypoints2conf_) override;
     double computeMetric();
 
     static const string motion_type;
