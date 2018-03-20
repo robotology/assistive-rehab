@@ -92,6 +92,8 @@ class Manager : public RFModule,
     vector<Metric*> metrics;
     vector<Processor*> processors;
 
+    double tstart;
+
 //    Metric* metric;
 //    Processor* processor;
 

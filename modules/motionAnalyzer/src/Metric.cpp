@@ -33,7 +33,7 @@ Rom::Rom()
 }
 
 Rom::Rom(const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
-         const Vector &plane_normal_, const double &min_, const double &max_)
+         const Vector &plane_normal_, const double &min_, const double &max_, const double &timeout_)
 {
     name = "ROM";
     motion_type = motion_type_;
@@ -42,6 +42,7 @@ Rom::Rom(const string &motion_type_, const string &tag_joint_, const Vector &ref
     plane_normal = plane_normal_;
     min = min_;
     max = max_;
+    timeout = timeout_;
 }
 
 void Rom::print()

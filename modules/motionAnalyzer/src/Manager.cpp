@@ -470,6 +470,7 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                                 string tag_joint = bMotion.find("tag_joint").asString();
                                 double min = bMotion.find("min").asDouble();
                                 double max = bMotion.find("max").asDouble();
+                                double timeout = bMotion.find("timeout").asDouble();
 
                                 Vector ref_dir;
                                 ref_dir.resize(3);
@@ -493,7 +494,7 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                                 else
                                     yError() << "Could not find reference plane";
 
-                                newMetric = new Rom(motion_type, tag_joint, ref_dir, plane_normal, min, max);
+                                newMetric = new Rom(motion_type, tag_joint, ref_dir, plane_normal, min, max, timeout);
 //                                metrics.push_back(newMetric);
 
                                 //overwrites initial configuration if different
@@ -979,6 +980,8 @@ bool Manager::configure(ResourceFinder &rf)
         return false;
     loadSequence(sequencer_file);
 
+    tstart = Time::now();
+
     return true;
 }
 
@@ -1028,6 +1031,10 @@ bool Manager::updateModule()
 
         Vector result;
         result.resize(processors.size());
+        double tnow = Time::now();
+        double currres = -1.0;
+        double prev_timeout = 0.0;
+        double timeout = 0.0;
         for(int i=0; i<processors.size(); i++)
         {
             processors[i]->update(skeleton);
@@ -1035,9 +1042,16 @@ bool Manager::updateModule()
                 yWarning() << "Deviating from initial pose\n";
 
             result[i] = processors[i]->computeMetric();
-            scopebottleout.addDouble(result[i]);
+
+            timeout += processors[i]->getTimeout();
+            //            cout << (tnow-tstart) << " " << prev_timeout << " " << timeout << endl;
+            if( prev_timeout < (tnow-tstart) && (tnow-tstart) < timeout )
+                currres = result[i];
+
+            prev_timeout = timeout;
         }
 
+        scopebottleout.addDouble(currres);
         scopePort.write();
 
     }
