@@ -44,9 +44,9 @@ public:
     Processor();
     virtual ~Processor() {;}
 //    virtual string getMotionType();
-    virtual void setInitialConf(const SkeletonStd& skeleton_init_, const map<string, string>& keypoints2conf_) = 0;
+    virtual void setInitialConf(const SkeletonWaist& skeleton_init_, const map<string, string>& keypoints2conf_) = 0;
     bool isStatic(const KeyPoint& keypoint);
-    void update(const SkeletonStd &curr_skeleton_);
+    void update(const SkeletonWaist &curr_skeleton_);
     bool isDeviatingFromIntialPose();
     bool isDeviatingFromIntialPose(const KeyPoint &keypoint, const KeyPoint &keypoint_init);
     virtual double computeMetric() {;}
@@ -63,7 +63,7 @@ public:
 
     Rom_Processor();
     Rom_Processor(const Metric *rom_);
-    void setInitialConf(const SkeletonStd& skeleton_init_, const map<string, string>& keypoints2conf_) override;
+    void setInitialConf(const SkeletonWaist& skeleton_init_, const map<string, string>& keypoints2conf_) override;
     double computeMetric();
     string getProcessedMetric() { return rom->getName(); }
     double getTimeout() const { return rom->getTimeout(); }

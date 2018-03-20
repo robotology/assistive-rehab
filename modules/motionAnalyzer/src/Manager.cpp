@@ -232,7 +232,7 @@ bool Manager::loadInitialConf(const string& motion_repertoire_file)
         else
             yError() << "Could not load initial pose for ankle right";
 
-        initial_skeleton.update(initial_keypoints);
+        initial_skeleton.update_fromstd(initial_keypoints);
     }
 }
 
@@ -1017,17 +1017,13 @@ bool Manager::updateModule()
         getKeyframes();
 
         //populate Skeleton data structure
-        SkeletonStd skeleton;
-        skeleton.update(curr_keypoints);
+        SkeletonWaist skeleton;
+        skeleton.update_fromstd(curr_keypoints);
 
 //        skeleton.print();
 
         //transform detected skeleton into standard
         skeleton.normalize();
-
-        //prepare output port
-        Bottle &scopebottleout = scopePort.prepare();
-        scopebottleout.clear();
 
         Vector result;
         result.resize(processors.size());
@@ -1043,6 +1039,7 @@ bool Manager::updateModule()
 
             result[i] = processors[i]->computeMetric();
 
+            //check which is the current processor based on timeout
             timeout += processors[i]->getTimeout();
             //            cout << (tnow-tstart) << " " << prev_timeout << " " << timeout << endl;
             if( prev_timeout < (tnow-tstart) && (tnow-tstart) < timeout )
@@ -1051,6 +1048,9 @@ bool Manager::updateModule()
             prev_timeout = timeout;
         }
 
+        //write on output port
+        Bottle &scopebottleout = scopePort.prepare();
+        scopebottleout.clear();
         scopebottleout.addDouble(currres);
         scopePort.write();
 

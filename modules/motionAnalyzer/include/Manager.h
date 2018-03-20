@@ -40,22 +40,11 @@ class Manager : public RFModule,
 
     int nmovements;
 
-//    struct listEntry
-//    {
-//        string tag;
-//        int id_joint;
-//        int n_motion;
-//        double min;
-//        double max;
-//    };
-//    map<string, listEntry> motion_list;
-
     map<string,Metric*> motion_repertoire;
 
     vector<pair<string,Vector>> initial_keypoints;
-//    vector<Vector> curr_keypoints;
     vector<pair<string,Vector>> curr_keypoints;
-    SkeletonStd initial_skeleton;
+    SkeletonWaist initial_skeleton;
 
     map<string, string> keypoints2conf;
 

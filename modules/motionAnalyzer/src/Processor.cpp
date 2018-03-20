@@ -49,7 +49,7 @@ bool Processor::isStatic(const KeyPoint& keypoint)
         return false;
 }
 
-void Processor::update(const SkeletonStd &curr_skeleton_)
+void Processor::update(const SkeletonWaist &curr_skeleton_)
 {
     curr_skeleton = curr_skeleton_;
 }
@@ -161,16 +161,12 @@ Rom_Processor::Rom_Processor()
 Rom_Processor::Rom_Processor(const Metric *rom_)
 {
     rom = (Rom*)rom_;
-//    cout << "processing rom id " << rom->getIdJoint() << endl;
 }
 
-void Rom_Processor::setInitialConf(const SkeletonStd &skeleton_init_, const map<string, string> &keypoints2conf_)
+void Rom_Processor::setInitialConf(const SkeletonWaist &skeleton_init_, const map<string, string> &keypoints2conf_)
 {
     skeleton_init = skeleton_init_;
     keypoints2conf = keypoints2conf_;
-
-//    yInfo() << rom->getMotionType();
-//    skeleton_init.print();
 }
 
 double Rom_Processor::computeMetric()

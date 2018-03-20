@@ -52,14 +52,5 @@ void Rom::print()
     yInfo() << "Tag joint = " << tag_joint;
     yInfo() << "Min = " << min;
     yInfo() << "Max = " << max;
-//    yInfo() << "elbowLeft = (" << elbowLeft[0] << elbowLeft[1] << elbowLeft[2] << ")";
-//    if(elbowLeft[3] == 0)
-//        yInfo() << "stationary";
-//    else
-//        yInfo() << "mobile";
-//    yInfo() << "elbowRight = (" << elbowRight[0] << elbowRight[1] << elbowRight[2] << ")";
-//    if(elbowRight[3] == 0)
-//        yInfo() << "stationary" << "\n";
-//    else
-//        yInfo() << "mobile" << "\n";
+    yInfo() << "Timeout = " << timeout;
 }
