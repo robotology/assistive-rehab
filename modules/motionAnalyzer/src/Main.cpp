@@ -29,8 +29,9 @@ int main(int argc, char *argv[])
     ResourceFinder rf;
 
     rf.setVerbose();
-    rf.setDefaultContext("motionAnalyzer");
-    rf.setDefault("configuration-file", "motion-repertoire.ini");
+    rf.setDefaultContext("motionAnalyzer");  
+    rf.setDefaultConfigFile("config.ini");
+//    rf.setDefault("configuration-file", "config.ini"); //"motion-repertoire.ini");
     rf.configure(argc, argv);
 
     return manager.runModule(rf);

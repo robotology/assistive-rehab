@@ -79,12 +79,12 @@ void Manager::init()
 
 }
 
-bool Manager::loadInitialConf()
+bool Manager::loadInitialConf(const string& motion_repertoire_file)
 {
     ResourceFinder rf;
     rf.setVerbose();
     rf.setDefaultContext(this->rf->getContext().c_str());
-    rf.setDefaultConfigFile(this->rf->find("configuration-file").asString().c_str());
+    rf.setDefaultConfigFile(motion_repertoire_file.c_str()); //(this->rf->find("configuration-file").asString().c_str());
     rf.configure(0, NULL);
 
     Bottle &bGeneral = rf.findGroup("GENERAL");
@@ -437,12 +437,12 @@ bool Manager::loadInitialConf(const Bottle& b)
     initial_skeleton.update(initial_keypoints);
 }
 
-bool Manager::loadMotionList()
+bool Manager::loadMotionList(const string& motion_repertoire_file)
 {
     ResourceFinder rf;
     rf.setVerbose();
     rf.setDefaultContext(this->rf->getContext().c_str());
-    rf.setDefaultConfigFile(this->rf->find("configuration-file").asString().c_str());
+    rf.setDefaultConfigFile(motion_repertoire_file.c_str()); //(this->rf->find("configuration-file").asString().c_str());
     rf.configure(0, NULL);
 
     Bottle &bGeneral = rf.findGroup("GENERAL");
@@ -463,7 +463,8 @@ bool Manager::loadMotionList()
                         Bottle &bMotion = rf.findGroup(curr_tag+"_"+to_string(j));
                         if(!bMotion.isNull())
                         {
-                            if(curr_tag == Rom_Processor::motion_type)
+                            Metric* newMetric;
+                            if(curr_tag == "ROM") //Rom_Processor::motion_type)
                             {
                                 string motion_type = bMotion.find("motion_type").asString();
                                 string tag_joint = bMotion.find("tag_joint").asString();
@@ -492,8 +493,8 @@ bool Manager::loadMotionList()
                                 else
                                     yError() << "Could not find reference plane";
 
-                                Metric* newMetric = new Rom(motion_type, tag_joint, ref_dir, plane_normal, min, max);
-                                metrics.push_back(newMetric);
+                                newMetric = new Rom(motion_type, tag_joint, ref_dir, plane_normal, min, max);
+//                                metrics.push_back(newMetric);
 
                                 //overwrites initial configuration if different
                                 loadInitialConf(bMotion);
@@ -668,13 +669,8 @@ bool Manager::loadMotionList()
                             }
 
                             //add the current metric to the repertoire
-                            motion_repertoire.insert(pair<string, Metric*>(curr_tag+"_"+to_string(j), metrics[j]));
+                            motion_repertoire.insert(pair<string, Metric*>(curr_tag+"_"+to_string(j), newMetric)); // metrics[j]));
 //                            motion_repertoire[curr_tag+"_"+to_string(j)]->print();
-
-                            //create a new processor for each metric of each motion type
-                            Processor* newProcessor = createProcessor(curr_tag, metrics[j]);
-                            newProcessor->setInitialConf(initial_skeleton, keypoints2conf);
-                            processors.push_back(newProcessor);
                         }
                     }
                 }
@@ -688,6 +684,48 @@ bool Manager::loadMotionList()
     }
 
     return true;
+}
+
+/********************************************************/
+bool Manager::loadSequence(const string &sequencer_file)
+{
+    ResourceFinder rf;
+    rf.setVerbose();
+    rf.setDefaultContext(this->rf->getContext().c_str());
+    rf.setDefaultConfigFile(sequencer_file.c_str()); //(this->rf->find("configuration-file").asString().c_str());
+    rf.configure(0, NULL);
+
+    if(Bottle *metric_type = rf.find("metric_type").asList())
+    {
+        if(Bottle *motion_type = rf.find("motion_type").asList())
+        {
+            metrics.resize(motion_type->size());
+            processors.resize(motion_type->size());
+
+            if(Bottle *tag_joint = rf.find("tag_joint").asList())
+            {
+                if(Bottle *n_rep = rf.find("number_repetitions").asList())
+                {
+                    for(int i=0; i<motion_type->size(); i++)
+                    {
+                        string single_motion = motion_type->get(i).asString();
+                        string joint = tag_joint->get(i).asString();
+                        string metric_tag = metric_type->get(i).asString();
+                        int n = n_rep->get(i).asInt();
+
+                        yInfo() << "Exercise to perform:" << n << single_motion << "for" << joint;
+
+                        metrics[i] = motion_repertoire.at(metric_tag);
+                        metrics[i]->print();
+
+                        Processor* newProcessor = createProcessor(metric_tag, metrics[i]);
+                        newProcessor->setInitialConf(initial_skeleton, keypoints2conf);
+                        processors[i] = newProcessor;
+                    }
+                }
+            }
+        }
+    }
 }
 
 /********************************************************/
@@ -927,15 +965,19 @@ bool Manager::configure(ResourceFinder &rf)
 
     string robot = rf.check("robot", Value("icub")).asString();
 
+    string motion_repertoire_file = rf.check("repertoire_file", Value("motion-repertoire.ini")).asString();
+    string sequencer_file = rf.check("sequencer_file", Value("sequencer.ini")).asString();
+
     opcPort.open(("/" + getName() + "/opc").c_str());
     scopePort.open(("/" + getName() + "/scope").c_str());
     rpcPort.open(("/" + getName() + "/cmd").c_str());
     attach(rpcPort);
 
     init();
-    loadInitialConf();
-    if(!loadMotionList())
+    loadInitialConf(motion_repertoire_file);
+    if(!loadMotionList(motion_repertoire_file))
         return false;
+    loadSequence(sequencer_file);
 
     return true;
 }
@@ -943,7 +985,6 @@ bool Manager::configure(ResourceFinder &rf)
 /********************************************************/
 bool Manager::close()
 {
-
     for(int j=0; j<metrics.size(); j++)
         delete metrics[j];
 
@@ -981,22 +1022,20 @@ bool Manager::updateModule()
         //transform detected skeleton into standard
         skeleton.normalize();
 
-//        yInfo() << processors.size();
-
         //prepare output port
         Bottle &scopebottleout = scopePort.prepare();
         scopebottleout.clear();
 
+        Vector result;
+        result.resize(processors.size());
         for(int i=0; i<processors.size(); i++)
         {
             processors[i]->update(skeleton);
             if(processors[i]->isDeviatingFromIntialPose())
                 yWarning() << "Deviating from initial pose\n";
 
-            double result = processors[i]->computeMetric();
-
-            //add result to output bottle
-            scopebottleout.addDouble(result);
+            result[i] = processors[i]->computeMetric();
+            scopebottleout.addDouble(result[i]);
         }
 
         scopePort.write();

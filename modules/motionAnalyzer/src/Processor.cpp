@@ -22,7 +22,7 @@ const string Rom_Processor::motion_type = "ROM";
 
 Processor* createProcessor(const string& motion_tag, const Metric* metric_)
 {
-    if(motion_tag == Rom_Processor::motion_type)
+    if(motion_tag.compare(Rom_Processor::motion_type) >= 0)
     {
         yInfo() << "Creating processor for" << Rom_Processor::motion_type << "\n";
         return new Rom_Processor(metric_);

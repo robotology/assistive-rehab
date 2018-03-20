@@ -92,10 +92,14 @@ class Manager : public RFModule,
     vector<Metric*> metrics;
     vector<Processor*> processors;
 
+//    Metric* metric;
+//    Processor* processor;
+
     void init();
-    bool loadInitialConf();
+    bool loadInitialConf(const string& motion_repertoire_file);
     bool loadInitialConf(const Bottle& b);
-    bool loadMotionList();
+    bool loadMotionList(const string& motion_repertoire_file);
+    bool loadSequence(const string& sequencer_file);
     void getKeyframes();
     bool attach(RpcServer &source);
 

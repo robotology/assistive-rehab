@@ -12,9 +12,30 @@
 
 #include "Metric.h"
 
+Metric::Metric()
+{
+
+}
+
+Metric::~Metric()
+{
+
+}
+
+void Metric::print()
+{
+
+}
+
+Rom::Rom()
+{
+
+}
+
 Rom::Rom(const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
          const Vector &plane_normal_, const double &min_, const double &max_)
 {
+    name = "ROM";
     motion_type = motion_type_;
     tag_joint = tag_joint_;
     ref_dir = ref_dir_;
@@ -25,6 +46,7 @@ Rom::Rom(const string &motion_type_, const string &tag_joint_, const Vector &ref
 
 void Rom::print()
 {
+    yInfo() << "Metric = " << name;
     yInfo() << "Motion type = " << motion_type;
     yInfo() << "Tag joint = " << tag_joint;
     yInfo() << "Min = " << min;

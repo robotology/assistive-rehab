@@ -28,13 +28,15 @@ class Metric
 {
 
 public:
-    Metric() {;}
-    virtual ~Metric() {;}
-    virtual void print() = 0;
+    Metric();
+    virtual ~Metric();
+    virtual void print();
+    virtual string getName() const = 0;
 };
 
 class Rom : public Metric
 {
+    string name;
     string motion_type;
     string tag_joint;
     Vector ref_dir;
@@ -47,6 +49,7 @@ public:
     Rom(const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
         const Vector &plane_normal_, const double &min_, const double &max_);
 
+    string getName() const { return name; }
     string getTagJoint() const { return tag_joint; }
     string getMotionType() const { return motion_type; }
     Vector getRefDir() const { return ref_dir; }
@@ -54,5 +57,6 @@ public:
     void print();
 
 };
+
 
 #endif

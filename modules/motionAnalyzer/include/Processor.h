@@ -50,6 +50,7 @@ public:
     bool isDeviatingFromIntialPose();
     bool isDeviatingFromIntialPose(const KeyPoint &keypoint, const KeyPoint &keypoint_init);
     virtual double computeMetric() {;}
+    virtual string getProcessedMetric() = 0;
 
 };
 
@@ -63,6 +64,7 @@ public:
     Rom_Processor(const Metric *rom_);
     void setInitialConf(const SkeletonStd& skeleton_init_, const map<string, string>& keypoints2conf_) override;
     double computeMetric();
+    string getProcessedMetric() { return rom->getName(); }
 
     static const string motion_type;
 
