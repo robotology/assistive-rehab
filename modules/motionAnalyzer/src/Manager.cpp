@@ -62,20 +62,20 @@ void Manager::init()
 
     curr_keypoints.resize(14);
 
-    keypoints2conf[KeyPointTag::shoulder_center]="static";
-    keypoints2conf[KeyPointTag::head]="static";
-    keypoints2conf[KeyPointTag::shoulder_left]="static";
-    keypoints2conf[KeyPointTag::elbow_left]="static";
-    keypoints2conf[KeyPointTag::hand_left]="static";
-    keypoints2conf[KeyPointTag::shoulder_right]="static";
-    keypoints2conf[KeyPointTag::elbow_right]="static";
-    keypoints2conf[KeyPointTag::hand_right]="static";
-    keypoints2conf[KeyPointTag::hip_left]="static";
-    keypoints2conf[KeyPointTag::knee_left]="static";
-    keypoints2conf[KeyPointTag::ankle_left]="static";
-    keypoints2conf[KeyPointTag::hip_right]="static";
-    keypoints2conf[KeyPointTag::knee_right]="static";
-    keypoints2conf[KeyPointTag::ankle_right]="static";
+    keypoints2conf[KeyPointTag::shoulder_center] = make_pair("static", 0.0);
+    keypoints2conf[KeyPointTag::head] = make_pair("static", 0.0);
+    keypoints2conf[KeyPointTag::shoulder_left] = make_pair("static", 0.0);
+    keypoints2conf[KeyPointTag::elbow_left] = make_pair("static", 0.0);
+    keypoints2conf[KeyPointTag::hand_left] = make_pair("static", 0.0);
+    keypoints2conf[KeyPointTag::shoulder_right] = make_pair("static", 0.0);
+    keypoints2conf[KeyPointTag::elbow_right] = make_pair("static", 0.0);
+    keypoints2conf[KeyPointTag::hand_right] = make_pair("static", 0.0);
+    keypoints2conf[KeyPointTag::hip_left] = make_pair("static", 0.0);
+    keypoints2conf[KeyPointTag::knee_left] = make_pair("static", 0.0);
+    keypoints2conf[KeyPointTag::ankle_left] = make_pair("static", 0.0);
+    keypoints2conf[KeyPointTag::hip_right] = make_pair("static", 0.0);
+    keypoints2conf[KeyPointTag::knee_right] = make_pair("static", 0.0);
+    keypoints2conf[KeyPointTag::ankle_right] = make_pair("static", 0.0);
 
 }
 
@@ -434,7 +434,7 @@ bool Manager::loadInitialConf(const Bottle& b)
         yInfo() << "Updated initial pose for ankle right";
     }
 
-    initial_skeleton.update(initial_keypoints);
+    initial_skeleton.update_fromstd(initial_keypoints);
 }
 
 bool Manager::loadMotionList(const string& motion_repertoire_file)
@@ -504,10 +504,7 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                                 if(elbowLC)
                                 {
                                     string eLC = elbowLC->get(0).asString();
-                                    if(eLC == "mobile")
-                                    {
-                                        keypoints2conf[KeyPointTag::elbow_left] = "mobile";
-                                    }
+                                    keypoints2conf[KeyPointTag::elbow_left] = make_pair(eLC, elbowLC->get(1).asDouble());
                                 }
                                 else
                                     yError() << "Could not load elbow left configuration";
@@ -516,10 +513,7 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                                 if(elbowRC)
                                 {
                                     string eRC = elbowRC->get(0).asString();
-                                    if(eRC == "mobile")
-                                    {
-                                        keypoints2conf[KeyPointTag::elbow_right] = "mobile";
-                                    }
+                                    keypoints2conf[KeyPointTag::elbow_right] = make_pair(eRC, elbowRC->get(1).asDouble());
                                 }
                                 else
                                     yError() << "Could not load elbow right configuration";
@@ -528,10 +522,7 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                                 if(handLC)
                                 {
                                     string hnLC = handLC->get(0).asString();
-                                    if(hnLC == "mobile")
-                                    {
-                                        keypoints2conf[KeyPointTag::hand_left] = "mobile";
-                                    }
+                                    keypoints2conf[KeyPointTag::hand_left] = make_pair(hnLC, handLC->get(1).asDouble());
                                 }
                                 else
                                     yError() << "Could not load hand left configuration";
@@ -540,10 +531,7 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                                 if(handRC)
                                 {
                                     string hnRC = handRC->get(0).asString();
-                                    if(hnRC == "mobile")
-                                    {
-                                        keypoints2conf[KeyPointTag::hand_right] = "mobile";
-                                    }
+                                    keypoints2conf[KeyPointTag::hand_right] = make_pair(hnRC, handRC->get(1).asDouble());
                                 }
                                 else
                                     yError() << "Could not load hand right configuration";
@@ -552,10 +540,7 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                                 if(headC)
                                 {
                                     string hC = headC->get(0).asString();
-                                    if(hC == "mobile")
-                                    {
-                                        keypoints2conf[KeyPointTag::head] = "mobile";
-                                    }
+                                    keypoints2conf[KeyPointTag::head] = make_pair(hC, headC->get(1).asDouble());
                                 }
                                 else
                                     yError() << "Could not load head configuration";
@@ -564,10 +549,7 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                                 if(shoulderCC)
                                 {
                                     string sCC = shoulderCC->get(0).asString();
-                                    if(sCC == "mobile")
-                                    {
-                                        keypoints2conf[KeyPointTag::shoulder_center] = "mobile";
-                                    }
+                                    keypoints2conf[KeyPointTag::shoulder_center] = make_pair(sCC, shoulderCC->get(1).asDouble());
                                 }
                                 else
                                     yError() << "Could not load shoulder center configuration";
@@ -576,10 +558,7 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                                 if(shoulderLC)
                                 {
                                     string sLC = shoulderLC->get(0).asString();
-                                    if(sLC == "mobile")
-                                    {
-                                        keypoints2conf[KeyPointTag::shoulder_left] = "mobile";
-                                    }
+                                    keypoints2conf[KeyPointTag::shoulder_left] = make_pair(sLC, shoulderLC->get(1).asDouble());
                                 }
                                 else
                                     yError() << "Could not load shoulder left configuration";
@@ -588,10 +567,7 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                                 if(shoulderRC)
                                 {
                                     string sRC = shoulderRC->get(0).asString();
-                                    if(sRC == "mobile")
-                                    {
-                                        keypoints2conf[KeyPointTag::shoulder_right] = "mobile";
-                                    }
+                                    keypoints2conf[KeyPointTag::shoulder_right] = make_pair(sRC, shoulderRC->get(1).asDouble());
                                 }
                                 else
                                     yError() << "Could not load shoulder right configuration";
@@ -600,10 +576,7 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                                 if(hipLC)
                                 {
                                     string hLC = hipLC->get(0).asString();
-                                    if(hLC == "mobile")
-                                    {
-                                        keypoints2conf[KeyPointTag::hip_left] = "mobile";
-                                    }
+                                    keypoints2conf[KeyPointTag::hip_left] = make_pair(hLC, hipLC->get(1).asDouble());
                                 }
                                 else
                                     yError() << "Could not load hip left configuration";
@@ -612,10 +585,7 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                                 if(hipRC)
                                 {
                                     string hRC = hipRC->get(0).asString();
-                                    if(hRC == "mobile")
-                                    {
-                                        keypoints2conf[KeyPointTag::hip_right] = "mobile";
-                                    }
+                                    keypoints2conf[KeyPointTag::hip_right] = make_pair(hRC, hipRC->get(1).asDouble());
                                 }
                                 else
                                     yError() << "Could not load hip right configuration";
@@ -624,10 +594,7 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                                 if(kneeLC)
                                 {
                                     string kLC = kneeLC->get(0).asString();
-                                    if(kLC == "mobile")
-                                    {
-                                        keypoints2conf[KeyPointTag::knee_left] = "mobile";
-                                    }
+                                    keypoints2conf[KeyPointTag::knee_left] = make_pair(kLC, kneeLC->get(1).asDouble());
                                 }
                                 else
                                     yError() << "Could not load knee left configuration";
@@ -636,10 +603,7 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                                 if(kneeRC)
                                 {
                                     string kRC = kneeRC->get(0).asString();
-                                    if(kRC == "mobile")
-                                    {
-                                        keypoints2conf[KeyPointTag::knee_right] = "mobile";
-                                    }
+                                    keypoints2conf[KeyPointTag::knee_right] = make_pair(kRC, kneeRC->get(1).asDouble());
                                 }
                                 else
                                     yError() << "Could not load knee right configuration";
@@ -648,10 +612,7 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                                 if(ankleLC)
                                 {
                                     string aLC = ankleLC->get(0).asString();
-                                    if(aLC == "mobile")
-                                    {
-                                        keypoints2conf[KeyPointTag::ankle_left] = "mobile";
-                                    }
+                                    keypoints2conf[KeyPointTag::ankle_left] = make_pair(aLC, ankleLC->get(1).asDouble());
                                 }
                                 else
                                     yError() << "Could not load ankle left configuration";
@@ -660,10 +621,7 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                                 if(ankleRC)
                                 {
                                     string aRC = ankleRC->get(0).asString();
-                                    if(aRC == "mobile")
-                                    {
-                                        keypoints2conf[KeyPointTag::ankle_right] = "mobile";
-                                    }
+                                    keypoints2conf[KeyPointTag::ankle_right] = make_pair(aRC, ankleRC->get(1).asDouble());
                                 }
                                 else
                                     yError() << "Could not load ankle right configuration";
@@ -1044,6 +1002,8 @@ bool Manager::updateModule()
             //            cout << (tnow-tstart) << " " << prev_timeout << " " << timeout << endl;
             if( prev_timeout < (tnow-tstart) && (tnow-tstart) < timeout )
                 currres = result[i];
+            else
+                currres = result[processors.size()];
 
             prev_timeout = timeout;
         }

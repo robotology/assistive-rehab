@@ -46,7 +46,7 @@ class Manager : public RFModule,
     vector<pair<string,Vector>> curr_keypoints;
     SkeletonWaist initial_skeleton;
 
-    map<string, string> keypoints2conf;
+    map<string, pair<string,double>> keypoints2conf;
 
     Vector elbowLeft_init;
     Vector elbowRight_init;

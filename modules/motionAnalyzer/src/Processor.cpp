@@ -12,7 +12,7 @@
 
 #include "Processor.h"
 
-#define MAX_DEVIATION_FROM_INITIAL_POSE 1
+#define CONST (4/3)*M_PI
 
 using namespace std;
 using namespace yarp::math;
@@ -43,7 +43,7 @@ Processor::Processor()
 
 bool Processor::isStatic(const KeyPoint& keypoint)
 {
-    if(keypoints2conf[keypoint.getTag()] == "static")
+    if(keypoints2conf[keypoint.getTag()].first == "static")
         return true;
     else
         return false;
@@ -125,7 +125,7 @@ bool Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyPoi
 //                         << initial_pose[0] << " " << initial_pose[1] << " " << initial_pose[2]
 //                         << " " << deviation << endl;
 
-                    if((deviation) > MAX_DEVIATION_FROM_INITIAL_POSE)
+                    if((deviation) > CONST*keypoints2conf[keypoint.getTag()].second)
                     {
                         isDeviating = true;
                     }
@@ -140,7 +140,7 @@ bool Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyPoi
 
 //                cout << keypoint.getTag() << " " << deviation << endl;
 
-                if((deviation) > MAX_DEVIATION_FROM_INITIAL_POSE)
+                if((deviation) > CONST*keypoints2conf[keypoint.getTag()].second)
                 {
                     isDeviating = true;
                 }
@@ -163,7 +163,7 @@ Rom_Processor::Rom_Processor(const Metric *rom_)
     rom = (Rom*)rom_;
 }
 
-void Rom_Processor::setInitialConf(const SkeletonWaist &skeleton_init_, const map<string, string> &keypoints2conf_)
+void Rom_Processor::setInitialConf(const SkeletonWaist &skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_)
 {
     skeleton_init = skeleton_init_;
     keypoints2conf = keypoints2conf_;
