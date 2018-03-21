@@ -6,24 +6,26 @@
  ******************************************************************************/
 
 /**
- * @file test-skeleton.cpp
+ * @file test-skeleton1.cpp
  * @authors: Ugo Pattacini <ugo.pattacini@iit.it>
  */
 
 #include <cstdlib>
 #include <utility>
 #include <iostream>
+#include <yarp/os/Property.h>
 #include <yarp/sig/Vector.h>
 #include "AssistiveRehab/skeleton.h"
 
 using namespace std;
+using namespace yarp::os;
 using namespace yarp::sig;
 using namespace assistive_rehab;
 
 void print_hierarchy(const KeyPoint *k)
 {
-    cout<<"keypoint[\""<<k->getTag()<<"\"]; ("
-        <<k->getPoint().toString(3,3)<<") "
+    cout<<"keypoint[\""<<k->getTag()<<"\"] = ("
+        <<k->getPoint().toString(3,3)<<"); status="
         <<(k->isUpdated()?"updated":"stale")<<endl;
     for (unsigned int i=0; i<k->getNumChild(); i++)
         print_hierarchy(k->getChild(i));
@@ -32,14 +34,14 @@ void print_hierarchy(const KeyPoint *k)
 int main()
 {
     cout<<"### Defining the Skeleton"<<endl;
-    SkeletonWaist skeleton;
+    SkeletonWaist skeleton1;
 
     cout<<"### Printing the Skeleton's structure (internal method)"<<endl;
-    skeleton.print();
+    skeleton1.print();
     cout<<endl;
 
     cout<<"### Printing the Skeleton's structure (using recursive access)"<<endl;
-    print_hierarchy(skeleton[0]);
+    print_hierarchy(skeleton1[0]);
     cout<<endl;
 
     vector<pair<string, Vector>> unordered;
@@ -93,13 +95,24 @@ int main()
     }
 
     cout<<"### Updating Skeleton's structure"<<endl;
-    skeleton.update_fromstd(unordered);
-    skeleton.print();
+    skeleton1.update_fromstd(unordered);
+    skeleton1.print();
     cout<<endl;
 
     cout<<"### Normalizing Skeleton's structure"<<endl;
-    skeleton.normalize();
-    skeleton.print();
+    skeleton1.normalize();
+    skeleton1.print();
+    cout<<endl;
+
+    cout<<"### Exporting Skeleton's structure"<<endl;
+    Property prop=skeleton1.toProperty();
+    cout<<prop.toString()<<endl;
+    cout<<endl;
+
+    cout<<"### Importing Skeleton's structure"<<endl;
+    SkeletonWaist skeleton2;
+    skeleton2.fromProperty(prop);
+    skeleton2.print();
     cout<<endl;
 
     return EXIT_SUCCESS;

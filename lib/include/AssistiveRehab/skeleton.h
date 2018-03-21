@@ -10,13 +10,15 @@
  * @authors: Ugo Pattacini <ugo.pattacini@iit.it>
  */
 
-#ifndef ASSIST_REHAB_SKELETON_H
-#define ASSIST_REHAB_SKELETON_H
+#ifndef ASSISTIVE_REHAB_SKELETON_H
+#define ASSISTIVE_REHAB_SKELETON_H
 
 #include <string>
 #include <vector>
 #include <unordered_map>
 #include <utility>
+#include <yarp/os/Bottle.h>
+#include <yarp/os/Property.h>
 #include <yarp/sig/Vector.h>
 
 namespace assistive_rehab
@@ -80,24 +82,34 @@ public:
 class Skeleton
 {
 protected:
+    std::string tag;
     std::vector<KeyPoint*> keypoints;
     std::unordered_map<std::string, KeyPoint*> tag2key;
     std::unordered_map<KeyPoint*, unsigned int> key2id;
 
-    void normalize(KeyPoint* k, const std::vector<yarp::sig::Vector> &helperpoints);
+    yarp::os::Property helper_toproperty(KeyPoint* k);
+    void helper_fromproperty(yarp::os::Bottle *prop, KeyPoint *parent);
+    void helper_normalize(KeyPoint* k, const std::vector<yarp::sig::Vector> &helperpoints);
 
 public:
+    Skeleton();
     virtual ~Skeleton();
+
+    void setTag(const std::string &tag) { this->tag=tag; }
+    std::string getTag() const { return tag; }
+
+    virtual yarp::os::Property toProperty();
+    virtual void fromProperty(const yarp::os::Property &prop);
+
+    unsigned int getNumKeyPoints() const { return (unsigned int)keypoints.size(); }
+    const KeyPoint*operator [](const std::string &tag) const;
+    const KeyPoint*operator [](const unsigned int i) const;
 
     virtual void update(const std::vector<yarp::sig::Vector> &ordered) = 0;
     virtual void update(const std::vector<std::pair<std::string, yarp::sig::Vector>> &unordered) = 0;
 
     virtual std::vector<yarp::sig::Vector> get_ordered() const;
     virtual std::vector<std::pair<std::string, yarp::sig::Vector>> get_unordered() const;
-
-    unsigned int getNumKeyPoints() const { return (unsigned int)keypoints.size(); }
-    const KeyPoint*operator [](const std::string &tag) const;
-    const KeyPoint*operator [](const unsigned int i) const;
 
     void normalize();
     void print() const;

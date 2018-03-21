@@ -78,10 +78,123 @@ const KeyPoint *KeyPoint::getChild(const unsigned int i) const
     return ((i>=0) && (i<child.size()))?child[i]:nullptr;
 }
 
+Skeleton::Skeleton()
+{
+    tag="";
+}
+
 Skeleton::~Skeleton()
 {
     for (auto &k:keypoints)
         delete k;
+}
+
+Property Skeleton::helper_toproperty(KeyPoint* k)
+{
+    Property prop;
+    if (k!=nullptr)
+    {
+        Bottle position;
+        position.addList().read(k->point);
+
+        prop.put("tag",k->getTag());
+        prop.put("status",k->isUpdated()?"updated":"stale");
+        prop.put("position",position.get(0));
+        
+        if (k->child.size()>0)
+        {
+            Bottle child;
+            Bottle &child_=child.addList();
+            for (auto &c:k->child)
+            {
+                Property p=helper_toproperty(c);
+                Bottle b; b.addList().read(p);
+                child_.append(b);
+            }
+            prop.put("child",child.get(0));
+        }
+    }
+
+    return prop;
+}
+
+void Skeleton::helper_fromproperty(Bottle *prop, KeyPoint *parent)
+{
+    if (prop!=nullptr)
+    {
+        for (int i=0; i<prop->size(); i++)
+        {
+            Bottle *b=prop->get(i).asList();
+            string tag=b->check("tag",Value("")).asString();
+            bool updated=(b->check("status",Value("stale")).asString()=="updated");
+
+            Vector point(3,0.0);
+            if (Bottle *p=b->find("position").asList())
+            {
+                point.resize(p->size());
+                for (int j=0; j<p->size(); j++)
+                    point[j]=p->get(j).asDouble();
+            }
+
+            KeyPoint *k=new KeyPoint(tag,point,updated);
+            tag2key[tag]=k;
+            keypoints.push_back(k);
+            key2id[k]=(unsigned int)keypoints.size()-1;
+            if (parent!=nullptr)
+            {
+                k->parent.push_back(parent);
+                parent->child.push_back(k);
+            }
+
+            helper_fromproperty(b->find("child").asList(),k);
+        }
+    }
+}
+
+void Skeleton::helper_normalize(KeyPoint* k, const vector<Vector> &helperpoints)
+{
+    if (k!=nullptr)
+    {
+        for (auto &c:k->child)
+        {
+            Vector dir=helperpoints[key2id[c]]-helperpoints[key2id[k]];
+            double n=norm(dir);
+            if (n>0.0)
+                dir/=norm(dir);
+            c->point=k->point+dir;
+            helper_normalize(c,helperpoints);
+        }
+    }
+}
+
+Property Skeleton::toProperty()
+{
+    Property prop;
+    prop.put("tag",tag);
+
+    Bottle skeleton;
+    Bottle &skeleton_=skeleton.addList();
+    if (keypoints.size()>0)
+    {
+        Property p=helper_toproperty(keypoints[0]);
+        skeleton_.addList().read(p);
+    }
+    prop.put("skeleton",skeleton.get(0));
+
+    return prop;
+}
+
+void Skeleton::fromProperty(const Property &prop)
+{
+    for (auto &k:keypoints)
+        delete k;
+
+    keypoints.clear();
+    tag2key.clear();
+    key2id.clear();
+
+    tag=prop.check("tag",Value("")).asString();
+    helper_fromproperty(prop.find("skeleton").asList(),nullptr);
 }
 
 const KeyPoint *Skeleton::operator [](const string &tag) const
@@ -111,22 +224,6 @@ vector<pair<string, Vector>> Skeleton::get_unordered() const
     return unordered;
 }
 
-void Skeleton::normalize(KeyPoint* k, const vector<Vector> &helperpoints)
-{
-    if (k!=nullptr)
-    {
-        for (auto &c:k->child)
-        {
-            Vector dir=helperpoints[key2id[c]]-helperpoints[key2id[k]];
-            double n=norm(dir);
-            if (n>0.0)
-                dir/=norm(dir);
-            c->point=k->point+dir;
-            normalize(c,helperpoints);
-        }
-    }
-}
-
 void Skeleton::normalize()
 {
     if (keypoints.size()>0)
@@ -134,7 +231,7 @@ void Skeleton::normalize()
         vector<Vector> helperpoints;
         for (auto &k:keypoints)
             helperpoints.push_back(k->getPoint());
-        normalize(keypoints[0],helperpoints);
+        helper_normalize(keypoints[0],helperpoints);
     }
 }
 
@@ -142,9 +239,14 @@ void Skeleton::print() const
 {
     for (auto &k:keypoints)
     {
-        cout<<"keypoint[\""<<k->getTag()<<"\"]; ("
-            <<k->getPoint().toString(3,3)<<") "
-            <<(k->isUpdated()?"updated":"stale")<<endl;
+        cout<<"keypoint[\""<<k->getTag()<<"\"] = ("
+            <<k->getPoint().toString(3,3)<<"); status="
+            <<(k->isUpdated()?"updated":"stale")
+            <<"; parent={";
+            for (auto &p:k->parent) cout<<"\""<<p->getTag()<<"\" ";
+            cout<<"}; child={";
+            for (auto &c:k->child) cout<<"\""<<c->getTag()<<"\" ";
+            cout<<"}"<<endl;
     }
 }
 
