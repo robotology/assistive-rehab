@@ -81,6 +81,7 @@ const KeyPoint *KeyPoint::getChild(const unsigned int i) const
 Skeleton::Skeleton()
 {
     tag="";
+    T=eye(4,4);
 }
 
 Skeleton::~Skeleton()
@@ -167,10 +168,25 @@ void Skeleton::helper_normalize(KeyPoint* k, const vector<Vector> &helperpoints)
     }
 }
 
+bool Skeleton::setTransformation(const Matrix &T)
+{
+    if ((T.rows()>=4) || (T.cols()>=4))
+    {
+        this->T=T;
+        return true;
+    }
+    else
+        return false;
+}
+
 Property Skeleton::toProperty()
 {
     Property prop;
     prop.put("tag",tag);
+
+    Bottle transformation;
+    transformation.addList().read(T);
+    prop.put("transformation",transformation.get(0));
 
     Bottle skeleton;
     Bottle &skeleton_=skeleton.addList();
@@ -194,6 +210,13 @@ void Skeleton::fromProperty(const Property &prop)
     key2id.clear();
 
     tag=prop.check("tag",Value("")).asString();
+    if (prop.check("transformation"))
+    {
+        if (Bottle *b=prop.find("transformation").asList())
+            b->write(T);
+    }
+    else
+        T=eye(3,3);
     helper_fromproperty(prop.find("skeleton").asList(),nullptr);
 }
 
@@ -237,6 +260,8 @@ void Skeleton::normalize()
 
 void Skeleton::print() const
 {
+    cout<<"tag = \""<<tag<<"\""<<endl;
+    cout<<"transformation"<<endl<<T.toString(3,3)<<endl;
     for (auto &k:keypoints)
     {
         cout<<"keypoint[\""<<k->getTag()<<"\"] = ("
@@ -343,12 +368,19 @@ SkeletonStd::SkeletonStd()
 
 void SkeletonStd::update(const vector<Vector> &ordered)
 {
+    Vector p(4,1);
     unsigned int i=0;
     for (auto &k:keypoints)
     {
         k->stale();
         if (i<ordered.size())
-            k->setPoint(ordered[i]);
+        {
+            auto &v=ordered[i];
+            p[0]=v[0];
+            p[1]=v[1];
+            p[2]=v[2];
+            k->setPoint((T*p).subVector(0,2));
+        }
         i++;
     }
 }
@@ -358,11 +390,18 @@ void SkeletonStd::update(const vector<pair<string, Vector>> &unordered)
     for (auto &k:keypoints)
         k->stale();
 
+    Vector p(4,1);
     for (auto &it1:unordered)
     {
         auto it2=tag2key.find(get<0>(it1));
         if (it2!=tag2key.end())
-            it2->second->setPoint(get<1>(it1));
+        {
+            auto &v=get<1>(it1);
+            p[0]=v[0];
+            p[1]=v[1];
+            p[2]=v[2];
+            it2->second->setPoint((T*p).subVector(0,2));
+        }
     }
 }
 
@@ -396,6 +435,7 @@ SkeletonWaist::SkeletonWaist() : SkeletonStd()
 
 void SkeletonWaist::update_fromstd(const vector<Vector> &ordered)
 {
+    Vector p(4,1);
     unsigned int i=0;
     for (auto &k:keypoints)
     {
@@ -403,7 +443,11 @@ void SkeletonWaist::update_fromstd(const vector<Vector> &ordered)
         if (i<ordered.size())
         {
             unsigned int pos=(i<waist_pos)?i:i+1;
-            k->setPoint(ordered[pos]);
+            auto &v=ordered[pos];
+            p[0]=v[0];
+            p[1]=v[1];
+            p[2]=v[2];
+            k->setPoint((T*p).subVector(0,2));
         }
         i++;
     }

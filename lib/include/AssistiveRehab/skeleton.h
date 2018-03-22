@@ -20,6 +20,7 @@
 #include <yarp/os/Bottle.h>
 #include <yarp/os/Property.h>
 #include <yarp/sig/Vector.h>
+#include <yarp/sig/Matrix.h>
 
 namespace assistive_rehab
 {
@@ -87,6 +88,8 @@ protected:
     std::unordered_map<std::string, KeyPoint*> tag2key;
     std::unordered_map<KeyPoint*, unsigned int> key2id;
 
+    yarp::sig::Matrix T;
+
     yarp::os::Property helper_toproperty(KeyPoint* k);
     void helper_fromproperty(yarp::os::Bottle *prop, KeyPoint *parent);
     void helper_normalize(KeyPoint* k, const std::vector<yarp::sig::Vector> &helperpoints);
@@ -97,6 +100,9 @@ public:
 
     void setTag(const std::string &tag) { this->tag=tag; }
     std::string getTag() const { return tag; }
+
+    bool setTransformation(const yarp::sig::Matrix &T);
+    yarp::sig::Matrix getTransformation() const { return T; }
 
     virtual yarp::os::Property toProperty();
     virtual void fromProperty(const yarp::os::Property &prop);

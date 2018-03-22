@@ -11,15 +11,18 @@
  */
 
 #include <cstdlib>
+#include <cmath>
 #include <utility>
 #include <iostream>
 #include <yarp/os/Property.h>
 #include <yarp/sig/Vector.h>
+#include <yarp/math/Math.h>
 #include "AssistiveRehab/skeleton.h"
 
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
+using namespace yarp::math;
 using namespace assistive_rehab;
 
 void print_hierarchy(const KeyPoint *k)
@@ -35,6 +38,10 @@ int main()
 {
     cout<<"### Defining the Skeleton"<<endl;
     SkeletonWaist skeleton1;
+    skeleton1.setTag("test");
+
+    Vector rot(4,0.0); rot[1]=1.0; rot[3]=M_PI;
+    skeleton1.setTransformation(axis2dcm(rot));
 
     cout<<"### Printing the Skeleton's structure (internal method)"<<endl;
     skeleton1.print();
