@@ -3,3 +3,4 @@
 # Authors: Ugo Pattacini <ugo.pattacini@iit.it>
 
 add_subdirectory(motionAnalyzer)
+add_subdirectory(skeletonViewer)
