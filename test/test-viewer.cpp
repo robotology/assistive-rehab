@@ -98,12 +98,6 @@ class TestViewer : public RFModule
         }
         skeleton1.update(unordered);
 
-        Vector rot=skeleton1.getTransverse();
-        rot.push_back(-M_PI/2.0);
-        Matrix T=axis2dcm(rot);
-        T.setSubcol(0.4*skeleton1.getCoronal(),0,3);
-        skeleton2.setTransformation(T);
-
         Vector d=skeleton1[KeyPointTag::head]->getPoint()-
                  skeleton1[KeyPointTag::shoulder_center]->getPoint();
         radius=norm(d);
@@ -131,6 +125,12 @@ class TestViewer : public RFModule
         vector<pair<string,Vector>> unordered;
         unordered.push_back(make_pair(KeyPointTag::head,p));
         skeleton1.update(unordered);
+
+        Vector rot=skeleton1.getTransverse();
+        rot.push_back(2.0*M_PI*0.1*t);
+        Matrix T=axis2dcm(rot);
+        T.setSubcol(0.4*skeleton1.getCoronal(),0,3);
+        skeleton2.setTransformation(T);
         skeleton2.update(skeleton1.get_ordered());
 
         Property prop1=skeleton1.toProperty();

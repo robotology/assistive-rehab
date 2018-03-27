@@ -62,6 +62,7 @@ protected:
 
     vector<double> gray{0.5,0.5,0.5};
     vector<double> color;
+    Vector z;
 
     vector<vtkSmartPointer<vtkSphereSource>>   vtk_sphere;
     vector<vtkSmartPointer<vtkPolyDataMapper>> vtk_sphere_mapper;
@@ -122,9 +123,27 @@ protected:
     }
 
     /****************************************************************/
+    bool align(vtkSmartPointer<vtkTransform> &vtk_transform,
+               const Vector &v1, const Vector &v2)
+    {
+        double n1=norm(v1);
+        double n2=norm(v2);
+        if ((n1>0.0) && (n2>0.0))
+        {
+            Vector v1_=(1.0/n1)*v1;
+            Vector v2_=(1.0/n2)*v2;
+            double angle=(180.0/M_PI)*acos(dot(v1_,v2_));
+            Vector axis=cross(v1_,v2_);
+            vtk_transform->RotateWXYZ(angle,axis.data());
+            return true;
+        }
+        else
+            return false;
+    }
+
+    /****************************************************************/
     void generate_limbs(const KeyPoint *k)
     {
-        Vector z(3,0.0); z[2]=1.0;
         double a=characteristic_length/100.0;
 
         vtk_sphere.push_back(vtkSmartPointer<vtkSphereSource>::New());
@@ -171,14 +190,7 @@ protected:
 
             Vector m=0.5*(c->getPoint()-k->getPoint());
             vtk_quadric_transform.back()->Translate((k->getPoint()+m).data());
-            double n=norm(m);
-            if (n>0.0)
-            {
-                m/=n;
-                double angle=(180.0/M_PI)*acos(dot(z,m));
-                Vector axis=cross(z,m);
-                vtk_quadric_transform.back()->RotateWXYZ(angle,axis.data());
-            }
+            align(vtk_quadric_transform.back(),z,m);
 
             vtk_quadric_actor.push_back(vtkSmartPointer<vtkActor>::New());
             vtk_quadric_actor.back()->SetMapper(vtk_quadric_mapper.back());
@@ -193,8 +205,6 @@ protected:
     /****************************************************************/
     void update_limbs(const KeyPoint *k)
     {
-        Vector z(3,0.0); z[2]=1.0;
-
         auto id_sphere=k2id_sphere[k];
         vtk_sphere[id_sphere]->SetCenter(Vector(k->getPoint()).data());
         set_color(vtk_sphere_actor[id_sphere],k->isUpdated());
@@ -208,14 +218,7 @@ protected:
 
             Vector m=0.5*(c->getPoint()-k->getPoint());
             vtk_quadric_transform[id_quadric]->Translate((k->getPoint()+m).data());
-            double n=norm(m);
-            if (n>0.0)
-            {
-                m/=n;
-                double angle=(180.0/M_PI)*acos(dot(z,m));
-                Vector axis=cross(z,m);
-                vtk_quadric_transform[id_quadric]->RotateWXYZ(angle,axis.data());
-            }
+            align(vtk_quadric_transform[id_quadric],z,m);
 
             update_limbs(c);
         }
@@ -227,6 +230,8 @@ public:
                 vtkSmartPointer<vtkRenderer> &vtk_renderer_) :
                 vtk_renderer(vtk_renderer_)
     {
+        z.resize(3,0.0); z[2]=1.0;
+
         skeleton=unique_ptr<Skeleton>(factory(prop));        
         if (skeleton!=nullptr)
         {
@@ -260,6 +265,7 @@ public:
 
                     vtk_textTransform=vtkSmartPointer<vtkTransform>::New();
                     vtk_textTransform->Translate(p.data());
+                    align(vtk_textTransform,z,skeleton->getCoronal());
                     vtk_textTransform->Scale(Vector(3,characteristic_length/20.0).data());
 
                     vtk_textActor=vtkSmartPointer<vtkActor>::New();
@@ -304,8 +310,14 @@ public:
                     Vector head=skeleton->operator[](KeyPointTag::head)->getPoint();
                     Vector p=shoulder_center+1.1*(head-shoulder_center);
                     
+                    Vector position(3),focal(3);
+                    vtkSmartPointer<vtkCamera> vtk_camera=vtk_renderer->GetActiveCamera();
+                    vtk_camera->GetPosition(position.data());
+                    vtk_camera->GetFocalPoint(focal.data());
+                    
                     vtk_textTransform->Identity();
                     vtk_textTransform->Translate(p.data());
+                    align(vtk_textTransform,z,position-focal);
                     vtk_textTransform->Scale(Vector(3,characteristic_length/20.0).data());
                 }
             }
