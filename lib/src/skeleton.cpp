@@ -10,6 +10,7 @@
  * @authors: Ugo Pattacini <ugo.pattacini@iit.it>
  */
 
+#include <typeinfo>
 #include <algorithm>
 #include <iostream>
 #include <yarp/math/Math.h>
@@ -160,7 +161,7 @@ void Skeleton::helper_updatefromproperty(Bottle *prop)
             Bottle *b=prop->get(i).asList();
             if (b->check("tag"))
             {
-                auto &it=tag2key.find(b->find("tag").asString());
+                auto it=tag2key.find(b->find("tag").asString());
                 if (it!=tag2key.end())
                 {
                     auto &k=it->second;

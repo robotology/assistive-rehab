@@ -133,10 +133,13 @@ class TestViewer : public RFModule
         skeleton1.update(unordered);
         skeleton2.update(skeleton1.get_ordered());
 
+        Property prop1=skeleton1.toProperty();
+        Property prop2=skeleton2.toProperty();
+
         Bottle &msg=port.prepare();
         msg.clear();
-        msg.addList().read(skeleton1.toProperty());
-        msg.addList().read(skeleton2.toProperty());
+        msg.addList().read(prop1);
+        msg.addList().read(prop2);
         port.write();
 
         return true;
