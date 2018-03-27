@@ -15,7 +15,6 @@
 #include <cmath>
 #include <vector>
 #include <unordered_map>
-#include <set>
 #include <algorithm>
 #include <string>
 
@@ -50,60 +49,13 @@ using namespace yarp::sig;
 using namespace yarp::math;
 using namespace assistive_rehab;
 
-Mutex mutex;
-
-/****************************************************************/
-class UpdateCommand : public vtkCommand
-{
-    const bool *closing;
-
-public:
-    /****************************************************************/
-    vtkTypeMacro(UpdateCommand, vtkCommand);
-
-    /****************************************************************/
-    static UpdateCommand *New()
-    {
-        return new UpdateCommand;
-    }
-
-    /****************************************************************/
-    UpdateCommand() : closing(nullptr) { }
-
-    /****************************************************************/
-    void set_closing(const bool &closing)
-    {
-        this->closing=&closing;
-    }
-
-    /****************************************************************/
-    void Execute(vtkObject *caller, unsigned long vtkNotUsed(eventId), 
-                 void *vtkNotUsed(callData))
-    {
-        LockGuard lg(mutex);
-        vtkRenderWindowInteractor* iren=static_cast<vtkRenderWindowInteractor*>(caller);
-        if (closing!=nullptr)
-        {
-            if (*closing)
-            {
-                iren->GetRenderWindow()->Finalize();
-                iren->TerminateApp();
-                return;
-            }
-        }
-
-        iren->GetRenderWindow()->SetWindowName("Skeleton Viewer");
-        iren->Render();
-    }
-};
-
-
 /****************************************************************/
 class VTKSkeleton
 {
 protected:
     vtkSmartPointer<vtkRenderer> &vtk_renderer;
     unique_ptr<Skeleton> skeleton;
+    double last_update;
 
     vector<vtkSmartPointer<vtkSphereSource>>   vtk_sphere;
     vector<vtkSmartPointer<vtkPolyDataMapper>> vtk_sphere_mapper;
@@ -124,7 +76,6 @@ protected:
     vtkSmartPointer<vtkPolyDataMapper>         vtk_textMapper;
     vtkSmartPointer<vtkTransform>              vtk_textTransform;
     vtkSmartPointer<vtkActor>                  vtk_textActor;
-    
 
     /****************************************************************/
     void set_color(vtkSmartPointer<vtkActor> &vtk_actor_id, const bool updated)
@@ -238,8 +189,9 @@ protected:
 
 public:
     /****************************************************************/
-    VTKSkeleton(vtkSmartPointer<vtkRenderer> &vtk_renderer_,
-                const Property &prop) : vtk_renderer(vtk_renderer_)
+    VTKSkeleton(const Property &prop,
+                vtkSmartPointer<vtkRenderer> &vtk_renderer_) :
+                vtk_renderer(vtk_renderer_)
     {
         skeleton=unique_ptr<Skeleton>(factory(prop));
         if (skeleton!=nullptr)
@@ -277,6 +229,18 @@ public:
                 vtk_camera->SetViewUp(skeleton->getTransverse().data());
             }
         }
+
+        last_update=Time::now();
+    }
+
+    /****************************************************************/
+    virtual ~VTKSkeleton()
+    {
+        for (auto &actor:vtk_sphere_actor)
+            vtk_renderer->RemoveActor(actor);
+        for (auto &actor:vtk_quadric_actor)
+            vtk_renderer->RemoveActor(actor);
+        vtk_renderer->RemoveActor(vtk_textActor);
     }
 
     /****************************************************************/
@@ -300,6 +264,71 @@ public:
                 }
             }
         }
+
+        last_update=Time::now();
+    }
+
+    /****************************************************************/
+    double get_last_update() const
+    {
+        return last_update;
+    }
+};
+
+
+Mutex mutex;
+unordered_map<string,unique_ptr<VTKSkeleton>> skeletons;
+vector<unordered_map<string,unique_ptr<VTKSkeleton>>::iterator> skeletons_gc_iterators;
+
+/****************************************************************/
+class UpdateCommand : public vtkCommand
+{
+    const bool *closing;
+
+public:
+    /****************************************************************/
+    vtkTypeMacro(UpdateCommand, vtkCommand);
+
+    /****************************************************************/
+    static UpdateCommand *New()
+    {
+        return new UpdateCommand;
+    }
+
+    /****************************************************************/
+    UpdateCommand() : closing(nullptr) { }
+
+    /****************************************************************/
+    void set_closing(const bool &closing)
+    {
+        this->closing=&closing;
+    }
+
+    /****************************************************************/
+    void Execute(vtkObject *caller, unsigned long vtkNotUsed(eventId), 
+                 void *vtkNotUsed(callData))
+    {
+        LockGuard lg(mutex);
+        vtkRenderWindowInteractor* iren=static_cast<vtkRenderWindowInteractor*>(caller);
+        if (closing!=nullptr)
+        {
+            if (*closing)
+            {
+                iren->GetRenderWindow()->Finalize();
+                iren->TerminateApp();
+                return;
+            }
+        }
+
+        if (skeletons_gc_iterators.size()>0)
+        {
+            for (auto &s:skeletons_gc_iterators)
+                skeletons.erase(s);
+            skeletons_gc_iterators.clear();
+        }
+
+        iren->GetRenderWindow()->SetWindowName("Skeleton Viewer");
+        iren->Render();
     }
 };
 
@@ -320,6 +349,15 @@ class Viewer : public RFModule
         }
     } inputPort;
 
+    class SkeletonsGC : public RateThread {
+        Viewer *viewer;
+        void run() override {
+            viewer->gc();
+        }
+    public:
+        SkeletonsGC(Viewer *viewer_) : RateThread(1000), viewer(viewer_) { }
+    } skeletonsGC;
+
     vtkSmartPointer<vtkRenderer> vtk_renderer;
     vtkSmartPointer<vtkRenderWindow> vtk_renderWindow;
     vtkSmartPointer<vtkRenderWindowInteractor> vtk_renderWindowInteractor;
@@ -329,12 +367,11 @@ class Viewer : public RFModule
     vtkSmartPointer<vtkInteractorStyleSwitch> vtk_style;
     vtkSmartPointer<UpdateCommand> vtk_updateCallback;
 
-    unordered_map<string,unique_ptr<VTKSkeleton>> skeletons;
-
     /****************************************************************/
     bool configure(ResourceFinder &rf) override
     {
         inputPort.open("/skeletonViewer:i");
+        skeletonsGC.start();
 
         vtk_renderer=vtkSmartPointer<vtkRenderer>::New();
         vtk_renderWindow=vtkSmartPointer<vtkRenderWindow>::New();
@@ -389,10 +426,22 @@ class Viewer : public RFModule
             string tag=input.find("tag").asString();
             auto s=skeletons.find(tag);
             if (s==skeletons.end())
-                skeletons[tag]=unique_ptr<VTKSkeleton>(new VTKSkeleton(vtk_renderer,input));
+                skeletons[tag]=unique_ptr<VTKSkeleton>(new VTKSkeleton(input,vtk_renderer));
             else
                 s->second->update(input);
         }
+    }
+
+    /****************************************************************/
+    void gc()
+    {
+        LockGuard lg(mutex);
+        double t=Time::now();
+        double deadline=0.001*skeletonsGC.getRate();
+
+        for (auto s=begin(skeletons); s!=end(skeletons); s++)
+            if (t-s->second->get_last_update()>deadline)
+                skeletons_gc_iterators.push_back(s);
     }
 
     /****************************************************************/
@@ -405,13 +454,14 @@ class Viewer : public RFModule
     /****************************************************************/
     bool close() override
     {
+        skeletonsGC.stop();
         inputPort.close();
         return true;
     }
 
 public:
     /****************************************************************/
-    Viewer() : closing(false), inputPort(this) { }
+    Viewer() : closing(false), inputPort(this), skeletonsGC(this) { }
 };
 
 
