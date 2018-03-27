@@ -16,6 +16,7 @@
 #include <vector>
 #include <unordered_map>
 #include <algorithm>
+#include <functional>
 #include <string>
 
 #include <yarp/os/all.h>
@@ -41,8 +42,6 @@
 #include <vtkCamera.h>
 #include <vtkInteractorStyleSwitch.h>
 
-#include <vtkRendererCollection.h>
-
 #include "AssistiveRehab/skeleton.h"
 
 using namespace std;
@@ -58,6 +57,9 @@ protected:
     vtkSmartPointer<vtkRenderer> &vtk_renderer;
     unique_ptr<Skeleton> skeleton;
     double last_update;
+
+    vector<double> gray{0.5,0.5,0.5};
+    vector<double> color;
 
     vector<vtkSmartPointer<vtkSphereSource>>   vtk_sphere;
     vector<vtkSmartPointer<vtkPolyDataMapper>> vtk_sphere_mapper;
@@ -80,10 +82,9 @@ protected:
     vtkSmartPointer<vtkActor>                  vtk_textActor;
 
     /****************************************************************/
-    void set_color(vtkSmartPointer<vtkActor> &vtk_actor_id, const bool updated)
+    void set_color(vtkSmartPointer<vtkActor> &vtk_actor, const bool updated)
     {
-        vtk_actor_id->GetProperty()->SetOpacity(updated?1.0:0.5);
-        vtk_actor_id->GetProperty()->SetColor(0.1,0.1,updated?0.2:0.1);
+        vtk_actor->GetProperty()->SetColor(updated?color.data():gray.data());
     }
 
     /****************************************************************/
@@ -149,7 +150,6 @@ protected:
             vtk_quadric_actor.push_back(vtkSmartPointer<vtkActor>::New());
             vtk_quadric_actor.back()->SetMapper(vtk_quadric_mapper.back());
             vtk_quadric_actor.back()->SetUserTransform(vtk_quadric_transform.back());
-            set_color(vtk_quadric_actor.back(),k->isUpdated()&&c->isUpdated());
             vtk_renderer->AddActor(vtk_quadric_actor.back());
 
             kk2id_quadric[k][c]=(unsigned int)vtk_quadric_actor.size()-1;
@@ -184,7 +184,6 @@ protected:
                 vtk_quadric_transform[id_quadric]->RotateWXYZ(angle,axis.data());
             }
 
-            set_color(vtk_quadric_actor[id_quadric],k->isUpdated()&&c->isUpdated());
             update_limbs(c);
         }
     }
@@ -195,9 +194,20 @@ public:
                 vtkSmartPointer<vtkRenderer> &vtk_renderer_) :
                 vtk_renderer(vtk_renderer_)
     {
-        skeleton=unique_ptr<Skeleton>(factory(prop));
+        skeleton=unique_ptr<Skeleton>(factory(prop));        
         if (skeleton!=nullptr)
         {
+            vector<vector<double>> colors_code;
+            colors_code.push_back(vector<double>{213.0/255.0, 47.0/255.0, 65.0/255.0});
+            colors_code.push_back(vector<double>{ 58.0/255.0, 79.0/255.0,122.0/255.0});
+            colors_code.push_back(vector<double>{ 72.0/255.0,208.0/255.0,154.0/255.0});
+            colors_code.push_back(vector<double>{249.0/255.0,196.0/255.0, 71.0/255.0});
+            colors_code.push_back(vector<double>{ 96.0/255.0,176.0/255.0,224.0/255.0});
+            colors_code.push_back(vector<double>{238.0/255.0,118.0/255.0, 22.0/255.0});
+
+            hash<string> color_hash;
+            color=colors_code[color_hash(skeleton->getTag())%colors_code.size()];
+
             if (skeleton->getNumKeyPoints()>0)
             {
                 auto k=skeleton->operator[](0);
@@ -220,7 +230,7 @@ public:
 
                     vtk_textActor=vtkSmartPointer<vtkActor>::New();
                     vtk_textActor->SetMapper(vtk_textMapper);
-                    vtk_textActor->GetProperty()->SetColor(1.0,0.0,0.0);
+                    vtk_textActor->GetProperty()->SetColor(color.data());
                     vtk_textActor->SetUserTransform(vtk_textTransform);
                     vtk_renderer->AddActor(vtk_textActor);
                 }
