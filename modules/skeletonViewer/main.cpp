@@ -60,7 +60,6 @@ protected:
     double characteristic_length;
     double last_update;
 
-    vector<double> gray{0.5,0.5,0.5};
     vector<double> color;
     Vector z;
 
@@ -83,12 +82,6 @@ protected:
     vtkSmartPointer<vtkPolyDataMapper>         vtk_textMapper;
     vtkSmartPointer<vtkTransform>              vtk_textTransform;
     vtkSmartPointer<vtkActor>                  vtk_textActor;
-
-    /****************************************************************/
-    void set_color(vtkSmartPointer<vtkActor> &vtk_actor, const bool updated)
-    {
-        vtk_actor->GetProperty()->SetColor(updated?color.data():gray.data());
-    }
 
     /****************************************************************/
     double compute_characteristic_length()
@@ -155,7 +148,8 @@ protected:
 
         vtk_sphere_actor.push_back(vtkSmartPointer<vtkActor>::New());
         vtk_sphere_actor.back()->SetMapper(vtk_sphere_mapper.back());
-        set_color(vtk_sphere_actor.back(),k->isUpdated());
+        vtk_sphere_actor.back()->GetProperty()->SetColor(color.data());
+        vtk_sphere_actor.back()->SetVisibility(k->isUpdated());
         vtk_renderer->AddActor(vtk_sphere_actor.back());
 
         k2id_sphere[k]=(unsigned int)vtk_sphere_actor.size()-1;
@@ -195,6 +189,7 @@ protected:
             vtk_quadric_actor.push_back(vtkSmartPointer<vtkActor>::New());
             vtk_quadric_actor.back()->SetMapper(vtk_quadric_mapper.back());
             vtk_quadric_actor.back()->SetUserTransform(vtk_quadric_transform.back());
+            vtk_quadric_actor.back()->SetVisibility(k->isUpdated()&&c->isUpdated());
             vtk_renderer->AddActor(vtk_quadric_actor.back());
 
             kk2id_quadric[k][c]=(unsigned int)vtk_quadric_actor.size()-1;
@@ -207,7 +202,7 @@ protected:
     {
         auto id_sphere=k2id_sphere[k];
         vtk_sphere[id_sphere]->SetCenter(Vector(k->getPoint()).data());
-        set_color(vtk_sphere_actor[id_sphere],k->isUpdated());
+        vtk_sphere_actor[id_sphere]->SetVisibility(k->isUpdated());
 
         for (unsigned int i=0; i<k->getNumChild(); i++)
         {
@@ -219,6 +214,7 @@ protected:
             Vector m=0.5*(c->getPoint()-k->getPoint());
             vtk_quadric_transform[id_quadric]->Translate((k->getPoint()+m).data());
             align(vtk_quadric_transform[id_quadric],z,m);
+            vtk_quadric_actor[id_quadric]->SetVisibility(k->isUpdated()&&c->isUpdated());
 
             update_limbs(c);
         }

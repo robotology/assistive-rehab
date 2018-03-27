@@ -122,7 +122,8 @@ class TestViewer : public RFModule
         p[0]+=radius*cos(2.0*M_PI*0.1*t+phase);
         p[1]+=radius*sin(2.0*M_PI*0.1*t+phase);
 
-        vector<pair<string,Vector>> unordered;
+        vector<pair<string,Vector>> unordered=skeleton1.get_unordered();
+        unordered.erase(unordered.end()-2,unordered.end());
         unordered.push_back(make_pair(KeyPointTag::head,p));
         skeleton1.update(unordered);
 

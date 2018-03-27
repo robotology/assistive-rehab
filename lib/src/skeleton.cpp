@@ -367,7 +367,7 @@ void Skeleton::update(const vector<Vector> &ordered)
     }
 }
 
-void Skeleton::update(const vector<pair<string, Vector>> &unordered)
+void Skeleton::update(const vector<pair<string,Vector>> &unordered)
 {
     for (auto &k:keypoints)
         k->stale();
@@ -417,9 +417,9 @@ vector<Vector> Skeleton::get_ordered() const
     return ordered;
 }
 
-vector<pair<string, Vector>> Skeleton::get_unordered() const
+vector<pair<string,Vector>> Skeleton::get_unordered() const
 {
-    vector<pair<string, Vector>> unordered;
+    vector<pair<string,Vector>> unordered;
     for (auto &it:tag2key)
         unordered.push_back(make_pair(it.first,it.second->getPoint()));
     return unordered;
