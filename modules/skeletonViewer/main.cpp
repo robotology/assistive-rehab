@@ -41,6 +41,8 @@
 #include <vtkCamera.h>
 #include <vtkInteractorStyleSwitch.h>
 
+#include <vtkRendererCollection.h>
+
 #include "AssistiveRehab/skeleton.h"
 
 using namespace std;
@@ -277,6 +279,8 @@ public:
 
 
 Mutex mutex;
+vector<Bottle> inputs;
+vtkSmartPointer<vtkRenderer> vtk_renderer;
 unordered_map<string,unique_ptr<VTKSkeleton>> skeletons;
 vector<unordered_map<string,unique_ptr<VTKSkeleton>>::iterator> skeletons_gc_iterators;
 
@@ -310,6 +314,7 @@ public:
     {
         LockGuard lg(mutex);
         vtkRenderWindowInteractor* iren=static_cast<vtkRenderWindowInteractor*>(caller);
+
         if (closing!=nullptr)
         {
             if (*closing)
@@ -318,6 +323,31 @@ public:
                 iren->TerminateApp();
                 return;
             }
+        }
+
+        if (inputs.size()>0)
+        {
+            for (auto &input:inputs)
+            {
+                for (int i=0; i<input.size(); i++)
+                {
+                    if (Bottle *b=input.get(i).asList())
+                    {
+                        if (b->check("tag"))
+                        {
+                            Property prop(b->toString().c_str());
+                            string tag=prop.find("tag").asString();
+                            auto s=skeletons.find(tag);
+                            if (s==skeletons.end())
+                                skeletons[tag]=unique_ptr<VTKSkeleton>(new VTKSkeleton(prop,vtk_renderer));
+                            else
+                                s->second->update(prop);
+                        }
+                    }
+                }
+            }
+
+            inputs.clear();
         }
 
         if (skeletons_gc_iterators.size()>0)
@@ -338,9 +368,9 @@ class Viewer : public RFModule
 {
     bool closing;
 
-    class InputPort : public BufferedPort<Property> {
+    class InputPort : public BufferedPort<Bottle> {
         Viewer *viewer;
-        void onRead(Property& input) override {
+        void onRead(Bottle& input) override {
             viewer->process(input);
         }
     public:
@@ -358,7 +388,6 @@ class Viewer : public RFModule
         SkeletonsGC(Viewer *viewer_) : RateThread(1000), viewer(viewer_) { }
     } skeletonsGC;
 
-    vtkSmartPointer<vtkRenderer> vtk_renderer;
     vtkSmartPointer<vtkRenderWindow> vtk_renderWindow;
     vtkSmartPointer<vtkRenderWindowInteractor> vtk_renderWindowInteractor;
     vtkSmartPointer<vtkAxesActor> vtk_axes;     
@@ -401,7 +430,7 @@ class Viewer : public RFModule
         vtk_renderWindowInteractor->SetInteractorStyle(vtk_style);
 
         vtk_renderWindowInteractor->Initialize();
-        vtk_renderWindowInteractor->CreateRepeatingTimer(1);
+        vtk_renderWindowInteractor->CreateRepeatingTimer(10);
 
         vtk_updateCallback=vtkSmartPointer<UpdateCommand>::New();
         vtk_updateCallback->set_closing(closing);
@@ -418,18 +447,10 @@ class Viewer : public RFModule
     }
 
     /****************************************************************/
-    void process(const Property &input)
+    void process(const Bottle &input)
     {
-        if (input.check("tag"))
-        {
-            LockGuard lg(mutex);
-            string tag=input.find("tag").asString();
-            auto s=skeletons.find(tag);
-            if (s==skeletons.end())
-                skeletons[tag]=unique_ptr<VTKSkeleton>(new VTKSkeleton(input,vtk_renderer));
-            else
-                s->second->update(input);
-        }
+        LockGuard lg(mutex);
+        inputs.push_back(input);
     }
 
     /****************************************************************/

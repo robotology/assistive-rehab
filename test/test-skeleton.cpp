@@ -6,7 +6,7 @@
  ******************************************************************************/
 
 /**
- * @file test-skeleton1.cpp
+ * @file test-skeleton.cpp
  * @authors: Ugo Pattacini <ugo.pattacini@iit.it>
  */
 

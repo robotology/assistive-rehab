@@ -6,17 +6,19 @@
  ******************************************************************************/
 
 /**
- * @file test-skeleton1.cpp
+ * @file test-viewer.cpp
  * @authors: Ugo Pattacini <ugo.pattacini@iit.it>
  */
 
 #include <cstdlib>
 #include <cmath>
+#include <yarp/os/Bottle.h>
 #include <yarp/os/Property.h>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/sig/Vector.h>
+#include <yarp/sig/Matrix.h>
 #include <yarp/math/Math.h>
 #include "AssistiveRehab/skeleton.h"
 
@@ -28,13 +30,15 @@ using namespace assistive_rehab;
 
 class TestViewer : public RFModule
 {
-    SkeletonStd skeleton;
+    SkeletonStd skeleton1,skeleton2;
     double radius,phase,t0;
-    BufferedPort<Property> port;
+    BufferedPort<Bottle> port;
 
     bool configure(ResourceFinder &rf) override
     {
-        skeleton.setTag("test");
+        skeleton1.setTag("test-1");
+        skeleton2.setTag("test-2");
+
         vector<pair<string, Vector>> unordered;
         {
             Vector p(3,0.0); p[0]=0.0; p[1]=0.0; p[2]=0.0;
@@ -92,10 +96,16 @@ class TestViewer : public RFModule
             Vector p(3,0.0); p[0]=0.1; p[1]=-0.3; p[2]=0.0;
             unordered.push_back(make_pair(KeyPointTag::ankle_right,p));
         }
-        skeleton.update(unordered);
+        skeleton1.update(unordered);
 
-        Vector d=skeleton[KeyPointTag::head]->getPoint()-
-                 skeleton[KeyPointTag::shoulder_center]->getPoint();
+        Vector rot=skeleton1.getTransverse();
+        rot.push_back(-M_PI/2.0);
+        Matrix T=axis2dcm(rot);
+        T.setSubcol(0.4*skeleton1.getCoronal(),0,3);
+        skeleton2.setTransformation(T);
+
+        Vector d=skeleton1[KeyPointTag::head]->getPoint()-
+                 skeleton1[KeyPointTag::shoulder_center]->getPoint();
         radius=norm(d);
         phase=atan2(d[1],d[0]);
 
@@ -114,15 +124,19 @@ class TestViewer : public RFModule
     {
         double t=Time::now()-t0;
 
-        Vector p=skeleton[KeyPointTag::shoulder_center]->getPoint();
+        Vector p=skeleton1[KeyPointTag::shoulder_center]->getPoint();
         p[0]+=radius*cos(2.0*M_PI*0.1*t+phase);
         p[1]+=radius*sin(2.0*M_PI*0.1*t+phase);
 
         vector<pair<string,Vector>> unordered;
         unordered.push_back(make_pair(KeyPointTag::head,p));
-        skeleton.update(unordered);
+        skeleton1.update(unordered);
+        skeleton2.update(skeleton1.get_ordered());
 
-        port.prepare()=skeleton.toProperty();
+        Bottle &msg=port.prepare();
+        msg.clear();
+        msg.addList().read(skeleton1.toProperty());
+        msg.addList().read(skeleton2.toProperty());
         port.write();
 
         return true;
