@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <memory>
 #include <cmath>
+#include <limits>
 #include <vector>
 #include <unordered_map>
 #include <algorithm>
@@ -56,6 +57,7 @@ class VTKSkeleton
 protected:
     vtkSmartPointer<vtkRenderer> &vtk_renderer;
     unique_ptr<Skeleton> skeleton;
+    double characteristic_length;
     double last_update;
 
     vector<double> gray{0.5,0.5,0.5};
@@ -88,15 +90,46 @@ protected:
     }
 
     /****************************************************************/
+    double compute_characteristic_length()
+    {
+        Matrix T=zeros(4,4); T(3,3)=1.0;
+        T.setSubcol(skeleton->getSagittal(),0,0);
+        T.setSubcol(skeleton->getTransverse(),0,1);
+        T.setSubcol(skeleton->getCoronal(),0,2);
+        T.setSubcol(skeleton->operator[](0)->getPoint(),0,3);
+        T=SE3inv(T);
+        
+        Matrix lim(3,2);
+        lim(0,0)=lim(1,0)=lim(2,0)=numeric_limits<double>::infinity();
+        lim(0,1)=lim(1,1)=lim(2,1)=-numeric_limits<double>::infinity();
+        Vector len(lim.rows());
+
+        vector<Vector> points=skeleton->get_ordered();
+        for (auto &p:points)
+        {
+            p.push_back(1.0);
+            p=T*p;
+
+            for (int i=0; i<lim.rows(); i++)
+            {
+                lim(i,0)=std::min(lim(i,0),p[i]);
+                lim(i,1)=std::max(lim(i,1),p[i]);
+                len[i]=lim(i,1)-lim(i,0);
+            }
+        }
+
+        return findMax(len);
+    }
+
+    /****************************************************************/
     void generate_limbs(const KeyPoint *k)
     {
         Vector z(3,0.0); z[2]=1.0;
-        double ax=1.0/400.0;
-        double ay=1.0/400.0;
+        double a=characteristic_length/100.0;
 
         vtk_sphere.push_back(vtkSmartPointer<vtkSphereSource>::New());
         vtk_sphere.back()->SetCenter(Vector(k->getPoint()).data());
-        vtk_sphere.back()->SetRadius(2.0*ax);
+        vtk_sphere.back()->SetRadius(2.0*a);
 
         vtk_sphere_mapper.push_back(vtkSmartPointer<vtkPolyDataMapper>::New());
         vtk_sphere_mapper.back()->SetInputConnection(vtk_sphere.back()->GetOutputPort());
@@ -115,16 +148,16 @@ protected:
             az=std::max(0.001,az);
 
             vtk_quadric.push_back(vtkSmartPointer<vtkQuadric>::New());
-            vector<double> a(10,0.0);
-            a[0]=1.0/(ax*ax);
-            a[1]=1.0/(ay*ay);
-            a[2]=1.0/(az*az);
-            vtk_quadric.back()->SetCoefficients(a.data());
+            vector<double> coeff(10,0.0);
+            coeff[0]=1.0/(a*a);
+            coeff[1]=1.0/(a*a);
+            coeff[2]=1.0/(az*az);
+            vtk_quadric.back()->SetCoefficients(coeff.data());
 
             vtk_quadric_sample.push_back(vtkSmartPointer<vtkSampleFunction>::New());
             vtk_quadric_sample.back()->SetSampleDimensions(20,20,20);
             vtk_quadric_sample.back()->SetImplicitFunction(vtk_quadric.back());
-            vtk_quadric_sample.back()->SetModelBounds(-ax,ax,-ay,ay,-az,az);
+            vtk_quadric_sample.back()->SetModelBounds(-a,a,-a,a,-az,az);
 
             vtk_quadric_contours.push_back(vtkSmartPointer<vtkContourFilter>::New());
             vtk_quadric_contours.back()->SetInputConnection(vtk_quadric_sample.back()->GetOutputPort());
@@ -206,10 +239,11 @@ public:
             colors_code.push_back(vector<double>{238.0/255.0,118.0/255.0, 22.0/255.0});
 
             hash<string> color_hash;
-            color=colors_code[color_hash(skeleton->getTag())%colors_code.size()];
+            color=colors_code[color_hash(skeleton->getTag())%colors_code.size()];            
 
             if (skeleton->getNumKeyPoints()>0)
             {
+                characteristic_length=compute_characteristic_length();
                 auto k=skeleton->operator[](0);
                 generate_limbs(k);
 
@@ -226,7 +260,7 @@ public:
 
                     vtk_textTransform=vtkSmartPointer<vtkTransform>::New();
                     vtk_textTransform->Translate(p.data());
-                    vtk_textTransform->Scale(0.01,0.01,0.01);
+                    vtk_textTransform->Scale(Vector(3,characteristic_length/20.0).data());
 
                     vtk_textActor=vtkSmartPointer<vtkActor>::New();
                     vtk_textActor->SetMapper(vtk_textMapper);
@@ -272,7 +306,7 @@ public:
                     
                     vtk_textTransform->Identity();
                     vtk_textTransform->Translate(p.data());
-                    vtk_textTransform->Scale(0.01,0.01,0.01);
+                    vtk_textTransform->Scale(Vector(3,characteristic_length/20.0).data());
                 }
             }
         }
