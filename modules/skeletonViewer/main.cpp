@@ -84,38 +84,6 @@ protected:
     vtkSmartPointer<vtkActor>                  vtk_textActor;
 
     /****************************************************************/
-    double compute_characteristic_length()
-    {
-        Matrix T=zeros(4,4); T(3,3)=1.0;
-        T.setSubcol(skeleton->getSagittal(),0,0);
-        T.setSubcol(skeleton->getTransverse(),0,1);
-        T.setSubcol(skeleton->getCoronal(),0,2);
-        T.setSubcol(skeleton->operator[](0)->getPoint(),0,3);
-        T=SE3inv(T);
-        
-        Matrix lim(3,2);
-        lim(0,0)=lim(1,0)=lim(2,0)=numeric_limits<double>::infinity();
-        lim(0,1)=lim(1,1)=lim(2,1)=-numeric_limits<double>::infinity();
-        Vector len(lim.rows());
-
-        vector<Vector> points=skeleton->get_ordered();
-        for (auto &p:points)
-        {
-            p.push_back(1.0);
-            p=T*p;
-
-            for (int i=0; i<lim.rows(); i++)
-            {
-                lim(i,0)=std::min(lim(i,0),p[i]);
-                lim(i,1)=std::max(lim(i,1),p[i]);
-                len[i]=lim(i,1)-lim(i,0);
-            }
-        }
-
-        return findMax(len);
-    }
-
-    /****************************************************************/
     bool align(vtkSmartPointer<vtkTransform> &vtk_transform,
                const Vector &v1, const Vector &v2)
     {
@@ -244,7 +212,7 @@ public:
 
             if (skeleton->getNumKeyPoints()>0)
             {
-                characteristic_length=compute_characteristic_length();
+                characteristic_length=skeleton->getMaxPath();
                 auto k=skeleton->operator[](0);
                 generate_limbs(k);
 

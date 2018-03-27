@@ -69,15 +69,15 @@ public:
     virtual ~KeyPoint() { }
 
     bool isUpdated() const { return updated; }
-    std::string getTag() const { return tag; }
+    const std::string& getTag() const { return tag; }
     const yarp::sig::Vector &getPoint() const { return point; }
     bool setPoint(const yarp::sig::Vector &point);
 
     unsigned int getNumParent() const { return (unsigned int)parent.size(); }
-    const KeyPoint *getParent(const unsigned int i) const;
+    const KeyPoint* getParent(const unsigned int i) const;
 
     unsigned int getNumChild() const { return (unsigned int)child.size(); }
-    const KeyPoint *getChild(const unsigned int i) const;
+    const KeyPoint* getChild(const unsigned int i) const;
 };
 
 class Skeleton
@@ -94,21 +94,22 @@ protected:
     yarp::sig::Vector sagittal;
     yarp::sig::Vector transverse;
 
-    yarp::os::Property helper_toproperty(KeyPoint* k);
+    yarp::os::Property helper_toproperty(KeyPoint* k) const;
     void helper_fromproperty(yarp::os::Bottle *prop, KeyPoint *parent);
     void helper_updatefromproperty(yarp::os::Bottle *prop);
     void helper_normalize(KeyPoint* k, const std::vector<yarp::sig::Vector> &helperpoints);
+    double helper_getmaxpath(KeyPoint* k, std::vector<bool> &visited) const;
 
 public:
     Skeleton();
     virtual ~Skeleton();
 
-    std::string getType() const { return type; }
+    const std::string& getType() const { return type; }
     void setTag(const std::string &tag) { this->tag=tag; }
-    std::string getTag() const { return tag; }
+    const std::string& getTag() const { return tag; }
 
     bool setTransformation(const yarp::sig::Matrix &T);
-    yarp::sig::Matrix getTransformation() const { return T; }
+    const yarp::sig::Matrix& getTransformation() const { return T; }
 
     bool setCoronal(const yarp::sig::Vector &coronal);
     bool setSagittal(const yarp::sig::Vector &sagittal);
@@ -116,13 +117,14 @@ public:
     yarp::sig::Vector getCoronal() const;
     yarp::sig::Vector getSagittal() const;
     yarp::sig::Vector getTransverse() const;
+    double getMaxPath() const;
 
     virtual yarp::os::Property toProperty();
     virtual void fromProperty(const yarp::os::Property &prop);
 
     unsigned int getNumKeyPoints() const { return (unsigned int)keypoints.size(); }
-    const KeyPoint*operator[](const std::string &tag) const;
-    const KeyPoint*operator[](const unsigned int i) const;
+    const KeyPoint* operator[](const std::string &tag) const;
+    const KeyPoint* operator[](const unsigned int i) const;
 
     virtual void update(const std::vector<yarp::sig::Vector> &ordered);
     virtual void update(const std::vector<std::pair<std::string, yarp::sig::Vector>> &unordered);

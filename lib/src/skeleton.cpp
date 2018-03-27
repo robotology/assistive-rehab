@@ -22,7 +22,6 @@ using namespace yarp::os;
 using namespace yarp::math;
 using namespace assistive_rehab;
 
-
 namespace assistive_rehab
 {
 
@@ -69,12 +68,12 @@ bool KeyPoint::setPoint(const Vector &point)
         return false;
 }
 
-const KeyPoint *KeyPoint::getParent(const unsigned int i) const
+const KeyPoint* KeyPoint::getParent(const unsigned int i) const
 {
     return ((i>=0) && (i<parent.size()))?parent[i]:nullptr;
 }
 
-const KeyPoint *KeyPoint::getChild(const unsigned int i) const
+const KeyPoint* KeyPoint::getChild(const unsigned int i) const
 {
     return ((i>=0) && (i<child.size()))?child[i]:nullptr;
 }
@@ -94,7 +93,7 @@ Skeleton::~Skeleton()
         delete k;
 }
 
-Property Skeleton::helper_toproperty(KeyPoint* k)
+Property Skeleton::helper_toproperty(KeyPoint* k) const
 {
     Property prop;
     if (k!=nullptr)
@@ -194,6 +193,33 @@ void Skeleton::helper_normalize(KeyPoint* k, const vector<Vector> &helperpoints)
     }
 }
 
+double Skeleton::helper_getmaxpath(KeyPoint* k, vector<bool> &visited) const
+{
+    Vector paths(1,0.0);
+    if (k!=nullptr)
+    {
+        auto id=key2id.find(k)->second;
+        visited[id]=true;
+
+        for (auto &p:k->parent)
+        {
+            auto id=key2id.find(p)->second;
+            if (!visited[id])
+                paths.push_back(norm(k->getPoint()-p->getPoint())+
+                                helper_getmaxpath(p,visited));
+        }
+        for (auto &c:k->child)
+        {
+            auto id=key2id.find(c)->second;
+            if (!visited[id])
+                paths.push_back(norm(k->getPoint()-c->getPoint())+
+                                helper_getmaxpath(c,visited));
+        }
+        
+    }
+    return findMax(paths);
+}
+
 bool Skeleton::setTransformation(const Matrix &T)
 {
     if ((T.rows()>=4) || (T.cols()>=4))
@@ -251,6 +277,17 @@ Vector Skeleton::getSagittal() const
 Vector Skeleton::getTransverse() const
 {
     return (T.submatrix(0,2,0,2)*transverse);
+}
+
+double Skeleton::getMaxPath() const
+{
+    Vector paths(1,0.0);
+    for (auto &k:keypoints)
+    {
+        vector<bool> visited(getNumKeyPoints(),false);
+        paths.push_back(helper_getmaxpath(k,visited));
+    }
+    return findMax(paths);
 }
 
 Property Skeleton::toProperty()
