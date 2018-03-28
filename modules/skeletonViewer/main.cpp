@@ -82,6 +82,30 @@ protected:
     vtkSmartPointer<vtkCaptionActor2D>         vtk_textActor;
 
     /****************************************************************/
+    bool findCaptionPoint(Vector &p) const
+    {
+        bool ret=false;
+        if (skeleton->operator[](KeyPointTag::head)->isUpdated())
+        {
+            p=skeleton->operator[](KeyPointTag::head)->getPoint();
+            ret=true;
+        }
+        else
+        {
+            for (unsigned int i=0; i<skeleton->getNumKeyPoints(); i++)
+            {
+                auto k=skeleton->operator[](i);
+                if (k->isUpdated())
+                {
+                    p=k->getPoint();
+                    ret=true;
+                }
+            }
+        }
+        return ret;
+    }
+
+    /****************************************************************/
     bool align(vtkSmartPointer<vtkTransform> &vtk_transform,
                const Vector &v1, const Vector &v2)
     {
@@ -214,24 +238,22 @@ public:
                 auto k=skeleton->operator[](0);
                 generate_limbs(k);
 
-                if (!skeleton->getTag().empty())
-                {
-                    Vector p=skeleton->operator[](KeyPointTag::head)->getPoint();
+                vtk_textActor=vtkSmartPointer<vtkCaptionActor2D>::New();
+                vtk_textActor->GetTextActor()->SetTextScaleModeToNone();
+                vtk_textActor->SetCaption(skeleton->getTag().c_str());
+                vtk_textActor->BorderOff();
+                vtk_textActor->LeaderOn();
+                vtk_textActor->GetCaptionTextProperty()->SetColor(color.data());
+                vtk_textActor->GetCaptionTextProperty()->SetFontSize(20);
+                vtk_textActor->GetCaptionTextProperty()->FrameOff();
+                vtk_textActor->GetCaptionTextProperty()->ShadowOff();
+                vtk_textActor->GetCaptionTextProperty()->BoldOff();
+                vtk_textActor->GetCaptionTextProperty()->ItalicOff();
+                vtk_renderer->AddActor(vtk_textActor);
 
-                    vtk_textActor=vtkSmartPointer<vtkCaptionActor2D>::New();
-                    vtk_textActor->GetTextActor()->SetTextScaleModeToNone();
-                    vtk_textActor->SetCaption(skeleton->getTag().c_str());
-                    vtk_textActor->BorderOff();
-                    vtk_textActor->LeaderOn();
-                    vtk_textActor->GetCaptionTextProperty()->SetColor(color.data());
-                    vtk_textActor->GetCaptionTextProperty()->SetFontSize(20);
-                    vtk_textActor->GetCaptionTextProperty()->FrameOff();
-                    vtk_textActor->GetCaptionTextProperty()->ShadowOff();
-                    vtk_textActor->GetCaptionTextProperty()->BoldOff();
-                    vtk_textActor->GetCaptionTextProperty()->ItalicOff();
+                Vector p;
+                if (findCaptionPoint(p))
                     vtk_textActor->SetAttachmentPoint(p.data());
-                    vtk_renderer->AddActor(vtk_textActor);
-                }
 
                 vtkSmartPointer<vtkCamera> vtk_camera=vtk_renderer->GetActiveCamera();
                 vtk_camera->SetPosition((k->getPoint()+2.0*max_path*skeleton->getCoronal()).data());
@@ -262,11 +284,10 @@ public:
             if (skeleton->getNumKeyPoints()>0)
             {
                 update_limbs(skeleton->operator[](0));
-                if (!skeleton->getTag().empty())
-                {
-                    Vector p=skeleton->operator[](KeyPointTag::head)->getPoint();
+
+                Vector p;
+                if (findCaptionPoint(p))
                     vtk_textActor->SetAttachmentPoint(p.data());
-                }
             }
         }
 
@@ -340,11 +361,14 @@ public:
                         {
                             Property prop(b->toString().c_str());
                             string tag=prop.find("tag").asString();
-                            auto s=skeletons.find(tag);
-                            if (s==skeletons.end())
-                                skeletons[tag]=unique_ptr<VTKSkeleton>(new VTKSkeleton(prop,vtk_renderer));
-                            else
-                                s->second->update(prop);
+                            if (!tag.empty())
+                            {
+                                auto s=skeletons.find(tag);
+                                if (s==skeletons.end())
+                                    skeletons[tag]=unique_ptr<VTKSkeleton>(new VTKSkeleton(prop,vtk_renderer));
+                                else
+                                    s->second->update(prop);
+                            }
                         }
                     }
                 }
