@@ -35,7 +35,6 @@
 #include <vtkContourFilter.h>
 #include <vtkVectorText.h>
 #include <vtkActor.h>
-#include <vtkOrientationMarkerWidget.h>
 #include <vtkAxesActor.h>
 #include <vtkRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
@@ -410,8 +409,7 @@ class Viewer : public RFModule
 
     vtkSmartPointer<vtkRenderWindow> vtk_renderWindow;
     vtkSmartPointer<vtkRenderWindowInteractor> vtk_renderWindowInteractor;
-    vtkSmartPointer<vtkAxesActor> vtk_axes;     
-    vtkSmartPointer<vtkOrientationMarkerWidget> vtk_widget;
+    vtkSmartPointer<vtkAxesActor> vtk_axes;
     vtkSmartPointer<vtkCamera> vtk_camera;
     vtkSmartPointer<vtkInteractorStyleSwitch> vtk_style;
     vtkSmartPointer<UpdateCommand> vtk_updateCallback;
@@ -430,14 +428,10 @@ class Viewer : public RFModule
         vtk_renderWindowInteractor->SetRenderWindow(vtk_renderWindow);
         vtk_renderer->SetBackground(0.1,0.2,0.2);
 
-        vtk_axes=vtkSmartPointer<vtkAxesActor>::New();     
-        vtk_widget=vtkSmartPointer<vtkOrientationMarkerWidget>::New();
-        vtk_widget->SetOutlineColor(0.9300,0.5700,0.1300);
-        vtk_widget->SetOrientationMarker(vtk_axes);
-        vtk_widget->SetInteractor(vtk_renderWindowInteractor);
-        vtk_widget->SetViewport(0.0,0.0,0.2,0.2);
-        vtk_widget->SetEnabled(1);
-        vtk_widget->InteractiveOn();
+        vtk_axes=vtkSmartPointer<vtkAxesActor>::New();
+        vtk_axes->AxisLabelsOff();
+        vtk_axes->SetTotalLength((0.1*ones(3)).data());
+        vtk_renderer->AddActor(vtk_axes);
 
         vtk_camera=vtkSmartPointer<vtkCamera>::New();
         vtk_camera->SetPosition(0.0,0.0,1.0);
