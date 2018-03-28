@@ -15,6 +15,7 @@ source_group("Header Files" FILES ${header})
 source_group("IDL Files" FILES src/idl.thrift)
 source_group("DOC Files" FILES ${PROJECT_NAME}.xml)
 
+add_definitions(-D_USE_MATH_DEFINES)
 include_directories(${PROJECT_SOURCE_DIR}/include ${YARP_INCLUDE_DIRS})
 add_executable(${PROJECT_NAME} ${source} ${header} src/idl.thrift ${IDL_GEN_FILES})
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} AssistiveRehab)

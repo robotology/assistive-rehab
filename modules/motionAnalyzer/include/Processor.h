@@ -15,7 +15,7 @@
 
 #include <iostream>
 #include <map>
-#include <math.h>
+#include <cmath>
 
 #include <yarp/sig/Matrix.h>
 #include <yarp/math/Math.h>
@@ -49,7 +49,7 @@ public:
     void update(const SkeletonWaist &curr_skeleton_);
     bool isDeviatingFromIntialPose();
     bool isDeviatingFromIntialPose(const KeyPoint &keypoint, const KeyPoint &keypoint_init);
-    virtual double computeMetric() {;}
+    virtual double computeMetric() { return 0.0; }
     virtual string getProcessedMetric() = 0;
     virtual double getTimeout() const = 0;
 
