@@ -33,8 +33,10 @@
 #include <vtkTransform.h>
 #include <vtkSampleFunction.h>
 #include <vtkContourFilter.h>
-#include <vtkVectorText.h>
+#include <vtkCaptionActor2D.h>
+#include <vtkTextProperty.h>
 #include <vtkActor.h>
+#include <vtkTextActor.h>
 #include <vtkAxesActor.h>
 #include <vtkRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
@@ -77,10 +79,7 @@ protected:
 
     unordered_map<const KeyPoint*,unordered_map<const KeyPoint*,unsigned int>> kk2id_quadric;
 
-    vtkSmartPointer<vtkVectorText>             vtk_textSource;
-    vtkSmartPointer<vtkPolyDataMapper>         vtk_textMapper;
-    vtkSmartPointer<vtkTransform>              vtk_textTransform;
-    vtkSmartPointer<vtkActor>                  vtk_textActor;
+    vtkSmartPointer<vtkCaptionActor2D>         vtk_textActor;
 
     /****************************************************************/
     bool align(vtkSmartPointer<vtkTransform> &vtk_transform,
@@ -217,24 +216,20 @@ public:
 
                 if (!skeleton->getTag().empty())
                 {
-                    Vector shoulder_center=skeleton->operator[](KeyPointTag::shoulder_center)->getPoint();
-                    Vector head=skeleton->operator[](KeyPointTag::head)->getPoint();
-                    Vector p=shoulder_center+1.1*(head-shoulder_center);
+                    Vector p=skeleton->operator[](KeyPointTag::head)->getPoint();
 
-                    vtk_textSource=vtkSmartPointer<vtkVectorText>::New();
-                    vtk_textSource->SetText(skeleton->getTag().c_str());
-                    vtk_textMapper=vtkSmartPointer<vtkPolyDataMapper>::New();
-                    vtk_textMapper->SetInputConnection(vtk_textSource->GetOutputPort());
-
-                    vtk_textTransform=vtkSmartPointer<vtkTransform>::New();
-                    vtk_textTransform->Translate(p.data());
-                    align(vtk_textTransform,z,skeleton->getCoronal());
-                    vtk_textTransform->Scale(Vector(3,max_path/20.0).data());
-
-                    vtk_textActor=vtkSmartPointer<vtkActor>::New();
-                    vtk_textActor->SetMapper(vtk_textMapper);
-                    vtk_textActor->GetProperty()->SetColor(color.data());
-                    vtk_textActor->SetUserTransform(vtk_textTransform);
+                    vtk_textActor=vtkSmartPointer<vtkCaptionActor2D>::New();
+                    vtk_textActor->GetTextActor()->SetTextScaleModeToNone();
+                    vtk_textActor->SetCaption(skeleton->getTag().c_str());
+                    vtk_textActor->BorderOff();
+                    vtk_textActor->LeaderOn();
+                    vtk_textActor->GetCaptionTextProperty()->SetColor(color.data());
+                    vtk_textActor->GetCaptionTextProperty()->SetFontSize(20);
+                    vtk_textActor->GetCaptionTextProperty()->FrameOff();
+                    vtk_textActor->GetCaptionTextProperty()->ShadowOff();
+                    vtk_textActor->GetCaptionTextProperty()->BoldOff();
+                    vtk_textActor->GetCaptionTextProperty()->ItalicOff();
+                    vtk_textActor->SetAttachmentPoint(p.data());
                     vtk_renderer->AddActor(vtk_textActor);
                 }
 
@@ -269,19 +264,8 @@ public:
                 update_limbs(skeleton->operator[](0));
                 if (!skeleton->getTag().empty())
                 {
-                    Vector shoulder_center=skeleton->operator[](KeyPointTag::shoulder_center)->getPoint();
-                    Vector head=skeleton->operator[](KeyPointTag::head)->getPoint();
-                    Vector p=shoulder_center+1.1*(head-shoulder_center);
-                    
-                    Vector position(3),focal(3);
-                    vtkSmartPointer<vtkCamera> vtk_camera=vtk_renderer->GetActiveCamera();
-                    vtk_camera->GetPosition(position.data());
-                    vtk_camera->GetFocalPoint(focal.data());
-                    
-                    vtk_textTransform->Identity();
-                    vtk_textTransform->Translate(p.data());
-                    align(vtk_textTransform,z,position-focal);
-                    vtk_textTransform->Scale(Vector(3,max_path/20.0).data());
+                    Vector p=skeleton->operator[](KeyPointTag::head)->getPoint();
+                    vtk_textActor->SetAttachmentPoint(p.data());
                 }
             }
         }
