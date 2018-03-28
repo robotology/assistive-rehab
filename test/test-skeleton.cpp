@@ -6,11 +6,12 @@
  ******************************************************************************/
 
 /**
- * @file test-skeleton1.cpp
+ * @file test-skeleton.cpp
  * @authors: Ugo Pattacini <ugo.pattacini@iit.it>
  */
 
 #include <cstdlib>
+#include <memory>
 #include <cmath>
 #include <utility>
 #include <iostream>
@@ -51,7 +52,7 @@ int main()
     print_hierarchy(skeleton1[0]);
     cout<<endl;
 
-    vector<pair<string, Vector>> unordered;
+    vector<pair<string,Vector>> unordered;
     {
         Vector p(3,0.0); p[0]=0.0; p[1]=0.0; p[2]=0.0;
         unordered.push_back(make_pair(KeyPointTag::shoulder_center,p));
@@ -117,9 +118,9 @@ int main()
     cout<<endl;
 
     cout<<"### Importing Skeleton's structure"<<endl;
-    SkeletonWaist skeleton2;
-    skeleton2.fromProperty(prop);
-    skeleton2.print();
+    unique_ptr<Skeleton> skeleton2(factory(prop));
+    cout<<"type = \""<<skeleton2->getType()<<"\""<<endl;
+    skeleton2->print();
     cout<<endl;
 
     return EXIT_SUCCESS;

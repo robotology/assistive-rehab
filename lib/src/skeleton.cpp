@@ -10,6 +10,7 @@
  * @authors: Ugo Pattacini <ugo.pattacini@iit.it>
  */
 
+#include <typeinfo>
 #include <algorithm>
 #include <iostream>
 #include <yarp/math/Math.h>
@@ -20,7 +21,6 @@ using namespace yarp::sig;
 using namespace yarp::os;
 using namespace yarp::math;
 using namespace assistive_rehab;
-
 
 namespace assistive_rehab
 {
@@ -68,20 +68,23 @@ bool KeyPoint::setPoint(const Vector &point)
         return false;
 }
 
-const KeyPoint *KeyPoint::getParent(const unsigned int i) const
+const KeyPoint* KeyPoint::getParent(const unsigned int i) const
 {
     return ((i>=0) && (i<parent.size()))?parent[i]:nullptr;
 }
 
-const KeyPoint *KeyPoint::getChild(const unsigned int i) const
+const KeyPoint* KeyPoint::getChild(const unsigned int i) const
 {
     return ((i>=0) && (i<child.size()))?child[i]:nullptr;
 }
 
 Skeleton::Skeleton()
 {
+    type=typeid(Skeleton).name();
     tag="";
     T=eye(4,4);
+    coronal=sagittal=transverse=zeros(3);
+    coronal[2]=sagittal[0]=transverse[1]=1.0;
 }
 
 Skeleton::~Skeleton()
@@ -90,7 +93,7 @@ Skeleton::~Skeleton()
         delete k;
 }
 
-Property Skeleton::helper_toproperty(KeyPoint* k)
+Property Skeleton::helper_toproperty(KeyPoint* k) const
 {
     Property prop;
     if (k!=nullptr)
@@ -131,11 +134,7 @@ void Skeleton::helper_fromproperty(Bottle *prop, KeyPoint *parent)
 
             Vector point(3,0.0);
             if (Bottle *p=b->find("position").asList())
-            {
-                point.resize(p->size());
-                for (int j=0; j<p->size(); j++)
-                    point[j]=p->get(j).asDouble();
-            }
+                p->write(point);
 
             KeyPoint *k=new KeyPoint(tag,point,updated);
             tag2key[tag]=k;
@@ -148,6 +147,32 @@ void Skeleton::helper_fromproperty(Bottle *prop, KeyPoint *parent)
             }
 
             helper_fromproperty(b->find("child").asList(),k);
+        }
+    }
+}
+
+void Skeleton::helper_updatefromproperty(Bottle *prop)
+{
+    if (prop!=nullptr)
+    {
+        for (int i=0; i<prop->size(); i++)
+        {
+            Bottle *b=prop->get(i).asList();
+            if (b->check("tag"))
+            {
+                auto it=tag2key.find(b->find("tag").asString());
+                if (it!=tag2key.end())
+                {
+                    auto &k=it->second;
+                    if (b->check("status"))
+                        k->updated=(b->find("status").asString()=="updated");
+
+                    if (Bottle *p=b->find("position").asList())
+                        p->write(k->point);
+
+                    helper_updatefromproperty(b->find("child").asList());
+                }
+            }
         }
     }
 }
@@ -168,25 +193,124 @@ void Skeleton::helper_normalize(KeyPoint* k, const vector<Vector> &helperpoints)
     }
 }
 
+double Skeleton::helper_getmaxpath(KeyPoint* k, vector<bool> &visited) const
+{
+    Vector paths(1,0.0);
+    if (k!=nullptr)
+    {
+        auto id=key2id.find(k)->second;
+        visited[id]=true;
+
+        for (auto &p:k->parent)
+        {
+            auto id=key2id.find(p)->second;
+            if (!visited[id])
+                paths.push_back(norm(k->getPoint()-p->getPoint())+
+                                helper_getmaxpath(p,visited));
+        }
+        for (auto &c:k->child)
+        {
+            auto id=key2id.find(c)->second;
+            if (!visited[id])
+                paths.push_back(norm(k->getPoint()-c->getPoint())+
+                                helper_getmaxpath(c,visited));
+        }
+        
+    }
+    return findMax(paths);
+}
+
 bool Skeleton::setTransformation(const Matrix &T)
 {
     if ((T.rows()>=4) || (T.cols()>=4))
     {
-        this->T=T;
+        this->T=T.submatrix(0,3,0,3);
         return true;
     }
     else
         return false;
 }
 
+bool Skeleton::setCoronal(const Vector &coronal)
+{
+    if (coronal.length()>=3)
+    {
+        this->coronal=coronal.subVector(0,2);
+        return true;
+    }
+    else
+        return false;
+}
+
+bool Skeleton::setSagittal(const Vector &sagittal)
+{
+    if (sagittal.length()>=3)
+    {
+        this->sagittal=sagittal.subVector(0,2);
+        return true;
+    }
+    else
+        return false;
+}
+
+bool Skeleton::setTransverse(const Vector &transverse)
+{
+    if (transverse.length()>=3)
+    {
+        this->transverse=transverse.subVector(0,2);
+        return true;
+    }
+    else
+        return false;
+}
+
+Vector Skeleton::getCoronal() const
+{
+    return (T.submatrix(0,2,0,2)*coronal);
+}
+
+Vector Skeleton::getSagittal() const
+{
+    return (T.submatrix(0,2,0,2)*sagittal);
+}
+
+Vector Skeleton::getTransverse() const
+{
+    return (T.submatrix(0,2,0,2)*transverse);
+}
+
+double Skeleton::getMaxPath() const
+{
+    Vector paths(1,0.0);
+    for (auto &k:keypoints)
+    {
+        vector<bool> visited(getNumKeyPoints(),false);
+        paths.push_back(helper_getmaxpath(k,visited));
+    }
+    return findMax(paths);
+}
+
 Property Skeleton::toProperty()
 {
     Property prop;
+    prop.put("type",type);
     prop.put("tag",tag);
 
     Bottle transformation;
     transformation.addList().read(T);
     prop.put("transformation",transformation.get(0));
+
+    Bottle plane;
+    plane.addList().read(coronal);
+    prop.put("coronal",plane.get(0));
+
+    plane.clear();
+    plane.addList().read(sagittal);
+    prop.put("sagittal",plane.get(0));
+
+    plane.clear();
+    plane.addList().read(transverse);
+    prop.put("transverse",plane.get(0));
 
     Bottle skeleton;
     Bottle &skeleton_=skeleton.addList();
@@ -216,19 +340,110 @@ void Skeleton::fromProperty(const Property &prop)
             b->write(T);
     }
     else
-        T=eye(3,3);
+        T=eye(4,4);
+    if (prop.check("coronal"))
+    {
+        if (Bottle *b=prop.find("coronal").asList())
+            b->write(coronal);
+    }
+    else
+    {
+        coronal=zeros(3);
+        coronal[2]=1.0;
+    }
+    if (prop.check("sagittal"))
+    {
+        if (Bottle *b=prop.find("sagittal").asList())
+            b->write(sagittal);
+    }
+    else
+    {
+        sagittal=zeros(3);
+        sagittal[0]=1.0;
+    }
+    if (prop.check("transverse"))
+    {
+        if (Bottle *b=prop.find("transverse").asList())
+            b->write(transverse);
+    }
+    else
+    {
+        transverse=zeros(3);
+        transverse[1]=1.0;
+    }
     helper_fromproperty(prop.find("skeleton").asList(),nullptr);
 }
 
-const KeyPoint *Skeleton::operator [](const string &tag) const
+const KeyPoint *Skeleton::operator[](const string &tag) const
 {
     auto it=tag2key.find(tag);
     return (it!=tag2key.end())?it->second:nullptr;
 }
 
-const KeyPoint *Skeleton::operator [](const unsigned int i) const
+const KeyPoint *Skeleton::operator[](const unsigned int i) const
 {
     return (i<keypoints.size())?keypoints[i]:nullptr;
+}
+
+void Skeleton::update(const vector<Vector> &ordered)
+{
+    Vector p(4,1);
+    unsigned int i=0;
+    for (auto &k:keypoints)
+    {
+        k->stale();
+        if (i<ordered.size())
+        {
+            auto &v=ordered[i];
+            p[0]=v[0];
+            p[1]=v[1];
+            p[2]=v[2];
+            k->setPoint((T*p).subVector(0,2));
+        }
+        i++;
+    }
+}
+
+void Skeleton::update(const vector<pair<string,Vector>> &unordered)
+{
+    for (auto &k:keypoints)
+        k->stale();
+
+    Vector p(4,1);
+    for (auto &it1:unordered)
+    {
+        auto it2=tag2key.find(get<0>(it1));
+        if (it2!=tag2key.end())
+        {
+            auto &v=get<1>(it1);
+            p[0]=v[0];
+            p[1]=v[1];
+            p[2]=v[2];
+            it2->second->setPoint((T*p).subVector(0,2));
+        }
+    }
+}
+
+void Skeleton::update(const Property &prop)
+{
+    if (prop.check("type"))
+        if (prop.find("type").asString()!=typeid(*this).name())
+            return;
+    if (prop.check("tag"))
+        tag=prop.find("tag").asString();
+    if (prop.check("transformation"))
+        if (Bottle *b=prop.find("transformation").asList())
+            b->write(T);
+    if (prop.check("coronal"))
+        if (Bottle *b=prop.find("coronal").asList())
+            b->write(coronal);
+    if (prop.check("sagittal"))
+        if (Bottle *b=prop.find("sagittal").asList())
+            b->write(sagittal);
+    if (prop.check("transverse"))
+        if (Bottle *b=prop.find("transverse").asList())
+            b->write(transverse);
+    helper_updatefromproperty(prop.find("skeleton").asList());
 }
 
 vector<Vector> Skeleton::get_ordered() const
@@ -239,9 +454,9 @@ vector<Vector> Skeleton::get_ordered() const
     return ordered;
 }
 
-vector<pair<string, Vector>> Skeleton::get_unordered() const
+vector<pair<string,Vector>> Skeleton::get_unordered() const
 {
-    vector<pair<string, Vector>> unordered;
+    vector<pair<string,Vector>> unordered;
     for (auto &it:tag2key)
         unordered.push_back(make_pair(it.first,it.second->getPoint()));
     return unordered;
@@ -261,7 +476,10 @@ void Skeleton::normalize()
 void Skeleton::print() const
 {
     cout<<"tag = \""<<tag<<"\""<<endl;
-    cout<<"transformation"<<endl<<T.toString(3,3)<<endl;
+    cout<<"transformation ="<<endl<<T.toString(3,3)<<endl;
+    cout<<"coronal = ("<<coronal.toString(3,3)<<")"<<endl;
+    cout<<"sagittal = ("<<sagittal.toString(3,3)<<")"<<endl;
+    cout<<"transverse = ("<<transverse.toString(3,3)<<")"<<endl;
     for (auto &k:keypoints)
     {
         cout<<"keypoint[\""<<k->getTag()<<"\"] = ("
@@ -277,6 +495,8 @@ void Skeleton::print() const
 
 SkeletonStd::SkeletonStd()
 {
+    type=typeid(SkeletonStd).name();
+
     tag2key[KeyPointTag::shoulder_center]=new KeyPoint(KeyPointTag::shoulder_center);
     tag2key[KeyPointTag::head]=new KeyPoint(KeyPointTag::head);
     tag2key[KeyPointTag::shoulder_left]=new KeyPoint(KeyPointTag::shoulder_left);
@@ -366,47 +586,10 @@ SkeletonStd::SkeletonStd()
     tag2key[KeyPointTag::ankle_right]->parent.push_back(tag2key[KeyPointTag::knee_right]);
 }
 
-void SkeletonStd::update(const vector<Vector> &ordered)
-{
-    Vector p(4,1);
-    unsigned int i=0;
-    for (auto &k:keypoints)
-    {
-        k->stale();
-        if (i<ordered.size())
-        {
-            auto &v=ordered[i];
-            p[0]=v[0];
-            p[1]=v[1];
-            p[2]=v[2];
-            k->setPoint((T*p).subVector(0,2));
-        }
-        i++;
-    }
-}
-
-void SkeletonStd::update(const vector<pair<string, Vector>> &unordered)
-{
-    for (auto &k:keypoints)
-        k->stale();
-
-    Vector p(4,1);
-    for (auto &it1:unordered)
-    {
-        auto it2=tag2key.find(get<0>(it1));
-        if (it2!=tag2key.end())
-        {
-            auto &v=get<1>(it1);
-            p[0]=v[0];
-            p[1]=v[1];
-            p[2]=v[2];
-            it2->second->setPoint((T*p).subVector(0,2));
-        }
-    }
-}
-
 SkeletonWaist::SkeletonWaist() : SkeletonStd()
 {
+    type=typeid(SkeletonWaist).name();
+
     waist_pos=7;
     tag2key[KeyPointTag::hip_center]=new KeyPoint(KeyPointTag::hip_center);
     keypoints.insert(keypoints.begin()+waist_pos+1,tag2key[KeyPointTag::hip_center]);
@@ -463,5 +646,30 @@ void SkeletonWaist::update_fromstd(const vector<pair<string, Vector>> &unordered
     if (tag2key[KeyPointTag::hip_left]->isUpdated() || tag2key[KeyPointTag::hip_right]->isUpdated())
         tag2key[KeyPointTag::hip_center]->setPoint(0.5*(tag2key[KeyPointTag::hip_left]->getPoint()+
                                                         tag2key[KeyPointTag::hip_right]->getPoint()));
+}
+
+void SkeletonWaist::update_fromstd(const Property &prop)
+{
+    update(prop);
+    if (tag2key[KeyPointTag::hip_left]->isUpdated() || tag2key[KeyPointTag::hip_right]->isUpdated())
+        tag2key[KeyPointTag::hip_center]->setPoint(0.5*(tag2key[KeyPointTag::hip_left]->getPoint()+
+                                                        tag2key[KeyPointTag::hip_right]->getPoint()));
+}
+
+Skeleton *assistive_rehab::factory(const Property &prop)
+{
+    Skeleton *skeleton=nullptr;
+    if (prop.check("type"))
+    {
+        string type=prop.find("type").asString();
+        if (type==typeid(SkeletonStd).name())
+            skeleton=new SkeletonStd;
+        else if (type==typeid(SkeletonWaist).name())
+            skeleton=new SkeletonWaist;
+
+        if (skeleton!=nullptr)
+            skeleton->fromProperty(prop);
+    }
+    return skeleton;
 }
 
