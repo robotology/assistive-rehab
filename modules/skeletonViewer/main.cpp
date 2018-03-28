@@ -437,7 +437,13 @@ class Viewer : public RFModule
         vtk_renderer->SetBackground(0.1,0.2,0.2);
 
         vtk_axes=vtkSmartPointer<vtkAxesActor>::New();
-        vtk_axes->AxisLabelsOff();
+        vtk_axes->GetXAxisCaptionActor2D()->GetTextActor()->SetTextScaleModeToNone();
+        vtk_axes->GetYAxisCaptionActor2D()->GetTextActor()->SetTextScaleModeToNone();
+        vtk_axes->GetZAxisCaptionActor2D()->GetTextActor()->SetTextScaleModeToNone();
+        vtk_axes->GetXAxisCaptionActor2D()->GetCaptionTextProperty()->SetFontSize(10);
+        vtk_axes->GetYAxisCaptionActor2D()->GetCaptionTextProperty()->SetFontSize(10);
+        vtk_axes->GetZAxisCaptionActor2D()->GetCaptionTextProperty()->SetFontSize(10);
+
         vtk_axes->SetTotalLength((0.1*ones(3)).data());
         vtk_renderer->AddActor(vtk_axes);
 
