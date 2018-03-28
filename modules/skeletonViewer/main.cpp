@@ -57,7 +57,7 @@ class VTKSkeleton
 protected:
     vtkSmartPointer<vtkRenderer> &vtk_renderer;
     unique_ptr<Skeleton> skeleton;
-    double characteristic_length;
+    double max_path;
     double last_update;
 
     vector<double> color;
@@ -105,7 +105,7 @@ protected:
     /****************************************************************/
     void generate_limbs(const KeyPoint *k)
     {
-        double a=characteristic_length/100.0;
+        double a=max_path/100.0;
 
         vtk_sphere.push_back(vtkSmartPointer<vtkSphereSource>::New());
         vtk_sphere.back()->SetCenter(Vector(k->getPoint()).data());
@@ -212,7 +212,7 @@ public:
 
             if (skeleton->getNumKeyPoints()>0)
             {
-                characteristic_length=skeleton->getMaxPath();
+                max_path=skeleton->getMaxPath();
                 auto k=skeleton->operator[](0);
                 generate_limbs(k);
 
@@ -230,7 +230,7 @@ public:
                     vtk_textTransform=vtkSmartPointer<vtkTransform>::New();
                     vtk_textTransform->Translate(p.data());
                     align(vtk_textTransform,z,skeleton->getCoronal());
-                    vtk_textTransform->Scale(Vector(3,characteristic_length/20.0).data());
+                    vtk_textTransform->Scale(Vector(3,max_path/20.0).data());
 
                     vtk_textActor=vtkSmartPointer<vtkActor>::New();
                     vtk_textActor->SetMapper(vtk_textMapper);
@@ -240,7 +240,7 @@ public:
                 }
 
                 vtkSmartPointer<vtkCamera> vtk_camera=vtk_renderer->GetActiveCamera();
-                vtk_camera->SetPosition((k->getPoint()+2.0*skeleton->getCoronal()).data());
+                vtk_camera->SetPosition((k->getPoint()+2.0*max_path*skeleton->getCoronal()).data());
                 vtk_camera->SetFocalPoint(k->getPoint().data());
                 vtk_camera->SetViewUp(skeleton->getTransverse().data());
             }
@@ -282,7 +282,7 @@ public:
                     vtk_textTransform->Identity();
                     vtk_textTransform->Translate(p.data());
                     align(vtk_textTransform,z,position-focal);
-                    vtk_textTransform->Scale(Vector(3,characteristic_length/20.0).data());
+                    vtk_textTransform->Scale(Vector(3,max_path/20.0).data());
                 }
             }
         }
