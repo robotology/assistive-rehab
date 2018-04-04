@@ -35,9 +35,9 @@ class Processor
 {
 
 protected:
-    SkeletonStd skeleton_init;
+    SkeletonWaist skeleton_init;
     map<string, pair<string,double>> keypoints2conf;
-    SkeletonStd curr_skeleton;
+    Skeleton curr_skeleton;
     const Metric* metric;
 
 public:
@@ -46,7 +46,7 @@ public:
 //    virtual string getMotionType();
     virtual void setInitialConf(const SkeletonWaist& skeleton_init_, const map<string, pair<string,double>>& keypoints2conf_) = 0;
     bool isStatic(const KeyPoint& keypoint);
-    void update(const SkeletonWaist &curr_skeleton_);
+    void update(const Skeleton &curr_skeleton_);
     bool isDeviatingFromIntialPose();
     bool isDeviatingFromIntialPose(const KeyPoint &keypoint, const KeyPoint &keypoint_init);
     virtual double computeMetric() { return 0.0; }

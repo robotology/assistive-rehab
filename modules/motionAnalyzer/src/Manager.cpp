@@ -934,6 +934,7 @@ bool Manager::configure(ResourceFinder &rf)
 
     opcPort.open(("/" + getName() + "/opc").c_str());
     scopePort.open(("/" + getName() + "/scope").c_str());
+    testPort.open(("/" + getName() + "/test").c_str());
     rpcPort.open(("/" + getName() + "/cmd").c_str());
     attach(rpcPort);
 
@@ -959,6 +960,7 @@ bool Manager::close()
 
     opcPort.close();
     scopePort.close();
+    testPort.close();
     rpcPort.close();
 
     return true;
@@ -967,59 +969,100 @@ bool Manager::close()
 /********************************************************/
 double Manager::getPeriod()
 {
-    return 1.0;
+    return 0.01;
 }
 
 /********************************************************/
 bool Manager::updateModule()
 {
-    //if we query the database
-    if(opcPort.getOutputCount() > 0)
+
+    Bottle *input = testPort.read();
+    for (int i=0; i<input->size(); i++)
     {
-        //get keyframes from skeleton
-        getKeyframes();
-
-        //populate Skeleton data structure
-        SkeletonWaist skeleton;
-        skeleton.update_fromstd(curr_keypoints);
-
-//        skeleton.print();
-
-        //transform detected skeleton into standard
-        skeleton.normalize();
-
-        Vector result;
-        result.resize(processors.size());
-        double tnow = Time::now();
-        double currres = -1.0;
-        double prev_timeout = 0.0;
-        double timeout = 0.0;
-        for(int i=0; i<processors.size(); i++)
+        if (Bottle *b=input->get(i).asList())
         {
-            processors[i]->update(skeleton);
-            if(processors[i]->isDeviatingFromIntialPose())
-                yWarning() << "Deviating from initial pose\n";
+            if (b->check("tag"))
+            {
+                Property prop(b->toString().c_str());
+                string tag=prop.find("tag").asString();
+                if (!tag.empty())
+                {
+                    if (prop.check("tag"))
+                    {
+                        Skeleton* skeleton(factory(prop));
+//                        skeleton->print();
 
-            result[i] = processors[i]->computeMetric();
+                        skeleton->normalize();
 
-            //check which is the current processor based on timeout
-            timeout += processors[i]->getTimeout();
-            //            cout << (tnow-tstart) << " " << prev_timeout << " " << timeout << endl;
-            if( prev_timeout < (tnow-tstart) && (tnow-tstart) < timeout )
-                currres = result[i];
-            else
-                currres = result[processors.size()];
+                        Vector result;
+                        result.resize(processors.size());
+                        for(int i=0; i<processors.size(); i++)
+                        {
+                            processors[i]->update(*skeleton);
+//                            if(processors[i]->isDeviatingFromIntialPose())
+//                                yWarning() << "Deviating from initial pose\n";
 
-            prev_timeout = timeout;
+                            result[i] = processors[i]->computeMetric();
+                        }
+
+                        //write on output port
+                        Bottle &scopebottleout = scopePort.prepare();
+                        scopebottleout.clear();
+                        scopebottleout.addDouble(result[result.size()-1]);
+                        scopePort.write();
+                    }
+                }
+            }
         }
-
-        //write on output port
-        Bottle &scopebottleout = scopePort.prepare();
-        scopebottleout.clear();
-        scopebottleout.addDouble(currres);
-        scopePort.write();
-
     }
+
+//    //if we query the database
+//    if(opcPort.getOutputCount() > 0)
+//    {
+//        //get keyframes from skeleton
+//        getKeyframes();
+
+//        //populate Skeleton data structure
+//        SkeletonWaist skeleton;
+//        skeleton.update_fromstd(curr_keypoints);
+
+////        skeleton.print();
+
+//        //transform detected skeleton into standard
+//        skeleton.normalize();
+
+//        Vector result;
+//        result.resize(processors.size());
+//        double tnow = Time::now();
+//        double currres = -1.0;
+//        double prev_timeout = 0.0;
+//        double timeout = 0.0;
+//        for(int i=0; i<processors.size(); i++)
+//        {
+//            processors[i]->update(skeleton);
+//            if(processors[i]->isDeviatingFromIntialPose())
+//                yWarning() << "Deviating from initial pose\n";
+
+//            result[i] = processors[i]->computeMetric();
+
+//            //check which is the current processor based on timeout
+//            timeout += processors[i]->getTimeout();
+//            //            cout << (tnow-tstart) << " " << prev_timeout << " " << timeout << endl;
+//            if( prev_timeout < (tnow-tstart) && (tnow-tstart) < timeout )
+//                currres = result[i];
+//            else
+//                currres = result[processors.size()];
+
+//            prev_timeout = timeout;
+//        }
+
+//        //write on output port
+//        Bottle &scopebottleout = scopePort.prepare();
+//        scopebottleout.clear();
+//        scopebottleout.addDouble(currres);
+//        scopePort.write();
+
+//    }
 
     return true;
 }
