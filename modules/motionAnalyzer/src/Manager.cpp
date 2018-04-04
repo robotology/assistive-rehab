@@ -234,6 +234,8 @@ bool Manager::loadInitialConf(const string& motion_repertoire_file)
 
         initial_skeleton.update_fromstd(initial_keypoints);
     }
+
+    return true;
 }
 
 bool Manager::loadInitialConf(const Bottle& b)
@@ -435,6 +437,7 @@ bool Manager::loadInitialConf(const Bottle& b)
     }
 
     initial_skeleton.update_fromstd(initial_keypoints);
+    return true;
 }
 
 bool Manager::loadMotionList(const string& motion_repertoire_file)
@@ -685,6 +688,8 @@ bool Manager::loadSequence(const string &sequencer_file)
             }
         }
     }
+
+    return true;
 }
 
 /********************************************************/

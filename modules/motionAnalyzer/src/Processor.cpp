@@ -27,6 +27,8 @@ Processor* createProcessor(const string& motion_tag, const Metric* metric_)
         yInfo() << "Creating processor for" << Rom_Processor::motion_type << "\n";
         return new Rom_Processor(metric_);
     }
+    else
+        return 0;
 }
 
 /********************************************************/
@@ -195,5 +197,8 @@ double Rom_Processor::computeMetric()
         return ( acos(dot_p/(v1_norm*v2_norm)) * (180/M_PI) );
     }
     else
+    {
         yError() << "The keypoint does not have a child ";
+        return 0.0;
+    }
 }
