@@ -125,7 +125,7 @@ protected:
     }
 
     /****************************************************************/
-    void generate_limbs(const KeyPoint *k)
+    void generate_limbs(const KeyPoint *k, const double opacity)
     {
         double a=max_path/100.0;
 
@@ -139,6 +139,7 @@ protected:
         vtk_sphere_actor.push_back(vtkSmartPointer<vtkActor>::New());
         vtk_sphere_actor.back()->SetMapper(vtk_sphere_mapper.back());
         vtk_sphere_actor.back()->GetProperty()->SetColor(color.data());
+        vtk_sphere_actor.back()->GetProperty()->SetOpacity(opacity);
         vtk_sphere_actor.back()->SetVisibility(k->isUpdated());
         vtk_renderer->AddActor(vtk_sphere_actor.back());
 
@@ -164,7 +165,7 @@ protected:
 
             vtk_quadric_contours.push_back(vtkSmartPointer<vtkContourFilter>::New());
             vtk_quadric_contours.back()->SetInputConnection(vtk_quadric_sample.back()->GetOutputPort());
-            vtk_quadric_contours.back()->GenerateValues(1.0,1.0,1.0);
+            vtk_quadric_contours.back()->GenerateValues(1,1.0,1.0);
 
             vtk_quadric_mapper.push_back(vtkSmartPointer<vtkPolyDataMapper>::New());
             vtk_quadric_mapper.back()->SetInputConnection(vtk_quadric_contours.back()->GetOutputPort());
@@ -179,19 +180,21 @@ protected:
             vtk_quadric_actor.push_back(vtkSmartPointer<vtkActor>::New());
             vtk_quadric_actor.back()->SetMapper(vtk_quadric_mapper.back());
             vtk_quadric_actor.back()->SetUserTransform(vtk_quadric_transform.back());
+            vtk_quadric_actor.back()->GetProperty()->SetOpacity(opacity);
             vtk_quadric_actor.back()->SetVisibility(k->isUpdated()&&c->isUpdated());
             vtk_renderer->AddActor(vtk_quadric_actor.back());
 
             kk2id_quadric[k][c]=(unsigned int)vtk_quadric_actor.size()-1;
-            generate_limbs(c);
+            generate_limbs(c,opacity);
         }
     }
 
     /****************************************************************/
-    void update_limbs(const KeyPoint *k)
+    void update_limbs(const KeyPoint *k, const double opacity)
     {
         auto id_sphere=k2id_sphere[k];
         vtk_sphere[id_sphere]->SetCenter(Vector(k->getPoint()).data());
+        vtk_sphere_actor[id_sphere]->GetProperty()->SetOpacity(opacity);
         vtk_sphere_actor[id_sphere]->SetVisibility(k->isUpdated());
 
         for (unsigned int i=0; i<k->getNumChild(); i++)
@@ -204,9 +207,10 @@ protected:
             Vector m=0.5*(c->getPoint()-k->getPoint());
             vtk_quadric_transform[id_quadric]->Translate((k->getPoint()+m).data());
             align(vtk_quadric_transform[id_quadric],z,m);
+            vtk_quadric_actor[id_quadric]->GetProperty()->SetOpacity(opacity);
             vtk_quadric_actor[id_quadric]->SetVisibility(k->isUpdated()&&c->isUpdated());
 
-            update_limbs(c);
+            update_limbs(c,opacity);
         }
     }
 
@@ -218,7 +222,7 @@ public:
     {
         z.resize(3,0.0); z[2]=1.0;
 
-        skeleton=unique_ptr<Skeleton>(factory(prop));        
+        skeleton=unique_ptr<Skeleton>(factory(prop));
         if (skeleton!=nullptr)
         {
             vector<vector<double>> colors_code;
@@ -232,11 +236,12 @@ public:
             hash<string> color_hash;
             color=colors_code[color_hash(skeleton->getTag())%colors_code.size()];            
 
+            double opacity=prop.check("opacity",Value(1.0)).asDouble();
             if (skeleton->getNumKeyPoints()>0)
             {
                 max_path=skeleton->getMaxPath();
                 auto k=skeleton->operator[](0);
-                generate_limbs(k);
+                generate_limbs(k,opacity);
 
                 vtk_textActor=vtkSmartPointer<vtkCaptionActor2D>::New();
                 vtk_textActor->GetTextActor()->SetTextScaleModeToNone();
@@ -281,9 +286,10 @@ public:
         if (skeleton!=nullptr)
         {
             skeleton->update(prop);
+            double opacity=prop.check("opacity",Value(1.0)).asDouble();
             if (skeleton->getNumKeyPoints()>0)
             {
-                update_limbs(skeleton->operator[](0));
+                update_limbs(skeleton->operator[](0),opacity);
 
                 Vector p;
                 if (findCaptionPoint(p))

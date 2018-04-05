@@ -117,10 +117,11 @@ class TestViewer : public RFModule
     bool updateModule() override
     {
         double t=Time::now()-t0;
+        double theta=2.0*M_PI*0.1*t+phase;
 
         Vector p=skeleton1[KeyPointTag::shoulder_center]->getPoint();
-        p[0]+=radius*cos(2.0*M_PI*0.1*t+phase);
-        p[1]+=radius*sin(2.0*M_PI*0.1*t+phase);
+        p[0]+=radius*cos(theta);
+        p[1]+=radius*sin(theta);
 
         vector<pair<string,Vector>> unordered=skeleton1.get_unordered();
         unordered.erase(unordered.end()-2,unordered.end());
@@ -136,6 +137,7 @@ class TestViewer : public RFModule
 
         Property prop1=skeleton1.toProperty();
         Property prop2=skeleton2.toProperty();
+        prop2.put("opacity",0.25+0.75*(1.0-cos(theta))/2.0);
 
         Bottle &msg=port.prepare();
         msg.clear();
