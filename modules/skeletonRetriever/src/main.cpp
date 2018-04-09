@@ -1,0 +1,376 @@
+/******************************************************************************
+ *                                                                            *
+ * Copyright (C) 2018 Fondazione Istituto Italiano di Tecnologia (IIT)        *
+ * All Rights Reserved.                                                       *
+ *                                                                            *
+ ******************************************************************************/
+
+/**
+ * @file main.cpp
+ * @authors: Ugo Pattacini <ugo.pattacini@iit.it>
+ */
+
+#include <cstdlib>
+#include <memory>
+#include <cmath>
+#include <vector>
+#include <map>
+#include <unordered_map>
+#include <utility>
+#include <sstream>
+#include <iostream>
+#include <string>
+
+#include <yarp/os/all.h>
+#include <yarp/sig/all.h>
+#include <yarp/math/Math.h>
+
+#include "AssistiveRehab/skeleton.h"
+
+using namespace std;
+using namespace yarp::os;
+using namespace yarp::sig;
+using namespace yarp::math;
+using namespace assistive_rehab;
+
+
+/****************************************************************/
+struct MetaSkeleton
+{
+    double timer;
+    int opc_id;
+    shared_ptr<SkeletonWaist> skeleton;
+
+    /****************************************************************/
+    MetaSkeleton(const double t) : timer(t), opc_id(-1)
+    {
+        skeleton=shared_ptr<SkeletonWaist>(new SkeletonWaist());
+    }
+};
+
+
+/****************************************************************/
+class Retriever : public RFModule
+{
+    BufferedPort<Bottle> skeletonsPort;
+    BufferedPort<ImageOf<PixelFloat>> depthPort;
+    BufferedPort<Bottle> viewerPort;
+    RpcClient opcPort;
+    RpcClient camPort;
+
+    ImageOf<PixelFloat> depth;
+
+    unordered_map<string,string> keysRemap;
+    vector<MetaSkeleton> skeletons;
+
+    bool camera_configured;
+    double period;
+    double fov_h;
+    double fov_v;
+    double key_recognition_confidence;
+    double tracking_threshold;
+    double time_to_live;
+
+    /****************************************************************/
+    bool getCameraOptions()
+    {
+        if (camPort.getOutputCount()>0)
+        {
+            Bottle cmd,rep;
+            cmd.addVocab(Vocab::encode("visr"));
+            cmd.addVocab(Vocab::encode("get"));
+            cmd.addVocab(Vocab::encode("fov"));
+            if (camPort.write(cmd,rep))
+            {
+                if (rep.size()>=5)
+                {
+                    fov_h=rep.get(3).asDouble();
+                    fov_v=rep.get(4).asDouble();
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /****************************************************************/
+    bool getPoint3D(const int u, const int v, Vector &p) const
+    {
+        double f=depth.width()/(2.0*tan(fov_h*(M_PI/180.0)/2.0));
+        double d=depth(u,v);
+        if (d>0.0)
+        {
+            int u_=(int)(u-0.5*(depth.width()-1));
+            int v_=(int)(v-0.5*(depth.height()-1));
+
+            p.resize(3,d);
+            p[0]*=u_/f;
+            p[1]*=v_/f;
+
+            return true;
+        }
+        else
+            return false;
+    }
+
+    /****************************************************************/
+    MetaSkeleton create(Bottle *keys)
+    {
+        MetaSkeleton s(time_to_live);
+        vector<pair<string,Vector>> unordered;
+
+        Vector p;
+        for (int i=0; i<keys->size(); i++)
+        {
+            if (Bottle *k=keys->get(i).asList())
+            {
+                if (k->size()>=4)
+                {
+                    string tag=k->get(0).asString();
+                    int u=(int)k->get(1).asDouble();
+                    int v=(int)k->get(2).asDouble();
+                    double confidence=k->get(3).asDouble();
+
+                    if ((confidence>=key_recognition_confidence) && getPoint3D(u,v,p))
+                        unordered.push_back(make_pair(keysRemap[tag],p));
+                }
+            }
+        }
+
+        s.skeleton->update_fromstd(unordered);
+        return s;
+    }
+
+    /****************************************************************/
+    MetaSkeleton *isTracked(const MetaSkeleton &s) const
+    {
+        map<double,MetaSkeleton*> scores; 
+        for (auto sk:skeletons)
+        {
+            double mean=0.0; int num=0;
+            for (unsigned int i=0; i<sk.skeleton->getNumKeyPoints(); i++)
+            {
+                if ((*sk.skeleton)[i]->isUpdated() && (*s.skeleton)[i]->isUpdated())
+                    mean+=norm((*sk.skeleton)[i]->getPoint()-(*s.skeleton)[i]->getPoint());
+                num++;
+            }
+            if (num>0)
+            {
+                mean/=num;
+                if (mean<=tracking_threshold)
+                    scores[mean]=&sk;
+            }
+        }
+
+        return (scores.empty()?nullptr:scores.begin()->second);
+    }
+
+    /****************************************************************/
+    bool opcAdd(MetaSkeleton &s) const
+    {
+        Bottle cmd,rep;
+        cmd.addVocab(Vocab::encode("add"));
+        Property prop=s.skeleton->toProperty();
+        cmd.addList().read(prop);
+        if (opcPort.write(cmd,rep))
+        {
+            if (rep.get(0).asVocab()==Vocab::encode("ack"))
+            {
+                s.opc_id=rep.get(1).asList()->get(1).asInt();
+                ostringstream ss;
+                ss<<"id #"<<hex<<s.opc_id;
+                s.skeleton->setTag(ss.str());
+                return opcSet(s);
+            }
+        }
+
+        return false;
+    }
+
+    /****************************************************************/
+    bool opcSet(const MetaSkeleton &s) const
+    {
+        Bottle cmd,rep;
+        cmd.addVocab(Vocab::encode("set"));
+        Bottle &pl=cmd.addList();
+        Property prop=s.skeleton->toProperty();
+        pl.read(prop);
+        Property &id=pl.addDict();
+        id.put("id",s.opc_id);
+        if (opcPort.write(cmd,rep))
+            return (rep.get(0).asVocab()==Vocab::encode("ack"));
+
+        return false;
+    }
+
+    /****************************************************************/
+    bool opcDel(const MetaSkeleton &s) const
+    {
+        Bottle cmd,rep;
+        cmd.addVocab(Vocab::encode("del"));
+        Bottle &pl=cmd.addList().addList();
+        pl.addString("id");
+        pl.addInt(s.opc_id);
+        if (opcPort.write(cmd,rep))
+            return (rep.get(0).asVocab()==Vocab::encode("ack"));
+
+        return false;
+    }
+
+    /****************************************************************/
+    void viewerUpdate()
+    {
+        if (viewerPort.getOutputCount()>0)
+        {
+            Bottle &msg=viewerPort.prepare();
+            msg.clear();
+            for (auto &s:skeletons)
+            {
+                Property prop=s.skeleton->toProperty();
+                msg.addList().read(prop);
+            }
+            viewerPort.writeStrict();
+        }
+    }
+
+    /****************************************************************/
+    bool configure(ResourceFinder &rf) override
+    {
+        keysRemap["Nose"]=KeyPointTag::head;
+        keysRemap["Neck"]=KeyPointTag::shoulder_center;
+        keysRemap["RShoulder"]=KeyPointTag::shoulder_right;
+        keysRemap["RElbow"]=KeyPointTag::elbow_right;
+        keysRemap["RWrist"]=KeyPointTag::hand_right;
+        keysRemap["LShoulder"]=KeyPointTag::shoulder_left;
+        keysRemap["LElbow"]=KeyPointTag::elbow_left;
+        keysRemap["LWrist"]=KeyPointTag::hand_left;
+        keysRemap["RHip"]=KeyPointTag::hip_right;
+        keysRemap["RKnee"]=KeyPointTag::knee_right;
+        keysRemap["RAnkle"]=KeyPointTag::ankle_right;
+        keysRemap["LHip"]=KeyPointTag::hip_left;
+        keysRemap["LKnee"]=KeyPointTag::knee_left;
+        keysRemap["LAnkle"]=KeyPointTag::ankle_left;
+
+        // default values
+        period=0.01;
+        key_recognition_confidence=0.3;
+        tracking_threshold=0.2;
+        time_to_live=1.0;
+
+        // retrieve values from config file
+        Bottle &gGeneral=rf.findGroup("general");
+        if (!gGeneral.isNull())
+        {
+            period=gGeneral.check("period",period).asDouble();
+        }
+
+        Bottle &gSkeleton=rf.findGroup("skeleton");
+        if (!gSkeleton.isNull())
+        {
+            key_recognition_confidence=gSkeleton.check("key-recognition-confidence",key_recognition_confidence).asDouble();
+            tracking_threshold=gSkeleton.check("tracking-threshold",tracking_threshold).asDouble();
+            time_to_live=gSkeleton.check("time-to-live",time_to_live).asDouble();
+        }
+
+        skeletonsPort.open("/skeletonRetriever/skeletons:i");
+        depthPort.open("/skeletonRetriever/depth:i");
+        viewerPort.open("/skeletonRetriever/viewer:o");
+        opcPort.open("/skeletonRetriever/opc:rpc");
+        camPort.open("/skeletonRetriever/cam:rpc");
+
+        camera_configured=false;
+        return true;
+    }
+
+    /****************************************************************/
+    double getPeriod() override
+    {
+        return period;
+    }
+
+    /****************************************************************/
+    bool updateModule() override
+    {
+        if (ImageOf<PixelFloat> *depth=depthPort.read(false))
+            this->depth=*depth;
+
+        if (!camera_configured)
+            camera_configured=getCameraOptions();
+
+        // handle life timer
+        for (auto it=begin(skeletons); it!=end(skeletons); it++)
+        {
+            it->timer-=period;
+            if (it->timer<=0.0)
+            {
+                opcDel(*it);
+                skeletons.erase(it);
+            }
+        }
+
+        // handle newly acquired skeletons from the detector
+        if (Bottle *bs=skeletonsPort.read(false))
+        {
+            bool doViewerUpdate=false;
+            for (int i=0; i<bs->size(); i++)
+            {
+                Bottle *b=bs->get(i).asList();
+                if ((depth.width()>0) && (depth.height()>0) && (b!=nullptr))
+                {
+                    MetaSkeleton s=create(b);
+                    if (MetaSkeleton *s1=isTracked(s))
+                    {
+                        s1->skeleton->update(s.skeleton->get_ordered());
+                        s1->timer=time_to_live;
+                        opcSet(*s1);
+                    }
+                    else
+                    {
+                        opcAdd(s);
+                        skeletons.push_back(s);
+                    }
+
+                    doViewerUpdate=true;
+                }
+            }
+
+            if (doViewerUpdate)
+                viewerUpdate();
+        }
+
+        return true;
+    }
+
+    /****************************************************************/
+    bool close() override
+    {
+        skeletonsPort.close();
+        depthPort.close();
+        viewerPort.close();
+        opcPort.close();
+        camPort.close();
+        return true;
+    }
+};
+
+
+/****************************************************************/
+int main(int argc, char *argv[])
+{
+    Network yarp;
+    if (!yarp.checkNetwork())
+    {
+        yError()<<"Unable to find Yarp server!";
+        return EXIT_FAILURE;
+    }
+
+    ResourceFinder rf;
+    rf.setDefaultContext("skeletonRetriever");
+    rf.setDefaultConfigFile("config.ini");
+    rf.configure(argc,argv);
+
+    Retriever retriever;
+    return retriever.runModule(rf);
+}
+

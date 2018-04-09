@@ -4,3 +4,4 @@
 
 add_subdirectory(motionAnalyzer)
 add_subdirectory(skeletonViewer)
+add_subdirectory(skeletonRetriever)
