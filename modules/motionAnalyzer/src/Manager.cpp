@@ -10,6 +10,9 @@
  * @authors: Valentina Vasco <valentina.vasco@iit.it>
  */
 
+#include <iostream>
+#include <vector>
+
 #include <yarp/os/all.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
@@ -20,6 +23,8 @@
 
 #include "src/motionAnalyzer_IDL.h"
 
+#include "matio.h"
+
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
@@ -27,6 +32,8 @@ using namespace assistive_rehab;
 
 void Manager::init()
 {
+    numKeypoints = 14;
+
     //tag2key initial configuration
     elbowLeft_init.resize(3);
     elbowRight_init.resize(3);
@@ -43,7 +50,7 @@ void Manager::init()
     ankleLeft_init.resize(3);
     ankleRight_init.resize(3);
 
-    initial_keypoints.resize(14);
+    initial_keypoints.resize(numKeypoints);
 
     elbowLeft.resize(3);
     elbowRight.resize(3);
@@ -60,7 +67,7 @@ void Manager::init()
     ankleLeft.resize(3);
     ankleRight.resize(3);
 
-    curr_keypoints.resize(14);
+    curr_keypoints.resize(numKeypoints);
 
     keypoints2conf[KeyPointTag::shoulder_center] = make_pair("static", 0.0);
     keypoints2conf[KeyPointTag::head] = make_pair("static", 0.0);
@@ -467,7 +474,7 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                         if(!bMotion.isNull())
                         {
                             Metric* newMetric;
-                            if(curr_tag == "ROM") //Rom_Processor::motion_type)
+                            if(curr_tag == Rom_Processor::motion_type)
                             {
                                 string motion_type = bMotion.find("motion_type").asString();
                                 string tag_joint = bMotion.find("tag_joint").asString();
@@ -497,7 +504,7 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                                 else
                                     yError() << "Could not find reference plane";
 
-                                newMetric = new Rom(motion_type, tag_joint, ref_dir, plane_normal, min, max, timeout);
+                                newMetric = new Rom(curr_tag+"_"+to_string(j), motion_type, tag_joint, ref_dir, plane_normal, min, max, timeout);
 //                                metrics.push_back(newMetric);
 
                                 //overwrites initial configuration if different
@@ -912,6 +919,8 @@ void Manager::getKeyframes()
             }
         }
     }
+
+    all_keypoints.push_back(curr_keypoints);
 }
 
 /********************************************************/
@@ -944,7 +953,28 @@ bool Manager::configure(ResourceFinder &rf)
         return false;
     loadSequence(sequencer_file);
 
+    // Use MATIO to write the results in a .mat file
+    filename_report = rf.getHomeContextPath() + "/test_data_fdg.mat";
+    matfp = Mat_CreateVer(filename_report.c_str(),NULL,MAT_FT_MAT73);
+    if (matfp == NULL)
+        yError() << "Error creating MAT file";
+
     tstart = Time::now();
+    tstart_session = Time::now();
+
+    finishedSession = false;
+
+    return true;
+}
+
+/********************************************************/
+bool Manager::interruptModule()
+{
+    opcPort.interrupt();
+    scopePort.interrupt();
+    testPort.interrupt();
+    rpcPort.interrupt();
+    yInfo() << "Interrupted module";
 
     return true;
 }
@@ -952,16 +982,26 @@ bool Manager::configure(ResourceFinder &rf)
 /********************************************************/
 bool Manager::close()
 {
+//    yInfo() << "Writing to file";
+//    if(writeKeypointsToFile())
+//        yInfo() << "Keypoints saved to file" << filename_report.c_str();
+
+    yInfo() << "Keypoints saved to file" << filename_report.c_str();
+    Mat_Close(matfp);
+
     for(int j=0; j<metrics.size(); j++)
         delete metrics[j];
 
     for(int i=0; i<processors.size(); i++)
         delete processors[i];
+    yInfo() << "Freed memory";
 
     opcPort.close();
     scopePort.close();
     testPort.close();
     rpcPort.close();
+
+    yInfo() << "Closed ports";
 
     return true;
 }
@@ -975,66 +1015,68 @@ double Manager::getPeriod()
 /********************************************************/
 bool Manager::updateModule()
 {
-
-    Bottle *input = testPort.read();
-    for (int i=0; i<input->size(); i++)
-    {
-        if (Bottle *b=input->get(i).asList())
-        {
-            if (b->check("tag"))
-            {
-                Property prop(b->toString().c_str());
-                string tag=prop.find("tag").asString();
-                if (!tag.empty())
-                {
-                    if (prop.check("tag"))
-                    {
-                        Skeleton* skeleton(factory(prop));
-//                        skeleton->print();
-
-                        skeleton->normalize();
-
-                        Vector result;
-                        result.resize(processors.size());
-                        for(int i=0; i<processors.size(); i++)
-                        {
-                            processors[i]->update(*skeleton);
-//                            if(processors[i]->isDeviatingFromIntialPose())
-//                                yWarning() << "Deviating from initial pose\n";
-
-                            result[i] = processors[i]->computeMetric();
-                        }
-
-                        //write on output port
-                        Bottle &scopebottleout = scopePort.prepare();
-                        scopebottleout.clear();
-                        scopebottleout.addDouble(result[result.size()-1]);
-                        scopePort.write();
-                    }
-                }
-            }
-        }
-    }
-
-//    //if we query the database
-//    if(opcPort.getOutputCount() > 0)
+//    Bottle *input = testPort.read();
+//    for (int i=0; i<input->size(); i++)
 //    {
-//        //get keyframes from skeleton
-//        getKeyframes();
+//        if (Bottle *b=input->get(i).asList())
+//        {
+//            if (b->check("tag"))
+//            {
+//                Property prop(b->toString().c_str());
+//                string tag=prop.find("tag").asString();
+//                if (!tag.empty())
+//                {
+//                    if (prop.check("tag"))
+//                    {
+//                        Skeleton* skeleton(factory(prop));
+////                        skeleton->print();
 
-//        //populate Skeleton data structure
-//        SkeletonWaist skeleton;
-//        skeleton.update_fromstd(curr_keypoints);
+//                        skeleton->normalize();
 
-////        skeleton.print();
+//                        Vector result;
+//                        result.resize(processors.size());
+//                        for(int i=0; i<processors.size(); i++)
+//                        {
+//                            processors[i]->update(*skeleton);
+////                            if(processors[i]->isDeviatingFromIntialPose())
+////                                yWarning() << "Deviating from initial pose\n";
 
-//        //transform detected skeleton into standard
-//        skeleton.normalize();
+//                            result[i] = processors[i]->computeMetric();
+//                        }
 
-//        Vector result;
-//        result.resize(processors.size());
+//                        //write on output port
+//                        Bottle &scopebottleout = scopePort.prepare();
+//                        scopebottleout.clear();
+//                        scopebottleout.addDouble(result[result.size()-1]);
+//                        scopePort.write();
+//                    }
+//                }
+//            }
+//        }
+//    }
+
+    //if we query the database
+    if(opcPort.getOutputCount() > 0)
+    {
+        //update time array
+        time_samples.push_back(Time::now());
+
+        //get keyframes from skeleton
+        getKeyframes();
+
+        //populate Skeleton data structure
+        SkeletonWaist skeleton;
+        skeleton.update_fromstd(curr_keypoints);
+
+//        skeleton.print();
+
+        //transform detected skeleton into standard
+        skeleton.normalize();
+
+        Vector result;
+        result.resize(processors.size());
 //        double tnow = Time::now();
-//        double currres = -1.0;
+        double currres = -1.0;
 //        double prev_timeout = 0.0;
 //        double timeout = 0.0;
 //        for(int i=0; i<processors.size(); i++)
@@ -1056,14 +1098,204 @@ bool Manager::updateModule()
 //            prev_timeout = timeout;
 //        }
 
-//        //write on output port
-//        Bottle &scopebottleout = scopePort.prepare();
-//        scopebottleout.clear();
-//        scopebottleout.addDouble(currres);
-//        scopePort.write();
+        //write on output port
+        Bottle &scopebottleout = scopePort.prepare();
+        scopebottleout.clear();
+        scopebottleout.addDouble(currres);
+        scopePort.write();
 
-//    }
+        tend_session = Time::now();
+        if(tend_session-tstart_session > 5.0)
+            finishedSession = true;
+
+        if(finishedSession)
+        {
+            yInfo() << "Writing to file";
+            if(writeKeypointsToFile())
+            {
+                time_samples.clear();
+                all_keypoints.clear();
+            }
+
+            finishedSession = false;
+            tstart_session = tend_session;
+        }
+    }
 
     return true;
 }
 
+bool Manager::writeStructToMat(const string& name, const vector< vector< pair<string,Vector> > >& keypoints_skel)
+{
+    const char *fields[numKeypoints] =
+    {
+        KeyPointTag::elbow_left.c_str(),
+        KeyPointTag::elbow_right.c_str(),
+        KeyPointTag::hand_left.c_str(),
+        KeyPointTag::hand_right.c_str(),
+        KeyPointTag::head.c_str(),
+        KeyPointTag::shoulder_center.c_str(),
+        KeyPointTag::shoulder_left.c_str(),
+        KeyPointTag::shoulder_right.c_str(),
+        KeyPointTag::hip_left.c_str(),
+        KeyPointTag::hip_right.c_str(),
+        KeyPointTag::knee_left.c_str(),
+        KeyPointTag::knee_right.c_str(),
+        KeyPointTag::ankle_left.c_str(),
+        KeyPointTag::ankle_right.c_str()
+    };
+
+    matvar_t *field;
+
+    size_t dim_struct[2] = {1,1};
+
+    size_t nSamples = keypoints_skel.size();
+
+    matvar_t *matvar = Mat_VarCreateStruct(name.c_str(),2,dim_struct,fields,numKeypoints);
+    if(matvar != NULL)
+    {
+        vector<double> field_vector;
+        field_vector.resize(3*nSamples);
+
+        size_t dims_field[2] = {nSamples,3};
+
+    //    print(keypoints_skel);
+
+        for(int i=0; i<numKeypoints; i++)
+        {
+            for(int j=0; j<nSamples; j++)
+            {
+                field_vector[j] = keypoints_skel[j][i].second[0];
+                field_vector[j+nSamples] = keypoints_skel[j][i].second[1];
+                field_vector[j+2*nSamples] = keypoints_skel[j][i].second[2];
+            }
+
+            field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field,field_vector.data(),MAT_F_GLOBAL);
+            Mat_VarSetStructFieldByName(matvar, fields[i], 0, field);
+        }
+
+//        Mat_VarWrite(matfp,matvar,MAT_COMPRESSION_NONE);
+        Mat_VarWriteAppend(matfp,matvar,MAT_COMPRESSION_NONE,1);
+        Mat_VarFree(matvar);
+    }
+    else
+        return false;
+
+    return true;
+
+}
+
+bool Manager::writeStructToMat(const string& name, const Metric& metric)
+{
+    int numFields=7;
+    const char *fields[numFields] = {"ref_joint", "ref_direction", "ref_plane", "max", "min", "tstart", "tend"};
+    matvar_t *field;
+
+    size_t dim_struct[2] = {1,1};
+    matvar_t *matvar = Mat_VarCreateStruct(name.c_str(),2,dim_struct,fields,numFields);
+
+    if(matvar != NULL)
+    {
+        string joint_met = metric.getTagJoint();
+        char *joint_c = new char[joint_met.length() + 1];
+        strcpy(joint_c, joint_met.c_str());
+        size_t dims_field_joint[2] = {1,2*sizeof(joint_c)/sizeof(joint_c[0])};
+        field = Mat_VarCreate(NULL,MAT_C_CHAR,MAT_T_UTF8,2,dims_field_joint,joint_c,0);
+        Mat_VarSetStructFieldByName(matvar, fields[0], 0, field);
+        delete [] joint_c;
+
+        size_t dims_field_dir[2] = {1,3};
+        Vector ref_met = metric.getRefDir();
+        field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_dir,ref_met.data(),MAT_F_DONT_COPY_DATA);
+        Mat_VarSetStructFieldByName(matvar, fields[1], 0, field);
+
+        size_t dims_field_plane[2] = {1,3};
+        Vector plane_met = metric.getPlane();
+        field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_plane,plane_met.data(),MAT_F_DONT_COPY_DATA);
+        Mat_VarSetStructFieldByName(matvar, fields[2], 0, field);
+
+        size_t dims_field_max[2] = {1,1};
+        double max_val = metric.getMax();
+        field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_max,&max_val,MAT_F_DONT_COPY_DATA);
+        Mat_VarSetStructFieldByName(matvar, fields[3], 0, field);
+
+        size_t dims_field_min[2] = {1,1};
+        double min_val = metric.getMin();
+        field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_min,&min_val,MAT_F_DONT_COPY_DATA);
+        Mat_VarSetStructFieldByName(matvar, fields[4], 0, field);
+
+        size_t dims_field_tstart[2] = {1,1};
+        cout << "started at " << tstart_session-tstart;
+        field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tstart,&tstart_session,MAT_F_DONT_COPY_DATA);
+        Mat_VarSetStructFieldByName(matvar, fields[5], 0, field);
+
+        cout << " ended at " << tend_session-tstart << endl;
+        size_t dims_field_tend[2] = {1,1};
+        field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tend,&tend_session,MAT_F_DONT_COPY_DATA);
+        Mat_VarSetStructFieldByName(matvar, fields[6], 0, field);
+
+//        Mat_VarWrite(matfp,matvar,MAT_COMPRESSION_NONE);
+        Mat_VarWriteAppend(matfp, matvar, MAT_COMPRESSION_NONE,1);
+        Mat_VarFree(matvar);
+    }
+    else
+        return false;
+
+
+    return true;
+
+}
+
+void Manager::print(const vector< vector< pair<string,Vector> > >& keypoints_skel)
+{
+    for(int i=0; i<keypoints_skel[0].size(); i++)
+    {
+        for(int j=0; j<keypoints_skel.size(); j++)
+        {
+            cout << keypoints_skel[j][i].first << " " << keypoints_skel[j][i].second[0] << " "
+                 << keypoints_skel[j][i].second[1] << " " << keypoints_skel[j][i].second[2] << endl;
+        }
+    }
+    cout << endl;
+}
+
+bool Manager::writeKeypointsToFile()
+{
+    // Use MATIO to write the results in a .mat file
+
+    //Save time samples
+    size_t nSamples = time_samples.size();
+    size_t dims[2] = {nSamples,1};
+    matvar_t *matvar = Mat_VarCreate("Time_samples", MAT_C_DOUBLE, MAT_T_DOUBLE, 2, dims, time_samples.data(), 0);
+    if(matvar != NULL)
+    {
+//        Mat_VarWrite(matfp, matvar, MAT_COMPRESSION_NONE);
+        Mat_VarWriteAppend(matfp, matvar, MAT_COMPRESSION_NONE,1);
+        Mat_VarFree(matvar);
+    }
+    else
+    {
+        yError() << "Could not save time samples.. the file will not be saved";
+        return false;
+    }
+
+    //Save keypoint
+    if(!writeStructToMat("Keypoints", all_keypoints))
+    {
+        yError() << "Could not save keypoints.. the file will not be saved";
+        return false;
+    }
+
+    //Save kind of metric to process
+    for(int i=0; i<metrics.size(); i++)
+    {
+        //         cout << metrics[i]->getName().c_str() << endl;
+        if(!writeStructToMat(metrics[i]->getName().c_str(), *metrics[i]))
+        {
+            yError() << "Could not save metrics.. the file will not be saved";
+            return false;
+        }
+    }
+
+    return true;
+}

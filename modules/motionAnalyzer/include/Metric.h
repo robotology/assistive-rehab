@@ -32,6 +32,11 @@ public:
     virtual ~Metric();
     virtual void print();
     virtual string getName() const = 0;
+    virtual string getTagJoint() const = 0;
+    virtual Vector getRefDir() const = 0;
+    virtual Vector getPlane() const = 0;
+    virtual double getMax() const = 0;
+    virtual double getMin() const = 0;
     virtual double getTimeout() const = 0;
 };
 
@@ -48,7 +53,7 @@ class Rom : public Metric
 
 public:
     Rom();
-    Rom(const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
+    Rom(const string &name_, const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
         const Vector &plane_normal_, const double &min_, const double &max_, const double &timeout_);
 
     string getName() const { return name; }
@@ -56,6 +61,8 @@ public:
     string getMotionType() const { return motion_type; }
     Vector getRefDir() const { return ref_dir; }
     Vector getPlane() const { return plane_normal; }
+    double getMax() const { return max; }
+    double getMin() const { return min; }
     double getTimeout() const { return timeout; }
     void print();
 

@@ -24,6 +24,8 @@
 #include "Metric.h"
 #include "src/motionAnalyzer_IDL.h"
 
+#include "matio.h"
+
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
@@ -43,8 +45,11 @@ class Manager : public RFModule,
 
     map<string,Metric*> motion_repertoire;
 
+    int numKeypoints;
     vector<pair<string,Vector>> initial_keypoints;
     vector<pair<string,Vector>> curr_keypoints;
+    vector< vector <pair<string,Vector>> > all_keypoints;
+    vector<double> time_samples;
     SkeletonWaist initial_skeleton;
 
     map<string, pair<string,double>> keypoints2conf;
@@ -83,6 +88,12 @@ class Manager : public RFModule,
     vector<Processor*> processors;
 
     double tstart;
+    double tstart_session;
+    double tend_session;
+    bool finishedSession;
+
+    mat_t *matfp;
+    string filename_report;
 
 //    Metric* metric;
 //    Processor* processor;
@@ -92,6 +103,13 @@ class Manager : public RFModule,
     bool loadInitialConf(const Bottle& b);
     bool loadMotionList(const string& motion_repertoire_file);
     bool loadSequence(const string& sequencer_file);
+    bool exportData();
+
+    bool writeStructToMat(const string& name, const vector< vector< pair<string,Vector> > >& keypoints_skel);
+    bool writeStructToMat(const string& name, const Metric& metric);
+    bool writeKeypointsToFile();
+    void print(const vector< vector< pair<string,Vector> > >& keypoints_skel);
+
     void getKeyframes();
     bool attach(RpcServer &source);
 
@@ -101,6 +119,7 @@ public:
     bool close();
     double getPeriod();
     bool updateModule();
+    bool interruptModule();
 
 };
 
