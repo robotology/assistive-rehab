@@ -40,11 +40,13 @@ struct MetaSkeleton
     double timer;
     int opc_id;
     shared_ptr<SkeletonStd> skeleton;
+    vector<int> keys_acceptable_misses;
 
     /****************************************************************/
     MetaSkeleton(const double t) : timer(t), opc_id(-1)
     {
         skeleton=shared_ptr<SkeletonStd>(new SkeletonStd());
+        keys_acceptable_misses.assign(skeleton->getNumKeyPoints(),0);
     }
 };
 
@@ -67,8 +69,9 @@ class Retriever : public RFModule
     double period;
     double fov_h;
     double fov_v;
-    double key_recognition_confidence;
+    double keys_recognition_confidence;
     double keys_recognition_percentage;
+    double keys_acceptable_misses;
     double tracking_threshold;
     double time_to_live;
 
@@ -114,7 +117,9 @@ class Retriever : public RFModule
             return true;
         }
         else
+        {
             return false;
+        }
     }
 
     /****************************************************************/
@@ -142,8 +147,10 @@ class Retriever : public RFModule
                     int v=(int)k->get(2).asDouble();
                     double confidence=k->get(3).asDouble();
 
-                    if ((confidence>=key_recognition_confidence) && getPoint3D(u,v,p))
+                    if ((confidence>=keys_recognition_confidence) && getPoint3D(u,v,p))
+                    {
                         unordered.push_back(make_pair(keysRemap[tag],p));
+                    }
                 }
             }
         }
@@ -153,16 +160,26 @@ class Retriever : public RFModule
     }
 
     /****************************************************************/
-    void update(const MetaSkeleton &s, MetaSkeleton &d)
+    void update(const MetaSkeleton &src, MetaSkeleton &dest)
     {
         vector<pair<string,Vector>> unordered;
-        for (unsigned int i=0; i<s.skeleton->getNumKeyPoints(); i++)
+        for (unsigned int i=0; i<src.skeleton->getNumKeyPoints(); i++)
         {
-            auto key=(*s.skeleton)[i];
+            auto key=(*src.skeleton)[i];
             if (key->isUpdated())
+            {
                 unordered.push_back(make_pair(key->getTag(),key->getPoint()));
+                dest.keys_acceptable_misses[i]=keys_acceptable_misses;
+            }
+            else if (dest.keys_acceptable_misses[i]>0)
+            {
+                unordered.push_back(make_pair(key->getTag(),(*dest.skeleton)[i]->getPoint()));
+                dest.keys_acceptable_misses[i]--;
+            }
         }
-        d.skeleton->update(unordered);
+
+        dest.skeleton->update(unordered);
+        dest.timer=time_to_live;
     }
 
     /****************************************************************/
@@ -170,8 +187,12 @@ class Retriever : public RFModule
     {
         unsigned int n=0;
         for (unsigned int i=0; i<s.skeleton->getNumKeyPoints(); i++)
+        {
             if ((*s.skeleton)[i]->isUpdated())
+            {
                 n++;
+            }
+        }
         
         double perc=((double)n)/((double)s.skeleton->getNumKeyPoints());
         return (perc>=keys_recognition_percentage);
@@ -188,14 +209,18 @@ class Retriever : public RFModule
             for (unsigned int j=0; j<sk.skeleton->getNumKeyPoints(); j++)
             {
                 if ((*sk.skeleton)[j]->isUpdated() && (*s.skeleton)[j]->isUpdated())
+                {
                     mean+=norm((*sk.skeleton)[j]->getPoint()-(*s.skeleton)[j]->getPoint());
+                }
                 num++;
             }
             if (num>0)
             {
                 mean/=num;
                 if (mean<=tracking_threshold)
+                {
                     scores[mean]=i;
+                }
             }
         }
 
@@ -240,7 +265,9 @@ class Retriever : public RFModule
             Property &id=pl.addDict();
             id.put("id",s.opc_id);
             if (opcPort.write(cmd,rep))
+            {
                 return (rep.get(0).asVocab()==Vocab::encode("ack"));
+            }
         }
 
         return false;
@@ -257,7 +284,9 @@ class Retriever : public RFModule
             pl.addString("id");
             pl.addInt(s.opc_id);
             if (opcPort.write(cmd,rep))
+            {
                 return (rep.get(0).asVocab()==Vocab::encode("ack"));
+            }
         }
 
         return false;
@@ -271,9 +300,13 @@ class Retriever : public RFModule
         {
             s.timer-=period;
             if (s.timer>0.0)
+            {
                 skeletons_.push_back(s);
+            }
             else
+            {
                 opcDel(s);
+            }
         }
 
         skeletons=skeletons_;
@@ -315,8 +348,9 @@ class Retriever : public RFModule
 
         // default values
         period=0.01;
-        key_recognition_confidence=0.3;
+        keys_recognition_confidence=0.3;
         keys_recognition_percentage=0.3;
+        keys_acceptable_misses=3;
         tracking_threshold=0.5;
         time_to_live=0.5;
 
@@ -330,8 +364,9 @@ class Retriever : public RFModule
         Bottle &gSkeleton=rf.findGroup("skeleton");
         if (!gSkeleton.isNull())
         {
-            key_recognition_confidence=gSkeleton.check("key-recognition-confidence",key_recognition_confidence).asDouble();
+            keys_recognition_confidence=gSkeleton.check("key-recognition-confidence",keys_recognition_confidence).asDouble();
             keys_recognition_percentage=gSkeleton.check("key-recognition-percentage",keys_recognition_percentage).asDouble();
+            keys_acceptable_misses=gSkeleton.check("keys-acceptable-misses",keys_acceptable_misses).asInt();
             tracking_threshold=gSkeleton.check("tracking-threshold",tracking_threshold).asDouble();
             time_to_live=gSkeleton.check("time-to-live",time_to_live).asDouble();
         }
@@ -356,10 +391,14 @@ class Retriever : public RFModule
     bool updateModule() override
     {
         if (ImageOf<PixelFloat> *depth=depthPort.read(false))
+        {
             this->depth=*depth;
+        }
 
         if (!camera_configured)
+        {
             camera_configured=getCameraOptions();
+        }
 
         // garbage collector
         gc();
@@ -376,27 +415,25 @@ class Retriever : public RFModule
                     if ((depth.width()>0) && (depth.height()>0) && (b3!=nullptr))
                     {
                         MetaSkeleton s=create(b3);
-                        if (isValid(s))
+                        if (MetaSkeleton *s1=isTracked(s))
                         {
-                            if (MetaSkeleton *s1=isTracked(s))
-                            {
-                                update(s,*s1);
-                                s1->timer=time_to_live;
-                                opcSet(*s1);
-                            }
-                            else
-                            {
-                                opcAdd(s);
-                                skeletons.push_back(s);
-                            }
-
+                            update(s,*s1);
+                            opcSet(*s1);
+                            doViewerUpdate=true;
+                        }
+                        else if (isValid(s))
+                        {
+                            opcAdd(s);
+                            skeletons.push_back(s);
                             doViewerUpdate=true;
                         }
                     }
                 }
 
                 if (doViewerUpdate)
+                {
                     viewerUpdate();
+                }
             }
         }
 
