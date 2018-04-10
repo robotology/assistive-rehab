@@ -39,13 +39,13 @@ struct MetaSkeleton
 {
     double timer;
     int opc_id;
-    shared_ptr<SkeletonStd> skeleton;
+    shared_ptr<SkeletonWaist> skeleton;
     vector<int> keys_acceptable_misses;
 
     /****************************************************************/
     MetaSkeleton(const double t) : timer(t), opc_id(-1)
     {
-        skeleton=shared_ptr<SkeletonStd>(new SkeletonStd());
+        skeleton=shared_ptr<SkeletonWaist>(new SkeletonWaist());
         keys_acceptable_misses.assign(skeleton->getNumKeyPoints(),0);
     }
 };
@@ -71,7 +71,7 @@ class Retriever : public RFModule
     double fov_v;
     double keys_recognition_confidence;
     double keys_recognition_percentage;
-    double keys_acceptable_misses;
+    int keys_acceptable_misses;
     double tracking_threshold;
     double time_to_live;
 
@@ -123,17 +123,44 @@ class Retriever : public RFModule
     }
 
     /****************************************************************/
+    void updatePlanes(MetaSkeleton &s)
+    {
+        auto &sk=*s.skeleton;
+        if (sk[KeyPointTag::shoulder_left]->isUpdated() &&
+            sk[KeyPointTag::shoulder_right]->isUpdated())
+        {
+            Vector sagittal=sk[KeyPointTag::shoulder_left]->getPoint()-
+                            sk[KeyPointTag::shoulder_right]->getPoint();
+            double n=norm(sagittal);
+            if (n>0.0)
+            {
+                sagittal/=n;
+                sk.setSagittal(sagittal);
+            }
+        }
+
+        if (sk[KeyPointTag::shoulder_center]->isUpdated() &&
+            sk[KeyPointTag::hip_center]->isUpdated())
+        {
+            Vector transverse=sk[KeyPointTag::shoulder_center]->getPoint()-
+                              sk[KeyPointTag::hip_center]->getPoint();
+            double n=norm(transverse);
+            if (n>0.0)
+            {
+                transverse/=n;
+                sk.setTransverse(transverse);
+            }
+        }
+
+        sk.setCoronal(cross(sk.getSagittal(),sk.getTransverse()));
+    }
+
+    /****************************************************************/
     MetaSkeleton create(Bottle *keys)
     {
         MetaSkeleton s(time_to_live);
-
-        Vector coronal,sagittal,transverse;
-        coronal=sagittal=transverse=zeros(3);
-        coronal[2]=-1.0;
-        sagittal[0]=1.0;
-        transverse[1]=-1.0;
-
         vector<pair<string,Vector>> unordered;
+        vector<Vector> hips;
 
         Vector p;
         for (int i=0; i<keys->size(); i++)
@@ -150,12 +177,24 @@ class Retriever : public RFModule
                     if ((confidence>=keys_recognition_confidence) && getPoint3D(u,v,p))
                     {
                         unordered.push_back(make_pair(keysRemap[tag],p));
+                        if ((keysRemap[tag]==KeyPointTag::hip_left) ||
+                            (keysRemap[tag]==KeyPointTag::hip_right))
+                        {
+                            hips.push_back(p);
+                        }
                     }
                 }
             }
         }
 
+        if (hips.size()==2)
+        {
+            unordered.push_back(make_pair(KeyPointTag::hip_center,0.5*(hips[0]+hips[1])));
+        }
+
         s.skeleton->update(unordered);
+        updatePlanes(s);
+
         return s;
     }
 
@@ -179,6 +218,7 @@ class Retriever : public RFModule
         }
 
         dest.skeleton->update(unordered);
+        updatePlanes(dest);
         dest.timer=time_to_live;
     }
 
@@ -205,12 +245,12 @@ class Retriever : public RFModule
         for (unsigned int i=0; i<skeletons.size(); i++)
         {
             double mean=0.0; int num=0;
-            MetaSkeleton &sk=skeletons[i];
-            for (unsigned int j=0; j<sk.skeleton->getNumKeyPoints(); j++)
+            auto &sk=*(skeletons[i].skeleton);
+            for (unsigned int j=0; j<sk.getNumKeyPoints(); j++)
             {
-                if ((*sk.skeleton)[j]->isUpdated() && (*s.skeleton)[j]->isUpdated())
+                if (sk[j]->isUpdated() && sk[j]->isUpdated())
                 {
-                    mean+=norm((*sk.skeleton)[j]->getPoint()-(*s.skeleton)[j]->getPoint());
+                    mean+=norm(sk[j]->getPoint()-sk[j]->getPoint());
                 }
                 num++;
             }

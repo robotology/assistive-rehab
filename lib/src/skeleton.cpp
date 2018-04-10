@@ -84,7 +84,6 @@ Skeleton::Skeleton()
     tag="";
     T=eye(4,4);
     coronal=sagittal=transverse=zeros(3);
-    coronal[2]=sagittal[0]=transverse[1]=1.0;
 }
 
 Skeleton::~Skeleton()
