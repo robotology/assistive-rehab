@@ -20,7 +20,7 @@
 
     <module>
        <name>skeletonRetriever</name>
-       <parameters>--x 750 --y 10</parameters>
+       <parameters></parameters>
        <node>icub21</node>
     </module>
 
@@ -38,7 +38,7 @@
 
     <module>
         <name>skeletonViewer</name>
-        <parameters></parameters>
+        <parameters>--x 750 --y 10</parameters>
         <node>icub22</node>
     </module>
 

@@ -86,6 +86,8 @@ class Retriever : public RFModule
                 {
                     fov_h=rep.get(3).asDouble();
                     fov_v=rep.get(4).asDouble();
+                    yInfo()<<"retrieved from camera fov_h="<<fov_h;
+                    yInfo()<<"retrieved from camera fov_v="<<fov_v;
                     return true;
                 }
             }
@@ -143,27 +145,28 @@ class Retriever : public RFModule
     }
 
     /****************************************************************/
-    MetaSkeleton *isTracked(const MetaSkeleton &s) const
+    MetaSkeleton *isTracked(const MetaSkeleton &s)
     {
-        map<double,MetaSkeleton*> scores; 
-        for (auto sk:skeletons)
+        map<double,int> scores;
+        for (unsigned int i=0; i<skeletons.size(); i++)
         {
             double mean=0.0; int num=0;
-            for (unsigned int i=0; i<sk.skeleton->getNumKeyPoints(); i++)
+            MetaSkeleton &sk=skeletons[i];
+            for (unsigned int j=0; j<sk.skeleton->getNumKeyPoints(); j++)
             {
-                if ((*sk.skeleton)[i]->isUpdated() && (*s.skeleton)[i]->isUpdated())
-                    mean+=norm((*sk.skeleton)[i]->getPoint()-(*s.skeleton)[i]->getPoint());
+                if ((*sk.skeleton)[j]->isUpdated() && (*s.skeleton)[j]->isUpdated())
+                    mean+=norm((*sk.skeleton)[j]->getPoint()-(*s.skeleton)[j]->getPoint());
                 num++;
             }
             if (num>0)
             {
                 mean/=num;
                 if (mean<=tracking_threshold)
-                    scores[mean]=&sk;
+                    scores[mean]=i;
             }
         }
 
-        return (scores.empty()?nullptr:scores.begin()->second);
+        return (scores.empty()?nullptr:&skeletons[scores.begin()->second]);
     }
 
     /****************************************************************/
@@ -310,33 +313,36 @@ class Retriever : public RFModule
         }
 
         // handle newly acquired skeletons from the detector
-        if (Bottle *bs=skeletonsPort.read(false))
+        if (Bottle *b1=skeletonsPort.read(false))
         {
-            bool doViewerUpdate=false;
-            for (int i=0; i<bs->size(); i++)
+            if (Bottle *b2=b1->get(0).asList())
             {
-                Bottle *b=bs->get(i).asList();
-                if ((depth.width()>0) && (depth.height()>0) && (b!=nullptr))
+                bool doViewerUpdate=false;
+                for (int i=0; i<b2->size(); i++)
                 {
-                    MetaSkeleton s=create(b);
-                    if (MetaSkeleton *s1=isTracked(s))
+                    Bottle *b3=b2->get(i).asList();
+                    if ((depth.width()>0) && (depth.height()>0) && (b3!=nullptr))
                     {
-                        s1->skeleton->update(s.skeleton->get_ordered());
-                        s1->timer=time_to_live;
-                        opcSet(*s1);
-                    }
-                    else
-                    {
-                        opcAdd(s);
-                        skeletons.push_back(s);
-                    }
+                        MetaSkeleton s=create(b3);
+                        if (MetaSkeleton *s1=isTracked(s))
+                        {
+                            s1->skeleton->update(s.skeleton->get_ordered());
+                            s1->timer=time_to_live;
+                            opcSet(*s1);
+                        }
+                        else
+                        {
+                            opcAdd(s);
+                            skeletons.push_back(s);
+                        }
 
-                    doViewerUpdate=true;
+                        doViewerUpdate=true;
+                    }
                 }
-            }
 
-            if (doViewerUpdate)
-                viewerUpdate();
+                if (doViewerUpdate)
+                    viewerUpdate();
+            }
         }
 
         return true;
