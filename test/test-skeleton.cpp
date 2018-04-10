@@ -58,7 +58,7 @@ int main()
         unordered.push_back(make_pair(KeyPointTag::shoulder_center,p));
     }
     {
-        Vector p(3,0.0); p[0]=0.0; p[1]=0.1; p[2]=0.0;
+        Vector p(3,0.0); p[0]=0.0; p[1]=-0.1; p[2]=0.0;
         unordered.push_back(make_pair(KeyPointTag::head,p));
     }
     {
@@ -86,19 +86,19 @@ int main()
         unordered.push_back(make_pair(KeyPointTag::hand_right,p));
     }
     {
-        Vector p(3,0.0); p[0]=0.1; p[1]=-0.1; p[2]=0.0;
+        Vector p(3,0.0); p[0]=0.1; p[1]=0.1; p[2]=0.0;
         unordered.push_back(make_pair(KeyPointTag::hip_left,p));
     }
     {
-        Vector p(3,0.0); p[0]=0.1; p[1]=-0.2; p[2]=0.0;
+        Vector p(3,0.0); p[0]=0.1; p[1]=0.2; p[2]=0.0;
         unordered.push_back(make_pair(KeyPointTag::knee_left,p));
     }
     {
-        Vector p(3,0.0); p[0]=-0.1; p[1]=-0.1; p[2]=0.0;
+        Vector p(3,0.0); p[0]=-0.1; p[1]=0.1; p[2]=0.0;
         unordered.push_back(make_pair(KeyPointTag::hip_right,p));
     }
     {
-        Vector p(3,0.0); p[0]=-0.1; p[1]=-0.2; p[2]=0.0;
+        Vector p(3,0.0); p[0]=-0.1; p[1]=0.2; p[2]=0.0;
         unordered.push_back(make_pair(KeyPointTag::knee_right,p));
     }
 

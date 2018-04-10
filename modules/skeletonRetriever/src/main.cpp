@@ -190,21 +190,24 @@ class Retriever : public RFModule
     }
 
     /****************************************************************/
-    bool opcAdd(MetaSkeleton &s) const
+    bool opcAdd(MetaSkeleton &s)
     {
-        Bottle cmd,rep;
-        cmd.addVocab(Vocab::encode("add"));
-        Property prop=s.skeleton->toProperty();
-        cmd.addList().read(prop);
-        if (opcPort.write(cmd,rep))
+        if (opcPort.getOutputCount())
         {
-            if (rep.get(0).asVocab()==Vocab::encode("ack"))
+            Bottle cmd,rep;
+            cmd.addVocab(Vocab::encode("add"));
+            Property prop=s.skeleton->toProperty();
+            cmd.addList().read(prop);
+            if (opcPort.write(cmd,rep))
             {
-                s.opc_id=rep.get(1).asList()->get(1).asInt();
-                ostringstream ss;
-                ss<<"#"<<hex<<s.opc_id;
-                s.skeleton->setTag(ss.str());
-                return opcSet(s);
+                if (rep.get(0).asVocab()==Vocab::encode("ack"))
+                {
+                    s.opc_id=rep.get(1).asList()->get(1).asInt();
+                    ostringstream ss;
+                    ss<<"#"<<hex<<s.opc_id;
+                    s.skeleton->setTag(ss.str());
+                    return opcSet(s);
+                }
             }
         }
 
@@ -212,31 +215,37 @@ class Retriever : public RFModule
     }
 
     /****************************************************************/
-    bool opcSet(const MetaSkeleton &s) const
+    bool opcSet(const MetaSkeleton &s)
     {
-        Bottle cmd,rep;
-        cmd.addVocab(Vocab::encode("set"));
-        Bottle &pl=cmd.addList();
-        Property prop=s.skeleton->toProperty();
-        pl.read(prop);
-        Property &id=pl.addDict();
-        id.put("id",s.opc_id);
-        if (opcPort.write(cmd,rep))
-            return (rep.get(0).asVocab()==Vocab::encode("ack"));
+        if (opcPort.getOutputCount())
+        {
+            Bottle cmd,rep;
+            cmd.addVocab(Vocab::encode("set"));
+            Bottle &pl=cmd.addList();
+            Property prop=s.skeleton->toProperty();
+            pl.read(prop);
+            Property &id=pl.addDict();
+            id.put("id",s.opc_id);
+            if (opcPort.write(cmd,rep))
+                return (rep.get(0).asVocab()==Vocab::encode("ack"));
+        }
 
         return false;
     }
 
     /****************************************************************/
-    bool opcDel(const MetaSkeleton &s) const
+    bool opcDel(const MetaSkeleton &s)
     {
-        Bottle cmd,rep;
-        cmd.addVocab(Vocab::encode("del"));
-        Bottle &pl=cmd.addList().addList();
-        pl.addString("id");
-        pl.addInt(s.opc_id);
-        if (opcPort.write(cmd,rep))
-            return (rep.get(0).asVocab()==Vocab::encode("ack"));
+        if (opcPort.getOutputCount())
+        {
+            Bottle cmd,rep;
+            cmd.addVocab(Vocab::encode("del"));
+            Bottle &pl=cmd.addList().addList();
+            pl.addString("id");
+            pl.addInt(s.opc_id);
+            if (opcPort.write(cmd,rep))
+                return (rep.get(0).asVocab()==Vocab::encode("ack"));
+        }
 
         return false;
     }
