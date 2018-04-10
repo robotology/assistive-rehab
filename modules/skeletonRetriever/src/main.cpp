@@ -317,7 +317,7 @@ class Retriever : public RFModule
         period=0.01;
         key_recognition_confidence=0.3;
         keys_recognition_percentage=0.3;
-        tracking_threshold=0.3;
+        tracking_threshold=0.5;
         time_to_live=0.5;
 
         // retrieve values from config file

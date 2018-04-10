@@ -79,12 +79,6 @@ protected:
     unordered_map<const KeyPoint*,unordered_map<const KeyPoint*,unsigned int>> kk2id_quadric;
 
     /****************************************************************/
-    void computeCharacteristicLength()
-    {
-        c_length=skeleton->getMaxPath()/100.0;
-    }
-
-    /****************************************************************/
     bool findCaptionPoint(Vector &p) const
     {
         bool ret=false;
@@ -233,6 +227,7 @@ public:
                 vtk_renderer(vtk_renderer_)
     {
         z.resize(3,0.0); z[2]=1.0;
+        c_length=0.01;
 
         skeleton=unique_ptr<Skeleton>(factory(prop));
         if (skeleton!=nullptr)
@@ -251,7 +246,6 @@ public:
             double opacity=prop.check("opacity",Value(1.0)).asDouble();
             if (skeleton->getNumKeyPoints()>0)
             {
-                computeCharacteristicLength();
                 auto k=(*skeleton)[0];
                 generate_limbs(k,opacity);
 
@@ -296,7 +290,6 @@ public:
             double opacity=prop.check("opacity",Value(1.0)).asDouble();
             if (skeleton->getNumKeyPoints()>0)
             {
-                computeCharacteristicLength();
                 update_limbs((*skeleton)[0],opacity);
 
                 Vector p;
