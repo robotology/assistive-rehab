@@ -431,12 +431,18 @@ class Viewer : public RFModule
     /****************************************************************/
     bool configure(ResourceFinder &rf) override
     {
+        int x=rf.check("x",Value(0)).asInt();
+        int y=rf.check("y",Value(0)).asInt();
+        int w=rf.check("w",Value(600)).asInt();
+        int h=rf.check("h",Value(600)).asInt();
+
         inputPort.open("/skeletonViewer:i");
         skeletonsGC.start();
 
         vtk_renderer=vtkSmartPointer<vtkRenderer>::New();
         vtk_renderWindow=vtkSmartPointer<vtkRenderWindow>::New();
-        vtk_renderWindow->SetSize(600,600);
+        vtk_renderWindow->SetPosition(x,y);
+        vtk_renderWindow->SetSize(w,h);
         vtk_renderWindow->AddRenderer(vtk_renderer);
         vtk_renderWindowInteractor=vtkSmartPointer<vtkRenderWindowInteractor>::New();
         vtk_renderWindowInteractor->SetRenderWindow(vtk_renderWindow);
