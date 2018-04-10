@@ -58,7 +58,7 @@ class VTKSkeleton
 protected:
     vtkSmartPointer<vtkRenderer> &vtk_renderer;
     unique_ptr<Skeleton> skeleton;
-    double max_path;
+    double c_length;
     double last_update;
 
     vector<double> color;
@@ -67,34 +67,37 @@ protected:
     vector<vtkSmartPointer<vtkSphereSource>>   vtk_sphere;
     vector<vtkSmartPointer<vtkPolyDataMapper>> vtk_sphere_mapper;
     vector<vtkSmartPointer<vtkActor>>          vtk_sphere_actor;
-
-    unordered_map<const KeyPoint*,unsigned int> k2id_sphere;
-
     vector<vtkSmartPointer<vtkQuadric>>        vtk_quadric;
     vector<vtkSmartPointer<vtkSampleFunction>> vtk_quadric_sample;
     vector<vtkSmartPointer<vtkContourFilter>>  vtk_quadric_contours;
     vector<vtkSmartPointer<vtkTransform>>      vtk_quadric_transform;
     vector<vtkSmartPointer<vtkPolyDataMapper>> vtk_quadric_mapper;
     vector<vtkSmartPointer<vtkActor>>          vtk_quadric_actor;
+    vtkSmartPointer<vtkCaptionActor2D>         vtk_textActor;
 
+    unordered_map<const KeyPoint*,unsigned int> k2id_sphere;
     unordered_map<const KeyPoint*,unordered_map<const KeyPoint*,unsigned int>> kk2id_quadric;
 
-    vtkSmartPointer<vtkCaptionActor2D>         vtk_textActor;
+    /****************************************************************/
+    void computeCharacteristicLength()
+    {
+        c_length=skeleton->getMaxPath()/100.0;
+    }
 
     /****************************************************************/
     bool findCaptionPoint(Vector &p) const
     {
         bool ret=false;
-        if (skeleton->operator[](KeyPointTag::head)->isUpdated())
+        if ((*skeleton)[KeyPointTag::head]->isUpdated())
         {
-            p=skeleton->operator[](KeyPointTag::head)->getPoint();
+            p=(*skeleton)[KeyPointTag::head]->getPoint();
             ret=true;
         }
         else
         {
             for (unsigned int i=0; i<skeleton->getNumKeyPoints(); i++)
             {
-                auto k=skeleton->operator[](i);
+                auto k=(*skeleton)[i];
                 if (k->isUpdated())
                 {
                     p=k->getPoint();
@@ -127,11 +130,9 @@ protected:
     /****************************************************************/
     void generate_limbs(const KeyPoint *k, const double opacity)
     {
-        double a=max_path/100.0;
-
         vtk_sphere.push_back(vtkSmartPointer<vtkSphereSource>::New());
         vtk_sphere.back()->SetCenter(Vector(k->getPoint()).data());
-        vtk_sphere.back()->SetRadius(2.0*a);
+        vtk_sphere.back()->SetRadius(2.0*c_length);
 
         vtk_sphere_mapper.push_back(vtkSmartPointer<vtkPolyDataMapper>::New());
         vtk_sphere_mapper.back()->SetInputConnection(vtk_sphere.back()->GetOutputPort());
@@ -148,20 +149,20 @@ protected:
         for (unsigned int i=0; i<k->getNumChild(); i++)
         {
             auto c=k->getChild(i);
-            double az=0.5*norm(k->getPoint()-c->getPoint());
-            az=std::max(0.001,az);
+            double cz_length=0.5*norm(k->getPoint()-c->getPoint());
+            cz_length=std::max(0.001,cz_length);
 
             vtk_quadric.push_back(vtkSmartPointer<vtkQuadric>::New());
             vector<double> coeff(10,0.0);
-            coeff[0]=1.0/(a*a);
-            coeff[1]=1.0/(a*a);
-            coeff[2]=1.0/(az*az);
+            coeff[0]=1.0/(c_length*c_length);
+            coeff[1]=1.0/(c_length*c_length);
+            coeff[2]=1.0/(cz_length*cz_length);
             vtk_quadric.back()->SetCoefficients(coeff.data());
 
             vtk_quadric_sample.push_back(vtkSmartPointer<vtkSampleFunction>::New());
             vtk_quadric_sample.back()->SetSampleDimensions(20,20,20);
             vtk_quadric_sample.back()->SetImplicitFunction(vtk_quadric.back());
-            vtk_quadric_sample.back()->SetModelBounds(-a,a,-a,a,-az,az);
+            vtk_quadric_sample.back()->SetModelBounds(-c_length,c_length,-c_length,c_length,-cz_length,cz_length);
 
             vtk_quadric_contours.push_back(vtkSmartPointer<vtkContourFilter>::New());
             vtk_quadric_contours.back()->SetInputConnection(vtk_quadric_sample.back()->GetOutputPort());
@@ -194,6 +195,7 @@ protected:
     {
         auto id_sphere=k2id_sphere[k];
         vtk_sphere[id_sphere]->SetCenter(Vector(k->getPoint()).data());
+        vtk_sphere[id_sphere]->SetRadius(2.0*c_length);
         vtk_sphere_actor[id_sphere]->GetProperty()->SetOpacity(opacity);
         vtk_sphere_actor[id_sphere]->SetVisibility(k->isUpdated());
 
@@ -202,6 +204,16 @@ protected:
             auto c=k->getChild(i);
             auto id_quadric=kk2id_quadric[k][c];
 
+            double cz_length=0.5*norm(k->getPoint()-c->getPoint());
+            cz_length=std::max(0.001,cz_length);
+
+            vector<double> coeff(10,0.0);
+            coeff[0]=1.0/(c_length*c_length);
+            coeff[1]=1.0/(c_length*c_length);
+            coeff[2]=1.0/(cz_length*cz_length);
+            vtk_quadric[id_quadric]->SetCoefficients(coeff.data());
+
+            vtk_quadric_sample[id_quadric]->SetModelBounds(-c_length,c_length,-c_length,c_length,-cz_length,cz_length);
             vtk_quadric_transform[id_quadric]->Identity();
 
             Vector m=0.5*(c->getPoint()-k->getPoint());
@@ -239,8 +251,8 @@ public:
             double opacity=prop.check("opacity",Value(1.0)).asDouble();
             if (skeleton->getNumKeyPoints()>0)
             {
-                max_path=skeleton->getMaxPath();
-                auto k=skeleton->operator[](0);
+                computeCharacteristicLength();
+                auto k=(*skeleton)[0];
                 generate_limbs(k,opacity);
 
                 vtk_textActor=vtkSmartPointer<vtkCaptionActor2D>::New();
@@ -284,7 +296,8 @@ public:
             double opacity=prop.check("opacity",Value(1.0)).asDouble();
             if (skeleton->getNumKeyPoints()>0)
             {
-                update_limbs(skeleton->operator[](0),opacity);
+                computeCharacteristicLength();
+                update_limbs((*skeleton)[0],opacity);
 
                 Vector p;
                 if (findCaptionPoint(p))

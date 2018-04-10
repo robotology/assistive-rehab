@@ -153,6 +153,19 @@ class Retriever : public RFModule
     }
 
     /****************************************************************/
+    void update(const MetaSkeleton &s, MetaSkeleton &d)
+    {
+        vector<pair<string,Vector>> unordered;
+        for (unsigned int i=0; i<s.skeleton->getNumKeyPoints(); i++)
+        {
+            auto key=(*s.skeleton)[i];
+            if (key->isUpdated())
+                unordered.push_back(make_pair(key->getTag(),key->getPoint()));
+        }
+        d.skeleton->update(unordered);
+    }
+
+    /****************************************************************/
     bool isValid(const MetaSkeleton &s) const
     {
         unsigned int n=0;
@@ -367,7 +380,7 @@ class Retriever : public RFModule
                         {
                             if (MetaSkeleton *s1=isTracked(s))
                             {
-                                s1->skeleton->update(s.skeleton->get_ordered());
+                                update(s,*s1);
                                 s1->timer=time_to_live;
                                 opcSet(*s1);
                             }
