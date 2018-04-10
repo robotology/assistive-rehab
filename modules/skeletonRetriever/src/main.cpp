@@ -39,12 +39,12 @@ struct MetaSkeleton
 {
     double timer;
     int opc_id;
-    shared_ptr<SkeletonWaist> skeleton;
+    shared_ptr<SkeletonStd> skeleton;
 
     /****************************************************************/
     MetaSkeleton(const double t) : timer(t), opc_id(-1)
     {
-        skeleton=shared_ptr<SkeletonWaist>(new SkeletonWaist());
+        skeleton=shared_ptr<SkeletonStd>(new SkeletonStd());
     }
 };
 
@@ -68,6 +68,7 @@ class Retriever : public RFModule
     double fov_h;
     double fov_v;
     double key_recognition_confidence;
+    double keys_recognition_percentage;
     double tracking_threshold;
     double time_to_live;
 
@@ -103,12 +104,12 @@ class Retriever : public RFModule
         double d=depth(u,v);
         if (d>0.0)
         {
-            int u_=(int)(u-0.5*(depth.width()-1));
-            int v_=(int)(v-0.5*(depth.height()-1));
+            double x=u-0.5*(depth.width()-1);
+            double y=v-0.5*(depth.height()-1);
 
-            p.resize(3,d);
-            p[0]*=u_/f;
-            p[1]*=v_/f;
+            p=d*ones(3);
+            p[0]*=x/f;
+            p[1]*=y/f;
 
             return true;
         }
@@ -120,6 +121,13 @@ class Retriever : public RFModule
     MetaSkeleton create(Bottle *keys)
     {
         MetaSkeleton s(time_to_live);
+
+        Vector coronal,sagittal,transverse;
+        coronal=sagittal=transverse=zeros(3);
+        coronal[2]=-1.0;
+        sagittal[0]=1.0;
+        transverse[1]=-1.0;
+
         vector<pair<string,Vector>> unordered;
 
         Vector p;
@@ -140,8 +148,20 @@ class Retriever : public RFModule
             }
         }
 
-        s.skeleton->update_fromstd(unordered);
+        s.skeleton->update(unordered);
         return s;
+    }
+
+    /****************************************************************/
+    bool isValid(const MetaSkeleton &s) const
+    {
+        unsigned int n=0;
+        for (unsigned int i=0; i<s.skeleton->getNumKeyPoints(); i++)
+            if ((*s.skeleton)[i]->isUpdated())
+                n++;
+        
+        double perc=((double)n)/((double)s.skeleton->getNumKeyPoints());
+        return (perc>=keys_recognition_percentage);
     }
 
     /****************************************************************/
@@ -182,7 +202,7 @@ class Retriever : public RFModule
             {
                 s.opc_id=rep.get(1).asList()->get(1).asInt();
                 ostringstream ss;
-                ss<<"id #"<<hex<<s.opc_id;
+                ss<<"#"<<hex<<s.opc_id;
                 s.skeleton->setTag(ss.str());
                 return opcSet(s);
             }
@@ -222,6 +242,22 @@ class Retriever : public RFModule
     }
 
     /****************************************************************/
+    void gc()
+    {
+        vector<MetaSkeleton> skeletons_;
+        for (auto &s:skeletons)
+        {
+            s.timer-=period;
+            if (s.timer>0.0)
+                skeletons_.push_back(s);
+            else
+                opcDel(s);
+        }
+
+        skeletons=skeletons_;
+    }
+
+    /****************************************************************/
     void viewerUpdate()
     {
         if (viewerPort.getOutputCount()>0)
@@ -258,8 +294,9 @@ class Retriever : public RFModule
         // default values
         period=0.01;
         key_recognition_confidence=0.3;
-        tracking_threshold=0.2;
-        time_to_live=1.0;
+        keys_recognition_percentage=0.3;
+        tracking_threshold=0.3;
+        time_to_live=0.5;
 
         // retrieve values from config file
         Bottle &gGeneral=rf.findGroup("general");
@@ -272,6 +309,7 @@ class Retriever : public RFModule
         if (!gSkeleton.isNull())
         {
             key_recognition_confidence=gSkeleton.check("key-recognition-confidence",key_recognition_confidence).asDouble();
+            keys_recognition_percentage=gSkeleton.check("key-recognition-percentage",keys_recognition_percentage).asDouble();
             tracking_threshold=gSkeleton.check("tracking-threshold",tracking_threshold).asDouble();
             time_to_live=gSkeleton.check("time-to-live",time_to_live).asDouble();
         }
@@ -301,18 +339,10 @@ class Retriever : public RFModule
         if (!camera_configured)
             camera_configured=getCameraOptions();
 
-        // handle life timer
-        for (auto it=begin(skeletons); it!=end(skeletons); it++)
-        {
-            it->timer-=period;
-            if (it->timer<=0.0)
-            {
-                opcDel(*it);
-                skeletons.erase(it);
-            }
-        }
+        // garbage collector
+        gc();
 
-        // handle newly acquired skeletons from the detector
+        // handle skeletons acquired from detector
         if (Bottle *b1=skeletonsPort.read(false))
         {
             if (Bottle *b2=b1->get(0).asList())
@@ -324,19 +354,22 @@ class Retriever : public RFModule
                     if ((depth.width()>0) && (depth.height()>0) && (b3!=nullptr))
                     {
                         MetaSkeleton s=create(b3);
-                        if (MetaSkeleton *s1=isTracked(s))
+                        if (isValid(s))
                         {
-                            s1->skeleton->update(s.skeleton->get_ordered());
-                            s1->timer=time_to_live;
-                            opcSet(*s1);
-                        }
-                        else
-                        {
-                            opcAdd(s);
-                            skeletons.push_back(s);
-                        }
+                            if (MetaSkeleton *s1=isTracked(s))
+                            {
+                                s1->skeleton->update(s.skeleton->get_ordered());
+                                s1->timer=time_to_live;
+                                opcSet(*s1);
+                            }
+                            else
+                            {
+                                opcAdd(s);
+                                skeletons.push_back(s);
+                            }
 
-                        doViewerUpdate=true;
+                            doViewerUpdate=true;
+                        }
                     }
                 }
 

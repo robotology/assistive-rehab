@@ -259,11 +259,6 @@ public:
                 Vector p;
                 if (findCaptionPoint(p))
                     vtk_textActor->SetAttachmentPoint(p.data());
-
-                vtkSmartPointer<vtkCamera> vtk_camera=vtk_renderer->GetActiveCamera();
-                vtk_camera->SetPosition((k->getPoint()+2.0*max_path*skeleton->getCoronal()).data());
-                vtk_camera->SetFocalPoint(k->getPoint().data());
-                vtk_camera->SetViewUp(skeleton->getTransverse().data());
             }
         }
 
@@ -435,8 +430,10 @@ class Viewer : public RFModule
         int y=rf.check("y",Value(0)).asInt();
         int w=rf.check("w",Value(600)).asInt();
         int h=rf.check("h",Value(600)).asInt();
+        double gc_period=rf.check("gc-period",Value(1.0)).asDouble();
 
         inputPort.open("/skeletonViewer:i");
+        skeletonsGC.setRate((int)(gc_period*1000.0));
         skeletonsGC.start();
 
         vtk_renderer=vtkSmartPointer<vtkRenderer>::New();
@@ -460,9 +457,9 @@ class Viewer : public RFModule
         vtk_renderer->AddActor(vtk_axes);
 
         vtk_camera=vtkSmartPointer<vtkCamera>::New();
-        vtk_camera->SetPosition(0.0,0.0,1.0);
+        vtk_camera->SetPosition(0.0,0.0,-2.0);
         vtk_camera->SetFocalPoint(0.0,0.0,0.0);
-        vtk_camera->SetViewUp(0.0,1.0,0.0);
+        vtk_camera->SetViewUp(0.0,-1.0,0.0);
         vtk_renderer->SetActiveCamera(vtk_camera);
 
         vtk_style=vtkSmartPointer<vtkInteractorStyleSwitch>::New();
