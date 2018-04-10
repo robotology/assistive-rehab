@@ -127,11 +127,11 @@ public:
     const KeyPoint* operator[](const unsigned int i) const;
 
     virtual void update(const std::vector<yarp::sig::Vector> &ordered);
-    virtual void update(const std::vector<std::pair<std::string, yarp::sig::Vector>> &unordered);
+    virtual void update(const std::vector<std::pair<std::string,yarp::sig::Vector>> &unordered);
     virtual void update(const yarp::os::Property &prop);
 
     virtual std::vector<yarp::sig::Vector> get_ordered() const;
-    virtual std::vector<std::pair<std::string, yarp::sig::Vector>> get_unordered() const;
+    virtual std::vector<std::pair<std::string,yarp::sig::Vector>> get_unordered() const;
 
     void normalize();
     void print() const;

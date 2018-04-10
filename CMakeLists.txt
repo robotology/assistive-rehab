@@ -61,3 +61,6 @@ add_subdirectory(modules)
 if(BUILD_TESTING)
     add_subdirectory(test)
 endif()
+
+file(GLOB ini app/conf/*.ini)
+yarp_install(FILES ${ini} DESTINATION ${ICUBCONTRIB_CONTEXTS_INSTALL_DIR}/${PROJECT_NAME})
