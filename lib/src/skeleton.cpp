@@ -92,7 +92,7 @@ Skeleton::~Skeleton()
         delete k;
 }
 
-Property Skeleton::helper_toproperty(KeyPoint* k) const
+Property Skeleton::helper_toproperty(KeyPoint *k) const
 {
     Property prop;
     if (k!=nullptr)

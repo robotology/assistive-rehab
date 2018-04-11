@@ -66,6 +66,8 @@ public:
     KeyPoint();
     KeyPoint(const std::string &tag_, const yarp::sig::Vector &point_=yarp::sig::Vector(3,0.0),
              const bool updated_=false);
+    KeyPoint(const KeyPoint&) = delete;
+    KeyPoint& operator=(const KeyPoint&) = delete;
     virtual ~KeyPoint() { }
 
     bool isUpdated() const { return updated; }
@@ -94,7 +96,7 @@ protected:
     yarp::sig::Vector sagittal;
     yarp::sig::Vector transverse;
 
-    yarp::os::Property helper_toproperty(KeyPoint* k) const;
+    yarp::os::Property helper_toproperty(KeyPoint *k) const;
     void helper_fromproperty(yarp::os::Bottle *prop, KeyPoint *parent);
     void helper_updatefromproperty(yarp::os::Bottle *prop);
     void helper_normalize(KeyPoint* k, const std::vector<yarp::sig::Vector> &helperpoints);
@@ -102,6 +104,8 @@ protected:
 
 public:
     Skeleton();
+    Skeleton(const Skeleton&) = delete;
+    Skeleton& operator=(const Skeleton&) = delete;
     virtual ~Skeleton();
 
     const std::string& getType() const { return type; }
