@@ -302,8 +302,11 @@ class Retriever : public RFModule
             Bottle &pl=cmd.addList();
             Property prop=s.skeleton->toProperty();
             pl.read(prop);
-            Property &id=pl.addDict();
-            id.put("id",s.opc_id);
+            Bottle id;
+            Bottle &id_pl=id.addList();
+            id_pl.addString("id");
+            id_pl.addInt(s.opc_id);
+            pl.append(id);
             if (opcPort.write(cmd,rep))
             {
                 return (rep.get(0).asVocab()==Vocab::encode("ack"));
