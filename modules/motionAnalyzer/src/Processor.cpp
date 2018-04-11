@@ -70,7 +70,7 @@ bool Processor::isDeviatingFromIntialPose()
         if(isStatic(*keypoint) && isDeviatingFromIntialPose(*keypoint, *keypoint_init))
         {
             isDeviating = true;
-//            yWarning() << "Deviating from initial pose";
+            yWarning() << keypoint->getTag() << "deviating from initial pose";
         }
     }
 
@@ -94,6 +94,7 @@ bool Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyPoi
 
     int nParents = keypoint.getNumParent();
     int nChildren = keypoint.getNumChild();
+
     if(nParents)
     {
         for(int j=0; j<nParents; j++)
@@ -121,7 +122,7 @@ bool Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyPoi
                     double deviation = fabs(fabs(curr_pose[0])+fabs(curr_pose[1])+fabs(curr_pose[2]))
                             -fabs(fabs(initial_pose[0])+fabs(initial_pose[1])+fabs(initial_pose[2]));
 
-                    if((deviation) > CONST*keypoints2conf[keypoint.getTag()].second)
+                     if((deviation) > CONST*keypoints2conf[keypoint.getTag()].second)
                     {
                         cout << keypoint.getTag() << " " << keypoint_child->getTag() << " " << keypoint_parent->getTag() << " "
                              << "(" << curr_kp[0] << " " << curr_kp[1] << " " << curr_kp[2] << ") "
@@ -177,34 +178,42 @@ double Rom_Processor::computeMetric()
     //get reference keypoint from skeleton
     string tag_joint = rom->getTagJoint();
     const KeyPoint *keypoint_ref = curr_skeleton[tag_joint];
-    Vector kp_ref = keypoint_ref->getPoint();
-
-    Vector v1;
-    double theta;
-    if(keypoint_ref->getNumChild())
+    if(keypoint_ref)
     {
-        const KeyPoint *keypoint_child = keypoint_ref->getChild(0);
-        Vector kp_child = keypoint_child->getPoint();
+        Vector kp_ref = keypoint_ref->getPoint();
 
-        Vector plane_normal = rom->getPlane();
-        v1 = kp_child-kp_ref;
-        double dist = dot(v1, plane_normal);
-        v1 = v1-dist*plane_normal;
+        Vector v1;
+        double theta;
+        if(keypoint_ref->getNumChild())
+        {
+            const KeyPoint *keypoint_child = keypoint_ref->getChild(0);
+            Vector kp_child = keypoint_child->getPoint();
 
-        Vector ref_dir = rom->getRefDir();
+            Vector plane_normal = rom->getPlane();
+            v1 = kp_child-kp_ref;
+            double dist = dot(v1, plane_normal);
+            v1 = v1-dist*plane_normal;
 
-        double v1_norm = norm(v1);
-        double v2_norm = norm(ref_dir);
-        double dot_p = dot(v1, ref_dir);
+            Vector ref_dir = rom->getRefDir();
 
-//        double minval = rom->getMinVal() * (M_PI/180);
-//        double maxval = rom->getMaxVal() * (M_PI/180);
-//        double range = M_PI;
-//        double scale = (maxval-minval)/range;
-//        theta = scale*acos(dot_p/(v1_norm*v2_norm))+minval;
-        theta = acos(dot_p/(v1_norm*v2_norm));
+            double v1_norm = norm(v1);
+            double v2_norm = norm(ref_dir);
+            double dot_p = dot(v1, ref_dir);
 
-        return ( theta * (180/M_PI) );
+            //        double minval = rom->getMinVal() * (M_PI/180);
+            //        double maxval = rom->getMaxVal() * (M_PI/180);
+            //        double range = M_PI;
+            //        double scale = (maxval-minval)/range;
+            //        theta = scale*acos(dot_p/(v1_norm*v2_norm))+minval;
+            theta = acos(dot_p/(v1_norm*v2_norm));
+
+            return ( theta * (180/M_PI) );
+        }
+        else
+        {
+            yError() << "The keypoint does not have a child ";
+            return 0.0;
+        }
     }
     else
     {

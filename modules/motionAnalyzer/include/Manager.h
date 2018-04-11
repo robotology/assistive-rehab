@@ -52,6 +52,8 @@ class Manager : public RFModule,
     vector<double> time_samples;
     SkeletonWaist initial_skeleton;
 
+    Skeleton skeletonIn;
+
     map<string, pair<string,double>> keypoints2conf;
 
     Vector elbowLeft_init;
@@ -110,6 +112,7 @@ class Manager : public RFModule,
     void print(const vector< vector< pair<string,Vector> > >& keypoints_skel);
 
     void getKeyframes();
+    void getSkeleton();
     bool attach(RpcServer &source);
 
 public:

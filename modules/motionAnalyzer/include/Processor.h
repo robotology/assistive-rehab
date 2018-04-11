@@ -46,7 +46,7 @@ public:
 //    virtual string getMotionType();
     void setInitialConf(const SkeletonWaist &skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_);
     bool isStatic(const KeyPoint& keypoint);
-    void update(const Skeleton &curr_skeleton_);
+    void update(const Skeleton& curr_skeleton_);
     bool isDeviatingFromIntialPose();
     bool isDeviatingFromIntialPose(const KeyPoint &keypoint, const KeyPoint &keypoint_init);
     virtual double computeMetric() { return 0.0; }

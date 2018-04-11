@@ -84,6 +84,9 @@ void Manager::init()
     keypoints2conf[KeyPointTag::knee_right] = make_pair("static", 0.0);
     keypoints2conf[KeyPointTag::ankle_right] = make_pair("static", 0.0);
 
+//    all_keypoints.resize(1000);
+//    all_keypoints[0].resize(numKeypoints);
+
 }
 
 bool Manager::loadInitialConf(const string& motion_repertoire_file)
@@ -240,7 +243,7 @@ bool Manager::loadInitialConf(const string& motion_repertoire_file)
         else
             yError() << "Could not load initial pose for ankle right";
 
-        initial_skeleton.update_fromstd(initial_keypoints);
+        initial_skeleton.update(initial_keypoints);
     }
 
     return true;
@@ -444,7 +447,7 @@ bool Manager::loadInitialConf(const Bottle& b)
         yInfo() << "Updated initial pose for ankle right";
     }
 
-    initial_skeleton.update_fromstd(initial_keypoints);
+    initial_skeleton.update(initial_keypoints);
     return true;
 }
 
@@ -642,7 +645,6 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                             }
 
                             //add the current metric to the repertoire
-                            cout << "Insert " << curr_tag+"_"+to_string(j) << endl;
                             motion_repertoire.insert(pair<string, Metric*>(curr_tag+"_"+to_string(j), newMetric)); // metrics[j]));
 //                            motion_repertoire[curr_tag+"_"+to_string(j)]->print();
                         }
@@ -930,6 +932,67 @@ void Manager::getKeyframes()
 }
 
 /********************************************************/
+void Manager::getSkeleton()
+{
+    //ask for the property id
+    Bottle cmd, reply;
+    cmd.addVocab(Vocab::encode("ask"));
+    Bottle &content = cmd.addList().addList();
+    content.addString("skeleton");
+
+//    yInfo() << "Query opc: " << cmd.toString();
+    opcPort.write(cmd, reply);
+//    yInfo() << "Reply from opc:" << reply.toString();
+
+    if(reply.size() > 1)
+    {
+        if(reply.get(0).asVocab() == Vocab::encode("ack"))
+        {
+            if(Bottle *idField = reply.get(1).asList())
+            {
+                if(Bottle *idValues = idField->get(1).asList())
+                {
+                    //get the last id
+                    int id = idValues->get(idValues->size()-1).asInt();
+                    //                        yInfo() << id;
+
+                    //given the id, get the value of the property
+                    cmd.clear();
+                    cmd.addVocab(Vocab::encode("get"));
+                    Bottle &content = cmd.addList().addList();
+                    content.addString("id");
+                    content.addInt(id);
+                    Bottle replyProp;
+
+//                    yInfo() << "Command sent to the port: " << cmd.toString();
+                    opcPort.write(cmd, replyProp);
+//                    yInfo() << "Reply from opc:" << replyProp.toString();
+
+                    if(replyProp.get(0).asVocab() == Vocab::encode("ack"))
+                    {
+                        if(Bottle *propField = replyProp.get(1).asList())
+                        {
+                            Property prop(propField->toString().c_str());
+                            string tag=prop.find("tag").asString();
+                            if (!tag.empty())
+                            {
+                                if (prop.check("tag"))
+                                {
+                                    Skeleton* skeleton(factory(prop));
+                                    skeletonIn = *skeleton;
+//                                    skeletonIn->print();
+                                    all_keypoints.push_back(skeletonIn.get_unordered());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/********************************************************/
 bool Manager::attach(RpcServer &source)
 {
     return this->yarp().attachAsServer(source);
@@ -1021,47 +1084,97 @@ double Manager::getPeriod()
 /********************************************************/
 bool Manager::updateModule()
 {
-    Bottle *input = testPort.read();
-    for (int i=0; i<input->size(); i++)
+    //if we query the database
+    if(opcPort.getOutputCount() > 0)
     {
-        if (Bottle *b=input->get(i).asList())
+        //update time array
+        time_samples.push_back(Time::now());
+
+        //get skeleton and normalize
+        getSkeleton();
+
+//        skeletonIn.print();
+        skeletonIn.normalize();
+
+        Vector result;
+        result.resize(processors.size());
+        for(int i=0; i<processors.size(); i++)
         {
-            if (b->check("tag"))
+            processors[i]->update(skeletonIn);
+//            if(processors[i]->isDeviatingFromIntialPose())
+//                yWarning() << "Deviating from initial pose\n";
+
+            result[i] = processors[i]->computeMetric();
+        }
+
+        //write on output port
+        Bottle &scopebottleout = scopePort.prepare();
+        scopebottleout.clear();
+        scopebottleout.addDouble(result[result.size()-1]);
+        scopebottleout.addDouble(metrics[result.size()-1]->getMin());
+        scopebottleout.addDouble(metrics[result.size()-1]->getMax());
+        scopePort.write();
+
+
+        tend_session = Time::now();
+        if(tend_session-tstart_session > 5.0)
+            finishedSession = true;
+
+        if(finishedSession)
+        {
+            yInfo() << "Writing to file";
+            if(writeKeypointsToFile())
             {
-                Property prop(b->toString().c_str());
-                string tag=prop.find("tag").asString();
-                if (!tag.empty())
-                {
-                    if (prop.check("tag"))
-                    {
-                        Skeleton* skeleton(factory(prop));
-                        //                        skeleton->print();
-
-                        skeleton->normalize();
-
-                        Vector result;
-                        result.resize(processors.size());
-                        for(int i=0; i<processors.size(); i++)
-                        {
-                            processors[i]->update(*skeleton);
-//                            if(processors[i]->isDeviatingFromIntialPose())
-//                                yWarning() << "Deviating from initial pose\n";
-
-                            result[i] = processors[i]->computeMetric();
-                        }
-
-                        //write on output port
-                        Bottle &scopebottleout = scopePort.prepare();
-                        scopebottleout.clear();
-                        scopebottleout.addDouble(result[result.size()-1]);
-                        scopebottleout.addDouble(metrics[result.size()-1]->getMin());
-                        scopebottleout.addDouble(metrics[result.size()-1]->getMax());
-                        scopePort.write();
-                    }
-                }
+                time_samples.clear();
+                all_keypoints.clear();
             }
+
+            finishedSession = false;
+            tstart_session = tend_session;
         }
     }
+
+//    Bottle *input = testPort.read();
+//    for (int i=0; i<input->size(); i++)
+//    {
+//        if (Bottle *b=input->get(i).asList())
+//        {
+//            if (b->check("tag"))
+//            {
+//                Property prop(b->toString().c_str());
+//                string tag=prop.find("tag").asString();
+//                if (!tag.empty())
+//                {
+//                    if (prop.check("tag"))
+//                    {
+//                        Skeleton* skeleton(factory(prop));
+//                        //                        skeleton->print();
+
+//                        skeleton->normalize();
+
+//                        Vector result;
+//                        result.resize(processors.size());
+//                        for(int i=0; i<processors.size(); i++)
+//                        {
+//                            processors[i]->update(*skeleton);
+////                            if(processors[i]->isDeviatingFromIntialPose())
+////                                yWarning() << "Deviating from initial pose\n";
+
+//                            result[i] = processors[i]->computeMetric();
+//                        }
+
+//                        //write on output port
+//                        Bottle &scopebottleout = scopePort.prepare();
+//                        scopebottleout.clear();
+//                        scopebottleout.addDouble(result[result.size()-1]);
+//                        scopebottleout.addDouble(metrics[result.size()-1]->getMin());
+//                        scopebottleout.addDouble(metrics[result.size()-1]->getMax());
+//                        scopePort.write();
+//                    }
+//                }
+//            }
+//        }
+//    }
 
 //    //if we query the database
 //    if(opcPort.getOutputCount() > 0)
@@ -1137,20 +1250,36 @@ bool Manager::writeStructToMat(const string& name, const vector< vector< pair<st
 {
     const char *fields[numKeypoints] =
     {
-        KeyPointTag::elbow_left.c_str(),
-        KeyPointTag::elbow_right.c_str(),
-        KeyPointTag::hand_left.c_str(),
-        KeyPointTag::hand_right.c_str(),
-        KeyPointTag::head.c_str(),
         KeyPointTag::shoulder_center.c_str(),
+        KeyPointTag::head.c_str(),
         KeyPointTag::shoulder_left.c_str(),
+        KeyPointTag::elbow_left.c_str(),
+        KeyPointTag::hand_left.c_str(),
         KeyPointTag::shoulder_right.c_str(),
+        KeyPointTag::elbow_right.c_str(),
+        KeyPointTag::hand_right.c_str(),
+//        KeyPointTag::hip_center.c_str(),
         KeyPointTag::hip_left.c_str(),
-        KeyPointTag::hip_right.c_str(),
         KeyPointTag::knee_left.c_str(),
-        KeyPointTag::knee_right.c_str(),
         KeyPointTag::ankle_left.c_str(),
+        KeyPointTag::hip_right.c_str(),
+        KeyPointTag::knee_right.c_str(),
         KeyPointTag::ankle_right.c_str()
+
+//        KeyPointTag::elbow_left.c_str(),
+//        KeyPointTag::elbow_right.c_str(),
+//        KeyPointTag::hand_left.c_str(),
+//        KeyPointTag::hand_right.c_str(),
+//        KeyPointTag::head.c_str(),
+//        KeyPointTag::shoulder_center.c_str(),
+//        KeyPointTag::shoulder_left.c_str(),
+//        KeyPointTag::shoulder_right.c_str(),
+//        KeyPointTag::hip_left.c_str(),
+//        KeyPointTag::hip_right.c_str(),
+//        KeyPointTag::knee_left.c_str(),
+//        KeyPointTag::knee_right.c_str(),
+//        KeyPointTag::ankle_left.c_str(),
+//        KeyPointTag::ankle_right.c_str()
     };
 
     matvar_t *field;
@@ -1286,6 +1415,9 @@ bool Manager::writeKeypointsToFile()
         yError() << "Could not save time samples.. the file will not be saved";
         return false;
     }
+
+//    if(all_keypoints.size() != 0)
+//        print(all_keypoints);
 
     //Save keypoint
     if(!writeStructToMat("Keypoints", all_keypoints))
