@@ -81,11 +81,10 @@ protected:
     /****************************************************************/
     bool findCaptionPoint(Vector &p) const
     {
-        bool ret=false;
         if ((*skeleton)[KeyPointTag::head]->isUpdated())
         {
             p=(*skeleton)[KeyPointTag::head]->getPoint();
-            ret=true;
+            return true;
         }
         else
         {
@@ -95,11 +94,11 @@ protected:
                 if (k->isUpdated())
                 {
                     p=k->getPoint();
-                    ret=true;
+                    return true;
                 }
             }
         }
-        return ret;
+        return false;
     }
 
     /****************************************************************/
