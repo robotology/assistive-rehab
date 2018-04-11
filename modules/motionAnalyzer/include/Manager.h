@@ -103,7 +103,6 @@ class Manager : public RFModule,
     bool loadInitialConf(const Bottle& b);
     bool loadMotionList(const string& motion_repertoire_file);
     bool loadSequence(const string& sequencer_file);
-    bool exportData();
 
     bool writeStructToMat(const string& name, const vector< vector< pair<string,Vector> > >& keypoints_skel);
     bool writeStructToMat(const string& name, const Metric& metric);

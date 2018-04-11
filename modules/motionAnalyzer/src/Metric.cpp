@@ -33,7 +33,8 @@ Rom::Rom()
 }
 
 Rom::Rom(const string &name_, const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
-         const Vector &plane_normal_, const double &min_, const double &max_, const double &timeout_)
+         const Vector &plane_normal_, const double &min_, const double &max_, const double &timeout_,
+         const map<string, pair<string,double>> &keypoints2conf_)
 {
     name = name_; //"ROM";
     motion_type = motion_type_;
@@ -43,6 +44,7 @@ Rom::Rom(const string &name_, const string &motion_type_, const string &tag_join
     min = min_;
     max = max_;
     timeout = timeout_;
+    keypoints2conf = keypoints2conf_;
 }
 
 void Rom::print()
@@ -53,4 +55,19 @@ void Rom::print()
     yInfo() << "Min = " << min;
     yInfo() << "Max = " << max;
     yInfo() << "Timeout = " << timeout;
+
+    yInfo() << KeyPointTag::elbow_left << keypoints2conf[KeyPointTag::elbow_left].first;
+    yInfo() << KeyPointTag::elbow_right << keypoints2conf[KeyPointTag::elbow_right].first;
+    yInfo() << KeyPointTag::hand_left << keypoints2conf[KeyPointTag::hand_left].first;
+    yInfo() << KeyPointTag::hand_right << keypoints2conf[KeyPointTag::hand_right].first;
+    yInfo() << KeyPointTag::head << keypoints2conf[KeyPointTag::head].first;
+    yInfo() << KeyPointTag::shoulder_center << keypoints2conf[KeyPointTag::shoulder_center].first;
+    yInfo() << KeyPointTag::shoulder_left << keypoints2conf[KeyPointTag::shoulder_left].first;
+    yInfo() << KeyPointTag::shoulder_right << keypoints2conf[KeyPointTag::shoulder_right].first;
+    yInfo() << KeyPointTag::hip_left << keypoints2conf[KeyPointTag::hip_left].first;
+    yInfo() << KeyPointTag::hip_right << keypoints2conf[KeyPointTag::hip_right].first;
+    yInfo() << KeyPointTag::knee_left << keypoints2conf[KeyPointTag::knee_left].first;
+    yInfo() << KeyPointTag::knee_right << keypoints2conf[KeyPointTag::knee_right].first;
+    yInfo() << KeyPointTag::ankle_left << keypoints2conf[KeyPointTag::ankle_left].first;
+    yInfo() << KeyPointTag::ankle_right << keypoints2conf[KeyPointTag::ankle_right].first;
 }

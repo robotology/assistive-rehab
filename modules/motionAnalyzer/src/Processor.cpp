@@ -37,11 +37,13 @@ Processor::Processor()
 
 }
 
-//void Processor::setInitialConf(const SkeletonStd &skeleton_init_, const map<string, string> &keypoints2conf_)
-//{
-//    skeleton_init = skeleton_init_;
-//    keypoints2conf = keypoints2conf_;
-//}
+void Processor::setInitialConf(const SkeletonWaist &skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_)
+{
+    skeleton_init = skeleton_init_;
+    keypoints2conf = keypoints2conf_;
+
+//    skeleton_init.print();
+}
 
 bool Processor::isStatic(const KeyPoint& keypoint)
 {
@@ -110,25 +112,24 @@ bool Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyPoi
                 {
                     const KeyPoint* keypoint_child = keypoint.getChild(k);
                     curr_kp_child = keypoint_child->getPoint();
-
                     const KeyPoint* keypoint_child_init = keypoint_init.getChild(k);
                     curr_kp_child_init = keypoint_child_init->getPoint();
 
                     //compute deviation from initial pose
                     Vector curr_pose = curr_kp + curr_kp_parent + curr_kp_child;
                     Vector initial_pose = curr_kp_init + curr_kp_parent_init + curr_kp_child_init;
-                    double deviation = fabs(fabs(curr_pose[0]+curr_pose[1]+curr_pose[2])-fabs(initial_pose[0]+initial_pose[1]+initial_pose[2]));
-
-//                    cout << keypoint.getTag() << " " << keypoint_child->getTag() << " " << keypoint_parent->getTag() << " "
-//                         << "(" << curr_kp[0] << " " << curr_kp[1] << " " << curr_kp[2] << ") "
-//                         << "(" << curr_kp_child[0] << " " << curr_kp_child[1] << " " << curr_kp_child[2] << ") "
-//                         << "(" << curr_kp_parent[0] << " " << curr_kp_parent[1] << " " << curr_kp_parent[2] << ") "
-//                         << curr_pose[0] << " " << curr_pose[1] << " " << curr_pose[2] << " "
-//                         << initial_pose[0] << " " << initial_pose[1] << " " << initial_pose[2]
-//                         << " " << deviation << endl;
+                    double deviation = fabs(fabs(curr_pose[0])+fabs(curr_pose[1])+fabs(curr_pose[2]))
+                            -fabs(fabs(initial_pose[0])+fabs(initial_pose[1])+fabs(initial_pose[2]));
 
                     if((deviation) > CONST*keypoints2conf[keypoint.getTag()].second)
                     {
+                        cout << keypoint.getTag() << " " << keypoint_child->getTag() << " " << keypoint_parent->getTag() << " "
+                             << "(" << curr_kp[0] << " " << curr_kp[1] << " " << curr_kp[2] << ") "
+                             << "(" << curr_kp_child[0] << " " << curr_kp_child[1] << " " << curr_kp_child[2] << ") "
+                             << "(" << curr_kp_parent[0] << " " << curr_kp_parent[1] << " " << curr_kp_parent[2] << ") "
+                             << curr_pose[0] << " " << curr_pose[1] << " " << curr_pose[2] << " "
+                             << initial_pose[0] << " " << initial_pose[1] << " " << initial_pose[2]
+                             << " " << deviation << endl;
                         isDeviating = true;
                     }
                 }
@@ -179,6 +180,7 @@ double Rom_Processor::computeMetric()
     Vector kp_ref = keypoint_ref->getPoint();
 
     Vector v1;
+    double theta;
     if(keypoint_ref->getNumChild())
     {
         const KeyPoint *keypoint_child = keypoint_ref->getChild(0);
@@ -194,7 +196,15 @@ double Rom_Processor::computeMetric()
         double v1_norm = norm(v1);
         double v2_norm = norm(ref_dir);
         double dot_p = dot(v1, ref_dir);
-        return ( acos(dot_p/(v1_norm*v2_norm)) * (180/M_PI) );
+
+//        double minval = rom->getMinVal() * (M_PI/180);
+//        double maxval = rom->getMaxVal() * (M_PI/180);
+//        double range = M_PI;
+//        double scale = (maxval-minval)/range;
+//        theta = scale*acos(dot_p/(v1_norm*v2_norm))+minval;
+        theta = acos(dot_p/(v1_norm*v2_norm));
+
+        return ( theta * (180/M_PI) );
     }
     else
     {

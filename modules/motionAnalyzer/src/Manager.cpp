@@ -91,7 +91,8 @@ bool Manager::loadInitialConf(const string& motion_repertoire_file)
     ResourceFinder rf;
     rf.setVerbose();
     rf.setDefaultContext(this->rf->getContext().c_str());
-    rf.setDefaultConfigFile(motion_repertoire_file.c_str()); //(this->rf->find("configuration-file").asString().c_str());
+    string confFile = this->rf->getHomeContextPath() + "/" + motion_repertoire_file;
+    rf.setDefaultConfigFile(confFile.c_str()); //(this->rf->find("configuration-file").asString().c_str());
     rf.configure(0, NULL);
 
     Bottle &bGeneral = rf.findGroup("GENERAL");
@@ -452,7 +453,8 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
     ResourceFinder rf;
     rf.setVerbose();
     rf.setDefaultContext(this->rf->getContext().c_str());
-    rf.setDefaultConfigFile(motion_repertoire_file.c_str()); //(this->rf->find("configuration-file").asString().c_str());
+    string confFile = this->rf->getHomeContextPath() + "/" + motion_repertoire_file;
+    rf.setDefaultConfigFile(confFile.c_str()); //(this->rf->find("configuration-file").asString().c_str());
     rf.configure(0, NULL);
 
     Bottle &bGeneral = rf.findGroup("GENERAL");
@@ -504,7 +506,6 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                                 else
                                     yError() << "Could not find reference plane";
 
-                                newMetric = new Rom(curr_tag+"_"+to_string(j), motion_type, tag_joint, ref_dir, plane_normal, min, max, timeout);
 //                                metrics.push_back(newMetric);
 
                                 //overwrites initial configuration if different
@@ -635,9 +636,13 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                                 }
                                 else
                                     yError() << "Could not load ankle right configuration";
+
+                                newMetric = new Rom(curr_tag+"_"+to_string(j), motion_type, tag_joint,
+                                                    ref_dir, plane_normal, min, max, timeout, keypoints2conf);
                             }
 
                             //add the current metric to the repertoire
+                            cout << "Insert " << curr_tag+"_"+to_string(j) << endl;
                             motion_repertoire.insert(pair<string, Metric*>(curr_tag+"_"+to_string(j), newMetric)); // metrics[j]));
 //                            motion_repertoire[curr_tag+"_"+to_string(j)]->print();
                         }
@@ -661,7 +666,8 @@ bool Manager::loadSequence(const string &sequencer_file)
     ResourceFinder rf;
     rf.setVerbose();
     rf.setDefaultContext(this->rf->getContext().c_str());
-    rf.setDefaultConfigFile(sequencer_file.c_str()); //(this->rf->find("configuration-file").asString().c_str());
+    string confFile = this->rf->getHomeContextPath() + "/" + sequencer_file;
+    rf.setDefaultConfigFile(confFile.c_str()); //(this->rf->find("configuration-file").asString().c_str());
     rf.configure(0, NULL);
 
     if(Bottle *metric_type = rf.find("metric_type").asList())
@@ -688,7 +694,7 @@ bool Manager::loadSequence(const string &sequencer_file)
                         metrics[i]->print();
 
                         Processor* newProcessor = createProcessor(metric_tag, metrics[i]);
-                        newProcessor->setInitialConf(initial_skeleton, keypoints2conf);
+                        newProcessor->setInitialConf(initial_skeleton, metrics[i]->getInitialConf());
                         processors[i] = newProcessor;
                     }
                 }
@@ -1015,112 +1021,114 @@ double Manager::getPeriod()
 /********************************************************/
 bool Manager::updateModule()
 {
-//    Bottle *input = testPort.read();
-//    for (int i=0; i<input->size(); i++)
-//    {
-//        if (Bottle *b=input->get(i).asList())
-//        {
-//            if (b->check("tag"))
-//            {
-//                Property prop(b->toString().c_str());
-//                string tag=prop.find("tag").asString();
-//                if (!tag.empty())
-//                {
-//                    if (prop.check("tag"))
-//                    {
-//                        Skeleton* skeleton(factory(prop));
-////                        skeleton->print();
-
-//                        skeleton->normalize();
-
-//                        Vector result;
-//                        result.resize(processors.size());
-//                        for(int i=0; i<processors.size(); i++)
-//                        {
-//                            processors[i]->update(*skeleton);
-////                            if(processors[i]->isDeviatingFromIntialPose())
-////                                yWarning() << "Deviating from initial pose\n";
-
-//                            result[i] = processors[i]->computeMetric();
-//                        }
-
-//                        //write on output port
-//                        Bottle &scopebottleout = scopePort.prepare();
-//                        scopebottleout.clear();
-//                        scopebottleout.addDouble(result[result.size()-1]);
-//                        scopePort.write();
-//                    }
-//                }
-//            }
-//        }
-//    }
-
-    //if we query the database
-    if(opcPort.getOutputCount() > 0)
+    Bottle *input = testPort.read();
+    for (int i=0; i<input->size(); i++)
     {
-        //update time array
-        time_samples.push_back(Time::now());
+        if (Bottle *b=input->get(i).asList())
+        {
+            if (b->check("tag"))
+            {
+                Property prop(b->toString().c_str());
+                string tag=prop.find("tag").asString();
+                if (!tag.empty())
+                {
+                    if (prop.check("tag"))
+                    {
+                        Skeleton* skeleton(factory(prop));
+                        //                        skeleton->print();
 
-        //get keyframes from skeleton
-        getKeyframes();
+                        skeleton->normalize();
 
-        //populate Skeleton data structure
-        SkeletonWaist skeleton;
-        skeleton.update_fromstd(curr_keypoints);
+                        Vector result;
+                        result.resize(processors.size());
+                        for(int i=0; i<processors.size(); i++)
+                        {
+                            processors[i]->update(*skeleton);
+//                            if(processors[i]->isDeviatingFromIntialPose())
+//                                yWarning() << "Deviating from initial pose\n";
 
-//        skeleton.print();
+                            result[i] = processors[i]->computeMetric();
+                        }
 
-        //transform detected skeleton into standard
-        skeleton.normalize();
+                        //write on output port
+                        Bottle &scopebottleout = scopePort.prepare();
+                        scopebottleout.clear();
+                        scopebottleout.addDouble(result[result.size()-1]);
+                        scopebottleout.addDouble(metrics[result.size()-1]->getMin());
+                        scopebottleout.addDouble(metrics[result.size()-1]->getMax());
+                        scopePort.write();
+                    }
+                }
+            }
+        }
+    }
 
-        Vector result;
-        result.resize(processors.size());
+//    //if we query the database
+//    if(opcPort.getOutputCount() > 0)
+//    {
+//        //update time array
+//        time_samples.push_back(Time::now());
+
+//        //get keyframes from skeleton
+//        getKeyframes();
+
+//        //populate Skeleton data structure
+//        SkeletonWaist skeleton;
+//        skeleton.update_fromstd(curr_keypoints);
+
+//        //        skeleton.print();
+
+//        //transform detected skeleton into standard
+//        skeleton.normalize();
+
+//        Vector result;
+//        result.resize(processors.size());
 //        double tnow = Time::now();
-        double currres = -1.0;
+//        double currres = -1.0;
 //        double prev_timeout = 0.0;
 //        double timeout = 0.0;
 //        for(int i=0; i<processors.size(); i++)
 //        {
-//            processors[i]->update(skeleton);
-//            if(processors[i]->isDeviatingFromIntialPose())
-//                yWarning() << "Deviating from initial pose\n";
+////            processors[i]->update(skeleton);
+////            if(processors[i]->isDeviatingFromIntialPose())
+////                yWarning() << "Deviating from initial pose\n";
 
-//            result[i] = processors[i]->computeMetric();
+////            result[i] = processors[i]->computeMetric();
 
-//            //check which is the current processor based on timeout
-//            timeout += processors[i]->getTimeout();
-//            //            cout << (tnow-tstart) << " " << prev_timeout << " " << timeout << endl;
-//            if( prev_timeout < (tnow-tstart) && (tnow-tstart) < timeout )
-//                currres = result[i];
-//            else
-//                currres = result[processors.size()];
+////            //check which is the current processor based on timeout
+////            timeout += processors[i]->getTimeout();
+////            //            cout << (tnow-tstart) << " " << prev_timeout << " " << timeout << endl;
+////            if( prev_timeout < (tnow-tstart) && (tnow-tstart) < timeout )
+////                currres = result[i];
+////            else
+////                currres = result[processors.size()];
 
-//            prev_timeout = timeout;
+////            prev_timeout = timeout;
 //        }
 
-        //write on output port
-        Bottle &scopebottleout = scopePort.prepare();
-        scopebottleout.clear();
-        scopebottleout.addDouble(currres);
-        scopePort.write();
+//        //write on output port
+//        Bottle &scopebottleout = scopePort.prepare();
+//        scopebottleout.clear();
+//        scopebottleout.addDouble(currres);
+//        scopePort.write();
 
-        tend_session = Time::now();
-        if(tend_session-tstart_session > 5.0)
-            finishedSession = true;
+//        tend_session = Time::now();
+//        if(tend_session-tstart_session > 5.0)
+//            finishedSession = true;
 
-        if(finishedSession)
-        {
-            yInfo() << "Writing to file";
-            if(writeKeypointsToFile())
-            {
-                time_samples.clear();
-                all_keypoints.clear();
-            }
+//        if(finishedSession)
+//        {
+//            yInfo() << "Writing to file";
+//            if(writeKeypointsToFile())
+//            {
+//                time_samples.clear();
+//                all_keypoints.clear();
+//            }
 
-            finishedSession = false;
-            tstart_session = tend_session;
-        }
-    }
+//            finishedSession = false;
+//            tstart_session = tend_session;
+//        }
+//    }
 
     return true;
 }
