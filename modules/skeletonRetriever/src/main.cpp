@@ -248,9 +248,9 @@ class Retriever : public RFModule
             auto &sk=*(skeletons[i].skeleton);
             for (unsigned int j=0; j<sk.getNumKeyPoints(); j++)
             {
-                if (sk[j]->isUpdated() && sk[j]->isUpdated())
+                if (sk[j]->isUpdated() && (*s.skeleton)[j]->isUpdated())
                 {
-                    mean+=norm(sk[j]->getPoint()-sk[j]->getPoint());
+                    mean+=norm(sk[j]->getPoint()-(*s.skeleton)[j]->getPoint());
                 }
                 num++;
             }
@@ -391,7 +391,7 @@ class Retriever : public RFModule
         keys_recognition_confidence=0.3;
         keys_recognition_percentage=0.3;
         keys_acceptable_misses=3;
-        tracking_threshold=0.5;
+        tracking_threshold=0.3;
         time_to_live=0.5;
 
         // retrieve values from config file
