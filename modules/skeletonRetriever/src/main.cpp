@@ -74,6 +74,7 @@ class Retriever : public RFModule
     int keys_acceptable_misses;
     double tracking_threshold;
     double time_to_live;
+    double t0;
 
     /****************************************************************/
     bool getCameraOptions()
@@ -336,12 +337,12 @@ class Retriever : public RFModule
     }
 
     /****************************************************************/
-    void gc()
+    void gc(const double dt)
     {
         vector<MetaSkeleton> skeletons_;
         for (auto &s:skeletons)
         {
-            s.timer-=period;
+            s.timer-=dt;
             if (s.timer>0.0)
             {
                 skeletons_.push_back(s);
@@ -394,8 +395,8 @@ class Retriever : public RFModule
         keys_recognition_confidence=0.3;
         keys_recognition_percentage=0.3;
         keys_acceptable_misses=3;
-        tracking_threshold=0.3;
-        time_to_live=0.5;
+        tracking_threshold=0.4;
+        time_to_live=1.0;
 
         // retrieve values from config file
         Bottle &gGeneral=rf.findGroup("general");
@@ -421,6 +422,7 @@ class Retriever : public RFModule
         camPort.open("/skeletonRetriever/cam:rpc");
 
         camera_configured=false;
+        t0=Time::now();
         return true;
     }
 
@@ -433,6 +435,10 @@ class Retriever : public RFModule
     /****************************************************************/
     bool updateModule() override
     {
+        const double t=Time::now();
+        const double dt=t-t0;
+        t0=t;
+
         if (ImageOf<PixelFloat> *depth=depthPort.read(false))
         {
             this->depth=*depth;
@@ -444,7 +450,7 @@ class Retriever : public RFModule
         }
 
         // garbage collector
-        gc();
+        gc(dt);
 
         // handle skeletons acquired from detector
         if (Bottle *b1=skeletonsPort.read(false))
