@@ -105,7 +105,7 @@ class Retriever : public RFModule
     {
         double f=depth.width()/(2.0*tan(fov_h*(M_PI/180.0)/2.0));
         double d=depth(u,v);
-        if (d>0.0)
+        if ((d>0.0) && (f>0.0))
         {
             double x=u-0.5*(depth.width()-1);
             double y=v-0.5*(depth.height()-1);
