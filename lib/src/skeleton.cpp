@@ -340,36 +340,17 @@ void Skeleton::fromProperty(const Property &prop)
     }
     else
         T=eye(4,4);
+
+    coronal=sagittal=transverse=zeros(3);
     if (prop.check("coronal"))
-    {
         if (Bottle *b=prop.find("coronal").asList())
             b->write(coronal);
-    }
-    else
-    {
-        coronal=zeros(3);
-        coronal[2]=1.0;
-    }
     if (prop.check("sagittal"))
-    {
         if (Bottle *b=prop.find("sagittal").asList())
             b->write(sagittal);
-    }
-    else
-    {
-        sagittal=zeros(3);
-        sagittal[0]=1.0;
-    }
     if (prop.check("transverse"))
-    {
         if (Bottle *b=prop.find("transverse").asList())
             b->write(transverse);
-    }
-    else
-    {
-        transverse=zeros(3);
-        transverse[1]=1.0;
-    }
     helper_fromproperty(prop.find("skeleton").asList(),nullptr);
 }
 
