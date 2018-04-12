@@ -420,7 +420,7 @@ class Retriever : public RFModule
         keys_recognition_confidence=0.3;
         keys_recognition_percentage=0.4;
         keys_acceptable_misses=5;
-        tracking_threshold=0.4;
+        tracking_threshold=0.5;
         time_to_live=1.0;
         filter_enable=true;
         filter_order=8;
@@ -514,19 +514,21 @@ class Retriever : public RFModule
                     {
                         vector<double> scores=computeScores(c,n);
                         auto it=min_element(scores.begin(),scores.end());
-                        auto i=distance(scores.begin(),it);
-                        if (*it<numeric_limits<double>::infinity())
+                        if (it!=scores.end())
                         {
-                            shared_ptr<MetaSkeleton> &s=skeletons[i];
-                            update(n,s);
-                            opcSet(s);
-                            c.erase(c.begin()+i);
+                            auto i=distance(scores.begin(),it);
+                            if (*it<numeric_limits<double>::infinity())
+                            {
+                                shared_ptr<MetaSkeleton> &s=skeletons[i];
+                                update(n,s);
+                                opcSet(s);
+                                c.erase(c.begin()+i);
+                                continue;
+                            }
                         }
-                        else
-                        {
-                            opcAdd(n);
-                            skeletons.push_back(n);
-                        }
+
+                        opcAdd(n);
+                        skeletons.push_back(n);
                     }
 
                     viewerUpdate();
