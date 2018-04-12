@@ -25,28 +25,79 @@
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
 
+#include <iCub/ctrl/filters.h>
+
 #include "AssistiveRehab/skeleton.h"
 
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
 using namespace yarp::math;
+using namespace iCub::ctrl;
 using namespace assistive_rehab;
 
 
 /****************************************************************/
-struct MetaSkeleton
+class MetaSkeleton
 {
+    bool filter_enable;
+    vector<shared_ptr<MedianFilter>> filter;
+
+public:
     double timer;
     int opc_id;
     shared_ptr<SkeletonWaist> skeleton;
     vector<int> keys_acceptable_misses;
 
     /****************************************************************/
-    MetaSkeleton(const double t) : timer(t), opc_id(-1)
+    MetaSkeleton(const double t, const bool filter_enable_,
+                 const int filter_order_) :
+        timer(t), filter_enable(filter_enable_), opc_id(-1)
     {
         skeleton=shared_ptr<SkeletonWaist>(new SkeletonWaist());
         keys_acceptable_misses.assign(skeleton->getNumKeyPoints(),0);
+
+        if (filter_enable)
+        {
+            for (unsigned int i=0; i<skeleton->getNumKeyPoints(); i++)
+            {
+                filter.push_back(shared_ptr<MedianFilter>(
+                   new MedianFilter(filter_order_,(*skeleton)[i]->getPoint())));
+            }
+        }
+    }
+
+    /****************************************************************/
+    bool init(const string &tag, const Vector &p)
+    {
+        int i=skeleton->getNumFromKey(tag);
+        if (i>=0)
+        {
+            filter[i]->init(p);
+            return true;
+        }
+        else
+            return false;
+    }
+
+    /****************************************************************/
+    void update(const vector<pair<string,Vector>> &unordered)
+    {
+        if (filter_enable)
+        {
+            vector<pair<string,Vector>> unordered_fitered;
+            for (auto &p:unordered)
+            {
+                int i=skeleton->getNumFromKey(p.first);
+                if (i>=0)
+                {
+                    unordered_fitered.push_back(make_pair(p.first,filter[i]->filt(p.second)));
+                }
+            }
+            skeleton->update(unordered_fitered);
+        }
+        else
+            skeleton->update(unordered);
     }
 };
 
@@ -74,6 +125,8 @@ class Retriever : public RFModule
     int keys_acceptable_misses;
     double tracking_threshold;
     double time_to_live;
+    bool filter_enable;
+    int filter_order;
     double t0;
 
     /****************************************************************/
@@ -124,42 +177,9 @@ class Retriever : public RFModule
     }
 
     /****************************************************************/
-    void updatePlanes(MetaSkeleton &s)
-    {
-        auto &sk=*s.skeleton;
-        if (sk[KeyPointTag::shoulder_left]->isUpdated() &&
-            sk[KeyPointTag::shoulder_right]->isUpdated())
-        {
-            Vector sagittal=sk[KeyPointTag::shoulder_left]->getPoint()-
-                            sk[KeyPointTag::shoulder_right]->getPoint();
-            double n=norm(sagittal);
-            if (n>0.0)
-            {
-                sagittal/=n;
-                sk.setSagittal(sagittal);
-            }
-        }
-
-        if (sk[KeyPointTag::shoulder_center]->isUpdated() &&
-            sk[KeyPointTag::hip_center]->isUpdated())
-        {
-            Vector transverse=sk[KeyPointTag::shoulder_center]->getPoint()-
-                              sk[KeyPointTag::hip_center]->getPoint();
-            double n=norm(transverse);
-            if (n>0.0)
-            {
-                transverse/=n;
-                sk.setTransverse(transverse);
-            }
-        }
-
-        sk.setCoronal(cross(sk.getSagittal(),sk.getTransverse()));
-    }
-
-    /****************************************************************/
     MetaSkeleton create(Bottle *keys)
     {
-        MetaSkeleton s(time_to_live);
+        MetaSkeleton s(time_to_live,filter_enable,filter_order);
         vector<pair<string,Vector>> unordered;
         vector<Vector> hips;
 
@@ -194,8 +214,6 @@ class Retriever : public RFModule
         }
 
         s.skeleton->update(unordered);
-        updatePlanes(s);
-
         return s;
     }
 
@@ -208,8 +226,10 @@ class Retriever : public RFModule
             auto key=(*src.skeleton)[i];
             if (key->isUpdated())
             {
-                unordered.push_back(make_pair(key->getTag(),key->getPoint()));
+                const Vector &p=key->getPoint();
+                unordered.push_back(make_pair(key->getTag(),p));
                 dest.keys_acceptable_misses[i]=keys_acceptable_misses;
+                dest.init(key->getTag(),p);
             }
             else if (dest.keys_acceptable_misses[i]>0)
             {
@@ -218,8 +238,7 @@ class Retriever : public RFModule
             }
         }
 
-        dest.skeleton->update(unordered);
-        updatePlanes(dest);
+        dest.update(unordered);
         dest.timer=time_to_live;
     }
 
@@ -397,6 +416,8 @@ class Retriever : public RFModule
         keys_acceptable_misses=3;
         tracking_threshold=0.4;
         time_to_live=1.0;
+        filter_enable=true;
+        filter_order=5;
 
         // retrieve values from config file
         Bottle &gGeneral=rf.findGroup("general");
@@ -413,6 +434,13 @@ class Retriever : public RFModule
             keys_acceptable_misses=gSkeleton.check("keys-acceptable-misses",keys_acceptable_misses).asInt();
             tracking_threshold=gSkeleton.check("tracking-threshold",tracking_threshold).asDouble();
             time_to_live=gSkeleton.check("time-to-live",time_to_live).asDouble();
+        }
+
+        Bottle &gFiltering=rf.findGroup("filtering");
+        if (!gFiltering.isNull())
+        {
+            filter_enable=(gFiltering.check("filter-enable",Value(filter_enable?"on":"off")).asString()=="on");
+            filter_order=gFiltering.check("filter-order",filter_order).asInt();
         }
 
         skeletonsPort.open("/skeletonRetriever/skeletons:i");

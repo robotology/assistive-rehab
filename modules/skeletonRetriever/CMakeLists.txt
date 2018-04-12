@@ -5,9 +5,9 @@
 project(skeletonRetriever)
 
 add_definitions(-D_USE_MATH_DEFINES)
-include_directories(${YARP_INCLUDE_DIRS})
+include_directories(${YARP_INCLUDE_DIRS} ${ICUB_INCLUDE_DIRS})
 add_executable(${PROJECT_NAME} src/main.cpp)
-target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} AssistiveRehab)
+target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} ctrlLib AssistiveRehab)
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
 file(GLOB ini app/conf/*.ini)
