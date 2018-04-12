@@ -65,6 +65,9 @@ public:
                    new MedianFilter(filter_order_,(*skeleton)[i]->getPoint())));
             }
         }
+
+        yInfo()<<"Created a new"<<skeleton->getType()<<"with filter_enable"
+               <<(filter_enable?"on":"off")<<", filter_order ="<<filter_order_<<")";
     }
 
     /****************************************************************/
