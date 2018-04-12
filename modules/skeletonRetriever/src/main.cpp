@@ -13,9 +13,12 @@
 #include <cstdlib>
 #include <memory>
 #include <cmath>
+#include <limits>
+#include <algorithm>
 #include <vector>
 #include <map>
 #include <unordered_map>
+#include <iterator>
 #include <utility>
 #include <sstream>
 #include <iostream>
@@ -258,32 +261,36 @@ class Retriever : public RFModule
     }
 
     /****************************************************************/
-    shared_ptr<MetaSkeleton> isTracked(const shared_ptr<MetaSkeleton> &s)
+    vector<double> computeScores(const vector<shared_ptr<MetaSkeleton>> &c,
+                                 const shared_ptr<MetaSkeleton> &n)
     {
-        map<double,int> scores;
-        for (unsigned int i=0; i<skeletons.size(); i++)
+        vector<double> scores;
+        auto &nsk=*(n->skeleton);
+        for (auto &s:c)
         {
             double mean=0.0; int num=0;
-            auto &sk=*(skeletons[i]->skeleton);
-            for (unsigned int j=0; j<sk.getNumKeyPoints(); j++)
+            auto &csk=*(s->skeleton);
+            for (unsigned int j=0; j<csk.getNumKeyPoints(); j++)
             {
-                if (sk[j]->isUpdated() && (*s->skeleton)[j]->isUpdated())
+                if (csk[j]->isUpdated() && nsk[j]->isUpdated())
                 {
-                    mean+=norm(sk[j]->getPoint()-(*s->skeleton)[j]->getPoint());
+                    mean+=norm(csk[j]->getPoint()-nsk[j]->getPoint());
                 }
                 num++;
             }
             if (num>0)
             {
                 mean/=num;
-                if (mean<=tracking_threshold)
+                if (mean<tracking_threshold)
                 {
-                    scores[mean]=i;
+                    scores.push_back(mean);
+                    continue;
                 }
             }
+            scores.push_back(numeric_limits<double>::infinity());
         }
 
-        return (scores.empty()?nullptr:skeletons[scores.begin()->second]);
+        return scores;
     }
 
     /****************************************************************/
@@ -484,7 +491,8 @@ class Retriever : public RFModule
         {
             if (Bottle *b2=b1->get(0).asList())
             {
-                bool doViewerUpdate=false;
+                // acquire skeletons with sufficient number of key-points
+                vector<shared_ptr<MetaSkeleton>> new_accepted_skeletons;
                 for (int i=0; i<b2->size(); i++)
                 {
                     Bottle *b3=b2->get(i).asList();
@@ -493,24 +501,34 @@ class Retriever : public RFModule
                         shared_ptr<MetaSkeleton> s=create(b3);
                         if (isValid(s))
                         {
-                            if (shared_ptr<MetaSkeleton> s1=isTracked(s))
-                            {
-                                update(s,s1);
-                                opcSet(s1);
-                            }
-                            else
-                            {
-                                opcAdd(s);
-                                skeletons.push_back(s);
-                            }
-
-                            doViewerUpdate=true;
+                            new_accepted_skeletons.push_back(s);
                         }
                     }
                 }
 
-                if (doViewerUpdate)
+                // update existing skeletons / create new skeletons
+                if (!new_accepted_skeletons.empty())
                 {
+                    vector<shared_ptr<MetaSkeleton>> c=skeletons;
+                    for (auto &n:new_accepted_skeletons)
+                    {
+                        vector<double> scores=computeScores(c,n);
+                        auto it=min_element(scores.begin(),scores.end());
+                        auto i=distance(scores.begin(),it);
+                        if (*it<numeric_limits<double>::infinity())
+                        {
+                            shared_ptr<MetaSkeleton> &s=skeletons[i];
+                            update(n,s);
+                            opcSet(s);
+                            c.erase(c.begin()+i);
+                        }
+                        else
+                        {
+                            opcAdd(n);
+                            skeletons.push_back(n);
+                        }
+                    }
+
                     viewerUpdate();
                 }
             }
