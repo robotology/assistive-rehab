@@ -50,7 +50,7 @@ class Manager : public RFModule,
     vector<pair<string,Vector>> curr_keypoints;
     vector< vector <pair<string,Vector>> > all_keypoints;
     vector<double> time_samples;
-    SkeletonWaist skeletonInit;
+    SkeletonWaist* skeletonInit;
     vector<SkeletonWaist*> skeletonsInit;
 
     SkeletonWaist skeletonIn;
@@ -103,7 +103,7 @@ class Manager : public RFModule,
 
     void init();
     bool loadInitialConf(const string& motion_repertoire_file);
-    bool loadInitialConf(const Bottle& b, const string &tag);
+    bool loadInitialConf(const Bottle& b, SkeletonWaist *skeletonInit);
     bool loadMotionList(const string& motion_repertoire_file);
     bool loadSequence(const string& sequencer_file);
 

@@ -102,8 +102,6 @@ bool Manager::loadInitialConf(const string& motion_repertoire_file)
 
     if(!bGeneral.isNull())
     {
-//        initial_keypoints.clear();
-
 //        nmovements = bGeneral.find("number_movements").asInt();
         if(Bottle *bElbowLeft_init = bGeneral.find("elbow_left_init_pose").asList())
         {
@@ -244,14 +242,12 @@ bool Manager::loadInitialConf(const string& motion_repertoire_file)
         }
         else
             yError() << "Could not load initial pose for ankle right";
-
-        skeletonInit.update(initial_keypoints);
     }
 
     return true;
 }
 
-bool Manager::loadInitialConf(const Bottle& b, const string & tag)
+bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
 {
     if(Bottle *bElbowLeft_init = b.find("elbow_left_init_pose").asList())
     {
@@ -449,7 +445,8 @@ bool Manager::loadInitialConf(const Bottle& b, const string & tag)
         yInfo() << "Updated initial pose for ankle right";
     }
 
-    skeletonInit.update(initial_keypoints);
+    skeletonInit->update(initial_keypoints);
+
     return true;
 }
 
@@ -515,9 +512,13 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
 //                                metrics.push_back(newMetric);
 
                                 //overwrites initial configuration if different
-                                loadInitialConf(bMotion, curr_tag+"_"+to_string(j));
-                                skeletonInit.setTag(curr_tag+"_"+to_string(j));
-                                skeletonsInit.push_back(&skeletonInit);
+                                skeletonInit = new SkeletonWaist();
+                                loadInitialConf(bMotion,skeletonInit);
+                                skeletonInit->setTag(curr_tag+"_"+to_string(j));
+//                                skeletonInit->print();
+                                skeletonsInit.push_back(skeletonInit);
+//                                for(int i=0; i<skeletonsInit.size(); i++)
+//                                    skeletonsInit[i]->print();
 
                                 Bottle *elbowLC = bMotion.find("elbow_left_configuration").asList();
                                 if(elbowLC)
@@ -699,12 +700,19 @@ bool Manager::loadSequence(const string &sequencer_file)
 
                         metrics[i] = motion_repertoire.at(metric_tag);
                         metrics[i]->print();
+                        SkeletonWaist skel;
                         for(int j=0; j<skeletonsInit.size(); j++)
-                            skeletonsInit[j]->print();
+                        {
+                            if(skeletonsInit[j]->getTag() == metric_tag)
+                            {
+                                skel.update(skeletonsInit[j]->get_unordered());
+                                skeletonsInit[j]->print();
+                            }
+                        }
 
                         Processor* newProcessor = createProcessor(metric_tag, metrics[i]);
 //                        skeletonsInit[i]->print();
-                        newProcessor->setInitialConf(*skeletonsInit[i], metrics[i]->getInitialConf());
+                        newProcessor->setInitialConf(skel, metrics[i]->getInitialConf());
 //                        newProcessor->setInitialConf(skeletonInit, metrics[i]->getInitialConf());
                         processors[i] = newProcessor;
                     }
@@ -1075,6 +1083,8 @@ bool Manager::close()
 
     for(int i=0; i<processors.size(); i++)
         delete processors[i];
+
+    delete skeletonInit;
 
     for(int i=0; i<skeletonsInit.size(); i++)
         delete skeletonsInit[i];
