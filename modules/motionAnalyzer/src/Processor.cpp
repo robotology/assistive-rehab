@@ -65,10 +65,9 @@ bool Processor::isDeviatingFromIntialPose()
         if(isStatic(*curr_skeleton[i]) && curr_skeleton[i]->isUpdated() && isDeviatingFromIntialPose(*curr_skeleton[i], *skeleton_init[i]))
         {
             isDeviating = true;
-            cout << curr_skeleton[i]->getTag() << " deviating from initial pose \n";
+            yWarning() << curr_skeleton[i]->getTag() << "deviating from initial pose";
         }
     }
-    cout << endl;
 
     return isDeviating;
 }
@@ -89,12 +88,12 @@ bool Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyPoi
 
         curr_pose = curr_kp + curr_kp_parent + curr_kp_child;
         initial_pose = curr_kp_init + curr_kp_parent_init + curr_kp_child_init;
-        yInfo() << keypoint.getTag().c_str()
-                << "(" << curr_kp_init[0] << "," << curr_kp_init[1] << "," << curr_kp_init[2] << ")"
-                << "(" << curr_kp_parent_init[0] << "," << curr_kp_parent_init[1] << "," << curr_kp_parent_init[2] << ")"
-                << "(" << curr_kp_child_init[0] << "," << curr_kp_child_init[1] << "," << curr_kp_child_init[2] << ")"
-                << "(" << curr_pose[0] << "," << curr_pose[1] << "," << curr_pose[2] << ")"
-                << "(" << initial_pose[0] << "," << initial_pose[1] << "," << initial_pose[2] << ")";
+//        yInfo() << keypoint.getTag().c_str()
+//                << "(" << curr_kp_init[0] << "," << curr_kp_init[1] << "," << curr_kp_init[2] << ")"
+//                << "(" << curr_kp_parent_init[0] << "," << curr_kp_parent_init[1] << "," << curr_kp_parent_init[2] << ")"
+//                << "(" << curr_kp_child_init[0] << "," << curr_kp_child_init[1] << "," << curr_kp_child_init[2] << ")"
+//                << "(" << curr_pose[0] << "," << curr_pose[1] << "," << curr_pose[2] << ")"
+//                << "(" << initial_pose[0] << "," << initial_pose[1] << "," << initial_pose[2] << ")";
     }
     else if(keypoint.getNumParent()) //if the current keypoint has parent and not child
     {
@@ -112,16 +111,19 @@ bool Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyPoi
 
 //    curr_skeleton.print();
     double deviation = norm(curr_pose-initial_pose);
-    yInfo() << keypoint.getTag().c_str()
+//    yInfo() << keypoint.getTag().c_str()
 //            << "(" << curr_kp[0] << "," << curr_kp[1] << "," << curr_kp[2] << ")"
 //            << "(" << curr_kp_parent[0] << "," << curr_kp_parent[1] << "," << curr_kp_parent[2] << ")"
 //            << "(" << curr_kp_child[0] << "," << curr_kp_child[1] << "," << curr_kp_child[2] << ")"
 //            << "(" << curr_pose[0] << "," << curr_pose[1] << "," << curr_pose[2] << ")"
 //            << "(" << initial_pose[0] << "," << initial_pose[1] << "," << initial_pose[2] << ")"
-            << deviation;
+//            << deviation;
 
     if(deviation > keypoints2conf[keypoint.getTag()].second)
+    {
+        yInfo() << deviation;
         return true;
+    }
     else
         return false;
 }
