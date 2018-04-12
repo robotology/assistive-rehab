@@ -61,13 +61,9 @@ public:
         {
             for (unsigned int i=0; i<skeleton->getNumKeyPoints(); i++)
             {
-                filter.push_back(shared_ptr<MedianFilter>(
-                   new MedianFilter(filter_order_,(*skeleton)[i]->getPoint())));
+                filter.push_back(shared_ptr<MedianFilter>(new MedianFilter(filter_order_,(*skeleton)[i]->getPoint())));
             }
         }
-
-        yInfo()<<"Created a new"<<skeleton->getType()<<"with filter_enable"
-               <<(filter_enable?"on":"off")<<", filter_order ="<<filter_order_<<")";
     }
 
     /****************************************************************/
