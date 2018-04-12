@@ -88,8 +88,8 @@ protected:
     std::string type;
     std::string tag;
     std::vector<KeyPoint*> keypoints;
-    std::unordered_map<std::string, KeyPoint*> tag2key;
-    std::unordered_map<KeyPoint*, unsigned int> key2id;
+    std::unordered_map<std::string,KeyPoint*> tag2key;
+    std::unordered_map<KeyPoint*,unsigned int> key2id;
 
     yarp::sig::Matrix T;
     yarp::sig::Vector coronal;
@@ -101,6 +101,8 @@ protected:
     void helper_updatefromproperty(yarp::os::Bottle *prop);
     void helper_normalize(KeyPoint* k, const std::vector<yarp::sig::Vector> &helperpoints);
     double helper_getmaxpath(KeyPoint* k, std::vector<bool> &visited) const;
+
+    virtual bool update_planes() = 0;
 
 public:
     Skeleton();
@@ -127,6 +129,7 @@ public:
     virtual void fromProperty(const yarp::os::Property &prop);
 
     unsigned int getNumKeyPoints() const { return (unsigned int)keypoints.size(); }
+    int getNumFromKey(const std::string &tag) const;
     const KeyPoint* operator[](const std::string &tag) const;
     const KeyPoint* operator[](const unsigned int i) const;
 
@@ -143,6 +146,9 @@ public:
 
 class SkeletonStd : public Skeleton
 {
+protected:
+    bool update_planes() override;
+
 public:
     SkeletonStd();
 };
@@ -151,6 +157,7 @@ class SkeletonWaist : public SkeletonStd
 {
 protected:
     unsigned int waist_pos;
+    bool update_planes() override;
 
 public:
     SkeletonWaist();

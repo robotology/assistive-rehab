@@ -354,6 +354,18 @@ void Skeleton::fromProperty(const Property &prop)
     helper_fromproperty(prop.find("skeleton").asList(),nullptr);
 }
 
+int Skeleton::getNumFromKey(const string &tag) const
+{
+    auto it1=tag2key.find(tag);
+    if (it1!=tag2key.end())
+    {
+        auto it2=key2id.find(it1->second);
+        if (it2!=key2id.end())
+            return (int)it2->second;
+    }
+    return -1;
+}
+
 const KeyPoint *Skeleton::operator[](const string &tag) const
 {
     auto it=tag2key.find(tag);
@@ -382,6 +394,8 @@ void Skeleton::update(const vector<Vector> &ordered)
         }
         i++;
     }
+
+    update_planes();
 }
 
 void Skeleton::update(const vector<pair<string,Vector>> &unordered)
@@ -402,6 +416,8 @@ void Skeleton::update(const vector<pair<string,Vector>> &unordered)
             it2->second->setPoint((T*p).subVector(0,2));
         }
     }
+
+    update_planes();
 }
 
 void Skeleton::update(const Property &prop)
@@ -566,6 +582,37 @@ SkeletonStd::SkeletonStd()
     tag2key[KeyPointTag::ankle_right]->parent.push_back(tag2key[KeyPointTag::knee_right]);
 }
 
+bool SkeletonStd::update_planes()
+{
+    int cnt=0;
+    if (tag2key[KeyPointTag::shoulder_left]->isUpdated() &&
+        tag2key[KeyPointTag::shoulder_right]->isUpdated())
+    {
+        sagittal=tag2key[KeyPointTag::shoulder_left]->getPoint()-
+                 tag2key[KeyPointTag::shoulder_right]->getPoint();
+        double n=norm(sagittal);
+        if (n>0.0)
+            sagittal/=n;
+        cnt++;
+    }
+
+    if (tag2key[KeyPointTag::shoulder_center]->isUpdated() &&
+        tag2key[KeyPointTag::hip_left]->isUpdated() &&
+        tag2key[KeyPointTag::hip_right]->isUpdated())
+    {
+        transverse=tag2key[KeyPointTag::shoulder_center]->getPoint()-
+                   0.5*(tag2key[KeyPointTag::hip_left]->getPoint()+
+                        tag2key[KeyPointTag::hip_right]->getPoint());
+        double n=norm(transverse);
+        if (n>0.0)
+            transverse/=n;
+        cnt++;
+    }
+
+    coronal=cross(sagittal,transverse);
+    return (cnt>=2);
+}
+
 SkeletonWaist::SkeletonWaist() : SkeletonStd()
 {
     type=typeid(SkeletonWaist).name();
@@ -596,6 +643,35 @@ SkeletonWaist::SkeletonWaist() : SkeletonStd()
     tag2key[KeyPointTag::hip_right]->parent[0]=tag2key[KeyPointTag::hip_center];
 }
 
+bool SkeletonWaist::update_planes()
+{
+    int cnt=0;
+    if (tag2key[KeyPointTag::shoulder_left]->isUpdated() &&
+        tag2key[KeyPointTag::shoulder_right]->isUpdated())
+    {
+        sagittal=tag2key[KeyPointTag::shoulder_left]->getPoint()-
+                 tag2key[KeyPointTag::shoulder_right]->getPoint();
+        double n=norm(sagittal);
+        if (n>0.0)
+            sagittal/=n;
+        cnt++;
+    }
+
+    if (tag2key[KeyPointTag::shoulder_center]->isUpdated() &&
+        tag2key[KeyPointTag::hip_center]->isUpdated())
+    {
+        transverse=tag2key[KeyPointTag::shoulder_center]->getPoint()-
+                   tag2key[KeyPointTag::hip_center]->getPoint();
+        double n=norm(transverse);
+        if (n>0.0)
+            transverse/=n;
+        cnt++;
+    }
+
+    coronal=cross(sagittal,transverse);
+    return (cnt>=2);
+}
+
 void SkeletonWaist::update_fromstd(const vector<Vector> &ordered)
 {
     Vector p(4,1);
@@ -618,6 +694,7 @@ void SkeletonWaist::update_fromstd(const vector<Vector> &ordered)
     if (tag2key[KeyPointTag::hip_left]->isUpdated() || tag2key[KeyPointTag::hip_right]->isUpdated())
         tag2key[KeyPointTag::hip_center]->setPoint(0.5*(tag2key[KeyPointTag::hip_left]->getPoint()+
                                                         tag2key[KeyPointTag::hip_right]->getPoint()));
+    update_planes();
 }
 
 void SkeletonWaist::update_fromstd(const vector<pair<string, Vector>> &unordered)
@@ -626,6 +703,7 @@ void SkeletonWaist::update_fromstd(const vector<pair<string, Vector>> &unordered
     if (tag2key[KeyPointTag::hip_left]->isUpdated() || tag2key[KeyPointTag::hip_right]->isUpdated())
         tag2key[KeyPointTag::hip_center]->setPoint(0.5*(tag2key[KeyPointTag::hip_left]->getPoint()+
                                                         tag2key[KeyPointTag::hip_right]->getPoint()));
+    update_planes();
 }
 
 void SkeletonWaist::update_fromstd(const Property &prop)
