@@ -113,7 +113,7 @@ class Retriever : public RFModule
     ImageOf<PixelFloat> depth;
 
     unordered_map<string,string> keysRemap;
-    vector<MetaSkeleton> skeletons;
+    vector<shared_ptr<MetaSkeleton>> skeletons;
 
     bool camera_configured;
     double period;
@@ -176,9 +176,9 @@ class Retriever : public RFModule
     }
 
     /****************************************************************/
-    MetaSkeleton create(Bottle *keys)
+    shared_ptr<MetaSkeleton> create(Bottle *keys)
     {
-        MetaSkeleton s(time_to_live,filter_enable,filter_order);
+        shared_ptr<MetaSkeleton> s=shared_ptr<MetaSkeleton>(new MetaSkeleton(time_to_live,filter_enable,filter_order));
         vector<pair<string,Vector>> unordered;
         vector<Vector> hips;
 
@@ -212,64 +212,64 @@ class Retriever : public RFModule
             unordered.push_back(make_pair(KeyPointTag::hip_center,0.5*(hips[0]+hips[1])));
         }
 
-        s.skeleton->update(unordered);
+        s->skeleton->update(unordered);
         return s;
     }
 
     /****************************************************************/
-    void update(const MetaSkeleton &src, MetaSkeleton &dest)
+    void update(const shared_ptr<MetaSkeleton> &src, shared_ptr<MetaSkeleton> &dest)
     {
         vector<pair<string,Vector>> unordered;
-        for (unsigned int i=0; i<src.skeleton->getNumKeyPoints(); i++)
+        for (unsigned int i=0; i<src->skeleton->getNumKeyPoints(); i++)
         {
-            auto key=(*src.skeleton)[i];
+            auto key=(*src->skeleton)[i];
             if (key->isUpdated())
             {
                 const Vector &p=key->getPoint();
                 unordered.push_back(make_pair(key->getTag(),p));
-                dest.keys_acceptable_misses[i]=keys_acceptable_misses;
-                dest.init(key->getTag(),p);
+                dest->keys_acceptable_misses[i]=keys_acceptable_misses;
+                dest->init(key->getTag(),p);
             }
-            else if (dest.keys_acceptable_misses[i]>0)
+            else if (dest->keys_acceptable_misses[i]>0)
             {
-                unordered.push_back(make_pair(key->getTag(),(*dest.skeleton)[i]->getPoint()));
-                dest.keys_acceptable_misses[i]--;
+                unordered.push_back(make_pair(key->getTag(),(*dest->skeleton)[i]->getPoint()));
+                dest->keys_acceptable_misses[i]--;
             }
         }
 
-        dest.update(unordered);
-        dest.timer=time_to_live;
+        dest->update(unordered);
+        dest->timer=time_to_live;
     }
 
     /****************************************************************/
-    bool isValid(const MetaSkeleton &s) const
+    bool isValid(const shared_ptr<MetaSkeleton> &s) const
     {
         unsigned int n=0;
-        for (unsigned int i=0; i<s.skeleton->getNumKeyPoints(); i++)
+        for (unsigned int i=0; i<s->skeleton->getNumKeyPoints(); i++)
         {
-            if ((*s.skeleton)[i]->isUpdated())
+            if ((*s->skeleton)[i]->isUpdated())
             {
                 n++;
             }
         }
         
-        double perc=((double)n)/((double)s.skeleton->getNumKeyPoints());
+        double perc=((double)n)/((double)s->skeleton->getNumKeyPoints());
         return (perc>=keys_recognition_percentage);
     }
 
     /****************************************************************/
-    MetaSkeleton *isTracked(const MetaSkeleton &s)
+    shared_ptr<MetaSkeleton> isTracked(const shared_ptr<MetaSkeleton> &s)
     {
         map<double,int> scores;
         for (unsigned int i=0; i<skeletons.size(); i++)
         {
             double mean=0.0; int num=0;
-            auto &sk=*(skeletons[i].skeleton);
+            auto &sk=*(skeletons[i]->skeleton);
             for (unsigned int j=0; j<sk.getNumKeyPoints(); j++)
             {
-                if (sk[j]->isUpdated() && (*s.skeleton)[j]->isUpdated())
+                if (sk[j]->isUpdated() && (*s->skeleton)[j]->isUpdated())
                 {
-                    mean+=norm(sk[j]->getPoint()-(*s.skeleton)[j]->getPoint());
+                    mean+=norm(sk[j]->getPoint()-(*s->skeleton)[j]->getPoint());
                 }
                 num++;
             }
@@ -283,26 +283,26 @@ class Retriever : public RFModule
             }
         }
 
-        return (scores.empty()?nullptr:&skeletons[scores.begin()->second]);
+        return (scores.empty()?nullptr:skeletons[scores.begin()->second]);
     }
 
     /****************************************************************/
-    bool opcAdd(MetaSkeleton &s)
+    bool opcAdd(shared_ptr<MetaSkeleton> &s)
     {
         if (opcPort.getOutputCount())
         {
             Bottle cmd,rep;
             cmd.addVocab(Vocab::encode("add"));
-            Property prop=s.skeleton->toProperty();
+            Property prop=s->skeleton->toProperty();
             cmd.addList().read(prop);
             if (opcPort.write(cmd,rep))
             {
                 if (rep.get(0).asVocab()==Vocab::encode("ack"))
                 {
-                    s.opc_id=rep.get(1).asList()->get(1).asInt();
+                    s->opc_id=rep.get(1).asList()->get(1).asInt();
                     ostringstream ss;
-                    ss<<"#"<<hex<<s.opc_id;
-                    s.skeleton->setTag(ss.str());
+                    ss<<"#"<<hex<<s->opc_id;
+                    s->skeleton->setTag(ss.str());
                     return opcSet(s);
                 }
             }
@@ -312,19 +312,19 @@ class Retriever : public RFModule
     }
 
     /****************************************************************/
-    bool opcSet(const MetaSkeleton &s)
+    bool opcSet(const shared_ptr<MetaSkeleton> &s)
     {
         if (opcPort.getOutputCount())
         {
             Bottle cmd,rep;
             cmd.addVocab(Vocab::encode("set"));
             Bottle &pl=cmd.addList();
-            Property prop=s.skeleton->toProperty();
+            Property prop=s->skeleton->toProperty();
             pl.read(prop);
             Bottle id;
             Bottle &id_pl=id.addList();
             id_pl.addString("id");
-            id_pl.addInt(s.opc_id);
+            id_pl.addInt(s->opc_id);
             pl.append(id);
             if (opcPort.write(cmd,rep))
             {
@@ -336,7 +336,7 @@ class Retriever : public RFModule
     }
 
     /****************************************************************/
-    bool opcDel(const MetaSkeleton &s)
+    bool opcDel(const shared_ptr<MetaSkeleton> &s)
     {
         if (opcPort.getOutputCount())
         {
@@ -344,7 +344,7 @@ class Retriever : public RFModule
             cmd.addVocab(Vocab::encode("del"));
             Bottle &pl=cmd.addList().addList();
             pl.addString("id");
-            pl.addInt(s.opc_id);
+            pl.addInt(s->opc_id);
             if (opcPort.write(cmd,rep))
             {
                 return (rep.get(0).asVocab()==Vocab::encode("ack"));
@@ -357,11 +357,11 @@ class Retriever : public RFModule
     /****************************************************************/
     void gc(const double dt)
     {
-        vector<MetaSkeleton> skeletons_;
+        vector<shared_ptr<MetaSkeleton>> skeletons_;
         for (auto &s:skeletons)
         {
-            s.timer-=dt;
-            if (s.timer>0.0)
+            s->timer-=dt;
+            if (s->timer>0.0)
             {
                 skeletons_.push_back(s);
             }
@@ -383,7 +383,7 @@ class Retriever : public RFModule
             msg.clear();
             for (auto &s:skeletons)
             {
-                Property prop=s.skeleton->toProperty();
+                Property prop=s->skeleton->toProperty();
                 msg.addList().read(prop);
             }
             viewerPort.writeStrict();
@@ -490,13 +490,13 @@ class Retriever : public RFModule
                     Bottle *b3=b2->get(i).asList();
                     if ((depth.width()>0) && (depth.height()>0) && (b3!=nullptr))
                     {
-                        MetaSkeleton s=create(b3);
+                        shared_ptr<MetaSkeleton> s=create(b3);
                         if (isValid(s))
                         {
-                            if (MetaSkeleton *s1=isTracked(s))
+                            if (shared_ptr<MetaSkeleton> s1=isTracked(s))
                             {
-                                update(s,*s1);
-                                opcSet(*s1);
+                                update(s,s1);
+                                opcSet(s1);
                             }
                             else
                             {
