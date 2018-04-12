@@ -1255,39 +1255,12 @@ bool Manager::updateModule()
 
 bool Manager::writeStructToMat(const string& name, const vector< vector< pair<string,Vector> > >& keypoints_skel)
 {
-    const char *fields[numKeypoints] =
+    const char *fields[numKeypoints];
+    for(int i=0; i<numKeypoints; i++)
     {
-        KeyPointTag::shoulder_center.c_str(),
-        KeyPointTag::head.c_str(),
-        KeyPointTag::shoulder_left.c_str(),
-        KeyPointTag::elbow_left.c_str(),
-        KeyPointTag::hand_left.c_str(),
-        KeyPointTag::shoulder_right.c_str(),
-        KeyPointTag::elbow_right.c_str(),
-        KeyPointTag::hand_right.c_str(),
-//        KeyPointTag::hip_center.c_str(),
-        KeyPointTag::hip_left.c_str(),
-        KeyPointTag::knee_left.c_str(),
-        KeyPointTag::ankle_left.c_str(),
-        KeyPointTag::hip_right.c_str(),
-        KeyPointTag::knee_right.c_str(),
-        KeyPointTag::ankle_right.c_str()
-
-//        KeyPointTag::elbow_left.c_str(),
-//        KeyPointTag::elbow_right.c_str(),
-//        KeyPointTag::hand_left.c_str(),
-//        KeyPointTag::hand_right.c_str(),
-//        KeyPointTag::head.c_str(),
-//        KeyPointTag::shoulder_center.c_str(),
-//        KeyPointTag::shoulder_left.c_str(),
-//        KeyPointTag::shoulder_right.c_str(),
-//        KeyPointTag::hip_left.c_str(),
-//        KeyPointTag::hip_right.c_str(),
-//        KeyPointTag::knee_left.c_str(),
-//        KeyPointTag::knee_right.c_str(),
-//        KeyPointTag::ankle_left.c_str(),
-//        KeyPointTag::ankle_right.c_str()
-    };
+//        cout << i << " " << keypoints_skel[0][i].first.c_str() << endl;
+        fields[i]=keypoints_skel[0][i].first.c_str();
+    }
 
     matvar_t *field;
 
