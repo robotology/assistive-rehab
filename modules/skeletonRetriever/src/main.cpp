@@ -492,16 +492,19 @@ class Retriever : public RFModule
                     if ((depth.width()>0) && (depth.height()>0) && (b3!=nullptr))
                     {
                         MetaSkeleton s=create(b3);
-                        if (MetaSkeleton *s1=isTracked(s))
+                        if (isValid(s))
                         {
-                            update(s,*s1);
-                            opcSet(*s1);
-                            doViewerUpdate=true;
-                        }
-                        else if (isValid(s))
-                        {
-                            opcAdd(s);
-                            skeletons.push_back(s);
+                            if (MetaSkeleton *s1=isTracked(s))
+                            {
+                                update(s,*s1);
+                                opcSet(*s1);
+                            }
+                            else
+                            {
+                                opcAdd(s);
+                                skeletons.push_back(s);
+                            }
+
                             doViewerUpdate=true;
                         }
                     }
