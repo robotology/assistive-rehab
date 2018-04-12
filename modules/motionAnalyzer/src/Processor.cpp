@@ -53,7 +53,7 @@ bool Processor::isStatic(const KeyPoint& keypoint)
 
 void Processor::update(const SkeletonWaist &curr_skeleton_)
 {
-    curr_skeleton = curr_skeleton_;
+    curr_skeleton.update(curr_skeleton_.get_unordered());
 }
 
 bool Processor::isDeviatingFromIntialPose()
@@ -167,7 +167,7 @@ Rom_Processor::Rom_Processor(const Metric *rom_)
 
 void Rom_Processor::setInitialConf(const SkeletonWaist &skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_)
 {
-    skeleton_init = skeleton_init_;
+    skeleton_init.update(skeleton_init_.get_unordered());
     keypoints2conf = keypoints2conf_;
 }
 
