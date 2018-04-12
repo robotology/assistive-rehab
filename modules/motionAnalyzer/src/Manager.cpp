@@ -102,6 +102,8 @@ bool Manager::loadInitialConf(const string& motion_repertoire_file)
 
     if(!bGeneral.isNull())
     {
+//        initial_keypoints.clear();
+
 //        nmovements = bGeneral.find("number_movements").asInt();
         if(Bottle *bElbowLeft_init = bGeneral.find("elbow_left_init_pose").asList())
         {
@@ -243,13 +245,13 @@ bool Manager::loadInitialConf(const string& motion_repertoire_file)
         else
             yError() << "Could not load initial pose for ankle right";
 
-        skeletonInit.update_fromstd(initial_keypoints);
+        skeletonInit.update(initial_keypoints);
     }
 
     return true;
 }
 
-bool Manager::loadInitialConf(const Bottle& b)
+bool Manager::loadInitialConf(const Bottle& b, const string & tag)
 {
     if(Bottle *bElbowLeft_init = b.find("elbow_left_init_pose").asList())
     {
@@ -447,7 +449,7 @@ bool Manager::loadInitialConf(const Bottle& b)
         yInfo() << "Updated initial pose for ankle right";
     }
 
-    skeletonInit.update_fromstd(initial_keypoints);
+    skeletonInit.update(initial_keypoints);
     return true;
 }
 
@@ -472,6 +474,7 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                 {
                     string curr_tag = motion_tag->get(i).asString();
                     int motion_number = n_motion_tag->get(i).asInt();
+//                    skeletonsInit.resize(motion_number);
 
                     for(int j=0; j<motion_number; j++)
                     {
@@ -512,7 +515,9 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
 //                                metrics.push_back(newMetric);
 
                                 //overwrites initial configuration if different
-                                loadInitialConf(bMotion);
+                                loadInitialConf(bMotion, curr_tag+"_"+to_string(j));
+                                skeletonInit.setTag(curr_tag+"_"+to_string(j));
+                                skeletonsInit.push_back(&skeletonInit);
 
                                 Bottle *elbowLC = bMotion.find("elbow_left_configuration").asList();
                                 if(elbowLC)
@@ -694,9 +699,13 @@ bool Manager::loadSequence(const string &sequencer_file)
 
                         metrics[i] = motion_repertoire.at(metric_tag);
                         metrics[i]->print();
+                        for(int j=0; j<skeletonsInit.size(); j++)
+                            skeletonsInit[j]->print();
 
                         Processor* newProcessor = createProcessor(metric_tag, metrics[i]);
-                        newProcessor->setInitialConf(skeletonInit, metrics[i]->getInitialConf());
+//                        skeletonsInit[i]->print();
+                        newProcessor->setInitialConf(*skeletonsInit[i], metrics[i]->getInitialConf());
+//                        newProcessor->setInitialConf(skeletonInit, metrics[i]->getInitialConf());
                         processors[i] = newProcessor;
                     }
                 }
@@ -979,8 +988,9 @@ void Manager::getSkeleton()
                                 if (prop.check("tag"))
                                 {
                                     Skeleton* skeleton = factory(prop);
-                                    skeletonIn.update_fromstd(skeleton->get_unordered()) ;
-//                                    skeletonIn->print();
+//                                    skeleton->print();
+                                    skeletonIn.update_fromstd(skeleton->toProperty()) ;
+//                                    skeletonIn.print();
                                     all_keypoints.push_back(skeletonIn.get_unordered());
 
                                     delete skeleton;
@@ -1066,6 +1076,9 @@ bool Manager::close()
     for(int i=0; i<processors.size(); i++)
         delete processors[i];
 
+    for(int i=0; i<skeletonsInit.size(); i++)
+        delete skeletonsInit[i];
+
     yInfo() << "Freed memory";
 
     opcPort.close();
@@ -1081,7 +1094,7 @@ bool Manager::close()
 /********************************************************/
 double Manager::getPeriod()
 {
-    return 0.01;
+    return 5.0; // 0.01;
 }
 
 /********************************************************/
@@ -1090,52 +1103,57 @@ bool Manager::updateModule()
     //if we query the database
     if(opcPort.getOutputCount() > 0)
     {
-        //update time array
-        time_samples.push_back(Time::now());
-
         //get skeleton and normalize
         getSkeleton();
 
-//        skeletonIn.print();
-        skeletonIn.normalize();
-
-        Vector result;
-        result.resize(processors.size());
-        for(int i=0; i<processors.size(); i++)
+        if(skeletonIn.getTag() != "")
         {
-            processors[i]->update(skeletonIn);
-            if(processors[i]->isDeviatingFromIntialPose())
-                yWarning() << "Deviating from initial pose\n";
-
-            result[i] = processors[i]->computeMetric();
-        }
-
-        //write on output port
-        Bottle &scopebottleout = scopePort.prepare();
-        scopebottleout.clear();
-        scopebottleout.addDouble(result[result.size()-1]);
-        scopebottleout.addDouble(metrics[result.size()-1]->getMin());
-        scopebottleout.addDouble(metrics[result.size()-1]->getMax());
-        scopePort.write();
+            //update time array
+            time_samples.push_back(Time::now());
 
 
-        tend_session = Time::now();
-        if(tend_session-tstart_session > 5.0)
-            finishedSession = true;
+            //        skeletonIn.print();
+            skeletonIn.normalize();
 
-        if(finishedSession)
-        {
-            yInfo() << "Writing to file";
-            if(writeKeypointsToFile())
+            Vector result;
+            result.resize(processors.size());
+            for(int i=0; i<processors.size(); i++)
             {
-                time_samples.clear();
-                all_keypoints.clear();
+                processors[i]->update(skeletonIn);
+                if(processors[i]->isDeviatingFromIntialPose())
+                    yWarning() << "Deviating from initial pose\n";
+
+                result[i] = processors[i]->computeMetric();
             }
 
-            finishedSession = false;
-            tstart_session = tend_session;
+            //write on output port
+            Bottle &scopebottleout = scopePort.prepare();
+            scopebottleout.clear();
+            scopebottleout.addDouble(result[result.size()-1]);
+            scopebottleout.addDouble(metrics[result.size()-1]->getMin());
+            scopebottleout.addDouble(metrics[result.size()-1]->getMax());
+            scopePort.write();
+
+
+            tend_session = Time::now();
+            if(tend_session-tstart_session > 5.0)
+                finishedSession = true;
+
+            if(finishedSession)
+            {
+                //            yInfo() << "Writing to file";
+                //            if(writeKeypointsToFile())
+                //            {
+                //                time_samples.clear();
+                //                all_keypoints.clear();
+                //            }
+
+                finishedSession = false;
+                tstart_session = tend_session;
+            }
         }
     }
+
 
 //    Bottle *input = testPort.read();
 //    for (int i=0; i<input->size(); i++)
