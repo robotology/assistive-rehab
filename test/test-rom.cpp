@@ -69,13 +69,21 @@ class TestRom : public RFModule
         if(isMoving())
         {
             vector< Vector > p;
-            vector<KeyPoint> children;
+            vector<const KeyPoint*> children;
 
             generateTarget(p, children);
 
             vector<pair<string,Vector>> unordered=skeleton.get_unordered();
-            for(int i=0; i<children.size(); i++)
-                unordered.push_back(make_pair(children[i].getTag(),p[i]));
+            for(int i=0; i<unordered.size(); i++)
+            {
+                for(int j=0; j<children.size(); j++)
+                {
+//                    cout << children[j]->getTag().c_str() << " " << children[j]->getPoint()[0] << " " <<
+//                            children[j]->getPoint()[1] << " " << children[j]->getPoint()[2] << endl;
+                    if(unordered[i].first == children[j]->getTag().c_str())
+                        unordered[i] = make_pair(children[j]->getTag(),p[j]);
+                }
+            }
 
             skeleton.update(unordered);
         }
@@ -161,31 +169,34 @@ class TestRom : public RFModule
         p[1]=pos->get(1).asDouble();
         p[2]=pos->get(2).asDouble();
 
-        unordered.push_back(make_pair(joint_test_,p));
+        for(int i=0; i<unordered.size(); i++)
+        {
+            if(unordered[i].first == joint_test_.c_str())
+                unordered[i] = make_pair(joint_test_.c_str(),p);
+        }
         skeleton.update(unordered);
     }
 
-    void generateTarget(vector< Vector > &p, vector<KeyPoint> &children)
+    void generateTarget(vector< Vector > &p, vector<const KeyPoint*> &children)
     {
         double t=Time::now()-t0;
         double theta = 2*M_PI*0.1*t;
 
-        Vector c;
-        int numchild;
+        Vector c(skeleton[joint]->getPoint());
+        int numchild = skeleton[joint]->getNumChild();
         int totnumchild=0;
 
-        c=skeleton[joint]->getPoint();
-        numchild = skeleton[joint]->getNumChild();
         totnumchild+=numchild;
         for(int j=0; j<numchild; j++)
         {
-            const KeyPoint* keypoint=skeleton[joint]->getChild(j);
-            children.push_back(*keypoint);
+            const KeyPoint *keypoint=skeleton[joint]->getChild(j);
+            children.push_back(keypoint);
+
             int numchild2=skeleton[keypoint->getTag()]->getNumChild();
             if(numchild2)
             {
                 const KeyPoint* keypoint2=skeleton[keypoint->getTag()]->getChild(0);
-                children.push_back(*keypoint2);
+                children.push_back(keypoint2);
                 totnumchild+=numchild2;
             }
         }

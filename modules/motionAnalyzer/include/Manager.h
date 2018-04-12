@@ -50,9 +50,9 @@ class Manager : public RFModule,
     vector<pair<string,Vector>> curr_keypoints;
     vector< vector <pair<string,Vector>> > all_keypoints;
     vector<double> time_samples;
-    SkeletonWaist initial_skeleton;
+    SkeletonWaist skeletonInit;
 
-    Skeleton skeletonIn;
+    SkeletonWaist skeletonIn;
 
     map<string, pair<string,double>> keypoints2conf;
 

@@ -243,7 +243,7 @@ bool Manager::loadInitialConf(const string& motion_repertoire_file)
         else
             yError() << "Could not load initial pose for ankle right";
 
-        initial_skeleton.update(initial_keypoints);
+        skeletonInit.update_fromstd(initial_keypoints);
     }
 
     return true;
@@ -447,7 +447,7 @@ bool Manager::loadInitialConf(const Bottle& b)
         yInfo() << "Updated initial pose for ankle right";
     }
 
-    initial_skeleton.update(initial_keypoints);
+    skeletonInit.update_fromstd(initial_keypoints);
     return true;
 }
 
@@ -696,7 +696,7 @@ bool Manager::loadSequence(const string &sequencer_file)
                         metrics[i]->print();
 
                         Processor* newProcessor = createProcessor(metric_tag, metrics[i]);
-                        newProcessor->setInitialConf(initial_skeleton, metrics[i]->getInitialConf());
+                        newProcessor->setInitialConf(skeletonInit, metrics[i]->getInitialConf());
                         processors[i] = newProcessor;
                     }
                 }
@@ -978,10 +978,12 @@ void Manager::getSkeleton()
                             {
                                 if (prop.check("tag"))
                                 {
-                                    Skeleton* skeleton(factory(prop));
-                                    skeletonIn = *skeleton;
+                                    Skeleton* skeleton = factory(prop);
+                                    skeletonIn.update_fromstd(skeleton->get_unordered()) ;
 //                                    skeletonIn->print();
                                     all_keypoints.push_back(skeletonIn.get_unordered());
+
+                                    delete skeleton;
                                 }
                             }
                         }
@@ -1063,6 +1065,7 @@ bool Manager::close()
 
     for(int i=0; i<processors.size(); i++)
         delete processors[i];
+
     yInfo() << "Freed memory";
 
     opcPort.close();
@@ -1101,8 +1104,8 @@ bool Manager::updateModule()
         for(int i=0; i<processors.size(); i++)
         {
             processors[i]->update(skeletonIn);
-//            if(processors[i]->isDeviatingFromIntialPose())
-//                yWarning() << "Deviating from initial pose\n";
+            if(processors[i]->isDeviatingFromIntialPose())
+                yWarning() << "Deviating from initial pose\n";
 
             result[i] = processors[i]->computeMetric();
         }
@@ -1147,21 +1150,25 @@ bool Manager::updateModule()
 //                {
 //                    if (prop.check("tag"))
 //                    {
-//                        Skeleton* skeleton(factory(prop));
+//                        Skeleton* skeleton = factory(prop);
 //                        //                        skeleton->print();
+//                        SkeletonWaist skeletonFromProp;
+//                        skeletonFromProp.update_fromstd(skeleton->get_unordered());
 
-//                        skeleton->normalize();
+//                        skeletonFromProp.normalize();
 
 //                        Vector result;
 //                        result.resize(processors.size());
 //                        for(int i=0; i<processors.size(); i++)
 //                        {
-//                            processors[i]->update(*skeleton);
-////                            if(processors[i]->isDeviatingFromIntialPose())
-////                                yWarning() << "Deviating from initial pose\n";
+//                            processors[i]->update(skeletonFromProp);
+//                            if(processors[i]->isDeviatingFromIntialPose())
+//                                yWarning() << "Deviating from initial pose\n";
 
 //                            result[i] = processors[i]->computeMetric();
 //                        }
+
+//                        delete skeleton;
 
 //                        //write on output port
 //                        Bottle &scopebottleout = scopePort.prepare();
