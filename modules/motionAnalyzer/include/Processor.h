@@ -49,6 +49,7 @@ public:
     void update(SkeletonWaist& curr_skeleton_);
     bool isDeviatingFromIntialPose();
     bool isDeviatingFromIntialPose(const KeyPoint &keypoint, const KeyPoint &keypoint_init);
+    bool isOutOfSphere(const KeyPoint& keypoint, const KeyPoint& keypoint_init);
     virtual double computeMetric() { return 0.0; }
     virtual string getProcessedMetric() = 0;
     virtual double getTimeout() const = 0;
