@@ -416,10 +416,10 @@ class Retriever : public RFModule
         keys_recognition_confidence=0.3;
         keys_recognition_percentage=0.4;
         keys_acceptable_misses=5;
-        tracking_threshold=30;
+        tracking_threshold=50;
         time_to_live=1.0;
         filter_enable=true;
-        filter_order=5;
+        filter_order=3;
 
         // retrieve values from config file
         Bottle &gGeneral=rf.findGroup("general");
