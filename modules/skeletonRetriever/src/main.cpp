@@ -161,23 +161,24 @@ class Retriever : public RFModule
     /****************************************************************/
     bool getPoint3D(const int u, const int v, Vector &p) const
     {
-        double f=depth.width()/(2.0*tan(fov_h*(M_PI/180.0)/2.0));
-        double d=depth(u,v);
-        if ((d>0.0) && (f>0.0))
+        if ((u>=0) && (u<depth.width()) && (v>=0) && (v<depth.height()))
         {
-            double x=u-0.5*(depth.width()-1);
-            double y=v-0.5*(depth.height()-1);
+            double f=depth.width()/(2.0*tan(fov_h*(M_PI/180.0)/2.0));
+            double d=depth(u,v);
+            if ((d>0.0) && (f>0.0))
+            {
+                double x=u-0.5*(depth.width()-1);
+                double y=v-0.5*(depth.height()-1);
 
-            p=d*ones(3);
-            p[0]*=x/f;
-            p[1]*=y/f;
+                p=d*ones(3);
+                p[0]*=x/f;
+                p[1]*=y/f;
 
-            return true;
+                return true;
+            }
         }
-        else
-        {
-            return false;
-        }
+        
+        return false;
     }
 
     /****************************************************************/
