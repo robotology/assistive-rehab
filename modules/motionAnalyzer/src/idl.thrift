@@ -14,9 +14,15 @@ service motionAnalyzer_IDL
 {
 
    /**
-   * Load calibration from file.
+   * Load motion repertoire from file.
    * @return true/false on success/failure.
    */
-   bool load();
+   bool loadMotionList(1:string motion_repertoire_file);
+
+   /**
+   * Load sequence from file.
+   * @return true/false on success/failure.
+   */
+   bool loadSequence(1:string sequencer_file);
 
 }

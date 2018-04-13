@@ -12,8 +12,6 @@
 
 #include "Processor.h"
 
-#define CONST (4/3)*M_PI
-
 using namespace std;
 using namespace yarp::math;
 using namespace assistive_rehab;
@@ -37,11 +35,13 @@ Processor::Processor()
 
 }
 
-//void Processor::setInitialConf(const SkeletonStd &skeleton_init_, const map<string, string> &keypoints2conf_)
-//{
-//    skeleton_init = skeleton_init_;
-//    keypoints2conf = keypoints2conf_;
-//}
+void Processor::setInitialConf(const SkeletonWaist &skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_)
+{
+    skeleton_init.update(skeleton_init_.get_unordered());
+    keypoints2conf = keypoints2conf_;
+
+//    skeleton_init.print();
+}
 
 bool Processor::isStatic(const KeyPoint& keypoint)
 {
@@ -51,107 +51,100 @@ bool Processor::isStatic(const KeyPoint& keypoint)
         return false;
 }
 
-void Processor::update(const SkeletonWaist &curr_skeleton_)
+void Processor::update(SkeletonWaist &curr_skeleton_)
 {
-    curr_skeleton.update(curr_skeleton_.get_unordered());
+    curr_skeleton.update_fromstd(curr_skeleton_.toProperty());
+//    curr_skeleton.update_fromstd(curr_skeleton_.get_unordered());
 }
 
 bool Processor::isDeviatingFromIntialPose()
 {
     bool isDeviating = false;
+//    for(unsigned int i=0; i<curr_skeleton.getNumKeyPoints(); i++)
+//    {
+//        if(isStatic(*curr_skeleton[i]) && curr_skeleton[i]->isUpdated() && isDeviatingFromIntialPose(*curr_skeleton[i], *skeleton_init[i]))
+//        {
+//            isDeviating = true;
+//            yWarning() << curr_skeleton[i]->getTag() << "deviating from initial pose";
+//        }
+//    }
+
     for(unsigned int i=0; i<curr_skeleton.getNumKeyPoints(); i++)
     {
-        //get current keypoint
-        const KeyPoint* keypoint = curr_skeleton[i];
-        const KeyPoint* keypoint_init = skeleton_init[i];
-
-        if(isStatic(*keypoint) && isDeviatingFromIntialPose(*keypoint, *keypoint_init))
+        if(curr_skeleton[i]->isUpdated() && curr_skeleton[i]->getTag() != KeyPointTag::hip_center)
         {
-            isDeviating = true;
-//            yWarning() << "Deviating from initial pose";
+            if(isStatic(*curr_skeleton[i]) && isDeviatingFromIntialPose(*curr_skeleton[i], *skeleton_init[i]))
+            {
+                isDeviating = true;
+                yWarning() << curr_skeleton[i]->getTag() << "deviating from initial pose";
+            }
+//            else if(!isStatic(*curr_skeleton[i]) && isDeviatingFromIntialPose(*curr_skeleton[i], *skeleton_init[i]))
+//            {
+//                isDeviating = true;
+//                yWarning() << curr_skeleton[i]->getTag() << "is not in the correct position";
+//            }
         }
     }
 
     return isDeviating;
 }
 
+bool Processor::isOutOfSphere(const KeyPoint& keypoint, const KeyPoint& keypoint_init)
+{
+    Vector curr_kp(keypoint.getPoint()), curr_kp_init(keypoint_init.getPoint());
+    double deviation = norm(curr_kp-curr_kp_init);
+
+    yInfo() << keypoint.getTag().c_str() << deviation;
+    return (deviation > keypoints2conf[keypoint.getTag()].second);
+}
+
 bool Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyPoint& keypoint_init)
 {
-    bool isDeviating = false;
-    Vector curr_kp, curr_kp_parent, curr_kp_child,
-            curr_kp_init, curr_kp_parent_init, curr_kp_child_init;
-    curr_kp.resize(3);
-    curr_kp_parent.resize(3);
-    curr_kp_child.resize(3);
-    curr_kp_init.resize(3);
-    curr_kp_parent_init.resize(3);
-    curr_kp_child_init.resize(3);
+    Vector curr_kp(keypoint.getPoint()), curr_kp_init(keypoint_init.getPoint());
+    Vector curr_pose, initial_pose;
 
-    curr_kp = keypoint.getPoint();
-    curr_kp_init = keypoint_init.getPoint();
-
-    int nParents = keypoint.getNumParent();
-    int nChildren = keypoint.getNumChild();
-    if(nParents)
+    //if the current keypoint has child and parent
+    if(keypoint.getNumChild() && keypoint.getNumParent())
     {
-        for(int j=0; j<nParents; j++)
-        {
-            //standard skeleton
-            const KeyPoint* keypoint_parent = keypoint.getParent(j);
-            curr_kp_parent = keypoint_parent->getPoint();
+        Vector curr_kp_parent = keypoint.getParent(0)->getPoint();
+        Vector curr_kp_child = keypoint.getChild(0)->getPoint();
 
-            //initial standard skeleton
-            const KeyPoint* keypoint_parent_init = keypoint_init.getParent(j);
-            curr_kp_parent_init = keypoint_parent_init->getPoint();
+        Vector curr_kp_parent_init = keypoint_init.getParent(0)->getPoint();
+        Vector curr_kp_child_init = keypoint_init.getChild(0)->getPoint();
 
-            if(nChildren)
-            {
-                for(int k=0; k<nChildren; k++)
-                {
-                    const KeyPoint* keypoint_child = keypoint.getChild(k);
-                    curr_kp_child = keypoint_child->getPoint();
-
-                    const KeyPoint* keypoint_child_init = keypoint_init.getChild(k);
-                    curr_kp_child_init = keypoint_child_init->getPoint();
-
-                    //compute deviation from initial pose
-                    Vector curr_pose = curr_kp + curr_kp_parent + curr_kp_child;
-                    Vector initial_pose = curr_kp_init + curr_kp_parent_init + curr_kp_child_init;
-                    double deviation = fabs(fabs(curr_pose[0]+curr_pose[1]+curr_pose[2])-fabs(initial_pose[0]+initial_pose[1]+initial_pose[2]));
-
-//                    cout << keypoint.getTag() << " " << keypoint_child->getTag() << " " << keypoint_parent->getTag() << " "
-//                         << "(" << curr_kp[0] << " " << curr_kp[1] << " " << curr_kp[2] << ") "
-//                         << "(" << curr_kp_child[0] << " " << curr_kp_child[1] << " " << curr_kp_child[2] << ") "
-//                         << "(" << curr_kp_parent[0] << " " << curr_kp_parent[1] << " " << curr_kp_parent[2] << ") "
-//                         << curr_pose[0] << " " << curr_pose[1] << " " << curr_pose[2] << " "
-//                         << initial_pose[0] << " " << initial_pose[1] << " " << initial_pose[2]
-//                         << " " << deviation << endl;
-
-                    if((deviation) > CONST*keypoints2conf[keypoint.getTag()].second)
-                    {
-                        isDeviating = true;
-                    }
-                }
-            }
-            else
-            {
-                //compute deviation from initial pose
-                Vector curr_pose = curr_kp + curr_kp_parent + curr_kp_child;
-                Vector initial_pose = curr_kp_init + curr_kp_parent_init + curr_kp_child_init;
-                double deviation = fabs(fabs(curr_pose[0]+curr_pose[1]+curr_pose[2])-fabs(initial_pose[0]+initial_pose[1]+initial_pose[2]));
-
-//                cout << keypoint.getTag() << " " << deviation << endl;
-
-                if((deviation) > CONST*keypoints2conf[keypoint.getTag()].second)
-                {
-                    isDeviating = true;
-                }
-            }
-        }
+        curr_pose = curr_kp + curr_kp_parent + curr_kp_child;
+        initial_pose = curr_kp_init + curr_kp_parent_init + curr_kp_child_init;
     }
-//    cout << endl;
+    else if(keypoint.getNumParent()) //if the current keypoint has parent and not child
+    {
+        Vector curr_kp_parent = keypoint.getParent(0)->getPoint();
+        Vector curr_kp_parent_init = keypoint_init.getParent(0)->getPoint();
 
-    return isDeviating;
+        curr_pose = curr_kp + curr_kp_parent;
+        initial_pose = curr_kp_init + curr_kp_parent_init;
+    }
+    else
+    {
+        curr_pose = curr_kp;
+        initial_pose = curr_kp_init;
+    }
+
+//    curr_skeleton.print();
+    double deviation = norm(curr_pose-initial_pose);
+//    Vector dev = curr_pose-initial_pose;
+//    double deviation = dev[0]+dev[1]+dev[2];
+    //    if(deviation > keypoints2conf[keypoint.getTag()].second)
+//    {
+        yInfo() << keypoint.getTag().c_str()
+    //            << "(" << curr_kp[0] << "," << curr_kp[1] << "," << curr_kp[2] << ")"
+    //            << "(" << curr_kp_parent[0] << "," << curr_kp_parent[1] << "," << curr_kp_parent[2] << ")"
+    //            << "(" << curr_kp_child[0] << "," << curr_kp_child[1] << "," << curr_kp_child[2] << ")"
+                << "(" << curr_pose[0] << "," << curr_pose[1] << "," << curr_pose[2] << ")"
+                << "(" << initial_pose[0] << "," << initial_pose[1] << "," << initial_pose[2] << ")"
+                << deviation;
+//    }
+
+    return(deviation > keypoints2conf[keypoint.getTag()].second);
 }
 
 /********************************************************/
@@ -165,24 +158,25 @@ Rom_Processor::Rom_Processor(const Metric *rom_)
     rom = (Rom*)rom_;
 }
 
-void Rom_Processor::setInitialConf(const SkeletonWaist &skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_)
-{
-    skeleton_init.update(skeleton_init_.get_unordered());
-    keypoints2conf = keypoints2conf_;
-}
+//void Rom_Processor::setInitialConf(const SkeletonWaist &skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_)
+//{
+//    skeleton_init.update(skeleton_init_.get_unordered());
+//    keypoints2conf = keypoints2conf_;
+//}
 
 double Rom_Processor::computeMetric()
 {
     //get reference keypoint from skeleton
     string tag_joint = rom->getTagJoint();
-    const KeyPoint *keypoint_ref = curr_skeleton[tag_joint];
-    Vector kp_ref = keypoint_ref->getPoint();
+
+//    cout << "compute metric for " << tag_joint.c_str() << endl;
+    Vector kp_ref = curr_skeleton[tag_joint]->getPoint();
 
     Vector v1;
-    if(keypoint_ref->getNumChild())
+    double theta;
+    if(curr_skeleton[tag_joint]->getNumChild())
     {
-        const KeyPoint *keypoint_child = keypoint_ref->getChild(0);
-        Vector kp_child = keypoint_child->getPoint();
+        Vector kp_child = curr_skeleton[tag_joint]->getChild(0)->getPoint();
 
         Vector plane_normal = rom->getPlane();
         v1 = kp_child-kp_ref;
@@ -194,7 +188,15 @@ double Rom_Processor::computeMetric()
         double v1_norm = norm(v1);
         double v2_norm = norm(ref_dir);
         double dot_p = dot(v1, ref_dir);
-        return ( acos(dot_p/(v1_norm*v2_norm)) * (180/M_PI) );
+
+        //        double minval = rom->getMinVal() * (M_PI/180);
+        //        double maxval = rom->getMaxVal() * (M_PI/180);
+        //        double range = M_PI;
+        //        double scale = (maxval-minval)/range;
+        //        theta = scale*acos(dot_p/(v1_norm*v2_norm))+minval;
+        theta = acos(dot_p/(v1_norm*v2_norm));
+
+        return ( theta * (180/M_PI) );
     }
     else
     {
