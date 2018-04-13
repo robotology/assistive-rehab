@@ -1086,8 +1086,8 @@ bool Manager::close()
 
     delete skeletonInit;
 
-    for(int i=0; i<skeletonsInit.size(); i++)
-        delete skeletonsInit[i];
+//    for(int i=0; i<skeletonsInit.size(); i++)
+//        delete skeletonsInit[i];
 
     yInfo() << "Freed memory";
 
