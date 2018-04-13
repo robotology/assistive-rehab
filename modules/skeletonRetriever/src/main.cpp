@@ -51,6 +51,7 @@ public:
     int opc_id;
     shared_ptr<SkeletonWaist> skeleton;
     vector<int> keys_acceptable_misses;
+    Vector pivot;
 
     /****************************************************************/
     MetaSkeleton(const double t, const bool filter_enable_,
@@ -59,6 +60,7 @@ public:
     {
         skeleton=shared_ptr<SkeletonWaist>(new SkeletonWaist());
         keys_acceptable_misses.assign(skeleton->getNumKeyPoints(),0);
+        pivot=-1.0*ones(2);
 
         if (filter_enable)
         {
@@ -125,7 +127,7 @@ class Retriever : public RFModule
     double keys_recognition_confidence;
     double keys_recognition_percentage;
     int keys_acceptable_misses;
-    double tracking_threshold;
+    int tracking_threshold;
     double time_to_live;
     bool filter_enable;
     int filter_order;
@@ -205,6 +207,11 @@ class Retriever : public RFModule
                         {
                             hips.push_back(p);
                         }
+                        else if (keysRemap[tag]==KeyPointTag::shoulder_center)
+                        {
+                            s->pivot[0]=u;
+                            s->pivot[1]=v;
+                        }
                     }
                 }
             }
@@ -230,8 +237,9 @@ class Retriever : public RFModule
             {
                 const Vector &p=key->getPoint();
                 unordered.push_back(make_pair(key->getTag(),p));
+                if (dest->keys_acceptable_misses[i]==0)
+                    dest->init(key->getTag(),p);
                 dest->keys_acceptable_misses[i]=keys_acceptable_misses;
-                dest->init(key->getTag(),p);
             }
             else if (dest->keys_acceptable_misses[i]>0)
             {
@@ -242,11 +250,17 @@ class Retriever : public RFModule
 
         dest->update(unordered);
         dest->timer=time_to_live;
+        dest->pivot=src->pivot;
     }
 
     /****************************************************************/
     bool isValid(const shared_ptr<MetaSkeleton> &s) const
     {
+        if ((s->pivot[0]<0.0) || (s->pivot[1]<0.0))
+        {
+            return false;
+        }
+
         unsigned int n=0;
         for (unsigned int i=0; i<s->skeleton->getNumKeyPoints(); i++)
         {
@@ -265,29 +279,11 @@ class Retriever : public RFModule
                                  const shared_ptr<MetaSkeleton> &n)
     {
         vector<double> scores;
-        auto &nsk=*(n->skeleton);
         for (auto &s:c)
         {
-            double mean=0.0; int num=0;
-            auto &csk=*(s->skeleton);
-            for (unsigned int j=0; j<csk.getNumKeyPoints(); j++)
-            {
-                if (csk[j]->isUpdated() && nsk[j]->isUpdated())
-                {
-                    mean+=norm(csk[j]->getPoint()-nsk[j]->getPoint());
-                }
-                num++;
-            }
-            if (num>0)
-            {
-                mean/=num;
-                if (mean<tracking_threshold)
-                {
-                    scores.push_back(mean);
-                    continue;
-                }
-            }
-            scores.push_back(numeric_limits<double>::infinity());
+            double dist=norm(s->pivot-n->pivot);
+            scores.push_back((dist<tracking_threshold)?dist:
+                             numeric_limits<double>::infinity());
         }
 
         return scores;
@@ -420,10 +416,10 @@ class Retriever : public RFModule
         keys_recognition_confidence=0.3;
         keys_recognition_percentage=0.4;
         keys_acceptable_misses=5;
-        tracking_threshold=0.5;
+        tracking_threshold=50;
         time_to_live=1.0;
         filter_enable=true;
-        filter_order=8;
+        filter_order=3;
 
         // retrieve values from config file
         Bottle &gGeneral=rf.findGroup("general");
@@ -438,7 +434,7 @@ class Retriever : public RFModule
             keys_recognition_confidence=gSkeleton.check("key-recognition-confidence",keys_recognition_confidence).asDouble();
             keys_recognition_percentage=gSkeleton.check("key-recognition-percentage",keys_recognition_percentage).asDouble();
             keys_acceptable_misses=gSkeleton.check("keys-acceptable-misses",keys_acceptable_misses).asInt();
-            tracking_threshold=gSkeleton.check("tracking-threshold",tracking_threshold).asDouble();
+            tracking_threshold=gSkeleton.check("tracking-threshold",tracking_threshold).asInt();
             time_to_live=gSkeleton.check("time-to-live",time_to_live).asDouble();
         }
 
