@@ -60,16 +60,41 @@ void Processor::update(SkeletonWaist &curr_skeleton_)
 bool Processor::isDeviatingFromIntialPose()
 {
     bool isDeviating = false;
+//    for(unsigned int i=0; i<curr_skeleton.getNumKeyPoints(); i++)
+//    {
+//        if(isStatic(*curr_skeleton[i]) && curr_skeleton[i]->isUpdated() && isDeviatingFromIntialPose(*curr_skeleton[i], *skeleton_init[i]))
+//        {
+//            isDeviating = true;
+//            yWarning() << curr_skeleton[i]->getTag() << "deviating from initial pose";
+//        }
+//    }
+
     for(unsigned int i=0; i<curr_skeleton.getNumKeyPoints(); i++)
     {
-        if(isStatic(*curr_skeleton[i]) && curr_skeleton[i]->isUpdated() && isDeviatingFromIntialPose(*curr_skeleton[i], *skeleton_init[i]))
+        if(curr_skeleton[i]->isUpdated())
         {
-            isDeviating = true;
-            yWarning() << curr_skeleton[i]->getTag() << "deviating from initial pose";
+            if(isStatic(*curr_skeleton[i]) && isOutOfSphere(*curr_skeleton[i], *skeleton_init[i]))
+            {
+                isDeviating = true;
+                yWarning() << curr_skeleton[i]->getTag() << "deviating from initial pose";
+            }
+            else if(!isStatic(*curr_skeleton[i]) && isDeviatingFromIntialPose(*curr_skeleton[i], *skeleton_init[i]))
+            {
+                isDeviating = true;
+                yWarning() << curr_skeleton[i]->getTag() << "is not in the correct position";
+            }
         }
     }
 
     return isDeviating;
+}
+
+bool Processor::isOutOfSphere(const KeyPoint& keypoint, const KeyPoint& keypoint_init)
+{
+    Vector curr_kp(keypoint.getPoint()), curr_kp_init(keypoint_init.getPoint());
+    double deviation = norm(curr_kp-curr_kp_init);
+
+    return (deviation > keypoints2conf[keypoint.getTag()].second);
 }
 
 bool Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyPoint& keypoint_init)
@@ -119,13 +144,7 @@ bool Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyPoi
 //            << "(" << initial_pose[0] << "," << initial_pose[1] << "," << initial_pose[2] << ")"
 //            << deviation;
 
-    if(deviation > keypoints2conf[keypoint.getTag()].second)
-    {
-        yInfo() << deviation;
-        return true;
-    }
-    else
-        return false;
+    return(deviation > keypoints2conf[keypoint.getTag()].second);
 }
 
 /********************************************************/
