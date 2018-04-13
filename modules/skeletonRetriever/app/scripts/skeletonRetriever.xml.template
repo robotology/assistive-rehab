@@ -4,42 +4,42 @@
     <module>
         <name>yarpdev</name>
         <parameters>--context AssistiveRehab --from realsense2.ini</parameters>
-        <node>icub22</node>
+        <node>localhost</node>
     </module>
 
     <module>
         <name>yarpOpenPose</name>
-        <node>icub-cuda</node>
+        <node>localhost</node>
     </module>
 
     <module>
        <name>objectsPropertiesCollector</name>
        <parameters>--name opc --no-load-db --no-save-db --async-bc</parameters>
-       <node>icub21</node>
+       <node>localhost</node>
     </module>
 
     <module>
        <name>skeletonRetriever</name>
        <parameters></parameters>
-       <node>icub21</node>
+       <node>localhost</node>
     </module>
 
     <module>
         <name>yarpview</name>
         <parameters>--name /viewer/depth --x 10 --y 10 --p 50 --compact</parameters>
-        <node>icub22</node>
+        <node>localhost</node>
     </module>
 
     <module>
         <name>yarpview</name>
         <parameters>--name /viewer/skeleton --x 380 --y 10 --p 50 --compact</parameters>
-        <node>icub22</node>
+        <node>localhost</node>
     </module>
 
     <module>
         <name>skeletonViewer</name>
         <parameters>--x 750 --y 10</parameters>
-        <node>icub22</node>
+        <node>localhost</node>
     </module>
 
     <connection>
