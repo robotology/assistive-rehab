@@ -537,27 +537,30 @@ class Viewer : public RFModule
     bool respond(const Bottle &command, Bottle &reply) override
     {
         LockGuard lg(mutex);
-        string cmd=command.get(0).asString();
-
-        if (command.size()>1)
+        if (command.size()>0)
         {
-            Value opt=command.get(1);
-            if (opt.isList())
+            string cmd=command.get(0).asString();
+            if (command.size()>1)
             {
-                if (cmd=="set_camera_position")
-                {                
-                    opt.asList()->write(camera_position);
-                    rpc_command_rx=true;
-                }
-                else if (cmd=="set_camera_focalpoint")
+                Property options;
+                command.tail().write(options);
+                if (cmd=="set_camera")
                 {
-                    opt.asList()->write(camera_focalpoint);
-                    rpc_command_rx=true;
-                }
-                else if (cmd=="set_camera_viewup")
-                {
-                    opt.asList()->write(camera_viewup);
-                    rpc_command_rx=true;
+                    if (options.check("position"))
+                    {
+                        options.find("position").asList()->write(camera_position);
+                        rpc_command_rx=true;
+                    }
+                    if (options.check("focalpoint"))
+                    {
+                        options.find("focalpoint").asList()->write(camera_focalpoint);
+                        rpc_command_rx=true;
+                    }
+                    if (options.check("viewup"))
+                    {
+                        options.find("viewup").asList()->write(camera_viewup);
+                        rpc_command_rx=true;
+                    }
                 }
             }
         }
