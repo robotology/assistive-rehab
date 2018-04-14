@@ -995,7 +995,7 @@ void Manager::getSkeleton()
                             {
                                 if (prop.check("tag"))
                                 {
-                                    Skeleton* skeleton = factory(prop);
+                                    Skeleton* skeleton = skeleton_factory(prop);
 //                                    skeleton->print();
                                     skeletonIn.update_fromstd(skeleton->toProperty()) ;
 //                                    skeletonIn.print();
@@ -1178,7 +1178,7 @@ bool Manager::updateModule()
 //                {
 //                    if (prop.check("tag"))
 //                    {
-//                        Skeleton* skeleton = factory(prop);
+//                        Skeleton* skeleton = skeleton_factory(prop);
 //                        //                        skeleton->print();
 //                        SkeletonWaist skeletonFromProp;
 //                        skeletonFromProp.update_fromstd(skeleton->get_unordered());
