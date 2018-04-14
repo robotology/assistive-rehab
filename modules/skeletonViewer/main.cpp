@@ -228,7 +228,7 @@ public:
         z.resize(3,0.0); z[2]=1.0;
         c_length=0.01;
 
-        skeleton=unique_ptr<Skeleton>(factory(prop));
+        skeleton=unique_ptr<Skeleton>(skeleton_factory(prop));
         if (skeleton!=nullptr)
         {
             vector<vector<double>> colors_code;

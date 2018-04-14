@@ -167,7 +167,7 @@ public:
     virtual void update_fromstd(const yarp::os::Property &prop);
 };
 
-Skeleton *factory(const yarp::os::Property &prop);
+Skeleton *skeleton_factory(const yarp::os::Property &prop);
 
 }
 

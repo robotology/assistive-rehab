@@ -714,7 +714,7 @@ void SkeletonWaist::update_fromstd(const Property &prop)
                                                         tag2key[KeyPointTag::hip_right]->getPoint()));
 }
 
-Skeleton *assistive_rehab::factory(const Property &prop)
+Skeleton *assistive_rehab::skeleton_factory(const Property &prop)
 {
     Skeleton *skeleton=nullptr;
     if (prop.check("type"))

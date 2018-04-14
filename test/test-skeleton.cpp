@@ -118,7 +118,7 @@ int main()
     cout<<endl;
 
     cout<<"### Importing Skeleton's structure"<<endl;
-    unique_ptr<Skeleton> skeleton2(factory(prop));
+    unique_ptr<Skeleton> skeleton2(skeleton_factory(prop));
     cout<<"type = \""<<skeleton2->getType()<<"\""<<endl;
     skeleton2->print();
     cout<<endl;
