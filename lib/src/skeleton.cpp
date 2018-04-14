@@ -674,20 +674,19 @@ bool SkeletonWaist::update_planes()
 
 void SkeletonWaist::update_fromstd(const vector<Vector> &ordered)
 {
+    for (auto &k:keypoints)
+        k->stale();
+
     Vector p(4,1);
     unsigned int i=0;
-    for (auto &k:keypoints)
+    for (auto &v:ordered)
     {
-        k->stale();
-        if (i<ordered.size())
-        {
-            unsigned int pos=(i<waist_pos)?i:i+1;
-            auto &v=ordered[pos];
-            p[0]=v[0];
-            p[1]=v[1];
-            p[2]=v[2];
-            k->setPoint((T*p).subVector(0,2));
-        }
+        unsigned int pos=(i<waist_pos)?i:i+1;
+        auto &k=keypoints[pos];
+        p[0]=v[0];
+        p[1]=v[1];
+        p[2]=v[2];
+        k->setPoint((T*p).subVector(0,2));
         i++;
     }
 
@@ -697,7 +696,7 @@ void SkeletonWaist::update_fromstd(const vector<Vector> &ordered)
     update_planes();
 }
 
-void SkeletonWaist::update_fromstd(const vector<pair<string, Vector>> &unordered)
+void SkeletonWaist::update_fromstd(const vector<pair<string,Vector>> &unordered)
 {
     update(unordered);
     if (tag2key[KeyPointTag::hip_left]->isUpdated() || tag2key[KeyPointTag::hip_right]->isUpdated())

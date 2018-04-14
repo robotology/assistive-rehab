@@ -30,7 +30,8 @@ using namespace assistive_rehab;
 
 class TestViewer : public RFModule
 {
-    SkeletonStd skeleton1,skeleton2;
+    SkeletonStd skeleton1;
+    SkeletonWaist skeleton2;
     double radius,phase,t0;
     BufferedPort<Bottle> port;
 
@@ -129,11 +130,10 @@ class TestViewer : public RFModule
         skeleton1.update(unordered);
 
         Vector rot=skeleton1.getTransverse();
-        rot.push_back(2.0*M_PI*0.1*t);
+        rot.push_back(theta);
         Matrix T=axis2dcm(rot);
-        T.setSubcol(0.4*skeleton1.getCoronal(),0,3);
         skeleton2.setTransformation(T);
-        skeleton2.update(skeleton1.get_ordered());
+        skeleton2.update_fromstd(skeleton1.get_ordered());
 
         Property prop1=skeleton1.toProperty();
         Property prop2=skeleton2.toProperty();
