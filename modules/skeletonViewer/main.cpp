@@ -310,6 +310,8 @@ public:
 
 Mutex mutex;
 vector<Bottle> inputs;
+bool rpc_command_rx;
+Vector camera_position,camera_focalpoint,camera_viewup;
 vtkSmartPointer<vtkRenderer> vtk_renderer;
 unordered_map<string,unique_ptr<VTKSkeleton>> skeletons;
 vector<unordered_map<string,unique_ptr<VTKSkeleton>>::iterator> skeletons_gc_iterators;
@@ -383,6 +385,19 @@ public:
             inputs.clear();
         }
 
+        if (rpc_command_rx)
+        {
+            vtkSmartPointer<vtkCamera> vtk_camera=vtk_renderer->GetActiveCamera();
+            vtk_camera->SetPosition(camera_position.data());
+            vtk_camera->SetFocalPoint(camera_focalpoint.data());
+            vtk_camera->SetViewUp(camera_viewup.data());
+            yInfo()<<"new camera options received:"
+                   <<"position=("<<camera_position.toString(3,3)<<");"
+                   <<"focalpoint=("<<camera_focalpoint.toString(3,3)<<");"
+                   <<"viewup=("<<camera_viewup.toString(3,3)<<");";
+            rpc_command_rx=false;
+        }
+
         if (skeletons_gc_iterators.size()>0)
         {
             for (auto &s:skeletons_gc_iterators)
@@ -421,6 +436,8 @@ class Viewer : public RFModule
         SkeletonsGC(Viewer *viewer_) : RateThread(1000), viewer(viewer_) { }
     } skeletonsGC;
 
+    RpcServer rpcPort;
+
     vtkSmartPointer<vtkRenderWindow> vtk_renderWindow;
     vtkSmartPointer<vtkRenderWindowInteractor> vtk_renderWindowInteractor;
     vtkSmartPointer<vtkAxesActor> vtk_axes;
@@ -431,6 +448,8 @@ class Viewer : public RFModule
     /****************************************************************/
     bool configure(ResourceFinder &rf) override
     {
+        rpc_command_rx=false;
+
         int x=rf.check("x",Value(0)).asInt();
         int y=rf.check("y",Value(0)).asInt();
         int w=rf.check("w",Value(600)).asInt();
@@ -438,6 +457,9 @@ class Viewer : public RFModule
         double gc_period=rf.check("gc-period",Value(1.0)).asDouble();
 
         inputPort.open("/skeletonViewer:i");
+        rpcPort.open("/skeletonViewer:rpc");
+        attach(rpcPort);
+
         skeletonsGC.setRate((int)(gc_period*1000.0));
         skeletonsGC.start();
 
@@ -461,10 +483,14 @@ class Viewer : public RFModule
         vtk_axes->SetTotalLength((0.1*ones(3)).data());
         vtk_renderer->AddActor(vtk_axes);
 
+        camera_position=camera_focalpoint=camera_viewup=zeros(3);
+        camera_position[2]=-2.0;
+        camera_viewup[1]=-1.0;
+
         vtk_camera=vtkSmartPointer<vtkCamera>::New();
-        vtk_camera->SetPosition(0.0,0.0,-2.0);
-        vtk_camera->SetFocalPoint(0.0,0.0,0.0);
-        vtk_camera->SetViewUp(0.0,-1.0,0.0);
+        vtk_camera->SetPosition(camera_position.data());
+        vtk_camera->SetFocalPoint(camera_focalpoint.data());
+        vtk_camera->SetViewUp(camera_viewup.data());
         vtk_renderer->SetActiveCamera(vtk_camera);
 
         vtk_style=vtkSmartPointer<vtkInteractorStyleSwitch>::New();
@@ -508,6 +534,39 @@ class Viewer : public RFModule
     }
 
     /****************************************************************/
+    bool respond(const Bottle &command, Bottle &reply) override
+    {
+        LockGuard lg(mutex);
+        string cmd=command.get(0).asString();
+
+        if (command.size()>1)
+        {
+            Value opt=command.get(1);
+            if (opt.isList())
+            {
+                if (cmd=="set_camera_position")
+                {                
+                    opt.asList()->write(camera_position);
+                    rpc_command_rx=true;
+                }
+                else if (cmd=="set_camera_focalpoint")
+                {
+                    opt.asList()->write(camera_focalpoint);
+                    rpc_command_rx=true;
+                }
+                else if (cmd=="set_camera_viewup")
+                {
+                    opt.asList()->write(camera_viewup);
+                    rpc_command_rx=true;
+                }
+            }
+        }
+
+        reply.addVocab(Vocab::encode(rpc_command_rx?"ack":"nack"));
+        return true;
+    }
+
+    /****************************************************************/
     bool interruptModule() override
     {
         closing=true;
@@ -518,6 +577,7 @@ class Viewer : public RFModule
     bool close() override
     {
         skeletonsGC.stop();
+        rpcPort.close();
         inputPort.close();
         return true;
     }
