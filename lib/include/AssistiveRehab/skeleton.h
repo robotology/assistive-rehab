@@ -44,6 +44,13 @@ extern const std::string knee_right;
 extern const std::string ankle_right;
 }
 
+namespace SkeletonType
+{
+extern const std::string Skeleton;
+extern const std::string SkeletonStd;
+extern const std::string SkeletonWaist;
+}
+
 class Skeleton;
 class SkeletonStd;
 class SkeletonWaist;

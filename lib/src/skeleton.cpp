@@ -10,7 +10,6 @@
  * @authors: Ugo Pattacini <ugo.pattacini@iit.it>
  */
 
-#include <typeinfo>
 #include <algorithm>
 #include <iostream>
 #include <yarp/math/Math.h>
@@ -42,6 +41,13 @@ const string ankle_left="ankleLeft";
 const string hip_right="hipRight";
 const string knee_right="kneeRight";
 const string ankle_right="ankleRight";
+}
+
+namespace SkeletonType
+{
+const string Skeleton="assistive_rehab::Skeleton";
+const string SkeletonStd="assistive_rehab::SkeletonStd";
+const string SkeletonWaist="assistive_rehab::SkeletonWaist";
 }
 
 }
@@ -80,7 +86,7 @@ const KeyPoint* KeyPoint::getChild(const unsigned int i) const
 
 Skeleton::Skeleton()
 {
-    type=typeid(Skeleton).name();
+    type=SkeletonType::Skeleton;
     tag="";
     T=eye(4,4);
     coronal=sagittal=transverse=zeros(3);
@@ -423,7 +429,7 @@ void Skeleton::update(const vector<pair<string,Vector>> &unordered)
 void Skeleton::update(const Property &prop)
 {
     if (prop.check("type"))
-        if (prop.find("type").asString()!=typeid(*this).name())
+        if (prop.find("type").asString()!=type)
             return;
     if (prop.check("tag"))
         tag=prop.find("tag").asString();
@@ -491,7 +497,7 @@ void Skeleton::print() const
 
 SkeletonStd::SkeletonStd()
 {
-    type=typeid(SkeletonStd).name();
+    type=SkeletonType::SkeletonStd;
 
     tag2key[KeyPointTag::shoulder_center]=new KeyPoint(KeyPointTag::shoulder_center);
     tag2key[KeyPointTag::head]=new KeyPoint(KeyPointTag::head);
@@ -615,7 +621,7 @@ bool SkeletonStd::update_planes()
 
 SkeletonWaist::SkeletonWaist() : SkeletonStd()
 {
-    type=typeid(SkeletonWaist).name();
+    type=SkeletonType::SkeletonWaist;
 
     waist_pos=7;
     tag2key[KeyPointTag::hip_center]=new KeyPoint(KeyPointTag::hip_center);
@@ -719,9 +725,9 @@ Skeleton *assistive_rehab::skeleton_factory(const Property &prop)
     if (prop.check("type"))
     {
         string type=prop.find("type").asString();
-        if (type==typeid(SkeletonStd).name())
+        if (type==SkeletonType::SkeletonStd)
             skeleton=new SkeletonStd;
-        else if (type==typeid(SkeletonWaist).name())
+        else if (type==SkeletonType::SkeletonWaist)
             skeleton=new SkeletonWaist;
 
         if (skeleton!=nullptr)
