@@ -28,7 +28,7 @@ service skeletonPlayer_IDL
    /**
     * Start streaming skeleton data.
     * @param n_sessions number of repetitions (0 means infinite).
-    * @param t_warp specifies the time warping factor which speed up (slow down) the original stream if <1 (>1).
+    * @param t_warp specifies the warping factor squeezing (dilating) in time the original stream if <1 (>1).
     * @param t_begin specifies the stream starting time computed from the time origin.
     * @param t_end specifies the stream ending time computed from the stream end. 
     * @return true/false on success/failure.
