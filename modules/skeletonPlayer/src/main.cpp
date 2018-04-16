@@ -18,12 +18,16 @@
 #include <fstream>
 
 #include <yarp/os/all.h>
+#include <yarp/sig/all.h>
+#include <yarp/math/Math.h>
 
 #include "AssistiveRehab/skeleton.h"
 #include "src/skeletonPlayer_IDL.h"
 
 using namespace std;
 using namespace yarp::os;
+using namespace yarp::sig;
+using namespace yarp::math;
 using namespace assistive_rehab;
 
 
@@ -363,6 +367,52 @@ class Player : public RFModule, public skeletonPlayer_IDL
         for (auto &sk:skeletons)
         {
             sk.s->setTag(new_tag);
+        }
+        return true;
+    }
+
+    /****************************************************************/
+    bool scale(const double s) override
+    {
+        LockGuard lg(mutex);
+        if (skeletons.empty())
+        {
+            yError()<<"No file loaded yet!";
+            return false;
+        }
+
+        for (auto &sk:skeletons)
+        {
+            sk.s->scale(s);
+        }
+        return true;
+    }
+
+    /****************************************************************/
+    bool transform(const double x, const double y, const double z,
+                   const double ax, const double ay, const double az,
+                   const double theta)
+    {
+        LockGuard lg(mutex);
+        if (skeletons.empty())
+        {
+            yError()<<"No file loaded yet!";
+            return false;
+        }
+
+        Vector rot(4);
+        rot[0]=ax;
+        rot[1]=ay;
+        rot[2]=az;
+        rot[3]=theta;
+        Matrix T=axis2dcm(rot);
+        T(0,3)=x;
+        T(1,3)=y;
+        T(2,3)=z;
+
+        for (auto &sk:skeletons)
+        {
+            sk.s->setTransformation(T);
         }
         return true;
     }

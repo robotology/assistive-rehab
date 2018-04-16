@@ -198,6 +198,20 @@ void Skeleton::helper_normalize(KeyPoint* k, const vector<Vector> &helperpoints)
     }
 }
 
+void Skeleton::helper_scale(KeyPoint* k, const vector<Vector> &helperpoints,
+                            const double s)
+{
+    if (k!=nullptr)
+    {
+        for (auto &c:k->child)
+        {
+            Vector dir=s*(helperpoints[key2id[c]]-helperpoints[key2id[k]]);
+            c->point=k->point+dir;
+            helper_normalize(c,helperpoints);
+        }
+    }
+}
+
 double Skeleton::helper_getmaxpath(KeyPoint* k, vector<bool> &visited) const
 {
     Vector paths(1,0.0);
@@ -472,6 +486,17 @@ void Skeleton::normalize()
         for (auto &k:keypoints)
             helperpoints.push_back(k->getPoint());
         helper_normalize(keypoints[0],helperpoints);
+    }
+}
+
+void Skeleton::scale(const double s)
+{
+    if (keypoints.size()>0)
+    {
+        vector<Vector> helperpoints;
+        for (auto &k:keypoints)
+            helperpoints.push_back(k->getPoint());
+        helper_scale(keypoints[0],helperpoints,s);
     }
 }
 

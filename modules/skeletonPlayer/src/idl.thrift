@@ -68,9 +68,30 @@ service skeletonPlayer_IDL
    bool set_tag(1:string new_tag);   
 
    /**
+    * Rescale skeleton.
+    * @param s the scale.
+    * @return true/false on success/failure.
+    */
+   bool scale(1:double s);
+
+   /**
+    * Apply homogeneous trasnformation to the skeleton.
+    * @param x the x-coordinate.
+    * @param y the y-coordinate.
+    * @param z the z-coordinate.
+    * @param ax the x-coordinate of the rotation axis.
+    * @param ay the y-coordinate of the rotation axis.
+    * @param az the z-coordinate of the rotation axis.
+    * @param theta the rotation angle.
+    * @return true/false on success/failure.
+    */
+   bool transform(1:double x, 2:double y, 3:double z,
+                  4:double ax, 5:double ay, 6:double az, 7:double theta);
+
+   /**
     * Set opacity.
     * @param new_opacity the new opacity of the skeleton.
     * @return true/false on success/failure.
     */
-   bool set_opacity(1:double new_opacity);   
+   bool set_opacity(1:double new_opacity);
 }

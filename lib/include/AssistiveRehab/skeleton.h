@@ -107,6 +107,8 @@ protected:
     void helper_fromproperty(yarp::os::Bottle *prop, KeyPoint *parent);
     void helper_updatefromproperty(yarp::os::Bottle *prop);
     void helper_normalize(KeyPoint* k, const std::vector<yarp::sig::Vector> &helperpoints);
+    void helper_scale(KeyPoint* k, const std::vector<yarp::sig::Vector> &helperpoints,
+                      const double s);
     double helper_getmaxpath(KeyPoint* k, std::vector<bool> &visited) const;
 
     virtual bool update_planes() = 0;
@@ -148,6 +150,7 @@ public:
     virtual std::vector<std::pair<std::string,yarp::sig::Vector>> get_unordered() const;
 
     void normalize();
+    void scale(const double s);
     void print() const;
 };
 
