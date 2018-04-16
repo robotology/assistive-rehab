@@ -372,21 +372,35 @@ class Player : public RFModule, public skeletonPlayer_IDL
     }
 
     /****************************************************************/
-    double get_maxpath() override
+    double get_maxpath(const double t_begin) override
     {
         LockGuard lg(mutex);
         if (skeletons.empty())
         {
             yError()<<"No file loaded yet!";
-            return 0.0;
         }
-
-        double maxPath=0.0;
-        for (auto &sk:skeletons)
+        else if (t_begin>=0.0)
         {
-            maxPath+=sk.s->getMaxPath();
+            vector<MetaSkeleton>::iterator it_;
+            if (findFrameDirect(begin(skeletons),t_begin,it_))
+            {
+                return it_->s->getMaxPath();
+            }
+            else
+            {
+                yError()<<"Unable to find the frame!";
+            }
         }
-        return (maxPath/(double)skeletons.size());
+        else
+        {
+            double maxPath=0.0;
+            for (auto &sk:skeletons)
+            {
+                maxPath+=sk.s->getMaxPath();
+            }
+            return (maxPath/(double)skeletons.size());
+        }
+        return 0.0;
     }
 
     /****************************************************************/

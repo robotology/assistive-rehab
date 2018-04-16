@@ -49,7 +49,7 @@ service skeletonPlayer_IDL
 
    /**
     * Put in opc a specified skeleton frame.
-    * @param b_begin specifies the time computed from the origin whose frame is to be put in opc.
+    * @param t_begin specifies the time computed from the origin whose frame is to be put in opc.
     * @return true/false on success/failure.
     */
    bool put_in_opc(1:double t_begin=0.0);
@@ -69,9 +69,12 @@ service skeletonPlayer_IDL
 
    /**
     * Retrieve skeleton maximum path.
+    * @param t_begin specifies the time computed from the origin whose frame will be used
+             to compute the maxium path. If t_begin<0, then an average is performed over
+             the whole set of skeletons. 
     * @return the path.
     */
-   double get_maxpath();
+   double get_maxpath(1:double t_begin=-1.0);
 
    /**
     * Normalize skeleton.
