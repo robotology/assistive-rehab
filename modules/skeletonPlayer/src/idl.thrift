@@ -100,8 +100,8 @@ service skeletonPlayer_IDL
     * @param theta the rotation angle.
     * @return true/false on success/failure.
     */
-   bool transform(1:double x, 2:double y, 3:double z,
-                  4:double ax, 5:double ay, 6:double az, 7:double theta);
+   bool move(1:double x, 2:double y, 3:double z,
+             4:double ax, 5:double ay, 6:double az, 7:double theta);
 
    /**
     * Set opacity.

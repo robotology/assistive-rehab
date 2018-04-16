@@ -438,9 +438,9 @@ class Player : public RFModule, public skeletonPlayer_IDL
     }
 
     /****************************************************************/
-    bool transform(const double x, const double y, const double z,
-                   const double ax, const double ay, const double az,
-                   const double theta)
+    bool move(const double x, const double y, const double z,
+              const double ax, const double ay, const double az,
+              const double theta)
     {
         LockGuard lg(mutex);
         if (skeletons.empty())
