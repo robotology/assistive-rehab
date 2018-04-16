@@ -13,6 +13,8 @@
 #ifndef __MANAGER_H__
 #define __MANAGER_H__
 
+#include <list>
+
 #include <yarp/os/all.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
@@ -87,8 +89,12 @@ class Manager : public RFModule,
     Vector ankleLeft;
     Vector ankleRight;
 
-    vector<Metric*> metrics;
-    vector<Processor*> processors;
+//    vector<Metric*> metrics;
+//    vector<Processor*> processors;
+
+    Metric* metric_repertoire;
+    Metric* metric;
+    Processor* processor;
 
     double tstart;
     double tstart_session;
@@ -105,7 +111,8 @@ class Manager : public RFModule,
     bool loadInitialConf(const string& motion_repertoire_file);
     bool loadInitialConf(const Bottle& b, SkeletonWaist *skeletonInit);
     bool loadMotionList(const string& motion_repertoire_file);
-    bool loadSequence(const string& sequencer_file);
+//    bool loadSequence(const string& sequencer_file);
+    bool loadMetric(const string &metric_tag);
 
     bool writeStructToMat(const string& name, const vector< vector< pair<string,Vector> > >& keypoints_skel);
     bool writeStructToMat(const string& name, const Metric& metric);

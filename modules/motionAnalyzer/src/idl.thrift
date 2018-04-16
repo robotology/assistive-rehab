@@ -25,4 +25,11 @@ service motionAnalyzer_IDL
    */
    bool loadSequence(1:string sequencer_file);
 
+   /**
+   * Load metric to analyze.
+   * @param metric_tag name of the metric to analyze
+   * @return true/false on success/failure.
+   */
+   bool loadMetric(1:string metric_tag);
+
 }

@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <vector>
+#include <list>
 
 #include <yarp/os/all.h>
 #include <yarp/sig/Vector.h>
@@ -478,7 +479,7 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                         Bottle &bMotion = rf.findGroup(curr_tag+"_"+to_string(j));
                         if(!bMotion.isNull())
                         {
-                            Metric* newMetric;
+//                            Metric* newMetric;
                             if(curr_tag == Rom_Processor::motion_type)
                             {
                                 string motion_type = bMotion.find("motion_type").asString();
@@ -646,12 +647,12 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                                 else
                                     yError() << "Could not load ankle right configuration";
 
-                                newMetric = new Rom(curr_tag+"_"+to_string(j), motion_type, tag_joint,
+                                metric_repertoire = new Rom(curr_tag+"_"+to_string(j), motion_type, tag_joint,
                                                     ref_dir, plane_normal, min, max, timeout, keypoints2conf);
                             }
 
                             //add the current metric to the repertoire
-                            motion_repertoire.insert(pair<string, Metric*>(curr_tag+"_"+to_string(j), newMetric)); // metrics[j]));
+                            motion_repertoire.insert(pair<string, Metric*>(curr_tag+"_"+to_string(j), metric_repertoire)); // metrics[j]));
 //                            motion_repertoire[curr_tag+"_"+to_string(j)]->print();
                         }
                     }
@@ -669,57 +670,79 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
 }
 
 /********************************************************/
-bool Manager::loadSequence(const string &sequencer_file)
+//bool Manager::loadSequence(const string &sequencer_file)
+//{
+//    ResourceFinder rf;
+//    rf.setVerbose();
+//    rf.setDefaultContext(this->rf->getContext().c_str());
+//    string confFile = this->rf->getHomeContextPath() + "/" + sequencer_file;
+//    rf.setDefaultConfigFile(confFile.c_str()); //(this->rf->find("configuration-file").asString().c_str());
+//    rf.configure(0, NULL);
+
+//    if(Bottle *metric_type = rf.find("metric_type").asList())
+//    {
+//        if(Bottle *motion_type = rf.find("motion_type").asList())
+//        {
+//            metrics.resize(motion_type->size());
+//            processors.resize(motion_type->size());
+
+//            if(Bottle *tag_joint = rf.find("tag_joint").asList())
+//            {
+//                if(Bottle *n_rep = rf.find("number_repetitions").asList())
+//                {
+//                    for(int i=0; i<motion_type->size(); i++)
+//                    {
+//                        string single_motion = motion_type->get(i).asString();
+//                        string joint = tag_joint->get(i).asString();
+//                        string metric_tag = metric_type->get(i).asString();
+//                        int n = n_rep->get(i).asInt();
+
+//                        yInfo() << "Exercise to perform:" << n << single_motion << "for" << joint;
+
+//                        metrics[i] = motion_repertoire.at(metric_tag);
+//                        metrics[i]->print();
+
+//                        SkeletonWaist skel;
+//                        for(int j=0; j<skeletonsInit.size(); j++)
+//                        {
+//                            if(skeletonsInit[j]->getTag() == metric_tag)
+//                            {
+//                                skel.update(skeletonsInit[j]->get_unordered());
+//                                skeletonsInit[j]->print();
+//                            }
+//                        }
+
+//                        Processor* newProcessor = createProcessor(metric_tag, metrics[i]);
+////                        skeletonsInit[i]->print();
+//                        newProcessor->setInitialConf(skel, metrics[i]->getInitialConf());
+////                        newProcessor->setInitialConf(skeletonInit, metrics[i]->getInitialConf());
+//                        processors[i] = newProcessor;
+//                    }
+//                }
+//            }
+//        }
+//    }
+
+//    return true;
+//}
+
+/********************************************************/
+bool Manager::loadMetric(const string &metric_tag)
 {
-    ResourceFinder rf;
-    rf.setVerbose();
-    rf.setDefaultContext(this->rf->getContext().c_str());
-    string confFile = this->rf->getHomeContextPath() + "/" + sequencer_file;
-    rf.setDefaultConfigFile(confFile.c_str()); //(this->rf->find("configuration-file").asString().c_str());
-    rf.configure(0, NULL);
-
-    if(Bottle *metric_type = rf.find("metric_type").asList())
+    metric = motion_repertoire.at(metric_tag);
+    metric->print();
+    SkeletonWaist skel;
+    for(int j=0; j<skeletonsInit.size(); j++)
     {
-        if(Bottle *motion_type = rf.find("motion_type").asList())
+        if(skeletonsInit[j]->getTag() == metric_tag)
         {
-            metrics.resize(motion_type->size());
-            processors.resize(motion_type->size());
-
-            if(Bottle *tag_joint = rf.find("tag_joint").asList())
-            {
-                if(Bottle *n_rep = rf.find("number_repetitions").asList())
-                {
-                    for(int i=0; i<motion_type->size(); i++)
-                    {
-                        string single_motion = motion_type->get(i).asString();
-                        string joint = tag_joint->get(i).asString();
-                        string metric_tag = metric_type->get(i).asString();
-                        int n = n_rep->get(i).asInt();
-
-                        yInfo() << "Exercise to perform:" << n << single_motion << "for" << joint;
-
-                        metrics[i] = motion_repertoire.at(metric_tag);
-                        metrics[i]->print();
-                        SkeletonWaist skel;
-                        for(int j=0; j<skeletonsInit.size(); j++)
-                        {
-                            if(skeletonsInit[j]->getTag() == metric_tag)
-                            {
-                                skel.update(skeletonsInit[j]->get_unordered());
-                                skeletonsInit[j]->print();
-                            }
-                        }
-
-                        Processor* newProcessor = createProcessor(metric_tag, metrics[i]);
-//                        skeletonsInit[i]->print();
-                        newProcessor->setInitialConf(skel, metrics[i]->getInitialConf());
-//                        newProcessor->setInitialConf(skeletonInit, metrics[i]->getInitialConf());
-                        processors[i] = newProcessor;
-                    }
-                }
-            }
+            skel.update(skeletonsInit[j]->get_unordered());
+//            skeletonsInit[j]->print();
         }
     }
+
+    processor = createProcessor(metric_tag, metric);
+    processor->setInitialConf(skel, metric->getInitialConf());
 
     return true;
 }
@@ -1040,7 +1063,7 @@ bool Manager::configure(ResourceFinder &rf)
     loadInitialConf(motion_repertoire_file);
     if(!loadMotionList(motion_repertoire_file))
         return false;
-    loadSequence(sequencer_file);
+//    loadSequence(sequencer_file);
 
     // Use MATIO to write the results in a .mat file
     filename_report = rf.getHomeContextPath() + "/test_data_fdg.mat";
@@ -1078,11 +1101,16 @@ bool Manager::close()
     yInfo() << "Keypoints saved to file" << filename_report.c_str();
     Mat_Close(matfp);
 
-    for(int j=0; j<metrics.size(); j++)
-        delete metrics[j];
+    delete metric_repertoire;
+    delete metric;
+    delete processor;
 
-    for(int i=0; i<processors.size(); i++)
-        delete processors[i];
+//    yInfo() << "Delete" << metrics.size() << "metrics and" << processors.size() << "processors";
+//    for(int j=0; j<metrics.size(); j++)
+//        delete metrics[j];
+
+//    for(int i=0; i<processors.size(); i++)
+//        delete processors[i];
 
     delete skeletonInit;
 
@@ -1111,7 +1139,7 @@ double Manager::getPeriod()
 bool Manager::updateModule()
 {
     //if we query the database
-    if(opcPort.getOutputCount() > 0)
+    if(opcPort.getOutputCount() > 0 && processor != NULL)
     {
         //get skeleton and normalize
         getSkeleton();
@@ -1125,23 +1153,37 @@ bool Manager::updateModule()
             //        skeletonIn.print();
             skeletonIn.normalize();
 
-            Vector result;
-            result.resize(processors.size());
-            for(int i=0; i<processors.size(); i++)
-            {
-                processors[i]->update(skeletonIn);
-                if(processors[i]->isDeviatingFromIntialPose())
-                    yWarning() << "Deviating from initial pose\n";
+//            Vector result;
+//            result.resize(processors.size());
+//            for(int i=0; i<processors.size(); i++)
+//            {
+//                processors[i]->update(skeletonIn);
+//                if(processors[i]->isDeviatingFromIntialPose())
+//                    yWarning() << "Deviating from initial pose\n";
 
-                result[i] = processors[i]->computeMetric();
-            }
+//                result[i] = processors[i]->computeMetric();
+//            }
+
+//            //write on output port
+//            Bottle &scopebottleout = scopePort.prepare();
+//            scopebottleout.clear();
+//            scopebottleout.addDouble(result[result.size()-1]);
+//            scopebottleout.addDouble(metrics[result.size()-1]->getMin());
+//            scopebottleout.addDouble(metrics[result.size()-1]->getMax());
+//            scopePort.write();
+
+            processor->update(skeletonIn);
+            if(processor->isDeviatingFromIntialPose())
+                yWarning() << "Deviating from initial pose\n";
+
+            double result = processor->computeMetric();
 
             //write on output port
             Bottle &scopebottleout = scopePort.prepare();
             scopebottleout.clear();
-            scopebottleout.addDouble(result[result.size()-1]);
-            scopebottleout.addDouble(metrics[result.size()-1]->getMin());
-            scopebottleout.addDouble(metrics[result.size()-1]->getMax());
+            scopebottleout.addDouble(result);
+            scopebottleout.addDouble(metric->getMin());
+            scopebottleout.addDouble(metric->getMax());
             scopePort.write();
 
 
@@ -1434,15 +1476,22 @@ bool Manager::writeKeypointsToFile()
         return false;
     }
 
+//    //Save kind of metric to process
+//    for(int i=0; i<metrics.size(); i++)
+//    {
+//        //         cout << metrics[i]->getName().c_str() << endl;
+//        if(!writeStructToMat(metrics[i]->getName().c_str(), *metrics[i]))
+//        {
+//            yError() << "Could not save metrics.. the file will not be saved";
+//            return false;
+//        }
+//    }
+
     //Save kind of metric to process
-    for(int i=0; i<metrics.size(); i++)
+    if(!writeStructToMat(metric->getName().c_str(), *metric))
     {
-        //         cout << metrics[i]->getName().c_str() << endl;
-        if(!writeStructToMat(metrics[i]->getName().c_str(), *metrics[i]))
-        {
-            yError() << "Could not save metrics.. the file will not be saved";
-            return false;
-        }
+        yError() << "Could not save metrics.. the file will not be saved";
+        return false;
     }
 
     return true;
