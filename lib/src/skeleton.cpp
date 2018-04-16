@@ -207,7 +207,7 @@ void Skeleton::helper_scale(KeyPoint* k, const vector<Vector> &helperpoints,
         {
             Vector dir=s*(helperpoints[key2id[c]]-helperpoints[key2id[k]]);
             c->point=k->point+dir;
-            helper_normalize(c,helperpoints);
+            helper_scale(c,helperpoints,s);
         }
     }
 }

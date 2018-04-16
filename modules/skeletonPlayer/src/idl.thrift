@@ -68,6 +68,12 @@ service skeletonPlayer_IDL
    bool set_tag(1:string new_tag);   
 
    /**
+    * Normalize skeleton.
+    * @return true/false on success/failure.
+    */
+   bool normalize();
+
+   /**
     * Rescale skeleton.
     * @param s the scale.
     * @return true/false on success/failure.

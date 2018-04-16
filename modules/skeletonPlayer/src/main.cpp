@@ -372,6 +372,23 @@ class Player : public RFModule, public skeletonPlayer_IDL
     }
 
     /****************************************************************/
+    bool normalize() override
+    {
+        LockGuard lg(mutex);
+        if (skeletons.empty())
+        {
+            yError()<<"No file loaded yet!";
+            return false;
+        }
+
+        for (auto &sk:skeletons)
+        {
+            sk.s->normalize();
+        }
+        return true;
+    }
+
+    /****************************************************************/
     bool scale(const double s) override
     {
         LockGuard lg(mutex);
