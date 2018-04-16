@@ -372,6 +372,24 @@ class Player : public RFModule, public skeletonPlayer_IDL
     }
 
     /****************************************************************/
+    double get_maxpath() override
+    {
+        LockGuard lg(mutex);
+        if (skeletons.empty())
+        {
+            yError()<<"No file loaded yet!";
+            return 0.0;
+        }
+
+        double maxPath=0.0;
+        for (auto &sk:skeletons)
+        {
+            maxPath+=sk.s->getMaxPath();
+        }
+        return (maxPath/(double)skeletons.size());
+    }
+
+    /****************************************************************/
     bool normalize() override
     {
         LockGuard lg(mutex);

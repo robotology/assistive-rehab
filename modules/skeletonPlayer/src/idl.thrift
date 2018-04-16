@@ -68,6 +68,12 @@ service skeletonPlayer_IDL
    bool set_tag(1:string new_tag);   
 
    /**
+    * Retrieve skeleton maximum path.
+    * @return the path.
+    */
+   double get_maxpath();
+
+   /**
     * Normalize skeleton.
     * @return true/false on success/failure.
     */
