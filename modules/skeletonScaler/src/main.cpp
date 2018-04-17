@@ -136,10 +136,15 @@ class Scaler : public RFModule
         }
 
         Vector xyz=retrievedSkel[KeyPointTag::shoulder_center]->getPoint();
-        Vector rot=retrievedSkel.getSagittal();
-        double theta=0;
-        if(!rotate(xyz,rot,theta))
-            yWarning() << "Unable to rotate";
+        Vector rot(3,0.0);
+        double theta=0.0;
+        if(file.compare("flexion")>0)
+        {
+            rot[1]=1.0;
+            theta=M_PI/2;
+        }
+        if(!moveSkeleton(xyz,rot,theta))
+            yWarning() << "Unable to move";
 
         double maxpath;
         getMaxPath(maxpath);
@@ -156,7 +161,7 @@ class Scaler : public RFModule
     }
 
     /****************************************************************/
-    bool rotate(const Vector& xyz,const Vector& rot,const double& theta)
+    bool moveSkeleton(const Vector& xyz,const Vector& rot,const double& theta)
     {
         Bottle cmd,rep;
         cmd.addString("move");
