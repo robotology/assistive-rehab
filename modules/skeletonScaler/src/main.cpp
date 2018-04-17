@@ -25,7 +25,7 @@ using namespace assistive_rehab;
 
 class Scaler : public RFModule
 {
-    BufferedPort<Bottle> playerPort;
+//    BufferedPort<Bottle> playerPort;
     BufferedPort<Bottle> retrieverPort;
     RpcClient cmdPort;
 
@@ -38,7 +38,7 @@ class Scaler : public RFModule
     /****************************************************************/
     bool configure(ResourceFinder &rf)
     {
-        playerPort.open("/skeletonScaler/player:i");
+//        playerPort.open("/skeletonScaler/player:i");
         retrieverPort.open("/skeletonScaler/retriever:i");
         cmdPort.open("/skeletonScaler/cmd");
 
@@ -69,7 +69,7 @@ class Scaler : public RFModule
         int idx=file.find(".");
         setTag(file.substr(0,idx));
 
-        opacity=0.2;
+        opacity=0.1;
         setOpacity(opacity);
 
         return true;
@@ -78,49 +78,18 @@ class Scaler : public RFModule
     /****************************************************************/
     double getPeriod()
     {
-        return 0.01;
+        return 10.0; //0.01;
     }
 
     /****************************************************************/
     bool updateModule()
     {
-        //get skeleton from skeletonPlayer
-        Bottle *inputPlayer = playerPort.read();
-        SkeletonWaist playedSkel;
-        for (int i=0; i<inputPlayer->size(); i++)
-        {
-            if (Bottle *b=inputPlayer->get(i).asList())
-            {
-                if (b->check("tag"))
-                {
-                    Property prop(b->toString().c_str());
-                    string tag=prop.find("tag").asString();
-                    if (!tag.empty())
-                    {
-                        if (prop.check("tag"))
-                        {
-                            Skeleton* sk1 = skeleton_factory(prop);
-                            playedSkel.update_fromstd(sk1->toProperty());
-//                            playedSkel.print();
-                            delete sk1;
-                        }
-                    }
-                }
-            }
-        }
-
-        Vector camera_position(3,0.0);
-        Vector rot=playedSkel.getTransverse();
-        double theta=M_PI;
-        if(!rotate(camera_position,rot,theta))
-            yWarning() << "Unable to rotate";
-
-//        //get skeleton from skeletonRetriever
-//        SkeletonWaist retrievedSkel;
-//        Bottle *inputRetriever = retrieverPort.read();
-//        for (int i=0; i<inputRetriever->size(); i++)
+//        //get skeleton from skeletonPlayer
+//        Bottle *inputPlayer = playerPort.read();
+//        SkeletonWaist playedSkel;
+//        for (int i=0; i<inputPlayer->size(); i++)
 //        {
-//            if (Bottle *b=inputRetriever->get(i).asList())
+//            if (Bottle *b=inputPlayer->get(i).asList())
 //            {
 //                if (b->check("tag"))
 //                {
@@ -130,20 +99,53 @@ class Scaler : public RFModule
 //                    {
 //                        if (prop.check("tag"))
 //                        {
-//                            Skeleton* sk2 = skeleton_factory(prop);
-//                            retrievedSkel.update_fromstd(sk2->toProperty());
-//                            retrievedSkel.print();
-
-//                            delete sk2;
+//                            Skeleton* sk1 = skeleton_factory(prop);
+//                            playedSkel.update_fromstd(sk1->toProperty());
+////                            playedSkel.print();
+//                            delete sk1;
 //                        }
 //                    }
 //                }
 //            }
 //        }
+
+        //get skeleton from skeletonRetriever
+        SkeletonWaist retrievedSkel;
+        Bottle *inputRetriever = retrieverPort.read();
+        for (int i=0; i<inputRetriever->size(); i++)
+        {
+            if (Bottle *b=inputRetriever->get(i).asList())
+            {
+                if (b->check("tag"))
+                {
+                    Property prop(b->toString().c_str());
+                    string tag=prop.find("tag").asString();
+                    if (!tag.empty())
+                    {
+                        if (prop.check("tag"))
+                        {
+                            Skeleton* sk2 = skeleton_factory(prop);
+                            retrievedSkel.update_fromstd(sk2->toProperty());
+//                            retrievedSkel.print();
+
+                            delete sk2;
+                        }
+                    }
+                }
+            }
+        }
+
+        Vector xyz=retrievedSkel[KeyPointTag::shoulder_center]->getPoint();
+        Vector rot=retrievedSkel.getSagittal();
+        double theta=0;
+        if(!rotate(xyz,rot,theta))
+            yWarning() << "Unable to rotate";
+
         double maxpath;
         getMaxPath(maxpath);
 
-        double scale = round(maxpath/playedSkel.getMaxPath());
+        double scale = retrievedSkel.getMaxPath()/maxpath;
+//        yInfo() << retrievedSkel.getMaxPath() << maxpath << retrievedSkel.getMaxPath()/maxpath;
         if(!setScale(scale))
         {
             yError() << "Unable to scale";
@@ -154,13 +156,13 @@ class Scaler : public RFModule
     }
 
     /****************************************************************/
-    bool rotate(const Vector& camera_position,const Vector& rot,const double& theta)
+    bool rotate(const Vector& xyz,const Vector& rot,const double& theta)
     {
         Bottle cmd,rep;
         cmd.addString("move");
-        cmd.addDouble(camera_position[0]);
-        cmd.addDouble(camera_position[1]);
-        cmd.addDouble(camera_position[2]);
+        cmd.addDouble(xyz[0]);
+        cmd.addDouble(xyz[1]);
+        cmd.addDouble(xyz[2]);
         cmd.addDouble(rot[0]);
         cmd.addDouble(rot[1]);
         cmd.addDouble(rot[2]);
@@ -180,7 +182,7 @@ class Scaler : public RFModule
     {
         Bottle cmd,rep;
         cmd.addString("get_maxpath");
-        yInfo() << cmd.toString();
+//        yInfo() << cmd.toString();
         if(cmdPort.write(cmd,rep))
             maxpath=rep.get(0).asDouble();
     }
@@ -274,7 +276,7 @@ class Scaler : public RFModule
     bool interruptModule()
     {
        stop();
-       playerPort.interrupt();
+//       playerPort.interrupt();
        retrieverPort.interrupt();
        cmdPort.interrupt();
 
@@ -284,7 +286,7 @@ class Scaler : public RFModule
     /****************************************************************/
     bool close()
     {
-        playerPort.close();
+//        playerPort.close();
         retrieverPort.close();
         cmdPort.close();
 
