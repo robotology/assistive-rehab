@@ -1,0 +1,52 @@
+<application>
+<name>Assistive Rehabilitation skeletonScaler App</name>
+
+    <module>
+       <name>objectsPropertiesCollector</name>
+       <parameters>--name opc --no-load-db --no-save-db --async-bc</parameters>
+       <node>localhost</node>
+    </module>
+
+    <module>
+       <name>skeletonPlayer</name>
+       <parameters></parameters>
+       <node>localhost</node>
+    </module>
+
+    <module>
+       <name>skeletonScaler</name>
+       <parameters></parameters>
+       <node>localhost</node>
+    </module>
+
+    <module>
+        <name>skeletonViewer</name>
+        <parameters>--x 100 --y 10</parameters>
+        <node>localhost</node>
+    </module>
+
+    <connection>
+        <from>/skeletonPlayer/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonRetriever/viewer:o</from>
+        <to>/skeletonScaler/retriever:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonRetriever/viewer:o</from>
+        <to>/skeletonViewer:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonPlayer/viewer:o</from>
+        <to>/skeletonViewer:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+</application>
