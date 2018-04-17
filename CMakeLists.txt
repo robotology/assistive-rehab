@@ -65,4 +65,6 @@ if(BUILD_TESTING)
 endif()
 
 file(GLOB ini app/conf/*.ini)
+file(GLOB scripts app/scripts/*.template)
 yarp_install(FILES ${ini} DESTINATION ${ICUBCONTRIB_CONTEXTS_INSTALL_DIR}/${PROJECT_NAME})
+yarp_install(FILES ${scripts} DESTINATION ${ICUBCONTRIB_APPLICATIONS_TEMPLATES_INSTALL_DIR})
