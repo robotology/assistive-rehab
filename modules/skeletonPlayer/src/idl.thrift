@@ -90,7 +90,7 @@ service skeletonPlayer_IDL
    bool scale(1:double s);
 
    /**
-    * Apply homogeneous trasnformation to the skeleton.
+    * Apply homogeneous transformation to the skeleton.
     * @param x the x-coordinate.
     * @param y the y-coordinate.
     * @param z the z-coordinate.

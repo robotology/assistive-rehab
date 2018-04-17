@@ -397,6 +397,24 @@ const KeyPoint *Skeleton::operator[](const unsigned int i) const
     return (i<keypoints.size())?keypoints[i]:nullptr;
 }
 
+void Skeleton::update()
+{
+    Vector p(4,1);
+    for (auto &k:keypoints)
+    {
+        if (k->isUpdated())
+        {
+            auto v=k->getPoint();
+            p[0]=v[0];
+            p[1]=v[1];
+            p[2]=v[2];
+            k->setPoint((T*p).subVector(0,2));
+        }
+    }
+
+    update_planes();
+}
+
 void Skeleton::update(const vector<Vector> &ordered)
 {
     Vector p(4,1);

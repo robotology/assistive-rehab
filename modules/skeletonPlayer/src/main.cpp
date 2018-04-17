@@ -462,6 +462,7 @@ class Player : public RFModule, public skeletonPlayer_IDL
         for (auto &sk:skeletons)
         {
             sk.s->setTransformation(T);
+            sk.s->update();
         }
         return true;
     }

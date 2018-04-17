@@ -142,6 +142,7 @@ public:
     const KeyPoint* operator[](const std::string &tag) const;
     const KeyPoint* operator[](const unsigned int i) const;
 
+    virtual void update();
     virtual void update(const std::vector<yarp::sig::Vector> &ordered);
     virtual void update(const std::vector<std::pair<std::string,yarp::sig::Vector>> &unordered);
     virtual void update(const yarp::os::Property &prop);
