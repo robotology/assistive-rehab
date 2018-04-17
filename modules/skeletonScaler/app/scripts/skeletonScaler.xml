@@ -38,6 +38,12 @@
     </connection>
 
     <connection>
+        <from>/skeletonScaler/opc</from>
+        <to>/opc/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
         <from>/skeletonRetriever/viewer:o</from>
         <to>/skeletonViewer:i</to>
         <protocol>tcp</protocol>
