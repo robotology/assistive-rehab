@@ -43,8 +43,9 @@ using namespace assistive_rehab;
 /****************************************************************/
 class MetaSkeleton
 {
-    bool filter_enable;
     vector<shared_ptr<MedianFilter>> filter;
+    unordered_map<string,shared_ptr<MedianFilter>> limbs_length;
+    unordered_map<string,unsigned int> limbs_length_cnt;
 
 public:
     double timer;
@@ -54,21 +55,33 @@ public:
     Vector pivot;
 
     /****************************************************************/
-    MetaSkeleton(const double t, const bool filter_enable_,
-                 const int filter_order_) :
-        timer(t), filter_enable(filter_enable_), opc_id(-1)
+    MetaSkeleton(const double t, const int filter_keypoint_order_,
+                 const int filter_limblength_order_) : 
+                 timer(t), opc_id(-1)
     {
         skeleton=shared_ptr<SkeletonWaist>(new SkeletonWaist());
         keys_acceptable_misses.assign(skeleton->getNumKeyPoints(),0);
         pivot=-1.0*ones(2);
 
-        if (filter_enable)
+        for (unsigned int i=0; i<skeleton->getNumKeyPoints(); i++)
         {
-            for (unsigned int i=0; i<skeleton->getNumKeyPoints(); i++)
-            {
-                filter.push_back(shared_ptr<MedianFilter>(new MedianFilter(filter_order_,(*skeleton)[i]->getPoint())));
-            }
+            filter.push_back(shared_ptr<MedianFilter>(new MedianFilter(filter_keypoint_order_,(*skeleton)[i]->getPoint())));
         }
+
+        limbs_length[KeyPointTag::elbow_left]=shared_ptr<MedianFilter>(new MedianFilter(filter_limblength_order_,zeros(1)));
+        limbs_length[KeyPointTag::hand_left]=shared_ptr<MedianFilter>(new MedianFilter(filter_limblength_order_,zeros(1)));
+        limbs_length[KeyPointTag::elbow_right]=shared_ptr<MedianFilter>(new MedianFilter(filter_limblength_order_,zeros(1)));
+        limbs_length[KeyPointTag::hand_right]=shared_ptr<MedianFilter>(new MedianFilter(filter_limblength_order_,zeros(1)));
+
+        limbs_length[KeyPointTag::knee_left]=shared_ptr<MedianFilter>(new MedianFilter(filter_limblength_order_,zeros(1)));
+        limbs_length[KeyPointTag::ankle_left]=shared_ptr<MedianFilter>(new MedianFilter(filter_limblength_order_,zeros(1)));
+        limbs_length[KeyPointTag::knee_right]=shared_ptr<MedianFilter>(new MedianFilter(filter_limblength_order_,zeros(1)));
+        limbs_length[KeyPointTag::ankle_right]=shared_ptr<MedianFilter>(new MedianFilter(filter_limblength_order_,zeros(1)));
+
+        limbs_length_cnt[KeyPointTag::elbow_left]=limbs_length_cnt[KeyPointTag::hand_left]=
+        limbs_length_cnt[KeyPointTag::elbow_right]=limbs_length_cnt[KeyPointTag::hand_right]=
+        limbs_length_cnt[KeyPointTag::knee_left]=limbs_length_cnt[KeyPointTag::ankle_left]=
+        limbs_length_cnt[KeyPointTag::knee_right]=limbs_length_cnt[KeyPointTag::ankle_right]=0;
     }
 
     /****************************************************************/
@@ -87,21 +100,36 @@ public:
     /****************************************************************/
     void update(const vector<pair<string,Vector>> &unordered)
     {
-        if (filter_enable)
+        vector<pair<string,Vector>> unordered_fitered;
+        for (auto &p:unordered)
         {
-            vector<pair<string,Vector>> unordered_fitered;
-            for (auto &p:unordered)
+            int i=skeleton->getNumFromKey(p.first);
+            if (i>=0)
             {
-                int i=skeleton->getNumFromKey(p.first);
-                if (i>=0)
+                unordered_fitered.push_back(make_pair(p.first,filter[i]->filt(p.second)));
+            }
+        }
+        skeleton->update(unordered_fitered);
+
+        for (auto &it:limbs_length)
+        {
+            const auto &k=(*skeleton)[it.first];
+            const auto &p=k->getParent(0);
+
+            if (k->isUpdated() && p->isUpdated())
+            {
+                double d=norm(k->getPoint()-p->getPoint());
+                it.second->filt(Vector(1,d));
+                limbs_length_cnt[it.first]++;
+
+                if (limbs_length_cnt[it.first]>=it.second->getOrder())
                 {
-                    unordered_fitered.push_back(make_pair(p.first,filter[i]->filt(p.second)));
+                    yInfo()<<"Skeleton:"<<skeleton->getTag()
+                           <<"limb:"<<p->getTag()<<"-"<<k->getTag()
+                           <<"length:"<<it.second->output()[0];
                 }
             }
-            skeleton->update(unordered_fitered);
         }
-        else
-            skeleton->update(unordered);
     }
 };
 
@@ -129,8 +157,8 @@ class Retriever : public RFModule
     int keys_acceptable_misses;
     int tracking_threshold;
     double time_to_live;
-    bool filter_enable;
-    int filter_order;
+    int filter_keypoint_order;
+    int filter_limblength_order;
     double t0;
 
     /****************************************************************/
@@ -148,8 +176,8 @@ class Retriever : public RFModule
                 {
                     fov_h=rep.get(3).asDouble();
                     fov_v=rep.get(4).asDouble();
-                    yInfo()<<"retrieved from camera fov_h="<<fov_h;
-                    yInfo()<<"retrieved from camera fov_v="<<fov_v;
+                    yInfo()<<"camera fov_h ="<<fov_h;
+                    yInfo()<<"camera fov_v ="<<fov_v;
                     return true;
                 }
             }
@@ -184,7 +212,9 @@ class Retriever : public RFModule
     /****************************************************************/
     shared_ptr<MetaSkeleton> create(Bottle *keys)
     {
-        shared_ptr<MetaSkeleton> s=shared_ptr<MetaSkeleton>(new MetaSkeleton(time_to_live,filter_enable,filter_order));
+        shared_ptr<MetaSkeleton> s=shared_ptr<MetaSkeleton>(new MetaSkeleton(time_to_live,
+                                                                             filter_keypoint_order,
+                                                                             filter_limblength_order));
         vector<pair<string,Vector>> unordered;
         vector<Vector> hips;
 
@@ -419,8 +449,8 @@ class Retriever : public RFModule
         keys_acceptable_misses=5;
         tracking_threshold=50;
         time_to_live=1.0;
-        filter_enable=true;
-        filter_order=3;
+        filter_keypoint_order=3;
+        filter_limblength_order=50;
 
         // retrieve values from config file
         Bottle &gGeneral=rf.findGroup("general");
@@ -442,8 +472,8 @@ class Retriever : public RFModule
         Bottle &gFiltering=rf.findGroup("filtering");
         if (!gFiltering.isNull())
         {
-            filter_enable=(gFiltering.check("filter-enable",Value(filter_enable?"on":"off")).asString()=="on");
-            filter_order=gFiltering.check("filter-order",filter_order).asInt();
+            filter_keypoint_order=gFiltering.check("filter-keypoint-order",filter_keypoint_order).asInt();
+            filter_limblength_order=gFiltering.check("filter-limblength-order",filter_limblength_order).asInt();
         }
 
         skeletonsPort.open("/skeletonRetriever/skeletons:i");
