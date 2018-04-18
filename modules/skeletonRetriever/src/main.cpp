@@ -283,7 +283,7 @@ class Retriever : public RFModule
         for (auto &s:c)
         {
             double dist=norm(s->pivot-n->pivot);
-            scores.push_back((dist<tracking_threshold)?dist:
+            scores.push_back(dist<=tracking_threshold?dist:
                              numeric_limits<double>::infinity());
         }
 
@@ -513,10 +513,10 @@ class Retriever : public RFModule
                         auto it=min_element(scores.begin(),scores.end());
                         if (it!=scores.end())
                         {
-                            auto i=distance(scores.begin(),it);
                             if (*it<numeric_limits<double>::infinity())
                             {
-                                shared_ptr<MetaSkeleton> &s=skeletons[i];
+                                auto i=distance(scores.begin(),it);
+                                auto &s=c[i];
                                 update(n,s);
                                 opcSet(s);
                                 c.erase(c.begin()+i);
