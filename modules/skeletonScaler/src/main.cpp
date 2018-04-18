@@ -27,7 +27,6 @@ using namespace assistive_rehab;
 
 class Scaler : public RFModule
 {
-    BufferedPort<Bottle> retrieverPort;
     RpcClient opcPort;
     RpcClient cmdPort;
     RpcClient rpcViewerPort;
@@ -45,10 +44,8 @@ class Scaler : public RFModule
     /****************************************************************/
     bool configure(ResourceFinder &rf)
     {
-//        playerPort.open("/skeletonScaler/player:i");
-        retrieverPort.open("/skeletonScaler/retriever:i");
         opcPort.open("/skeletonScaler/opc");
-        cmdPort.open("/skeletonScaler/cmd");
+        cmdPort.open("/skeletonScaler/player:rpc");
         rpcViewerPort.open("/skeletonScaler/viewer:rpc");
 
         if(!Network::connect(cmdPort.getName(),"/skeletonPlayer/cmd:rpc", "tcp"))
@@ -91,19 +88,23 @@ class Scaler : public RFModule
         xyz.zero();
         rot.resize(4);
         rot.zero();
-        if(file.compare("abduction")>0)
+        if(file.find("abduction")!=string::npos)
         {
-            xyz[0]=-0.15;
+            xyz[0]=-0.12;
+            xyz[1]=0.24;
+            xyz[2]=-1.75;
+            Vector camerapos(3,0.0),focalpoint(3,0.0);
+            camerapos[2]=-2.0;
+            rotateCam(camerapos,focalpoint);
         }
-
-        if(file.compare("flexion")>0)
+        if(file.find("flexion")!=string::npos)
         {
-//            xyz[0]=-1.5;
-//            rot[1]=1.0;
-//            rot[3]=M_PI/2;
-            Vector camerapos(3,0.0);
-            camerapos[0]=2.0;
-            rotateCam(camerapos);
+            xyz[0]=-0.12;
+            xyz[1]=0.24;
+            xyz[2]=-1.75;
+            Vector camerapos(3,0.0),focalpoint(3,0.0);
+            camerapos[0]=4.0;
+            rotateCam(camerapos,focalpoint);
         }
         if(!moveSkeleton(xyz,rot))
             yWarning() << "Unable to move";
@@ -117,123 +118,49 @@ class Scaler : public RFModule
     /****************************************************************/
     double getPeriod()
     {
-        return 0.001;
+        return 0.01;
     }
 
     /****************************************************************/
     bool updateModule()
     {
-        //get skeleton from skeletonRetriever
-        SkeletonWaist retrievedSkel;
-        Bottle *inputRetriever = retrieverPort.read();
-        for (int i=0; i<inputRetriever->size(); i++)
+        if(opcPort.getOutputCount()>0)
         {
-            if (Bottle *b=inputRetriever->get(i).asList())
-            {
-                if (b->check("tag"))
-                {
-                    Property prop(b->toString().c_str());
-                    string tag=prop.find("tag").asString();
-                    if (!tag.empty())
-                    {
-                        if (prop.check("tag"))
-                        {
-                            Skeleton* sk2 = skeleton_factory(prop);
-                            retrievedSkel.update_fromstd(sk2->toProperty());
-                            //                            retrievedSkel.print();
+            SkeletonWaist retrievedSkel;
+            getSkeletonFromOpc(retrievedSkel);
+//            retrievedSkel.print();
 
-                            delete sk2;
-                        }
-                    }
+            Vector xyz_inv=invT.subcol(0,3,3);
+            xyz=retrievedSkel[KeyPointTag::shoulder_center]->getPoint();
+
+            //retrieve transformation from unmoved skeleton
+            Matrix T=axis2dcm(rot);
+            T(0,3)=xyz[0];
+            T(1,3)=xyz[1];
+            T(2,3)=xyz[2];
+            invT=SE3inv(T);
+
+            xyz[0]+=xyz_inv[0];
+            xyz[1]+=xyz_inv[1];
+            xyz[2]+=xyz_inv[2];
+            if(!moveSkeleton(xyz,rot))
+                yWarning() << "Unable to move";
+
+            double maxpath;
+            if(!retrievedSkel.getTag().empty())
+            {
+//                yInfo() << retrievedSkel.getTag().c_str();
+                getMaxPath(maxpath);
+                double scale=retrievedSkel.getMaxPath()/maxpath;
+                if(!setScale(scale))
+                {
+                    yError() << "Unable to scale";
+                    return false;
                 }
             }
         }
 
-        //        Vector rot_inv=dcm2axis(invT);
-        //        rot_inv[3]=0.0;
-
-        Vector xyz_inv=invT.subcol(0,3,3);
-        Vector rot_inv=dcm2axis(invT);
-        xyz=retrievedSkel[KeyPointTag::shoulder_center]->getPoint();//+retrievedSkel[KeyPointTag::hip_center]->getPoint());
-
-        //retrieve unmoved skeleton
-        Matrix T=axis2dcm(rot);
-        T(0,3)=xyz[0];
-        T(1,3)=xyz[1];
-        T(2,3)=xyz[2];
-        invT=SE3inv(T);
-
-        xyz[0]+=xyz_inv[0];
-        xyz[1]+=xyz_inv[1];
-        xyz[2]+=xyz_inv[2];
-        if(file.compare("flexion")>0)
-        {
-            rot[1]=1.0+rot_inv[1];
-            rot[3]=M_PI/2;
-        }
-        if(!moveSkeleton(xyz,rot))
-            yWarning() << "Unable to move";
-
-//        double maxpath;
-//        getMaxPath(maxpath);
-//        double scale = retrievedSkel.getMaxPath()/maxpath;
-//        yInfo() << retrievedSkel.getMaxPath() << maxpath << retrievedSkel.getMaxPath()/maxpath << maxpath/retrievedSkel.getMaxPath();
-//        if(!setScale(scale))
-//        {
-//            yError() << "Unable to scale";
-//            return false;
-//        }
-
         return true;
-
-
-//        if(opcPort.getOutputCount()>0)
-//        {
-//            SkeletonWaist retrievedSkel;
-//            getSkeletonFromOpc(retrievedSkel);
-////            retrievedSkel.print();
-
-//            Vector xyz_inv=invT.subcol(0,3,3);
-//            Vector xyz_start=0.5*(retrievedSkel[KeyPointTag::shoulder_center]->getPoint()+retrievedSkel[KeyPointTag::hip_center]->getPoint());
-
-//    //        Vector sc=retrievedSkel[KeyPointTag::shoulder_center]->getPoint();
-//    //        Vector hc=retrievedSkel[KeyPointTag::hip_center]->getPoint();
-//    //        yInfo() << sc[0] << sc[1] << sc[2] << " " << hc[0] << hc[1] << hc[2];
-
-//            Vector xyz(3,0.0);
-//            xyz[0]=xyz_start[0]+xyz_inv[0];
-//            xyz[1]=xyz_start[1]+xyz_inv[1];
-//            xyz[2]=xyz_start[2]+0.0;//xyz_inv[2];
-//            Vector rot(4,0.0);
-//            if(file.compare("flexion")>0)
-//            {
-//                rot[1]=1.0;
-//                rot[3]=M_PI/2;
-//            }
-//            if(!moveSkeleton(xyz,rot))
-//                yWarning() << "Unable to move";
-
-//            //retrieve unmoved skeleton
-//            Matrix T=axis2dcm(rot);
-//            T(0,3)=xyz_start[0];
-//            T(1,3)=xyz_start[1];
-//            T(2,3)=xyz_start[2];
-//            invT=SE3inv(T);
-
-//    //        double maxpath;
-//    //        getMaxPath(maxpath);
-//    //        double scale = retrievedSkel.getMaxPath()/maxpath;
-//    //        yInfo() << retrievedSkel.getMaxPath() << maxpath << retrievedSkel.getMaxPath()/maxpath << maxpath/retrievedSkel.getMaxPath();
-//    //        if(!setScale(scale))
-//    //        {
-//    //            yError() << "Unable to scale";
-//    //            return false;
-//    //        }
-
-//        }
-
-
-//        return true;
     }
 
     /****************************************************************/
@@ -273,15 +200,17 @@ class Scaler : public RFModule
                                 {
                                     Property prop(propField->toString().c_str());
                                     string tag=prop.find("tag").asString();
-                                    yInfo() << tag.c_str() << file.c_str() << tag.compare(file);
-                                    if (!tag.empty() && tag.compare(file)<0)
+                                    if(!tag.empty())
                                     {
-                                        if (prop.check("tag"))
+                                        if(file.find(tag)==string::npos)
                                         {
-                                            Skeleton* skel = skeleton_factory(prop);
-                                            skeleton.update_fromstd(skel->toProperty());
-
-                                            delete skel;
+                                            if(prop.check("tag"))
+                                            {
+                                                Skeleton* skel = skeleton_factory(prop);
+                                                skeleton.update_fromstd(skel->toProperty());
+//                                                skeleton.print();
+                                                delete skel;
+                                            }
                                         }
                                     }
                                 }
@@ -292,17 +221,23 @@ class Scaler : public RFModule
             }
         }
     }
+
     /****************************************************************/
-    bool rotateCam(const Vector& camerapos)
+    bool rotateCam(const Vector& camerapos,const Vector& focalpoint)
     {
         Bottle cmd,rep;
         cmd.addString("set_camera");
         Bottle &content = cmd.addList();
         content.addString("position");
-        Bottle &content2 = content.addList();
-        content2.addDouble(camerapos[0]);
-        content2.addDouble(camerapos[1]);
-        content2.addDouble(camerapos[2]);
+        Bottle &position = content.addList();
+        position.addDouble(camerapos[0]);
+        position.addDouble(camerapos[1]);
+        position.addDouble(camerapos[2]);
+        content.addString("focalpoint");
+        Bottle &fp = content.addList();
+        fp.addDouble(focalpoint[0]);
+        fp.addDouble(focalpoint[1]);
+        fp.addDouble(focalpoint[2]);
 
         yInfo() << cmd.toString();
         if(rpcViewerPort.write(cmd,rep))
@@ -326,7 +261,7 @@ class Scaler : public RFModule
         cmd.addDouble(rot[1]);
         cmd.addDouble(rot[2]);
         cmd.addDouble(rot[3]);
-        yInfo() << cmd.toString();
+//        yInfo() << cmd.toString();
         if(cmdPort.write(cmd,rep))
         {
             if(rep.get(0).asVocab()==Vocab::encode("ok"))
@@ -352,7 +287,7 @@ class Scaler : public RFModule
         Bottle cmd,rep;
         cmd.addString("scale");
         cmd.addDouble(scale);
-        yInfo() << cmd.toString();
+//        yInfo() << cmd.toString();
         if(cmdPort.write(cmd,rep))
         {
             if(rep.get(0).asVocab()==Vocab::encode("ok"))
@@ -435,7 +370,7 @@ class Scaler : public RFModule
     bool interruptModule()
     {
        stop();
-       retrieverPort.interrupt();
+//       retrieverPort.interrupt();
        opcPort.interrupt();
        cmdPort.interrupt();
        rpcViewerPort.interrupt();
@@ -446,7 +381,7 @@ class Scaler : public RFModule
     /****************************************************************/
     bool close()
     {
-        retrieverPort.close();
+//        retrieverPort.close();
         opcPort.close();
         cmdPort.close();
         rpcViewerPort.close();
