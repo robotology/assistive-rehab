@@ -50,35 +50,32 @@ class MetaSkeleton
     vector<pair<string,Vector>> optimize_limb(const vector<string> &tags)
     {
         vector<pair<string,Vector>> unordered;
-        if (!tags.empty())
+        bool ok=true;
+        vector<double> lengths;
+        for (const auto &tag:tags)
         {
-            bool ok=true;
-            vector<double> lengths;
-            for (const auto &tag:tags)
+            ok&=(*skeleton)[tag]->isUpdated();
+            auto &it=limbs_length_cnt.find(tag);
+            if (it!=limbs_length_cnt.end())
             {
-                ok&=(*skeleton)[tag]->isUpdated();
-                auto &it=limbs_length_cnt.find(tag);
-                if (it!=limbs_length_cnt.end())
-                {
-                    lengths.push_back(it->second);
-                }
+                lengths.push_back(it->second);
             }
-            if (ok)
-            {
-                Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
-                app->Options()->SetNumericValue("tol",1e-4);
-                app->Options()->SetNumericValue("constr_viol_tol",1e-6);
-                app->Options()->SetIntegerValue("acceptable_iter",0);
-                app->Options()->SetStringValue("mu_strategy","adaptive");
-                app->Options()->SetIntegerValue("max_iter",100);
-                app->Options()->SetNumericValue("max_cpu_time",0.1);
-                app->Options()->SetStringValue("hessian_approximation","limited-memory");
-                app->Initialize();
+        }
+        if (ok && !lengths.empty())
+        {
+            Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
+            app->Options()->SetNumericValue("tol",1e-4);
+            app->Options()->SetNumericValue("constr_viol_tol",1e-6);
+            app->Options()->SetIntegerValue("acceptable_iter",0);
+            app->Options()->SetStringValue("mu_strategy","adaptive");
+            app->Options()->SetIntegerValue("max_iter",100);
+            app->Options()->SetNumericValue("max_cpu_time",0.1);
+            app->Options()->SetStringValue("hessian_approximation","limited-memory");
+            app->Initialize();
 
-                Ipopt::SmartPtr<LimbOptimizer> nlp=new LimbOptimizer((*skeleton)[tags[0]],lengths);
-                Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(nlp));
-                unordered=nlp->get_result();
-            }
+            Ipopt::SmartPtr<LimbOptimizer> nlp=new LimbOptimizer((*skeleton)[tags[0]],lengths);
+            Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(nlp));
+            unordered=nlp->get_result();
         }
         return unordered;
     }
@@ -171,8 +168,11 @@ public:
 
         if (optimize_limblength)
         {
-            vector<pair<string,Vector>> unordered,unordered_;
-            unordered=optimize_limb({KeyPointTag::shoulder_left,KeyPointTag::elbow_left,KeyPointTag::hand_left});
+            vector<pair<string,Vector>> unordered=skeleton->get_unordered();
+            vector<pair<string,Vector>> unordered_;
+
+            unordered_=optimize_limb({KeyPointTag::shoulder_left,KeyPointTag::elbow_left,KeyPointTag::hand_left});
+            unordered.insert(end(unordered),begin(unordered_),end(unordered_));
 
             unordered_=optimize_limb({KeyPointTag::shoulder_right,KeyPointTag::elbow_right,KeyPointTag::hand_right});
             unordered.insert(end(unordered),begin(unordered_),end(unordered_));
