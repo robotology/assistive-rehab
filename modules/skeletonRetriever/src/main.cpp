@@ -55,10 +55,14 @@ class MetaSkeleton
         for (const auto &tag:tags)
         {
             ok&=(*skeleton)[tag]->isUpdated();
-            auto &it=limbs_length_cnt.find(tag);
-            if (it!=limbs_length_cnt.end())
+            auto &cnt=limbs_length_cnt.find(tag);
+            if (cnt!=limbs_length_cnt.end())
             {
-                lengths.push_back(it->second);
+                auto &flt=limbs_length[tag];
+                if (cnt->second>=flt->getOrder())
+                {
+                    lengths.push_back(flt->output()[0]);
+                }
             }
         }
         if (ok && !lengths.empty())
@@ -71,6 +75,8 @@ class MetaSkeleton
             app->Options()->SetIntegerValue("max_iter",100);
             app->Options()->SetNumericValue("max_cpu_time",0.1);
             app->Options()->SetStringValue("hessian_approximation","limited-memory");
+            app->Options()->SetStringValue("derivative_test","none");
+            app->Options()->SetIntegerValue("print_level",0);
             app->Initialize();
 
             Ipopt::SmartPtr<LimbOptimizer> nlp=new LimbOptimizer((*skeleton)[tags[0]],lengths);
@@ -133,16 +139,16 @@ public:
     /****************************************************************/
     void update(const vector<pair<string,Vector>> &unordered)
     {
-        vector<pair<string,Vector>> unordered_fitered;
+        vector<pair<string,Vector>> unordered_filtered;
         for (auto &p:unordered)
         {
             int i=skeleton->getNumFromKey(p.first);
             if (i>=0)
             {
-                unordered_fitered.push_back(make_pair(p.first,filter[i]->filt(p.second)));
+                unordered_filtered.push_back(make_pair(p.first,filter[i]->filt(p.second)));
             }
         }
-        skeleton->update(unordered_fitered);
+        skeleton->update(unordered_filtered);
 
         for (auto &it:limbs_length)
         {
@@ -168,22 +174,20 @@ public:
 
         if (optimize_limblength)
         {
-            vector<pair<string,Vector>> unordered=skeleton->get_unordered();
-            vector<pair<string,Vector>> unordered_;
+            vector<pair<string,Vector>> tmp;
+            tmp=optimize_limb({KeyPointTag::shoulder_left,KeyPointTag::elbow_left,KeyPointTag::hand_left});
+            unordered_filtered.insert(end(unordered_filtered),begin(tmp),end(tmp));
 
-            unordered_=optimize_limb({KeyPointTag::shoulder_left,KeyPointTag::elbow_left,KeyPointTag::hand_left});
-            unordered.insert(end(unordered),begin(unordered_),end(unordered_));
+            tmp=optimize_limb({KeyPointTag::shoulder_right,KeyPointTag::elbow_right,KeyPointTag::hand_right});
+            unordered_filtered.insert(end(unordered_filtered),begin(tmp),end(tmp));
 
-            unordered_=optimize_limb({KeyPointTag::shoulder_right,KeyPointTag::elbow_right,KeyPointTag::hand_right});
-            unordered.insert(end(unordered),begin(unordered_),end(unordered_));
+            tmp=optimize_limb({KeyPointTag::hip_left,KeyPointTag::knee_left,KeyPointTag::ankle_left});
+            unordered_filtered.insert(end(unordered_filtered),begin(tmp),end(tmp));
 
-            unordered_=optimize_limb({KeyPointTag::hip_left,KeyPointTag::knee_left,KeyPointTag::ankle_left});
-            unordered.insert(end(unordered),begin(unordered_),end(unordered_));
+            tmp=optimize_limb({KeyPointTag::hip_right,KeyPointTag::knee_right,KeyPointTag::ankle_right});
+            unordered_filtered.insert(end(unordered_filtered),begin(tmp),end(tmp));
 
-            unordered_=optimize_limb({KeyPointTag::hip_right,KeyPointTag::knee_right,KeyPointTag::ankle_right});
-            unordered.insert(end(unordered),begin(unordered_),end(unordered_));
-
-            skeleton->update(unordered);
+            skeleton->update(unordered_filtered);
         }
     }
 };
