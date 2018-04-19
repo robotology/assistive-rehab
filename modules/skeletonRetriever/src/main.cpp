@@ -28,6 +28,7 @@
 #include <yarp/math/Math.h>
 #include <iCub/ctrl/filters.h>
 #include "AssistiveRehab/skeleton.h"
+#include "nlp.h"
 
 using namespace std;
 using namespace yarp::os;
@@ -44,6 +45,43 @@ class MetaSkeleton
     unordered_map<string,shared_ptr<MedianFilter>> limbs_length;
     unordered_map<string,unsigned int> limbs_length_cnt;
     bool optimize_limblength;
+
+    /****************************************************************/
+    vector<pair<string,Vector>> optimize_limb(const vector<string> &tags)
+    {
+        vector<pair<string,Vector>> unordered;
+        if (!tags.empty())
+        {
+            bool ok=true;
+            vector<double> lengths;
+            for (const auto &tag:tags)
+            {
+                ok&=(*skeleton)[tag]->isUpdated();
+                auto &it=limbs_length_cnt.find(tag);
+                if (it!=limbs_length_cnt.end())
+                {
+                    lengths.push_back(it->second);
+                }
+            }
+            if (ok)
+            {
+                Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
+                app->Options()->SetNumericValue("tol",1e-4);
+                app->Options()->SetNumericValue("constr_viol_tol",1e-6);
+                app->Options()->SetIntegerValue("acceptable_iter",0);
+                app->Options()->SetStringValue("mu_strategy","adaptive");
+                app->Options()->SetIntegerValue("max_iter",100);
+                app->Options()->SetNumericValue("max_cpu_time",0.1);
+                app->Options()->SetStringValue("hessian_approximation","limited-memory");
+                app->Initialize();
+
+                Ipopt::SmartPtr<LimbOptimizer> nlp=new LimbOptimizer((*skeleton)[tags[0]],lengths);
+                Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(nlp));
+                unordered=nlp->get_result();
+            }
+        }
+        return unordered;
+    }
 
 public:
     double timer;
@@ -118,15 +156,34 @@ public:
             {
                 double d=norm(k->getPoint()-p->getPoint());
                 it.second->filt(Vector(1,d));
-                limbs_length_cnt[it.first]++;
-
                 if (limbs_length_cnt[it.first]>=it.second->getOrder())
                 {
                     yInfo()<<"Skeleton:"<<skeleton->getTag()
                            <<"limb:"<<p->getTag()<<"-"<<k->getTag()
                            <<"length:"<<it.second->output()[0];
                 }
+                else
+                {
+                    limbs_length_cnt[it.first]++;
+                }
             }
+        }
+
+        if (optimize_limblength)
+        {
+            vector<pair<string,Vector>> unordered,unordered_;
+            unordered=optimize_limb({KeyPointTag::shoulder_left,KeyPointTag::elbow_left,KeyPointTag::hand_left});
+
+            unordered_=optimize_limb({KeyPointTag::shoulder_right,KeyPointTag::elbow_right,KeyPointTag::hand_right});
+            unordered.insert(end(unordered),begin(unordered_),end(unordered_));
+
+            unordered_=optimize_limb({KeyPointTag::hip_left,KeyPointTag::knee_left,KeyPointTag::ankle_left});
+            unordered.insert(end(unordered),begin(unordered_),end(unordered_));
+
+            unordered_=optimize_limb({KeyPointTag::hip_right,KeyPointTag::knee_right,KeyPointTag::ankle_right});
+            unordered.insert(end(unordered),begin(unordered_),end(unordered_));
+
+            skeleton->update(unordered);
         }
     }
 };

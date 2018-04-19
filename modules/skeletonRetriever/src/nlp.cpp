@@ -137,12 +137,13 @@ bool LimbOptimizer::eval_jac_g(Ipopt::Index n, const Ipopt::Number *x,
         Ipopt::Index i=3;
         for (Ipopt::Index j=1; j<m; j++)
         {
-            iRow[i+0]=j; jCol[i+0]=j+0;
-            iRow[i+1]=j; jCol[i+1]=j+1;
-            iRow[i+2]=j; jCol[i+2]=j+2;
-            iRow[i+3]=j; jCol[i+3]=j+3;
-            iRow[i+4]=j; jCol[i+4]=j+4;
-            iRow[i+5]=j; jCol[i+5]=j+5;
+            Ipopt::Index k=j-1;
+            iRow[i+0]=j; jCol[i+0]=k+0;
+            iRow[i+1]=j; jCol[i+1]=k+1;
+            iRow[i+2]=j; jCol[i+2]=k+2;
+            iRow[i+3]=j; jCol[i+3]=k+3;
+            iRow[i+4]=j; jCol[i+4]=k+4;
+            iRow[i+5]=j; jCol[i+5]=k+5;
             i+=6;
         }
     }
@@ -154,15 +155,17 @@ bool LimbOptimizer::eval_jac_g(Ipopt::Index n, const Ipopt::Number *x,
         values[2]=2.0*(x[2]-b[2]);
 
         Ipopt::Index i=3;
-        for (Ipopt::Index j=1; j<m; j++)
+        Ipopt::Index j=0;
+        for (Ipopt::Index k=1; k<m; k++)
         {
-            values[i+0]=-2.0*(x[i+3]-x[i+0]);
-            values[i+1]=-2.0*(x[i+4]-x[i+1]);
-            values[i+2]=-2.0*(x[i+5]-x[i+2]);
+            values[i+0]=-2.0*(x[j+3]-x[j+0]);
+            values[i+1]=-2.0*(x[j+4]-x[j+1]);
+            values[i+2]=-2.0*(x[j+5]-x[j+2]);
             values[i+3]=-values[i+0];
             values[i+4]=-values[i+1];
             values[i+5]=-values[i+2];
             i+=6;
+            j+=3;
         }
     }
     return true;
@@ -191,12 +194,14 @@ void LimbOptimizer::finalize_solution(Ipopt::SolverReturn status,
                                       Ipopt::IpoptCalculatedQuantities *ip_cq)
 {
     Vector v(3);
+    auto c=k->getChild(0); 
     for (Ipopt::Index i=0; i<n; i+=3)
     {
         v[0]=x[i+0];
         v[1]=x[i+1];
         v[2]=x[i+2];
-        result.push_back(v);
+        result.push_back(make_pair(c->getTag(),v));
+        c=c->getChild(0);
     }
 }
 
@@ -209,11 +214,5 @@ LimbOptimizer::LimbOptimizer(const KeyPoint* k_, vector<double> lengths_) :
     {
         num_var+=3;
     }
-}
-
-/****************************************************************/
-vector<Vector> LimbOptimizer::get_result() const
-{
-    return result;
 }
 

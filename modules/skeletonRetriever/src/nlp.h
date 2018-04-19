@@ -14,6 +14,7 @@
 #define NLP_H
 
 #include <vector>
+#include <utility>
 #include <IpTNLP.hpp>
 #include <IpIpoptApplication.hpp>
 #include <yarp/sig/Vector.h>
@@ -29,7 +30,7 @@ protected:
     std::vector<double> lengths;
 
     Ipopt::Index num_var;
-    std::vector<yarp::sig::Vector> result;
+    std::vector<std::pair<std::string,yarp::sig::Vector>> result;
 
     /****************************************************************/
     bool get_nlp_info(Ipopt::Index &n, Ipopt::Index &m, Ipopt::Index &nnz_jac_g,
@@ -81,7 +82,7 @@ public:
                   std::vector<double> lengths_);
 
     /****************************************************************/
-    std::vector<yarp::sig::Vector> get_result() const;
+    std::vector<std::pair<std::string,yarp::sig::Vector>> get_result() const { return result; }
 };
 
 #endif
