@@ -23,13 +23,10 @@
 #include <sstream>
 #include <iostream>
 #include <string>
-
 #include <yarp/os/all.h>
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
-
 #include <iCub/ctrl/filters.h>
-
 #include "AssistiveRehab/skeleton.h"
 
 using namespace std;
@@ -46,6 +43,7 @@ class MetaSkeleton
     vector<shared_ptr<MedianFilter>> filter;
     unordered_map<string,shared_ptr<MedianFilter>> limbs_length;
     unordered_map<string,unsigned int> limbs_length_cnt;
+    bool optimize_limblength;
 
 public:
     double timer;
@@ -56,8 +54,8 @@ public:
 
     /****************************************************************/
     MetaSkeleton(const double t, const int filter_keypoint_order_,
-                 const int filter_limblength_order_) : 
-                 timer(t), opc_id(-1)
+                 const int filter_limblength_order_, const bool optimize_limblength_) : 
+                 timer(t), opc_id(-1), optimize_limblength(optimize_limblength_)
     {
         skeleton=shared_ptr<SkeletonWaist>(new SkeletonWaist());
         keys_acceptable_misses.assign(skeleton->getNumKeyPoints(),0);
@@ -159,6 +157,7 @@ class Retriever : public RFModule
     double time_to_live;
     int filter_keypoint_order;
     int filter_limblength_order;
+    bool optimize_limblength;
     double t0;
 
     /****************************************************************/
@@ -214,7 +213,8 @@ class Retriever : public RFModule
     {
         shared_ptr<MetaSkeleton> s=shared_ptr<MetaSkeleton>(new MetaSkeleton(time_to_live,
                                                                              filter_keypoint_order,
-                                                                             filter_limblength_order));
+                                                                             filter_limblength_order,
+                                                                             optimize_limblength));
         vector<pair<string,Vector>> unordered;
         vector<Vector> hips;
 
@@ -450,30 +450,32 @@ class Retriever : public RFModule
         tracking_threshold=50;
         time_to_live=1.0;
         filter_keypoint_order=3;
-        filter_limblength_order=50;
+        filter_limblength_order=40;
+        optimize_limblength=false;
 
         // retrieve values from config file
         Bottle &gGeneral=rf.findGroup("general");
         if (!gGeneral.isNull())
         {
-            period=gGeneral.check("period",period).asDouble();
+            period=gGeneral.check("period",Value(period)).asDouble();
         }
 
         Bottle &gSkeleton=rf.findGroup("skeleton");
         if (!gSkeleton.isNull())
         {
-            keys_recognition_confidence=gSkeleton.check("key-recognition-confidence",keys_recognition_confidence).asDouble();
-            keys_recognition_percentage=gSkeleton.check("key-recognition-percentage",keys_recognition_percentage).asDouble();
-            keys_acceptable_misses=gSkeleton.check("keys-acceptable-misses",keys_acceptable_misses).asInt();
-            tracking_threshold=gSkeleton.check("tracking-threshold",tracking_threshold).asInt();
-            time_to_live=gSkeleton.check("time-to-live",time_to_live).asDouble();
+            keys_recognition_confidence=gSkeleton.check("key-recognition-confidence",Value(keys_recognition_confidence)).asDouble();
+            keys_recognition_percentage=gSkeleton.check("key-recognition-percentage",Value(keys_recognition_percentage)).asDouble();
+            keys_acceptable_misses=gSkeleton.check("keys-acceptable-misses",Value(keys_acceptable_misses)).asInt();
+            tracking_threshold=gSkeleton.check("tracking-threshold",Value(tracking_threshold)).asInt();
+            time_to_live=gSkeleton.check("time-to-live",Value(time_to_live)).asDouble();
         }
 
         Bottle &gFiltering=rf.findGroup("filtering");
         if (!gFiltering.isNull())
         {
-            filter_keypoint_order=gFiltering.check("filter-keypoint-order",filter_keypoint_order).asInt();
-            filter_limblength_order=gFiltering.check("filter-limblength-order",filter_limblength_order).asInt();
+            filter_keypoint_order=gFiltering.check("filter-keypoint-order",Value(filter_keypoint_order)).asInt();
+            filter_limblength_order=gFiltering.check("filter-limblength-order",Value(filter_limblength_order)).asInt();
+            optimize_limblength=(gFiltering.check("optimize-limblength",Value(optimize_limblength?"on":"off")).asString()=="on");
         }
 
         skeletonsPort.open("/skeletonRetriever/skeletons:i");

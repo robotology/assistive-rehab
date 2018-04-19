@@ -5,9 +5,10 @@
 project(skeletonRetriever)
 
 add_definitions(-D_USE_MATH_DEFINES)
-include_directories(${YARP_INCLUDE_DIRS} ${ICUB_INCLUDE_DIRS})
-add_executable(${PROJECT_NAME} src/main.cpp)
-target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} ctrlLib AssistiveRehab)
+include_directories(${IPOPT_INCLUDE_DIRS} ${YARP_INCLUDE_DIRS} ${ICUB_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/src)
+add_executable(${PROJECT_NAME} src/main.cpp src/nlp.h src/nlp.cpp)
+set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS " ${IPOPT_LINK_FLAGS}")
+target_link_libraries(${PROJECT_NAME} ${IPOPT_LIBRARIES} ${YARP_LIBRARIES} ctrlLib AssistiveRehab)
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
 file(GLOB ini app/conf/*.ini)
