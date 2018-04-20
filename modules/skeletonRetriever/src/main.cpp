@@ -54,7 +54,7 @@ class MetaSkeleton
         for (const auto &tag:tags)
         {
             all_updated&=(*skeleton)[tag]->isUpdated();
-            auto &cnt=limbs_length_cnt.find(tag);
+            const auto &cnt=limbs_length_cnt.find(tag);
             if (cnt!=limbs_length_cnt.end())
             {
                 auto &flt=limbs_length[tag];
