@@ -46,7 +46,7 @@ bool LimbOptimizer::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l,
     }
     for (Ipopt::Index i=0; i<m; i++)
     {
-        g_l[i]=g_u[i]=lengths[i];
+        g_l[i]=g_u[i]=lengths[i]*lengths[i];
     }
     return true;
 }

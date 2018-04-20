@@ -50,11 +50,11 @@ class MetaSkeleton
     vector<pair<string,Vector>> optimize_limb(const vector<string> &tags)
     {
         vector<pair<string,Vector>> unordered;
-        bool ok=true;
+        bool all_updated=true;
         vector<double> lengths;
         for (const auto &tag:tags)
         {
-            ok&=(*skeleton)[tag]->isUpdated();
+            all_updated&=(*skeleton)[tag]->isUpdated();
             auto &cnt=limbs_length_cnt.find(tag);
             if (cnt!=limbs_length_cnt.end())
             {
@@ -65,15 +65,15 @@ class MetaSkeleton
                 }
             }
         }
-        if (ok && !lengths.empty())
+        if (all_updated && (lengths.size()==tags.size()-1))
         {
             Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
-            app->Options()->SetNumericValue("tol",1e-4);
-            app->Options()->SetNumericValue("constr_viol_tol",1e-6);
+            app->Options()->SetNumericValue("tol",1e-6);
+            app->Options()->SetNumericValue("constr_viol_tol",1e-4);
             app->Options()->SetIntegerValue("acceptable_iter",0);
             app->Options()->SetStringValue("mu_strategy","adaptive");
-            app->Options()->SetIntegerValue("max_iter",100);
-            app->Options()->SetNumericValue("max_cpu_time",0.1);
+            app->Options()->SetIntegerValue("max_iter",50);
+            app->Options()->SetNumericValue("max_cpu_time",0.05);
             app->Options()->SetStringValue("hessian_approximation","limited-memory");
             app->Options()->SetStringValue("derivative_test","none");
             app->Options()->SetIntegerValue("print_level",0);
@@ -149,7 +149,7 @@ public:
             }
         }
         skeleton->update(unordered_filtered);
-
+        
         for (auto &it:limbs_length)
         {
             const auto &k=(*skeleton)[it.first];
@@ -157,8 +157,7 @@ public:
 
             if (k->isUpdated() && p->isUpdated())
             {
-                double d=norm(k->getPoint()-p->getPoint());
-                it.second->filt(Vector(1,d));
+                it.second->filt(Vector(1,norm(k->getPoint()-p->getPoint())));
                 if (limbs_length_cnt[it.first]>=it.second->getOrder())
                 {
                     yInfo()<<"Skeleton:"<<skeleton->getTag()
@@ -536,7 +535,7 @@ class Retriever : public RFModule
         {
             filter_keypoint_order=gFiltering.check("filter-keypoint-order",Value(filter_keypoint_order)).asInt();
             filter_limblength_order=gFiltering.check("filter-limblength-order",Value(filter_limblength_order)).asInt();
-            optimize_limblength=(gFiltering.check("optimize-limblength",Value(optimize_limblength?"on":"off")).asString()=="on");
+            optimize_limblength=gFiltering.check("optimize-limblength",Value(optimize_limblength)).asBool();
         }
 
         skeletonsPort.open("/skeletonRetriever/skeletons:i");
