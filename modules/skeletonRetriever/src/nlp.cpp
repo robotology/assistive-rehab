@@ -10,7 +10,6 @@
  * @authors: Ugo Pattacini <ugo.pattacini@iit.it>
  */
 
-#include <limits>
 #include <IpTNLP.hpp>
 #include <IpIpoptApplication.hpp>
 #include <yarp/math/Math.h>
@@ -51,10 +50,16 @@ protected:
                          Ipopt::Number *x_u, Ipopt::Index m,
                          Ipopt::Number *g_l, Ipopt::Number *g_u) override
     {
-        for (Ipopt::Index i=0; i<n; i++)
+        auto c=k;
+        Ipopt::Index j=0;
+        for (Ipopt::Index i=0; i<n; i+=3)
         {
-            x_l[i]=-numeric_limits<double>::infinity();
-            x_u[i]=numeric_limits<double>::infinity();
+            auto p=c->getPoint();
+            x_l[i+0]=p[0]-1.01*lengths[j]; x_u[i+0]=p[0]+1.01*lengths[j];
+            x_l[i+1]=p[1]-1.01*lengths[j]; x_u[i+1]=p[1]+1.01*lengths[j];
+            x_l[i+2]=p[2]-1.01*lengths[j]; x_u[i+2]=p[2]+1.01*lengths[j];
+            c=c->getChild(0);
+            j++;
         }
         for (Ipopt::Index i=0; i<m; i++)
         {
@@ -289,7 +294,7 @@ vector<pair<string,Vector>> LimbOptimizer::optimize(const KeyPoint* k,
     app->Options()->SetNumericValue("constr_viol_tol",1e-4);
     app->Options()->SetIntegerValue("acceptable_iter",0);
     app->Options()->SetStringValue("mu_strategy","adaptive");
-    app->Options()->SetIntegerValue("max_iter",50);
+    app->Options()->SetIntegerValue("max_iter",100);
     app->Options()->SetNumericValue("max_cpu_time",0.05);
     app->Options()->SetStringValue("hessian_constant","yes");
     app->Options()->SetIntegerValue("print_level",0);
@@ -297,11 +302,5 @@ vector<pair<string,Vector>> LimbOptimizer::optimize(const KeyPoint* k,
 
     Ipopt::SmartPtr<LimbOptimizerNLP> nlp=new LimbOptimizerNLP(k,lengths);
     Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(nlp));
-
-    vector<pair<string,Vector>> result;
-    if (status==Ipopt::Solve_Succeeded)
-    {
-        result=nlp->get_result();
-    }
-    return result;
+    return nlp->get_result();
 }
