@@ -255,5 +255,11 @@ vector<pair<string,Vector>> LimbOptimizer::optimize(const KeyPoint* k,
 
     Ipopt::SmartPtr<LimbOptimizerNLP> nlp=new LimbOptimizerNLP(k,lengths);
     Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(nlp));
-    return nlp->get_result();
+
+    vector<pair<string,Vector>> result;
+    if (status==Ipopt::Solve_Succeeded)
+    {
+        result=nlp->get_result();
+    }
+    return result;
 }
