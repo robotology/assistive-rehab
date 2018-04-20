@@ -47,9 +47,9 @@ protected:
     }
 
     /****************************************************************/
-    bool LimbOptimizerNLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l,
-                                        Ipopt::Number *x_u, Ipopt::Index m,
-                                        Ipopt::Number *g_l, Ipopt::Number *g_u) override
+    bool get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l,
+                         Ipopt::Number *x_u, Ipopt::Index m,
+                         Ipopt::Number *g_l, Ipopt::Number *g_u) override
     {
         for (Ipopt::Index i=0; i<n; i++)
         {

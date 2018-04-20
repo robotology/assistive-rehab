@@ -4,7 +4,7 @@
 
 project(skeletonRetriever)
 
-add_definitions(-D_USE_MATH_DEFINES)
+add_definitions(${IPOPT_DEFINITIONS} -D_USE_MATH_DEFINES)
 include_directories(${IPOPT_INCLUDE_DIRS} ${YARP_INCLUDE_DIRS} ${ICUB_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/src)
 add_executable(${PROJECT_NAME} src/main.cpp src/nlp.h src/nlp.cpp)
 set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS " ${IPOPT_LINK_FLAGS}")
