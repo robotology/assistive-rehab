@@ -68,7 +68,7 @@ class MetaSkeleton
         if (all_updated && (lengths.size()==tags.size()-1))
         {
             Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
-            app->Options()->SetNumericValue("tol",1e-6);
+            app->Options()->SetNumericValue("tol",1e-4);
             app->Options()->SetNumericValue("constr_viol_tol",1e-4);
             app->Options()->SetIntegerValue("acceptable_iter",0);
             app->Options()->SetStringValue("mu_strategy","adaptive");
