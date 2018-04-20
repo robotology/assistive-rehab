@@ -41,7 +41,7 @@ protected:
         n=num_var;
         m=n/3;
         nnz_jac_g=3+6*(m-1);
-        nnz_h_lag=0;
+        nnz_h_lag=(n*n+n)/2;
         index_style=TNLP::C_STYLE;
         return true;
     }
@@ -191,6 +191,49 @@ protected:
                 Ipopt::Index *iRow, Ipopt::Index *jCol,
                 Ipopt::Number *values) override
     {
+        if (values==nullptr)
+        {
+            Ipopt::Index i=0;
+            for (Ipopt::Index r=0; r<n; r++)
+            {
+                for (Ipopt::Index c=0; c<=r; c++)
+                {
+                    iRow[i]=r;
+                    jCol[i]=c;
+                    i++;
+                }
+            }
+        }
+        else
+        {
+            Ipopt::Index i=0;
+            for (Ipopt::Index r=0; r<n; r++)
+            {
+                for (Ipopt::Index c=0; c<=r; c++)
+                {
+                    values[i]=0.0;
+                    if (r==c)
+                    {
+                        Ipopt::Index j=r/3;
+                        values[i]+=2.0*(obj_factor+lambda[j]);
+                        if (j+1<m)
+                        {
+                            values[i]+=2.0*lambda[j+1];
+                        }
+                    }
+                    else for (Ipopt::Index j=1; j<m; j++)
+                    {
+                        Ipopt::Index lb=3*j-3;
+                        Ipopt::Index hb=lb+5;
+                        if ((r>=lb) && (r<=hb) && (c>=lb) && (c<=hb) && (abs(r-c)==3))
+                        {
+                            values[i]-=2.0*lambda[j];
+                        }
+                    }
+                    i++;
+                }
+            }
+        }
         return true;
     }
 
@@ -248,8 +291,7 @@ vector<pair<string,Vector>> LimbOptimizer::optimize(const KeyPoint* k,
     app->Options()->SetStringValue("mu_strategy","adaptive");
     app->Options()->SetIntegerValue("max_iter",50);
     app->Options()->SetNumericValue("max_cpu_time",0.05);
-    app->Options()->SetStringValue("hessian_approximation","limited-memory");
-    app->Options()->SetStringValue("derivative_test","none");
+    app->Options()->SetStringValue("hessian_constant","yes");
     app->Options()->SetIntegerValue("print_level",0);
     app->Initialize();
 
