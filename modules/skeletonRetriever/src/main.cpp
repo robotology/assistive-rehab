@@ -66,21 +66,7 @@ class MetaSkeleton
         }
         if (all_updated && (lengths.size()==tags.size()-1))
         {
-            Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
-            app->Options()->SetNumericValue("tol",1e-4);
-            app->Options()->SetNumericValue("constr_viol_tol",1e-4);
-            app->Options()->SetIntegerValue("acceptable_iter",0);
-            app->Options()->SetStringValue("mu_strategy","adaptive");
-            app->Options()->SetIntegerValue("max_iter",50);
-            app->Options()->SetNumericValue("max_cpu_time",0.05);
-            app->Options()->SetStringValue("hessian_approximation","limited-memory");
-            app->Options()->SetStringValue("derivative_test","none");
-            app->Options()->SetIntegerValue("print_level",0);
-            app->Initialize();
-
-            Ipopt::SmartPtr<LimbOptimizer> nlp=new LimbOptimizer((*skeleton)[tags[0]],lengths);
-            Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(nlp));
-            unordered=nlp->get_result();
+            unordered=LimbOptimizer::optimize((*skeleton)[tags[0]],lengths);
         }
         return unordered;
     }
