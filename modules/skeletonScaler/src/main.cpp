@@ -10,12 +10,13 @@
  * @authors: Valentina Vasco <valentina.vasco@iit.it>
  */
 
-#include "string"
-#include "cmath"
+#include <iostream>
+#include <string>
+#include <cmath>
 
-#include "yarp/sig/Vector.h"
-#include "yarp/os/all.h"
-#include "yarp/math/Math.h"
+#include <yarp/sig/Vector.h>
+#include <yarp/os/all.h>
+#include <yarp/math/Math.h>
 
 #include "AssistiveRehab/skeleton.h"
 
@@ -40,6 +41,7 @@ class Scaler : public RFModule
     Matrix invT;
     Vector rot;
     Vector xyz;
+    int cnt;
 
     /****************************************************************/
     bool configure(ResourceFinder &rf)
@@ -112,6 +114,8 @@ class Scaler : public RFModule
         invT.resize(4,4);
         invT.zero();
 
+        cnt=0;
+
         return true;
     }
 
@@ -126,30 +130,61 @@ class Scaler : public RFModule
     {
         if(opcPort.getOutputCount()>0)
         {
-            SkeletonWaist retrievedSkel;
-            getSkeletonFromOpc(retrievedSkel);
-//            retrievedSkel.print();
+            SkeletonWaist retrievedSkel, playedSkel;
+            getSkeletonsFromOpc(retrievedSkel,playedSkel);
 
-            Vector xyz_inv=invT.subcol(0,3,3);
-            xyz=retrievedSkel[KeyPointTag::shoulder_center]->getPoint();
-
-            //retrieve transformation from unmoved skeleton
-            Matrix T=axis2dcm(rot);
-            T(0,3)=xyz[0];
-            T(1,3)=xyz[1];
-            T(2,3)=xyz[2];
-            invT=SE3inv(T);
-
-            xyz[0]+=xyz_inv[0];
-            xyz[1]+=xyz_inv[1];
-            xyz[2]+=xyz_inv[2];
-            if(!moveSkeleton(xyz,rot))
-                yWarning() << "Unable to move";
-
-            double maxpath;
-            if(!retrievedSkel.getTag().empty())
+            if(!retrievedSkel.getTag().empty() && retrievedSkel.getTag()!="#8c"
+                    && retrievedSkel.getTag()!="flexion" && retrievedSkel.getTag()!="abduction")
             {
-//                yInfo() << retrievedSkel.getTag().c_str();
+                yInfo() << retrievedSkel.getTag();
+                xyz=retrievedSkel[KeyPointTag::shoulder_center]->getPoint();
+
+                //retrieve previous translation
+                Matrix prevRot(4,4);
+                prevRot.setSubmatrix(invT.submatrix(0,2,0,2).transposed(),0,0);
+                Vector v(4,0.0);
+                v[3]=1;
+                prevRot.setSubrow(v,3,3);
+                prevRot.setSubcol(v,3,3);
+                Vector xyz_inv=(prevRot*invT).subcol(0,3,3);
+
+                //get axis-angle to align coronal planes
+                Vector p1=retrievedSkel.getCoronal();
+                Vector p2=playedSkel.getCoronal();
+                Vector axis=cross(p2,p1);
+                if(norm(axis)>0.0)
+                    axis/=norm(axis);
+                double angle=acos(dot(p2,p1)/norm(p1)*norm(p2));
+                rot[0]=axis[0];
+                rot[1]=axis[1];
+                rot[2]=axis[2];
+                rot[3]=angle;
+
+                //current transformation
+                Matrix T=axis2dcm(rot);
+                T(0,3)=xyz[0];
+                T(1,3)=xyz[1];
+                T(2,3)=xyz[2];
+
+                xyz[0]+=xyz_inv[0];
+                xyz[1]+=xyz_inv[1];
+                xyz[2]+=xyz_inv[2];
+                Vector rot2;
+                if(!isZero(invT))
+                {
+                    Matrix rotback=multiply(T.submatrix(0,2,0,2),(invT.submatrix(0,2,0,2)).transposed());
+                    rot2=dcm2axis(rotback);
+                }
+                else
+                    rot2=rot;
+
+                if(!moveSkeleton(xyz,rot2))
+                    yWarning() << "Unable to move";
+
+                //retrieve transformation from unmoved skeleton
+                invT=SE3inv(T);
+
+                double maxpath;
                 getMaxPath(maxpath);
                 double scale=retrievedSkel.getMaxPath()/maxpath;
                 if(!setScale(scale))
@@ -164,7 +199,51 @@ class Scaler : public RFModule
     }
 
     /****************************************************************/
-    void getSkeletonFromOpc(SkeletonWaist& skeleton)
+    void print(const Matrix& m)
+    {
+        for(int i=0;i<m.rows();i++)
+        {
+            for(int j=0;j<m.cols();j++)
+            {
+                cout << m[i][j] << " ";
+            }
+            cout << "\n";
+        }
+    }
+
+    /****************************************************************/
+    Matrix multiply(const Matrix& m1, const Matrix& m2)
+    {
+        Matrix res(m1.rows(),m1.cols());
+        for(int i=0;i<m1.rows();i++)
+        {
+            for(int j=0;j<m1.cols();j++)
+            {
+                res[i][j]=m1[i][j]*m2[i][j];
+            }
+        }
+        return res;
+    }
+
+
+    /****************************************************************/
+    bool isZero(const Matrix& m)
+    {
+        int count=0;
+        for(int i=0;i<m.rows();i++)
+        {
+            for(int j=0;j<m.cols();j++)
+            {
+                if(m[i][j]!=0)
+                    count++;
+            }
+        }
+        return (count < 1);
+
+    }
+
+    /****************************************************************/
+    void getSkeletonsFromOpc(SkeletonWaist& skeleton, SkeletonWaist& playedSkel)
     {
         //ask for the property id
         Bottle cmd, reply;
@@ -202,14 +281,19 @@ class Scaler : public RFModule
                                     string tag=prop.find("tag").asString();
                                     if(!tag.empty())
                                     {
-                                        if(file.find(tag)==string::npos)
+                                        if(prop.check("tag"))
                                         {
-                                            if(prop.check("tag"))
+                                            if(file.find(tag)==string::npos)
                                             {
-                                                Skeleton* skel = skeleton_factory(prop);
-                                                skeleton.update_fromstd(skel->toProperty());
-//                                                skeleton.print();
-                                                delete skel;
+                                                Skeleton* skel1 = skeleton_factory(prop);
+                                                skeleton.update_fromstd(skel1->toProperty());
+                                                delete skel1;
+                                            }
+                                            else
+                                            {
+                                                Skeleton* skel2 = skeleton_factory(prop);
+                                                playedSkel.update_fromstd(skel2->toProperty());
+                                                delete skel2;
                                             }
                                         }
                                     }
@@ -261,7 +345,7 @@ class Scaler : public RFModule
         cmd.addDouble(rot[1]);
         cmd.addDouble(rot[2]);
         cmd.addDouble(rot[3]);
-//        yInfo() << cmd.toString();
+        yInfo() << cmd.toString();
         if(cmdPort.write(cmd,rep))
         {
             if(rep.get(0).asVocab()==Vocab::encode("ok"))
