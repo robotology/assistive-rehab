@@ -133,27 +133,48 @@ public:
                 unordered_filtered.push_back(make_pair(p.first,filter[i]->filt(p.second)));
             }
         }
+        // update 1: incorporate filtered feedback
         skeleton->update(unordered_filtered);
         
-        for (auto &it:limbs_length)
+        size_t latch_size=unordered_filtered.size();
+        for (auto &it1:limbs_length)
         {
-            const auto &k=(*skeleton)[it.first];
+            const auto &k=(*skeleton)[it1.first];
             const auto &p=k->getParent(0);
 
             if (k->isUpdated() && p->isUpdated())
             {
-                it.second->filt(Vector(1,norm(k->getPoint()-p->getPoint())));
-                if (limbs_length_cnt[it.first]>=it.second->getOrder())
+                double d=norm(k->getPoint()-p->getPoint());
+                it1.second->filt(Vector(1,d));
+                if (limbs_length_cnt[it1.first]>=it1.second->getOrder())
                 {
+                    // account for too long limb parts
+                    if (d>2.0*it1.second->output()[0])
+                    {
+                        for (auto &it2=begin(unordered_filtered); it2!=end(unordered_filtered); it2++)
+                        {
+                            if (it2->first==it1.first)
+                            {
+                                unordered_filtered.erase(it2);
+                                break;
+                            }
+                        }
+                    }
+
                     yInfo()<<"Skeleton:"<<skeleton->getTag()
                            <<"limb:"<<p->getTag()<<"-"<<k->getTag()
-                           <<"length:"<<it.second->output()[0];
+                           <<"length:"<<it1.second->output()[0];
                 }
                 else
                 {
-                    limbs_length_cnt[it.first]++;
+                    limbs_length_cnt[it1.first]++;
                 }
             }
+        }
+        // update 2: remove limbs' keypoints that are clearly too long
+        if (unordered_filtered.size()<latch_size)
+        {
+            skeleton->update(unordered_filtered);
         }
 
         if (optimize_limblength)
@@ -171,6 +192,7 @@ public:
             tmp=optimize_limb({KeyPointTag::hip_right,KeyPointTag::knee_right,KeyPointTag::ankle_right});
             unordered_filtered.insert(end(unordered_filtered),begin(tmp),end(tmp));
 
+            // update 3: adjust limbs' keypoints through optimization
             skeleton->update(unordered_filtered);
         }
     }

@@ -10,6 +10,7 @@
  * @authors: Ugo Pattacini <ugo.pattacini@iit.it>
  */
 
+#include <limits>
 #include <IpTNLP.hpp>
 #include <IpIpoptApplication.hpp>
 #include <yarp/math/Math.h>
@@ -27,7 +28,6 @@ class LimbOptimizerNLP : public Ipopt::TNLP
 protected:
     const KeyPoint* k;
     const vector<double>& lengths;
-    vector<double> weights;
 
     Ipopt::Index num_var;
     vector<pair<string,Vector>> result;
@@ -51,16 +51,10 @@ protected:
                          Ipopt::Number *x_u, Ipopt::Index m,
                          Ipopt::Number *g_l, Ipopt::Number *g_u) override
     {
-        auto c=k;
-        Ipopt::Index j=0;
-        for (Ipopt::Index i=0; i<n; i+=3)
+        for (Ipopt::Index i=0; i<n; i++)
         {
-            auto p=c->getPoint();
-            x_l[i+0]=p[0]-1.01*lengths[j]; x_u[i+0]=p[0]+1.01*lengths[j];
-            x_l[i+1]=p[1]-1.01*lengths[j]; x_u[i+1]=p[1]+1.01*lengths[j];
-            x_l[i+2]=p[2]-1.01*lengths[j]; x_u[i+2]=p[2]+1.01*lengths[j];
-            c=c->getChild(0);
-            j++;
+            x_l[i]=-numeric_limits<double>::infinity();
+            x_u[i]=+numeric_limits<double>::infinity();;
         }
         for (Ipopt::Index i=0; i<m; i++)
         {
@@ -101,7 +95,7 @@ protected:
             v[0]=x[i+0];
             v[1]=x[i+1];
             v[2]=x[i+2];
-            obj_value+=weights[j]*norm2(v-c->getPoint());
+            obj_value+=norm2(v-c->getPoint());
             i+=3;
             j++;
         }
@@ -117,9 +111,9 @@ protected:
         for (auto c=k->getChild(0); c!=nullptr; c=c->getChild(0))
         {
             Vector v=c->getPoint();
-            grad_f[i+0]=2.0*weights[j]*(x[i+0]-v[0]);
-            grad_f[i+1]=2.0*weights[j]*(x[i+1]-v[1]);
-            grad_f[i+2]=2.0*weights[j]*(x[i+2]-v[2]);
+            grad_f[i+0]=2.0*(x[i+0]-v[0]);
+            grad_f[i+1]=2.0*(x[i+1]-v[1]);
+            grad_f[i+2]=2.0*(x[i+2]-v[2]);
             i+=3;
             j++;
         }
@@ -225,7 +219,7 @@ protected:
                     if (r==c)
                     {
                         Ipopt::Index j=r/3;
-                        values[i]+=2.0*(obj_factor*weights[j]+lambda[j]);
+                        values[i]+=2.0*(obj_factor+lambda[j]);
                         if (j+1<m)
                         {
                             values[i]+=2.0*lambda[j+1];
@@ -279,13 +273,6 @@ public:
         for (auto c=k->getChild(0); c!=nullptr; c=c->getChild(0))
         {
             num_var+=3;
-        }
-
-        Ipopt::Index i=0;
-        for (auto c=k->getChild(0); c!=nullptr; c=c->getChild(0))
-        {
-            auto p=c->getParent(0);
-            weights.push_back(norm(c->getPoint()-p->getPoint())<2.0*lengths[i++]?1.0:0.0);
         }
     }
 
