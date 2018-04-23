@@ -13,36 +13,36 @@
 service recognition_IDL
 {
     /**
-     * Set the lower bound of the colour threshold
-     * @param name: name of the label to assign
-     * @return true/false on success/failure
+     * Train a face.
+     * @param name: name of the label to assign.
+     * @return true/false on success/failure.
      */
     bool train(1:string name);
 
     /**
-     * Set the lower bound of the colour threshold
-     * @param label: object name to forget
-     * @return true/false on success/failure
+     * Forget a face.
+     * @param label: object name to forget. Use "all" to forget all faces.
+     * @return true/false on success/failure.
      */
     bool forget(1:string label);
 
     /**
-     * Set the confidenceThreshold
-     * @param thresh: threshold of the confidence
-     * @return true/false on success/failure
+     * Set the confidenceThreshold.
+     * @param thresh: threshold of the confidence.
+     * @return true/false on success/failure.
      */
     bool setConfidenceThreshold(1:double thresh);
 
     /**
-     * Get the confidenceThreshold
-     * @param thresh: threshold of the confidence
-     * @return value of confidence Threshold
+     * Get the confidenceThreshold.
+     * @param thresh: threshold of the confidence.
+     * @return value of confidence Threshold.
      */
     double getConfidenceThreshold();
 
     /**
      * Quit the module.
-     * @return true/false on success/failure
+     * @return true/false on success/failure.
      */
     bool quit();
 }
