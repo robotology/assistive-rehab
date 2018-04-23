@@ -9,7 +9,7 @@
 
     <module>
         <name>yarpOpenPose</name>
-        <node>localhost</node>
+        <node>cuda-machine</node>
     </module>
 
     <module>
@@ -45,13 +45,13 @@
     <connection>
         <from>/depthCamera/rgbImage:o</from>
         <to>/yarpOpenPose/image:i</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/depthCamera/depthImage:o</from>
         <to>/skeletonRetriever/depth:i</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
@@ -75,13 +75,13 @@
     <connection>
         <from>/depthCamera/depthImage:o</from>
         <to>/viewer/depth</to>
-        <protocol>tcp+recv.portmonitor+type.dll+file.depthimage</protocol>
+        <protocol>fast_tcp+recv.portmonitor+type.dll+file.depthimage</protocol>
     </connection>
 
     <connection>
         <from>/yarpOpenPose/image:o</from>
         <to>/viewer/skeleton</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>

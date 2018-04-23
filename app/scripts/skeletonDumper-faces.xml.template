@@ -1,5 +1,5 @@
 <application>
-<name>Assistive Rehabilitation skeletonDumper App</name>
+<name>Assistive Rehabilitation skeletonDumper with Faces App</name>
 
     <module>
         <name>yarpdatadumper --name /skeletonDumper/skeletons-img --type image</name>
@@ -16,6 +16,11 @@
         <node>localhost</node>
     </module>
 
+    <module>
+        <name>yarpdatadumper --name /skeletonDumper/faces --type image</name>
+        <node>localhost</node>
+    </module>
+
     <connection>
         <from>/yarpOpenPose/image:o</from>
         <to>/skeletonDumper/skeletons-img</to>
@@ -23,7 +28,7 @@
     </connection>
 
     <connection>
-        <from>/yarpOpenPose/target:o</from>
+        <from>/recognition-manager/target:o</from>
         <to>/skeletonDumper/skeletons-data</to>
         <protocol>tcp</protocol>
     </connection>
@@ -31,6 +36,12 @@
     <connection>
         <from>/depthCamera/depthImage:o</from>
         <to>/skeletonDumper/depth</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/recognition-manager/image:o</from>
+        <to>/skeletonDumper/faces</to>
         <protocol>fast_tcp</protocol>
     </connection>
 </application>
