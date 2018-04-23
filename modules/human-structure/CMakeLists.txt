@@ -1,4 +1,4 @@
-# Copyright: (C) 2016 iCub Facility - Istituto Italiano di Tecnologia
+# Copyright: (C) 2018 iCub Facility - Istituto Italiano di Tecnologia
 # Authors: Vadim Tikhanoff
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 
