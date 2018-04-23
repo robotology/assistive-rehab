@@ -33,7 +33,7 @@ using namespace assistive_rehab;
 
 void Manager::init()
 {
-    numKeypoints = 14;
+    numKeypoints = 15;
 
     //tag2key initial configuration
     elbowLeft_init.resize(3);
@@ -51,7 +51,7 @@ void Manager::init()
     ankleLeft_init.resize(3);
     ankleRight_init.resize(3);
 
-    initial_keypoints.resize(numKeypoints);
+    initial_keypoints.resize(numKeypoints-1);
 
     elbowLeft.resize(3);
     elbowRight.resize(3);
@@ -68,7 +68,7 @@ void Manager::init()
     ankleLeft.resize(3);
     ankleRight.resize(3);
 
-    curr_keypoints.resize(numKeypoints);
+    curr_keypoints.resize(numKeypoints-1);
 
     keypoints2conf[KeyPointTag::shoulder_center] = make_pair("static", 0.0);
     keypoints2conf[KeyPointTag::head] = make_pair("static", 0.0);
@@ -84,9 +84,6 @@ void Manager::init()
     keypoints2conf[KeyPointTag::hip_right] = make_pair("static", 0.0);
     keypoints2conf[KeyPointTag::knee_right] = make_pair("static", 0.0);
     keypoints2conf[KeyPointTag::ankle_right] = make_pair("static", 0.0);
-
-//    all_keypoints.resize(1000);
-//    all_keypoints[0].resize(numKeypoints);
 
 }
 
@@ -647,12 +644,14 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
                                 else
                                     yError() << "Could not load ankle right configuration";
 
-                                metric_repertoire = new Rom(curr_tag+"_"+to_string(j), motion_type, tag_joint,
+                                metric_repertoire = new Rom(curr_tag, motion_type, tag_joint,
                                                     ref_dir, plane_normal, min, max, timeout, keypoints2conf);
                             }
 
                             //add the current metric to the repertoire
                             motion_repertoire.insert(pair<string, Metric*>(curr_tag+"_"+to_string(j), metric_repertoire)); // metrics[j]));
+//                            loadMetric(curr_tag+"_"+to_string(j));
+
 //                            motion_repertoire[curr_tag+"_"+to_string(j)]->print();
                         }
                     }
@@ -730,6 +729,7 @@ bool Manager::loadMotionList(const string& motion_repertoire_file)
 bool Manager::loadMetric(const string &metric_tag)
 {
     metric = motion_repertoire.at(metric_tag);
+    yInfo() << "Metric to analyze";
     metric->print();
     SkeletonWaist skel;
     for(int j=0; j<skeletonsInit.size(); j++)
@@ -743,6 +743,8 @@ bool Manager::loadMetric(const string &metric_tag)
 
     processor = createProcessor(metric_tag, metric);
     processor->setInitialConf(skel, metric->getInitialConf());
+
+    tstart_session = Time::now()-tstart;
 
     return true;
 }
@@ -1055,9 +1057,10 @@ bool Manager::configure(ResourceFinder &rf)
 
     opcPort.open(("/" + getName() + "/opc").c_str());
     scopePort.open(("/" + getName() + "/scope").c_str());
-    testPort.open(("/" + getName() + "/test").c_str());
     rpcPort.open(("/" + getName() + "/cmd").c_str());
     attach(rpcPort);
+
+    metric=NULL;
 
     init();
     loadInitialConf(motion_repertoire_file);
@@ -1072,7 +1075,6 @@ bool Manager::configure(ResourceFinder &rf)
         yError() << "Error creating MAT file";
 
     tstart = Time::now();
-    tstart_session = Time::now();
 
     finishedSession = false;
 
@@ -1082,9 +1084,11 @@ bool Manager::configure(ResourceFinder &rf)
 /********************************************************/
 bool Manager::interruptModule()
 {
+    yInfo() << "Keypoints saved to file" << filename_report.c_str();
+    Mat_Close(matfp);
+
     opcPort.interrupt();
     scopePort.interrupt();
-    testPort.interrupt();
     rpcPort.interrupt();
     yInfo() << "Interrupted module";
 
@@ -1097,9 +1101,6 @@ bool Manager::close()
 //    yInfo() << "Writing to file";
 //    if(writeKeypointsToFile())
 //        yInfo() << "Keypoints saved to file" << filename_report.c_str();
-
-    yInfo() << "Keypoints saved to file" << filename_report.c_str();
-    Mat_Close(matfp);
 
     delete metric_repertoire;
     delete metric;
@@ -1121,7 +1122,6 @@ bool Manager::close()
 
     opcPort.close();
     scopePort.close();
-    testPort.close();
     rpcPort.close();
 
     yInfo() << "Closed ports";
@@ -1139,186 +1139,57 @@ double Manager::getPeriod()
 bool Manager::updateModule()
 {
     //if we query the database
-    if(opcPort.getOutputCount() > 0 && processor != NULL)
+    if(opcPort.getOutputCount() > 0)
     {
-        //get skeleton and normalize
-        getSkeleton();
-
-        if(skeletonIn.getTag() != "")
+        //if no metric has been defined we do not analyze motion
+        if(metric != NULL)
         {
-            //update time array
-            time_samples.push_back(Time::now());
+            //get skeleton and normalize
+            getSkeleton();
 
-
-            //        skeletonIn.print();
-            skeletonIn.normalize();
-
-//            Vector result;
-//            result.resize(processors.size());
-//            for(int i=0; i<processors.size(); i++)
-//            {
-//                processors[i]->update(skeletonIn);
-//                if(processors[i]->isDeviatingFromIntialPose())
-//                    yWarning() << "Deviating from initial pose\n";
-
-//                result[i] = processors[i]->computeMetric();
-//            }
-
-//            //write on output port
-//            Bottle &scopebottleout = scopePort.prepare();
-//            scopebottleout.clear();
-//            scopebottleout.addDouble(result[result.size()-1]);
-//            scopebottleout.addDouble(metrics[result.size()-1]->getMin());
-//            scopebottleout.addDouble(metrics[result.size()-1]->getMax());
-//            scopePort.write();
-
-            processor->update(skeletonIn);
-            if(processor->isDeviatingFromIntialPose())
-                yWarning() << "Deviating from initial pose\n";
-
-            double result = processor->computeMetric();
-
-            //write on output port
-            Bottle &scopebottleout = scopePort.prepare();
-            scopebottleout.clear();
-            scopebottleout.addDouble(result);
-            scopebottleout.addDouble(metric->getMin());
-            scopebottleout.addDouble(metric->getMax());
-            scopePort.write();
-
-
-            tend_session = Time::now();
-            if(tend_session-tstart_session > 5.0)
-                finishedSession = true;
-
-            if(finishedSession)
+            if(!skeletonIn.getTag().empty())
             {
-                //            yInfo() << "Writing to file";
-                //            if(writeKeypointsToFile())
-                //            {
-                //                time_samples.clear();
-                //                all_keypoints.clear();
-                //            }
+                //update time array
+                time_samples.push_back(Time::now()-tstart);
 
-                finishedSession = false;
-                tstart_session = tend_session;
+                //        skeletonIn.print();
+                skeletonIn.normalize();
+
+                processor->update(skeletonIn);
+                //            if(processor->isDeviatingFromIntialPose())
+                //                yWarning() << "Deviating from initial pose\n";
+
+                double result = processor->computeMetric();
+
+                //write on output port
+                Bottle &scopebottleout = scopePort.prepare();
+                scopebottleout.clear();
+                scopebottleout.addDouble(result);
+                scopebottleout.addDouble(metric->getMin());
+                scopebottleout.addDouble(metric->getMax());
+                scopePort.write();
+
+                tend_session = Time::now()-tstart;
+                if(tend_session-tstart_session > 5.0)
+                    finishedSession = true;
+
+                if(finishedSession)
+                {
+                    yInfo() << "Writing to file";
+                    if(writeKeypointsToFile())
+                    {
+                        time_samples.clear();
+                        all_keypoints.clear();
+                    }
+
+                    finishedSession = false;
+                    tstart_session = tend_session;
+                }
             }
         }
+        else
+            yInfo() << "Please specify metric";
     }
-
-
-//    Bottle *input = testPort.read();
-//    for (int i=0; i<input->size(); i++)
-//    {
-//        if (Bottle *b=input->get(i).asList())
-//        {
-//            if (b->check("tag"))
-//            {
-//                Property prop(b->toString().c_str());
-//                string tag=prop.find("tag").asString();
-//                if (!tag.empty())
-//                {
-//                    if (prop.check("tag"))
-//                    {
-//                        Skeleton* skeleton = skeleton_factory(prop);
-//                        //                        skeleton->print();
-//                        SkeletonWaist skeletonFromProp;
-//                        skeletonFromProp.update_fromstd(skeleton->get_unordered());
-
-//                        skeletonFromProp.normalize();
-
-//                        Vector result;
-//                        result.resize(processors.size());
-//                        for(int i=0; i<processors.size(); i++)
-//                        {
-//                            processors[i]->update(skeletonFromProp);
-//                            if(processors[i]->isDeviatingFromIntialPose())
-//                                yWarning() << "Deviating from initial pose\n";
-
-//                            result[i] = processors[i]->computeMetric();
-//                        }
-
-//                        delete skeleton;
-
-//                        //write on output port
-//                        Bottle &scopebottleout = scopePort.prepare();
-//                        scopebottleout.clear();
-//                        scopebottleout.addDouble(result[result.size()-1]);
-//                        scopebottleout.addDouble(metrics[result.size()-1]->getMin());
-//                        scopebottleout.addDouble(metrics[result.size()-1]->getMax());
-//                        scopePort.write();
-//                    }
-//                }
-//            }
-//        }
-//    }
-
-//    //if we query the database
-//    if(opcPort.getOutputCount() > 0)
-//    {
-//        //update time array
-//        time_samples.push_back(Time::now());
-
-//        //get keyframes from skeleton
-//        getKeyframes();
-
-//        //populate Skeleton data structure
-//        SkeletonWaist skeleton;
-//        skeleton.update_fromstd(curr_keypoints);
-
-//        //        skeleton.print();
-
-//        //transform detected skeleton into standard
-//        skeleton.normalize();
-
-//        Vector result;
-//        result.resize(processors.size());
-//        double tnow = Time::now();
-//        double currres = -1.0;
-//        double prev_timeout = 0.0;
-//        double timeout = 0.0;
-//        for(int i=0; i<processors.size(); i++)
-//        {
-////            processors[i]->update(skeleton);
-////            if(processors[i]->isDeviatingFromIntialPose())
-////                yWarning() << "Deviating from initial pose\n";
-
-////            result[i] = processors[i]->computeMetric();
-
-////            //check which is the current processor based on timeout
-////            timeout += processors[i]->getTimeout();
-////            //            cout << (tnow-tstart) << " " << prev_timeout << " " << timeout << endl;
-////            if( prev_timeout < (tnow-tstart) && (tnow-tstart) < timeout )
-////                currres = result[i];
-////            else
-////                currres = result[processors.size()];
-
-////            prev_timeout = timeout;
-//        }
-
-//        //write on output port
-//        Bottle &scopebottleout = scopePort.prepare();
-//        scopebottleout.clear();
-//        scopebottleout.addDouble(currres);
-//        scopePort.write();
-
-//        tend_session = Time::now();
-//        if(tend_session-tstart_session > 5.0)
-//            finishedSession = true;
-
-//        if(finishedSession)
-//        {
-//            yInfo() << "Writing to file";
-//            if(writeKeypointsToFile())
-//            {
-//                time_samples.clear();
-//                all_keypoints.clear();
-//            }
-
-//            finishedSession = false;
-//            tstart_session = tend_session;
-//        }
-//    }
 
     return true;
 }
@@ -1328,6 +1199,7 @@ bool Manager::writeStructToMat(const string& name, const vector< vector< pair<st
     const char *fields[numKeypoints];
     for(int i=0; i<numKeypoints; i++)
     {
+//        if(keypoints_skel[0][i].first.c_str() != KeyPointTag::hip_center)
 //        cout << i << " " << keypoints_skel[0][i].first.c_str() << endl;
         fields[i]=keypoints_skel[0][i].first.c_str();
     }
@@ -1374,8 +1246,8 @@ bool Manager::writeStructToMat(const string& name, const vector< vector< pair<st
 
 bool Manager::writeStructToMat(const string& name, const Metric& metric)
 {
-    int numFields=7;
-    const char *fields[numFields] = {"ref_joint", "ref_direction", "ref_plane", "max", "min", "tstart", "tend"};
+    int numFields=8;
+    const char *fields[numFields] = {"motion_type", "ref_joint", "ref_direction", "ref_plane", "max", "min", "tstart", "tend"};
     matvar_t *field;
 
     size_t dim_struct[2] = {1,1};
@@ -1383,43 +1255,51 @@ bool Manager::writeStructToMat(const string& name, const Metric& metric)
 
     if(matvar != NULL)
     {
+        string motion_met = metric.getMotionType();
+        char *motion_c = new char[motion_met.length() + 1];
+        strcpy(motion_c, motion_met.c_str());
+        size_t dims_field_motion[2] = {1,2*sizeof(motion_c)/sizeof(motion_c[0])};
+        field = Mat_VarCreate(NULL,MAT_C_CHAR,MAT_T_UTF8,2,dims_field_motion,motion_c,0);
+        Mat_VarSetStructFieldByName(matvar, fields[0], 0, field);
+        delete [] motion_c;
+
         string joint_met = metric.getTagJoint();
         char *joint_c = new char[joint_met.length() + 1];
         strcpy(joint_c, joint_met.c_str());
         size_t dims_field_joint[2] = {1,2*sizeof(joint_c)/sizeof(joint_c[0])};
         field = Mat_VarCreate(NULL,MAT_C_CHAR,MAT_T_UTF8,2,dims_field_joint,joint_c,0);
-        Mat_VarSetStructFieldByName(matvar, fields[0], 0, field);
+        Mat_VarSetStructFieldByName(matvar, fields[1], 0, field);
         delete [] joint_c;
 
         size_t dims_field_dir[2] = {1,3};
         Vector ref_met = metric.getRefDir();
         field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_dir,ref_met.data(),MAT_F_DONT_COPY_DATA);
-        Mat_VarSetStructFieldByName(matvar, fields[1], 0, field);
+        Mat_VarSetStructFieldByName(matvar, fields[2], 0, field);
 
         size_t dims_field_plane[2] = {1,3};
         Vector plane_met = metric.getPlane();
         field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_plane,plane_met.data(),MAT_F_DONT_COPY_DATA);
-        Mat_VarSetStructFieldByName(matvar, fields[2], 0, field);
+        Mat_VarSetStructFieldByName(matvar, fields[3], 0, field);
 
         size_t dims_field_max[2] = {1,1};
         double max_val = metric.getMax();
         field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_max,&max_val,MAT_F_DONT_COPY_DATA);
-        Mat_VarSetStructFieldByName(matvar, fields[3], 0, field);
+        Mat_VarSetStructFieldByName(matvar, fields[4], 0, field);
 
         size_t dims_field_min[2] = {1,1};
         double min_val = metric.getMin();
         field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_min,&min_val,MAT_F_DONT_COPY_DATA);
-        Mat_VarSetStructFieldByName(matvar, fields[4], 0, field);
-
-        size_t dims_field_tstart[2] = {1,1};
-        cout << "started at " << tstart_session-tstart;
-        field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tstart,&tstart_session,MAT_F_DONT_COPY_DATA);
         Mat_VarSetStructFieldByName(matvar, fields[5], 0, field);
 
-        cout << " ended at " << tend_session-tstart << endl;
+        size_t dims_field_tstart[2] = {1,1};
+        cout << "started at " << tstart_session;
+        field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tstart,&tstart_session,MAT_F_DONT_COPY_DATA);
+        Mat_VarSetStructFieldByName(matvar, fields[6], 0, field);
+
+        cout << " ended at " << tend_session << endl;
         size_t dims_field_tend[2] = {1,1};
         field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tend,&tend_session,MAT_F_DONT_COPY_DATA);
-        Mat_VarSetStructFieldByName(matvar, fields[6], 0, field);
+        Mat_VarSetStructFieldByName(matvar, fields[7], 0, field);
 
 //        Mat_VarWrite(matfp,matvar,MAT_COMPRESSION_NONE);
         Mat_VarWriteAppend(matfp, matvar, MAT_COMPRESSION_NONE,1);

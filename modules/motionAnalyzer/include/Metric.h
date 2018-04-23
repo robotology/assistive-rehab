@@ -34,6 +34,7 @@ public:
     virtual void print();
     virtual string getName() const = 0;
     virtual string getTagJoint() const = 0;
+    virtual string getMotionType() const = 0;
     virtual Vector getRefDir() const = 0;
     virtual Vector getPlane() const = 0;
     virtual double getMax() const = 0;
