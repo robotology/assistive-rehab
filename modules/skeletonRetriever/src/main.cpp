@@ -151,7 +151,7 @@ public:
                     // account for too long limb parts
                     if (d>2.0*it1.second->output()[0])
                     {
-                        for (auto &it2=begin(unordered_filtered); it2!=end(unordered_filtered); it2++)
+                        for (auto it2=begin(unordered_filtered); it2!=end(unordered_filtered); it2++)
                         {
                             if (it2->first==it1.first)
                             {
