@@ -29,6 +29,7 @@
 
 #include <vector>
 #include <iostream>
+#include <utility>
 
 /********************************************************/
 class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
@@ -117,71 +118,71 @@ public:
         cv::Point point;
 
         std::vector<yarp::os::Bottle> shapes;
-        vector<pair <int,int> > elements;
+        std::vector<std::pair <int,int> > elements;
 
-        for (size_t i = 0; i < skeletonSize; i++)
+        for (int i = 0; i < skeletonSize; i++)
         {
             if (yarp::os::Bottle *propField = data.get(0).asList()->get(i).asList())
             {
-                for (size_t ii = 0; ii < internalElements; ii++)
+                for (int ii = 0; ii < internalElements; ii++)
                 {
                     if (yarp::os::Bottle *propFieldPos = propField->get(ii).asList())
                     {
-                        if ( strcmp (propFieldPos->get(0).asString().c_str(),"REar") == 0)
+                        if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"REar") == 0)
                         {
                             //yDebug() << "posX = " << propFieldPos->get(1).asDouble() << "posY = " << propFieldPos->get(2).asDouble();
-                            point.x = propFieldPos->get(1).asDouble();
-                            point.y = propFieldPos->get(2).asDouble();
+                            point.x = (int)propFieldPos->get(1).asDouble();
+                            point.y = (int)propFieldPos->get(2).asDouble();
                             rightEar2D.push_back(point);
                         }
-                        if ( strcmp (propFieldPos->get(0).asString().c_str(),"LEar") == 0)
+                        if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"LEar") == 0)
                         {
                             //yDebug() << "posX = " << propFieldPos->get(1).asDouble() << "posY = " << propFieldPos->get(2).asDouble();
-                            point.x = propFieldPos->get(1).asDouble();
-                            point.y = propFieldPos->get(2).asDouble();
+                            point.x = (int)propFieldPos->get(1).asDouble();
+                            point.y = (int)propFieldPos->get(2).asDouble();
                             leftEar2D.push_back(point);
                         }
-                        if ( strcmp (propFieldPos->get(0).asString().c_str(),"Neck") == 0)
+                        if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"Neck") == 0)
                         {
                             //yDebug() << "posX = " << propFieldPos->get(1).asDouble() << "posY = " << propFieldPos->get(2).asDouble();
-                            point.x = propFieldPos->get(1).asDouble();
-                            point.y = propFieldPos->get(2).asDouble();
+                            point.x = (int)propFieldPos->get(1).asDouble();
+                            point.y = (int)propFieldPos->get(2).asDouble();
                             neck2D.push_back(point);
                         }
-                        if ( strcmp (propFieldPos->get(0).asString().c_str(),"Nose") == 0)
+                        if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"Nose") == 0)
                         {
                             //yDebug() << "posX = " << propFieldPos->get(1).asDouble() << "posY = " << propFieldPos->get(2).asDouble();
-                            point.x = propFieldPos->get(1).asDouble();
-                            point.y = propFieldPos->get(2).asDouble();
+                            point.x = (int)propFieldPos->get(1).asDouble();
+                            point.y = (int)propFieldPos->get(2).asDouble();
                             nose2D.push_back(point);
                         }
-                        if ( strcmp (propFieldPos->get(0).asString().c_str(),"LShoulder") == 0)
+                        if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"LShoulder") == 0)
                         {
                             //yDebug() << "posX = " << propFieldPos->get(1).asDouble() << "posY = " << propFieldPos->get(2).asDouble();
-                            point.x = propFieldPos->get(1).asDouble();
-                            point.y = propFieldPos->get(2).asDouble();
+                            point.x = (int)propFieldPos->get(1).asDouble();
+                            point.y = (int)propFieldPos->get(2).asDouble();
                             leftShoulder2D.push_back(point);
                         }
-                        if ( strcmp (propFieldPos->get(0).asString().c_str(),"RShoulder") == 0)
+                        if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"RShoulder") == 0)
                         {
                             //yDebug() << "posX = " << propFieldPos->get(1).asDouble() << "posY = " << propFieldPos->get(2).asDouble();
-                            point.x = propFieldPos->get(1).asDouble();
-                            point.y = propFieldPos->get(2).asDouble();
+                            point.x = (int)propFieldPos->get(1).asDouble();
+                            point.y = (int)propFieldPos->get(2).asDouble();
                             rightShoulder2D.push_back(point);
                         }
 
-                        if ( strcmp (propFieldPos->get(0).asString().c_str(),"RWrist") == 0)
+                        if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"RWrist") == 0)
                         {
                             //yDebug() << "posX = " << propFieldPos->get(1).asDouble() << "posY = " << propFieldPos->get(2).asDouble();
-                            point.x = propFieldPos->get(1).asDouble();
-                            point.y = propFieldPos->get(2).asDouble();
+                            point.x = (int)propFieldPos->get(1).asDouble();
+                            point.y = (int)propFieldPos->get(2).asDouble();
                             rightWrist2D.push_back(point);
                         }
-                        if ( strcmp (propFieldPos->get(0).asString().c_str(),"LWrist") == 0)
+                        if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"LWrist") == 0)
                         {
                             //yDebug() << "posX = " << propFieldPos->get(1).asDouble() << "posY = " << propFieldPos->get(2).asDouble();
-                            point.x = propFieldPos->get(1).asDouble();
-                            point.y = propFieldPos->get(2).asDouble();
+                            point.x = (int)propFieldPos->get(1).asDouble();
+                            point.y = (int)propFieldPos->get(2).asDouble();
                             leftWrist2D.push_back(point);
                         }
                     }
@@ -267,7 +268,7 @@ public:
                     tmp.addInt(bottomRight.x);
                     tmp.addInt(bottomRight.y);
                     yInfo() << "IN NORMAL" << tmp.toString();
-                    elements.push_back(make_pair(topLeft.x,increment));
+                    elements.push_back(std::make_pair(topLeft.x,increment));
                     shapes.push_back(tmp);
                     increment++;
                 }
@@ -322,7 +323,7 @@ public:
                         tmp.addInt(bottomRight.x);
                         tmp.addInt(bottomRight.y);
                         yInfo() << "IN REVERSED" << tmp.toString();
-                        elements.push_back(make_pair(topLeft.x, increment));
+                        elements.push_back(std::make_pair(topLeft.x, increment));
                         shapes.push_back(tmp);
                         increment++;
                     }

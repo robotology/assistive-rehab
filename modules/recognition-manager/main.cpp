@@ -29,13 +29,14 @@
 #include <opencv2/opencv.hpp>
 
 #include <vector>
+#include <sstream>
 #include <iostream>
-#include <time.h>
+#include <ctime>
 
-#include "interaction_IDL.h"
+#include "recognition_IDL.h"
 
 /********************************************************/
-class Module : public yarp::os::RFModule, public interaction_IDL
+class Module : public yarp::os::RFModule, public recognition_IDL
 {
     yarp::os::ResourceFinder    *rf;
     yarp::os::RpcServer         rpcPort;
@@ -220,7 +221,7 @@ public:
 
         for (int i=0; i<blobs.size(); i++)
         {
-            ostringstream tag;
+            std::ostringstream tag;
             tag<<"blob_"<<i;
             yarp::os::Bottle &item=options.addList();
             item.addString(tag.str().c_str());
@@ -304,7 +305,7 @@ public:
             br.y=(int)item->get(3).asDouble();
             txtLoc.x=tl.x;
             txtLoc.y=tl.y-5;
-            ostringstream tag;
+            std::ostringstream tag;
 
             double confidence = 0.0;
             int largest = 0;
