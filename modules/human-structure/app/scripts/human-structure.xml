@@ -1,0 +1,45 @@
+<application>
+    <name>Human Structure</name>
+
+    <module>
+        <name>human-structure</name>
+        <node>localhost</node>
+    </module>
+    <module>
+        <name>yarpOpenPose</name>
+        <node>localhost</node>
+    </module>
+    <module>
+        <name>yarpview</name>
+        <node>localhost</node>
+        <parameters>--name /poses --x 0 --y 0 --RefreshTime 33 </parameters>
+    </module>
+    <module>
+        <name>yarpview</name>
+        <node>localhost</node>
+        <parameters>--name /output --x 300 --y 0 --RefreshTime 33 </parameters>
+    </module>
+    <connection>
+        <from>/yarpOpenPose/target:o</from>
+        <to>/human-structure/skeleton:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+    <connection>
+        <from>/yarpOpenPose/propag:o</from>
+        <to>/human-structure/image:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/human-structure/image:o</from>
+        <to>/output</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/image:o</from>
+        <to>/poses</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+</application>
