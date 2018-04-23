@@ -1,0 +1,133 @@
+<application>
+    <name>Interaction DonGnocchi</name>
+    <module>
+        <name>yarpOpenPose</name>
+        <node>cuda-machine</node>
+    </module>
+    <module>
+        <name>human-structure</name>
+        <node>localhost</node>
+    </module>
+    <module>
+        <name>recognition-manager</name>
+        <node>localhost</node>
+    </module>
+    <module>
+        <name>linearClassifierModule</name>
+        <parameters>--BufferSize 1 --CSVM 1.0 --databaseFolder faceDatabase --WeightedSVM 1</parameters>
+        <node>cuda-machine</node>
+    </module>
+    <module>
+        <name>caffeCoder</name>
+        <parameters>--from caffeCoder_resnet.ini</parameters>
+        <node>cuda-machine</node>
+    </module>
+    <module>
+        <name>himrepClassifier</name>
+        <node>cuda-machine</node>
+    </module>
+    <module>
+        <name>yarpview</name>
+        <node>localhost</node>
+        <parameters>--name /poses --x 0 --y 0 --RefreshTime 33 </parameters>
+    </module>
+    <module>
+        <name>yarpview</name>
+        <node>localhost</node>
+        <parameters>--name /output --x 300 --y 0 --RefreshTime 33 </parameters>
+    </module>
+    <module>
+        <name>yarpview</name>
+        <node>localhost</node>
+        <parameters>--name /imageOut --x 600 --y 0 --RefreshTime 33 </parameters>
+    </module>
+    <connection>
+        <from>/icub/camcalib/left/out</from>
+        <to>/yarpOpenPose/image:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+    <connection>
+        <from>/yarpOpenPose/target:o</from>
+        <to>/human-structure/skeleton:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+    <connection>
+        <from>/yarpOpenPose/propag:o</from>
+        <to>/human-structure/image:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/human-structure/image:o</from>
+        <to>/output</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/image:o</from>
+        <to>/poses</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/himrepClassifier/img:o</from>
+        <to>/caffeCoder/img:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+    <connection>
+        <from>/caffeCoder/code:o</from>
+        <to>/himrepClassifier/features:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+    <connection>
+        <from>/himrepClassifier/features:o</from>
+        <to>/linearClassifier/features:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+    <connection>
+        <from>/linearClassifier/scores:o</from>
+        <to>/himrepClassifier/scores:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+    <connection>
+        <from>/himrepClassifier/classify:rpc</from>
+        <to>/linearClassifier/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+    <connection>
+        <from>/caffeCoder/img:o</from>
+        <to>/himrepClassifier/SIFTimg:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+    <connection>
+        <from>/human-structure/target:o</from>
+        <to>/recognition-manager/target:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+    <connection>
+        <from>/human-structure/blobs:o</from>
+        <to>/recognition-manager/blobs:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+    <connection>
+        <from>/recognition-manager/classify:rpc</from>
+        <to>/himrepClassifier/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+    <connection>
+        <from>/yarpOpenPose/propag:o</from>
+        <to>/recognition-manager/image:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+    <connection>
+        <from>/recognition-manager/image:o</from>
+        <to>/imageOut</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+    <connection>
+        <from>/recognition-manager/imgClassifier:o</from>
+        <to>/himrepClassifier/img:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+</application>
