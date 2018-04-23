@@ -126,7 +126,7 @@ public:
     bool configure(yarp::os::ResourceFinder &rf)
     {
         this->rf=&rf;
-        std::string moduleName = rf.check("name", yarp::os::Value("interaction-manager"), "module name (string)").asString();
+        std::string moduleName = rf.check("name", yarp::os::Value("recognition-manager"), "module name (string)").asString();
         setName(moduleName.c_str());
 
         blobs_detection_timeout  = rf.check("blobs_detection_timeout",yarp::os::Value(0.2)).asDouble();
