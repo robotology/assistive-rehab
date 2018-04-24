@@ -20,8 +20,6 @@ list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
 list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})
 list(APPEND CMAKE_MODULE_PATH ${ICUBCONTRIB_MODULE_PATH})
 
-find_package(IPOPT REQUIRED)
-
 include(YarpInstallationHelpers)
 include(ICUBcontribOptions)
 include(ICUBcontribHelpers)
