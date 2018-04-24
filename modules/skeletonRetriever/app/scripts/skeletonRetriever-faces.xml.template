@@ -65,7 +65,7 @@
 
     <module>
         <name>yarpview</name>
-        <parameters>--name /viewer/faces --x 750 --y 0 --p 50 --compact</parameters>
+        <parameters>--name /viewer/faces --x 750 --y 10 --p 50 --compact</parameters>
         <node>localhost</node>
     </module>
 
