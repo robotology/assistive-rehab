@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # Authors: Ugo Pattacini <ugo.pattacini@iit.it>
 
-find_package(VTK QUIET)
+find_package(VTK 8.1.0 QUIET)
 if(VTK_FOUND)
   project(skeletonViewer)
 
