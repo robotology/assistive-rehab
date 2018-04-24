@@ -66,6 +66,8 @@ class Module : public yarp::os::RFModule, public recognition_IDL
     double              time_spent;
     clock_t             begin, end;
 
+    bool                isLiftArm;
+
 public:
 
     /********************************************************/
@@ -124,6 +126,20 @@ public:
         return confidenceThreshold;
     }
 
+    /**********************************************************/
+    bool interactionMode(const std::string &mode)
+    {
+        bool success = true;
+
+        if (mode.compare("liftArm") == 0)
+            isLiftArm = true;
+        else if (mode.compare("closeFace") == 0)
+            isLiftArm = false;
+        else
+            success = false;
+        
+        return success;
+    }
 
     /********************************************************/
     bool configure(yarp::os::ResourceFinder &rf)
@@ -152,6 +168,7 @@ public:
 
         confidenceThreshold = 0.70;
         time_spent = 0.0;
+        isLiftArm = true;
 
         attach(rpcPort);
 
@@ -242,7 +259,7 @@ public:
     }
 
     /**********************************************************/
-    size_t findClosestBlob(const yarp::os::Bottle &blobs)
+    int findClosestBlob(const yarp::os::Bottle &blobs)
     {
         double area = 0.0;
         int largest = 0;
@@ -264,15 +281,12 @@ public:
     }
 
     /**********************************************************/
-    size_t findArmLift(const yarp::os::Bottle &blobs, const yarp::os::Bottle &skeletons)
+    int findArmLift(const yarp::os::Bottle &blobs, const yarp::os::Bottle &skeletons)
     {
-
-        yInfo() << "IN ARM LIFT";
         int index = -1;
         
         if (skeletons.size() > 0)
         {
-            yInfo() << "SKELETON IS OK";
             int skeletonSize = skeletons.get(0).asList()->size();
             int internalElements = 0;
             
@@ -360,15 +374,10 @@ public:
                     {
                         yarp::os::Bottle *item=blobs.get(i).asList();
                         
-                        int cog = item->get(2).asInt() - ( (item->get(2).asInt() -item->get(0).asInt()) / 2);
-                        
-                        yInfo() << "COG " << cog;                 
+                        int cog = item->get(2).asInt() - ( (item->get(2).asInt() -item->get(0).asInt()) / 2);             
                         
                         if ( abs(cog - neck[getIndex].x) < 20)
-                        {
-                            yInfo() << "GOT CORRECT BLOB" << i;
                             index = i;
-                        }
                     }
                 }
             }
@@ -569,11 +578,15 @@ public:
         getImage();
 
         yarp::os::Bottle blobs = getBlobs();
+
         yarp::os::Bottle skeletons = getSkeletons();
 
-        //const std::size_t item = findClosestBlob(blobs);
+        int person = -1;
 
-        int person = findArmLift(blobs, skeletons);
+        if (isLiftArm)
+            person = findArmLift(blobs, skeletons);
+        else
+            person = findClosestBlob(blobs);
 
         if (allowedTrain && person > -1)
         {
@@ -632,8 +645,6 @@ public:
                 yarp::os::Bottle &labelblobs = labels.addList();
             }
         }
-
-        yDebug() << "**********************************" << person;
 
         yDebug() << "Bottle" << labels.toString();
 

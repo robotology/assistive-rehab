@@ -41,6 +41,13 @@ service recognition_IDL
     double getConfidenceThreshold();
 
     /**
+     * Interaction Mode .
+     * @param mode: use lift arm or closest face. Can be liftArm or closeFace, default is liftArm.
+     * @return true/false on success/failure.
+     */
+    bool interactionMode(1:string mode);
+
+    /**
      * Quit the module.
      * @return true/false on success/failure.
      */
