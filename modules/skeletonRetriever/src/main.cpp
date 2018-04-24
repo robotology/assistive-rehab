@@ -36,6 +36,8 @@ using namespace yarp::math;
 using namespace iCub::ctrl;
 using namespace assistive_rehab;
 
+const string skeleton_unknown="?";
+
 
 /****************************************************************/
 class MetaSkeleton
@@ -276,6 +278,14 @@ class Retriever : public RFModule
     }
 
     /****************************************************************/
+    string getNameFromId(const int id) const
+    {
+        ostringstream ss;
+        ss<<"#"<<hex<<id;
+        return ss.str();
+    }
+
+    /****************************************************************/
     shared_ptr<MetaSkeleton> create(Bottle *keys)
     {
         shared_ptr<MetaSkeleton> s=shared_ptr<MetaSkeleton>(new MetaSkeleton(time_to_live,
@@ -290,7 +300,7 @@ class Retriever : public RFModule
         {
             if (Bottle *k=keys->get(i).asList())
             {
-                if (k->size()>=4)
+                if (k->size()==4)
                 {
                     string tag=k->get(0).asString();
                     int u=(int)k->get(1).asDouble();
@@ -310,6 +320,17 @@ class Retriever : public RFModule
                             s->pivot[0]=u;
                             s->pivot[1]=v;
                         }
+                    }
+                }
+                else if (k->size()==3)
+                {
+                    string tag=k->get(0).asString();
+                    string name=k->get(1).asString();
+                    double confidence=k->get(2).asDouble();
+
+                    if (tag=="Name")
+                    {
+                        s->skeleton->setTag(name);
                     }
                 }
             }
@@ -349,6 +370,10 @@ class Retriever : public RFModule
         dest->update(unordered);
         dest->timer=time_to_live;
         dest->pivot=src->pivot;
+
+        dest->skeleton->setTag(src->skeleton->getTag()==skeleton_unknown?
+                               getNameFromId(dest->opc_id):
+                               src->skeleton->getTag());
     }
 
     /****************************************************************/
@@ -401,10 +426,12 @@ class Retriever : public RFModule
                 if (rep.get(0).asVocab()==Vocab::encode("ack"))
                 {
                     s->opc_id=rep.get(1).asList()->get(1).asInt();
-                    ostringstream ss;
-                    ss<<"#"<<hex<<s->opc_id;
-                    s->skeleton->setTag(ss.str());
-                    return opcSet(s);
+                    if (s->skeleton->getTag()==skeleton_unknown)
+                    {
+                        s->skeleton->setTag(getNameFromId(s->opc_id));
+                        return opcSet(s);
+                    }
+                    return true;
                 }
             }
         }
