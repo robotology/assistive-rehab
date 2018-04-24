@@ -63,9 +63,11 @@ class Module : public yarp::os::RFModule, public recognition_IDL
     double              trainingTime;
     double              confidenceThreshold;
 
+    double              time_spent;
     clock_t             begin, end;
 
 public:
+
     /********************************************************/
     bool attach(yarp::os::RpcServer &source)
     {
@@ -87,6 +89,7 @@ public:
         yarp::os::Bottle cmd, reply;
         cmd.clear();
         reply.clear();
+
         if (label=="all")
         {
             cmd.addVocab(yarp::os::Vocab::encode("forget"));
@@ -148,17 +151,19 @@ public:
         allowedTrain = false;
 
         confidenceThreshold = 0.70;
+        time_spent = 0.0;
 
         attach(rpcPort);
 
         return true;
     }
+
     /********************************************************/
     yarp::os::Bottle getSkeletons()
     {
         yarp::os::Bottle receivedSkeletons;
         mutex.lock();
-        if (yarp::os::Bottle *skeletons=targetInPort.read(false))
+        if (yarp::os::Bottle *skeletons=targetInPort.read(true))
         {
             receivedSkeletons = * skeletons;
         }
@@ -227,9 +232,9 @@ public:
             item.addString(tag.str().c_str());
             item.addList()=*blobs.get(i).asList();
         }
-        //yInfo("Sending classification request: %s",cmd.toString().c_str());
+        yInfo("Sending classification request: %s",cmd.toString().c_str());
         rpcClassifier.write(cmd,reply);
-        //yInfo("Received reply: %s",reply.toString().c_str());
+        yInfo("Received reply: %s",reply.toString().c_str());
 
         mutex.unlock();
 
@@ -259,6 +264,120 @@ public:
     }
 
     /**********************************************************/
+    size_t findArmLift(const yarp::os::Bottle &blobs, const yarp::os::Bottle &skeletons)
+    {
+
+        yInfo() << "IN ARM LIFT";
+        int index = -1;
+        
+        if (skeletons.size() > 0)
+        {
+            yInfo() << "SKELETON IS OK";
+            int skeletonSize = skeletons.get(0).asList()->size();
+            int internalElements = 0;
+            
+            std::vector<cv::Point> relbow;
+            std::vector<cv::Point> rwrist;
+            std::vector<cv::Point> lelbow;
+            std::vector<cv::Point> lwrist;
+            std::vector<cv::Point> neck;
+
+            cv::Point point;
+
+            if (skeletonSize>0)
+                internalElements = skeletons.get(0).asList()->get(0).asList()->size();
+
+
+            for (int i = 0; i < skeletonSize; i++)
+            {
+                if (yarp::os::Bottle *propField = skeletons.get(0).asList()->get(i).asList())
+                {
+                    for (int ii = 0; ii < internalElements; ii++)
+                    {
+                        if (yarp::os::Bottle *propFieldPos = propField->get(ii).asList())
+                        {
+                            if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"RElbow") == 0)
+                            {
+                                point.x = (int)propFieldPos->get(1).asDouble();
+                                point.y = (int)propFieldPos->get(2).asDouble();
+                                relbow.push_back(point);
+                            }
+                            if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"RWrist") == 0)
+                            {
+                                point.x = (int)propFieldPos->get(1).asDouble();
+                                point.y = (int)propFieldPos->get(2).asDouble();
+                                rwrist.push_back(point);
+                            }
+                            if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"LElbow") == 0)
+                            {
+                                point.x = (int)propFieldPos->get(1).asDouble();
+                                point.y = (int)propFieldPos->get(2).asDouble();
+                                lelbow.push_back(point);
+                            }
+                            if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"LWrist") == 0)
+                            {
+                                point.x = (int)propFieldPos->get(1).asDouble();
+                                point.y = (int)propFieldPos->get(2).asDouble();
+                                lwrist.push_back(point);
+                            }
+                            if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"Neck") == 0)
+                            {
+                                point.x = (int)propFieldPos->get(1).asDouble();
+                                point.y = (int)propFieldPos->get(2).asDouble();
+                                neck.push_back(point);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            int getIndex = -1;
+     
+
+            if (neck.size() > 0)
+            {
+                yInfo() << "GOT DATA";
+                
+                for (int i = 0; i < skeletonSize; i++)
+                {
+                    if ( relbow[i].y - rwrist[i].y > 20 && relbow[i].y > 0 && rwrist[i].y > 0 )
+                    {
+                        yInfo() << "RIGHT ELBOW BIGGER THAN WRIST" << i;
+                        getIndex = i;
+                    }
+                    else if ( lelbow[i].y - lwrist[i].y > 20 && lelbow[i].y > 0 && lwrist[i].y > 0 )
+                    {
+                        yInfo() << "LEFT ELBOW BIGGER THAN WRIST" << i;
+                        getIndex = i;
+                    }
+                    else
+                        yInfo() << "ERROR" << i;
+                }
+
+                if (getIndex > -1)
+                { 
+                    for (int i=0;i<blobs.size(); i++)
+                    {
+                        yarp::os::Bottle *item=blobs.get(i).asList();
+                        
+                        int cog = item->get(2).asInt() - ( (item->get(2).asInt() -item->get(0).asInt()) / 2);
+                        
+                        yInfo() << "COG " << cog;                 
+                        
+                        if ( abs(cog - neck[getIndex].x) < 20)
+                        {
+                            yInfo() << "GOT CORRECT BLOB" << i;
+                            index = i;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return index;
+    }
+
+    /**********************************************************/
     void sendTrain(const std::string &object, const yarp::os::Bottle &blobs, const int i)
     {
         mutex.lock();
@@ -269,11 +388,12 @@ public:
         yarp::os::Bottle &options=cmd.addList().addList();
         options.addString(object.c_str());
         options.add(blobs.get(i));
-        //yInfo("Sending training request: %s",cmd.toString().c_str());
+        yInfo("Sending training request: %s",cmd.toString().c_str());
         rpcClassifier.write(cmd,reply);
-        //yInfo("Received reply: %s",reply.toString().c_str());
+        yInfo("Received reply: %s",reply.toString().c_str());
         mutex.unlock();
     }
+
     /**********************************************************/
     yarp::os::Bottle sendOutputImage(const yarp::os::Bottle &blobs, const int i, const yarp::os::Bottle &labels)
     {
@@ -309,17 +429,20 @@ public:
 
             double confidence = 0.0;
             int largest = 0;
-            //yInfo() << "label size " << labels.size();
+ 
+            int classSize = 0;
 
-            int classSize = labels.get(j).asList()->size();
-            yInfo() << "class size" << classSize;
-            //yInfo() << "*************" << labels.get(j).asList()->toString();
+            if (labels.size() > 0)       
+                classSize = labels.get(j).asList()->size();
+
+            //yInfo() << "***********************************class size" << classSize;
+
             int elementSize = 0;
 
             if (classSize>0)
                 elementSize = labels.get(j).asList()->get(0).asList()->size();
 
-            yInfo() << "element size" << classSize;
+            //yInfo() << "***********************************element size" << classSize;
 
             for (int y=0; y<classSize; y++)
             {
@@ -343,14 +466,15 @@ public:
                 {
                     tmp.addString("?");
                     tmp.addDouble(0.0);
-                    tag<<"?";
+                    tag<<"-";
                 }
 
-                cv::rectangle(imgMat,tl,br,(j==i)?highlight:lowlight,2);
-                cv::putText(imgMat,tag.str().c_str(),txtLoc,cv::FONT_HERSHEY_SIMPLEX,
+                
+                cv::putText(imgMat,tag.str().c_str(),txtLoc,  cv::FONT_HERSHEY_SIMPLEX ,
                             0.5,(j==i)?highlight:lowlight,2);
             }
 
+            cv::rectangle(imgMat,tl,br,(j==i)?highlight:lowlight,2);
         }
 
         imageOutPort.prepare()=img;
@@ -359,25 +483,22 @@ public:
         return winners;
         //mutex.unlock();
     }
-    /**********************************************************/
-    void sendTargetData(const yarp::os::Bottle &labels)
-    {
-        yarp::os::Bottle tmp = getSkeletons();
 
-        if (tmp.size() > 0)
+    /**********************************************************/
+    void sendTargetData(const yarp::os::Bottle &labels, const yarp::os::Bottle &skeletons)
+    {
+
+        if (skeletons.size() > 0)
         {
-            //yInfo() << "**** SENDING " << tmp.get(0).asList()->size() << "Skeletons";
 
             yarp::os::Bottle &target  = targetOutPort.prepare();
 
-            target = tmp;
+            target = skeletons;
 
             yarp::os::Bottle toSend;
             toSend.clear();
             yarp::os::Bottle &addStructure = toSend.addList();
 
-            //yInfo() << "skeleton size " << target.get(0).asList()->size();
-            //yInfo() << "label size " << labels.size();
 
             if (target.get(0).asList()->size() == labels.size())
             {
@@ -394,7 +515,6 @@ public:
                     options.addDouble(labels.get(i).asList()->get(1).asDouble());
                     //yInfo() << "#######" << options.toString();
                     addSkeletons=*skeleton;
-
                 }
             }
             else
@@ -449,25 +569,35 @@ public:
         getImage();
 
         yarp::os::Bottle blobs = getBlobs();
+        yarp::os::Bottle skeletons = getSkeletons();
 
-        const std::size_t item = findClosestBlob(blobs);
+        //const std::size_t item = findClosestBlob(blobs);
 
-        if (allowedTrain)
+        int person = findArmLift(blobs, skeletons);
+
+        if (allowedTrain && person > -1)
         {
-            sendTrain(label, blobs, item);
-            double time_spent = (double)( clock() - begin) / CLOCKS_PER_SEC;
+            sendTrain(label, blobs, person);
+            time_spent = (double)( clock() - begin) / CLOCKS_PER_SEC;
+            yInfo() << "time spent " << time_spent*100;
 
-            if (time_spent*100 > 20)
+            if (time_spent*100 > 10)
+            {
                 allowedTrain = false;
+                time_spent = 0.0;
+            }
         }
 
         yarp::os::Bottle scores;
+        yarp::os::Bottle labels;
+
+        scores.clear();
+        labels.clear();
+
         if (blobs.size()!=0)
             scores = classify(blobs);
 
-        yarp::os::Bottle labels;
-
-        if (scores.size()!=0)
+        if (scores.size()!=0 && scores.get(0).asList()->size() > 0)
         {
             for (int i=0; i<blobs.size(); i++)
             {
@@ -488,13 +618,30 @@ public:
                     yError() << "no classes avaiblable";
             }
         }
+        else
+        {
+            for (int i=0; i<blobs.size(); i++)
+            {   
+                yarp::os::Bottle &fillScores = scores.addList();
+                yarp::os::Bottle &labelblobs = labels.addList();
+            }
+
+            if (blobs.size() == 0)
+            {
+                yarp::os::Bottle &fillScores = scores.addList();
+                yarp::os::Bottle &labelblobs = labels.addList();
+            }
+        }
+
+        yDebug() << "**********************************" << person;
 
         yDebug() << "Bottle" << labels.toString();
-        yarp::os::Bottle winners = sendOutputImage(blobs, item, labels);
+
+        yarp::os::Bottle winners = sendOutputImage(blobs, person, labels);
 
         yDebug() << "Winners" << winners.toString();
 
-        sendTargetData(winners);
+        sendTargetData(winners, skeletons);
 
         return !closing;
     }
