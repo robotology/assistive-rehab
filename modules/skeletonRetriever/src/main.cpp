@@ -537,6 +537,7 @@ class Retriever : public RFModule
         keysRemap["LAnkle"]=KeyPointTag::ankle_left;
 
         // default values
+        camera_configured=false;
         period=0.01;
         keys_recognition_confidence=0.3;
         keys_recognition_percentage=0.4;
@@ -572,13 +573,31 @@ class Retriever : public RFModule
             optimize_limblength=gFiltering.check("optimize-limblength",Value(optimize_limblength)).asBool();
         }
 
+        Bottle &gCamera=rf.findGroup("camera");
+        if (!gCamera.isNull())
+        {
+            if (gCamera.check("fov"))
+            {
+                if (Bottle *fov=gCamera.find("fov").asList())
+                {
+                    if (fov->size()>=2)
+                    {
+                        camera_configured=true;
+                        fov_h=fov->get(0).asDouble();
+                        fov_v=fov->get(1).asDouble();
+                        yInfo()<<"camera fov_h (from file) ="<<fov_h;
+                        yInfo()<<"camera fov_v (from file) ="<<fov_v;
+                    }
+                }
+            }
+        }
+
         skeletonsPort.open("/skeletonRetriever/skeletons:i");
         depthPort.open("/skeletonRetriever/depth:i");
         viewerPort.open("/skeletonRetriever/viewer:o");
         opcPort.open("/skeletonRetriever/opc:rpc");
         camPort.open("/skeletonRetriever/cam:rpc");
 
-        camera_configured=false;
         t0=Time::now();
         return true;
     }
