@@ -67,6 +67,7 @@ class Module : public yarp::os::RFModule, public recognition_IDL
     clock_t             begin, end;
 
     bool                isLiftArm;
+    bool                gotTime;
 
 public:
 
@@ -79,8 +80,8 @@ public:
     /**********************************************************/
     bool train(const std::string &name)
     {
-        begin = clock();
         allowedTrain = true;
+        gotTime = false;
         label = name;
         return true;
     }
@@ -169,6 +170,7 @@ public:
         confidenceThreshold = 0.70;
         time_spent = 0.0;
         isLiftArm = true;
+        gotTime = false;
 
         attach(rpcPort);
 
@@ -590,6 +592,12 @@ public:
 
         if (allowedTrain && person > -1)
         {
+            if (!gotTime)
+            {
+                begin = clock();
+                gotTime = true;
+            }
+
             sendTrain(label, blobs, person);
             time_spent = (double)( clock() - begin) / CLOCKS_PER_SEC;
             yInfo() << "time spent " << time_spent*100;
