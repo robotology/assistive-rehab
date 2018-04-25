@@ -131,42 +131,36 @@ public:
                     {
                         if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"REar") == 0)
                         {
-                            //yDebug() << "posX = " << propFieldPos->get(1).asDouble() << "posY = " << propFieldPos->get(2).asDouble();
                             point.x = (int)propFieldPos->get(1).asDouble();
                             point.y = (int)propFieldPos->get(2).asDouble();
                             rightEar2D.push_back(point);
                         }
                         if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"LEar") == 0)
                         {
-                            //yDebug() << "posX = " << propFieldPos->get(1).asDouble() << "posY = " << propFieldPos->get(2).asDouble();
                             point.x = (int)propFieldPos->get(1).asDouble();
                             point.y = (int)propFieldPos->get(2).asDouble();
                             leftEar2D.push_back(point);
                         }
                         if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"Neck") == 0)
                         {
-                            //yDebug() << "posX = " << propFieldPos->get(1).asDouble() << "posY = " << propFieldPos->get(2).asDouble();
                             point.x = (int)propFieldPos->get(1).asDouble();
                             point.y = (int)propFieldPos->get(2).asDouble();
                             neck2D.push_back(point);
                         }
                         if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"Nose") == 0)
                         {
-                            //yDebug() << "posX = " << propFieldPos->get(1).asDouble() << "posY = " << propFieldPos->get(2).asDouble();
                             point.x = (int)propFieldPos->get(1).asDouble();
                             point.y = (int)propFieldPos->get(2).asDouble();
                             nose2D.push_back(point);
                         }
                         if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"LShoulder") == 0)
                         {
-                            //yDebug() << "posX = " << propFieldPos->get(1).asDouble() << "posY = " << propFieldPos->get(2).asDouble();
                             point.x = (int)propFieldPos->get(1).asDouble();
                             point.y = (int)propFieldPos->get(2).asDouble();
                             leftShoulder2D.push_back(point);
                         }
                         if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"RShoulder") == 0)
                         {
-                            //yDebug() << "posX = " << propFieldPos->get(1).asDouble() << "posY = " << propFieldPos->get(2).asDouble();
                             point.x = (int)propFieldPos->get(1).asDouble();
                             point.y = (int)propFieldPos->get(2).asDouble();
                             rightShoulder2D.push_back(point);
@@ -174,14 +168,12 @@ public:
 
                         if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"RWrist") == 0)
                         {
-                            //yDebug() << "posX = " << propFieldPos->get(1).asDouble() << "posY = " << propFieldPos->get(2).asDouble();
                             point.x = (int)propFieldPos->get(1).asDouble();
                             point.y = (int)propFieldPos->get(2).asDouble();
                             rightWrist2D.push_back(point);
                         }
                         if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"LWrist") == 0)
                         {
-                            //yDebug() << "posX = " << propFieldPos->get(1).asDouble() << "posY = " << propFieldPos->get(2).asDouble();
                             point.x = (int)propFieldPos->get(1).asDouble();
                             point.y = (int)propFieldPos->get(2).asDouble();
                             leftWrist2D.push_back(point);
@@ -340,8 +332,6 @@ public:
             }
         }
 
-        yDebug() << "Element size" <<elements.size();
-
         if (elements.size()>0)
         {
             for (int i=0; i<elements.size(); i++)
@@ -368,7 +358,6 @@ public:
                     tmp.addInt(shapes[elements[i].second].get(3).asInt());
                 }
 
-                yInfo() << "Bottle = " << blobs.toString() ;
                 targetPort.write();
             }
         }
