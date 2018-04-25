@@ -440,7 +440,7 @@ class Player : public RFModule, public skeletonPlayer_IDL
     /****************************************************************/
     bool move(const double x, const double y, const double z,
               const double ax, const double ay, const double az,
-              const double theta)
+              const double theta) override
     {
         LockGuard lg(mutex);
         if (skeletons.empty())
@@ -476,7 +476,7 @@ class Player : public RFModule, public skeletonPlayer_IDL
     }
 
     /****************************************************************/
-    bool attach(RpcServer &source)
+    bool attach(RpcServer &source) override
     {
         return yarp().attachAsServer(source);
     }
