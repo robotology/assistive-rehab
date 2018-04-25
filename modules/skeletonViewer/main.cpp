@@ -412,7 +412,7 @@ public:
         {
             for (auto &tag:skeletons_gc_tags)
             {
-                auto &s=skeletons.find(tag);
+                auto s=skeletons.find(tag);
                 if (s!=skeletons.end())
                     skeletons.erase(s);
             }
