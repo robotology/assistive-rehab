@@ -560,7 +560,7 @@ class Retriever : public RFModule
         camera_configured=false;
         period=0.01;
         keys_recognition_confidence=0.3;
-        keys_recognition_percentage=0.4;
+        keys_recognition_percentage=0.3;
         keys_acceptable_misses=5;
         tracking_threshold=50;
         time_to_live=1.0;
