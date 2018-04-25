@@ -346,7 +346,8 @@ class Retriever : public RFModule
     }
 
     /****************************************************************/
-    void update(const shared_ptr<MetaSkeleton> &src, shared_ptr<MetaSkeleton> &dest)
+    void update(const shared_ptr<MetaSkeleton> &src, shared_ptr<MetaSkeleton> &dest,
+                vector<string> &remove_tags)
     {
         vector<pair<string,Vector>> unordered;
         for (unsigned int i=0; i<src->skeleton->getNumKeyPoints(); i++)
@@ -371,9 +372,15 @@ class Retriever : public RFModule
         dest->timer=time_to_live;
         dest->pivot=src->pivot;
 
+        string oldTag=dest->skeleton->getTag();
         dest->skeleton->setTag(src->skeleton->getTag()==skeleton_unknown?
                                getNameFromId(dest->opc_id):
                                src->skeleton->getTag());
+
+        if (oldTag!=dest->skeleton->getTag())
+        {
+            remove_tags.push_back(oldTag);
+        }
     }
 
     /****************************************************************/
@@ -503,7 +510,7 @@ class Retriever : public RFModule
     }
 
     /****************************************************************/
-    void viewerUpdate()
+    void viewerUpdate(const vector<string> &remove_tags)
     {
         if (viewerPort.getOutputCount()>0)
         {
@@ -512,6 +519,19 @@ class Retriever : public RFModule
             for (auto &s:skeletons)
             {
                 Property prop=s->skeleton->toProperty();
+                msg.addList().read(prop);
+            }
+
+            if (!remove_tags.empty())
+            {
+                Bottle val;
+                Bottle &payload=val.addList();
+                for (auto &tag:remove_tags)
+                {
+                    payload.addString(tag);
+                }
+                Property prop;
+                prop.put("remove-tags",val.get(0));
                 msg.addList().read(prop);
             }
             viewerPort.writeStrict();
@@ -651,6 +671,7 @@ class Retriever : public RFModule
                 // update existing skeletons / create new skeletons
                 if (!new_accepted_skeletons.empty())
                 {
+                    vector<string> viewer_remove_tags;
                     vector<shared_ptr<MetaSkeleton>> c=skeletons;
                     for (auto &n:new_accepted_skeletons)
                     {
@@ -662,7 +683,7 @@ class Retriever : public RFModule
                             {
                                 auto i=distance(scores.begin(),it);
                                 auto &s=c[i];
-                                update(n,s);
+                                update(n,s,viewer_remove_tags);
                                 opcSet(s);
                                 c.erase(c.begin()+i);
                                 continue;
@@ -673,7 +694,7 @@ class Retriever : public RFModule
                         skeletons.push_back(n);
                     }
 
-                    viewerUpdate();
+                    viewerUpdate(viewer_remove_tags);
                 }
             }
         }

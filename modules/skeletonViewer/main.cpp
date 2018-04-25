@@ -314,7 +314,7 @@ bool rpc_command_rx;
 Vector camera_position,camera_focalpoint,camera_viewup;
 vtkSmartPointer<vtkRenderer> vtk_renderer;
 unordered_map<string,unique_ptr<VTKSkeleton>> skeletons;
-vector<unordered_map<string,unique_ptr<VTKSkeleton>>::iterator> skeletons_gc_iterators;
+vector<string> skeletons_gc_tags;
 
 /****************************************************************/
 class UpdateCommand : public vtkCommand
@@ -357,17 +357,17 @@ public:
             }
         }
 
-        if (inputs.size()>0)
+        if (!inputs.empty())
         {
             for (auto &input:inputs)
             {
                 for (int i=0; i<input.size(); i++)
                 {
-                    if (Bottle *b=input.get(i).asList())
+                    if (Bottle *b1=input.get(i).asList())
                     {
-                        if (b->check("tag"))
+                        if (b1->check("tag"))
                         {
-                            Property prop(b->toString().c_str());
+                            Property prop(b1->toString().c_str());
                             string tag=prop.find("tag").asString();
                             if (!tag.empty())
                             {
@@ -376,6 +376,16 @@ public:
                                     skeletons[tag]=unique_ptr<VTKSkeleton>(new VTKSkeleton(prop,vtk_renderer));
                                 else
                                     s->second->update(prop);
+                            }
+                        }
+                        else if (Bottle *b2=b1->find("remove-tags").asList())
+                        {
+                            for (int j=0; j<b2->size(); j++)
+                            {
+                                string tag=b2->get(j).asString();
+                                auto s=skeletons.find(tag);
+                                if (s!=skeletons.end())
+                                    skeletons_gc_tags.push_back(tag);
                             }
                         }
                     }
@@ -398,11 +408,15 @@ public:
             rpc_command_rx=false;
         }
 
-        if (skeletons_gc_iterators.size()>0)
+        if (!skeletons_gc_tags.empty())
         {
-            for (auto &s:skeletons_gc_iterators)
-                skeletons.erase(s);
-            skeletons_gc_iterators.clear();
+            for (auto &tag:skeletons_gc_tags)
+            {
+                auto &s=skeletons.find(tag);
+                if (s!=skeletons.end())
+                    skeletons.erase(s);
+            }
+            skeletons_gc_tags.clear();
         }
 
         iren->GetRenderWindow()->SetWindowName("Skeleton Viewer");
@@ -530,7 +544,7 @@ class Viewer : public RFModule
 
         for (auto s=begin(skeletons); s!=end(skeletons); s++)
             if (t-s->second->get_last_update()>deadline)
-                skeletons_gc_iterators.push_back(s);
+                skeletons_gc_tags.push_back(s->first);
     }
 
     /****************************************************************/
