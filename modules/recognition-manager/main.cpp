@@ -476,53 +476,164 @@ public:
     }
 
     /**********************************************************/
-    void sendTargetData(const yarp::os::Bottle &labels,
+    void sendTargetData(const yarp::os::Bottle &blobs, 
+                        const yarp::os::Bottle &labels,
                         const yarp::os::Bottle &skeletons)
     {
-
+        yInfo() << "*************************************************************";
         if (skeletons.size() > 0)
         {
-
+            
             yarp::os::Bottle &target  = targetOutPort.prepare();
 
             target = skeletons;
+            yInfo() << "******************************** SIZE TARGET " << target.get(0).asList()->size();
 
             yarp::os::Bottle toSend;
             toSend.clear();
             yarp::os::Bottle &addStructure = toSend.addList();
 
+            int skeletonSize = target.get(0).asList()->size();
+            int internalElements = 0;
 
-            if (target.get(0).asList()->size() == labels.size())
+            std::vector<cv::Point> neck;
+            std::vector<cv::Point> lear;
+            std::vector<cv::Point> rear;
+
+            cv::Point point;
+
+            if (skeletonSize>0)
+                internalElements = target.get(0).asList()->get(0).asList()->size();
+
+            
+            
+            for (int i = 0; i < skeletonSize; i++)
             {
-                yarp::os::Bottle &addSkeletons = addStructure.addList();
-
-                for (int i=0; i<target.get(0).asList()->size(); i++)
+                if (yarp::os::Bottle *propField = skeletons.get(0).asList()->get(i).asList())
                 {
-                    yarp::os::Bottle *skeleton = target.get(0).asList()->get(i).asList();
-                    yarp::os::Bottle &options=skeleton->addList();
+                    yInfo() << propField->toString();
+                    for (int ii = 0; ii < internalElements; ii++)
+                    {
+                        if (yarp::os::Bottle *propFieldPos = propField->get(ii).asList())
+                        {
+                            if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"Neck") == 0)
+                            {
+                                point.x = (int)propFieldPos->get(1).asDouble();
+                                point.y = (int)propFieldPos->get(2).asDouble();
+                                neck.push_back(point);
+                            }
+                            if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"LEar") == 0)
+                            {
+                                point.x = (int)propFieldPos->get(1).asDouble();
+                                point.y = (int)propFieldPos->get(2).asDouble();
+                                lear.push_back(point);
+                            }
+                            if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"REar") == 0)
+                            {
+                                point.x = (int)propFieldPos->get(1).asDouble();
+                                point.y = (int)propFieldPos->get(2).asDouble();
+                                rear.push_back(point);
+                            }
+                        }
+                    }
+                }
+            }
 
-                    options.addString("Name");
+            for (int i = 0; i < skeletonSize; i++)
+            {
+                yInfo() << i << "point neck" <<neck[i].x << neck[i].y;
+                yInfo() << i << "point lear" <<lear[i].x << lear[i].y;
+                yInfo() << i << "point rear" <<rear[i].x << rear[i].y;
+                yInfo() << "";
+            }   
 
-                    options.addString(labels.get(i).asList()->get(0).asString());
-                    options.addDouble(labels.get(i).asList()->get(1).asDouble());
-                    addSkeletons=*skeleton;
+            yInfo() << "******************************** SIZE BLOB " << blobs.size();
+            int index =-1;
+
+            std::vector<std::pair <int,int> > elements;
+            
+            
+            yInfo() << "******************************** SIZE TARGET " << target.get(0).asList()->size();
+            yInfo() << "******************************** SIZE BLOB " << blobs.size();
+            yInfo() << "******************************** SIZE NECKS " << neck.size();
+            yInfo() << "******************************** SIZE LABELS " << labels.size();
+            
+            
+            //consider only if we get blobs and valid necks
+            if (blobs.size() > 1 )
+            {
+                for (int i=0; i<neck.size(); i++)
+                {           
+                    if (neck[i].x >0)
+                    {     
+                        for (int j=0; j<blobs.size(); j++)
+                        { 
+                            yarp::os::Bottle *item=blobs.get(j).asList(); 
+                            int cog = item->get(2).asInt() - ( (item->get(2).asInt() -item->get(0).asInt()) / 2);
+                            yInfo() << "COG = " << j << " with " << cog; 
+                            yInfo() << "DIFF NECK" << i << "with  abs(cog - neck[i].x) " << abs(cog - neck[i].x);
+                            yInfo() << "DIFF LEAR" << i << "with  abs(cog - lear[i].x) " << abs(cog - lear[i].x);
+                            yInfo() << "DIFF REAR" << i << "with  abs(cog - rear[i].x) " << abs(cog - rear[i].x);
+                            if ( abs(cog - neck[i].x) < 30 || abs(cog - lear[i].x) < 30 || abs(cog - rear[i].x) < 30)
+                            {
+                                yInfo() << "adding " << i << j; 
+                                elements.push_back(std::make_pair(i, j));
+                            }
+                        }
+                    }
+                    else
+                    {
+                       elements.push_back(std::make_pair(i, -1));
+                    }
                 }
             }
             else
             {
-                yarp::os::Bottle &addSkeletons = addStructure.addList();
-                for (int i=0; i<target.get(0).asList()->size(); i++)
-                {
-                    yarp::os::Bottle *skeleton = target.get(0).asList()->get(i).asList();
-                    yarp::os::Bottle &options=skeleton->addList();
+                if (skeletonSize > 0 && blobs.size() > 0)
+                    elements.push_back(std::make_pair(0, 0));
+            }
+                
+   
+            yInfo() << "******************************** SIZE ELEMENTS " << elements.size();
+            for (int i = 0; i < elements.size(); i++)
+                yInfo() << "******************************** skeleton " << elements[i].first << "blob " << elements[i].second;
+        
+            
+            yarp::os::Bottle &addSkeletons = addStructure.addList();
 
-                    options.addString("Name");
+            for (int i=0; i<target.get(0).asList()->size(); i++)
+            {
+                //yInfo() << "IN addSkeletons";
+                yarp::os::Bottle *skeleton = target.get(0).asList()->get(i).asList();
+                yarp::os::Bottle &options=skeleton->addList();
+
+                options.addString("Name");
+                
+                if (blobs.size() > 0)
+                {
+                    if (elements[i].second != -1 && labels.size()>0 && i<=labels.size()-1)
+                    {
+                        yInfo() << "Adding name for skeleton " << i << "with blob " << elements[i].second;
+                        options.addString(labels.get(elements[i].second).asList()->get(0).asString());
+                        options.addDouble(labels.get(elements[i].second).asList()->get(1).asDouble());
+                    }
+                    else
+                    {
+                        yInfo() << "Adding empty name";
+                        options.addString("?");
+                        options.addDouble(0.0);
+                    }
+                    
+                }
+                else
+                {
+                    yInfo() << "Adding empty name AS NO BLOB FOUND";
                     options.addString("?");
                     options.addDouble(0.0);
-                    addSkeletons=*skeleton;
                 }
+                addSkeletons=*skeleton;
             }
-            //target = toSend;
+            
             targetOutPort.write();
         }
     }
@@ -647,7 +758,7 @@ public:
         }
 
         yarp::os::Bottle winners = sendOutputImage(blobs, person, labels);
-        sendTargetData(winners, skeletons);
+        sendTargetData(blobs, winners, skeletons);
 
         return !closing;
     }
