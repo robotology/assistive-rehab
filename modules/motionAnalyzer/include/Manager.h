@@ -107,9 +107,9 @@ class Manager : public RFModule,
 //    Processor* processor;
 
     void init();
-    bool loadInitialConf(const string& motion_repertoire_file);
+    bool loadInitialConf();
     bool loadInitialConf(const Bottle& b, SkeletonWaist *skeletonInit);
-    bool loadMotionList(const string& motion_repertoire_file);
+    bool loadMotionList();
 //    bool loadSequence(const string& sequencer_file);
     bool loadMetric(const string &metric_tag);
 

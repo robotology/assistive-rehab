@@ -87,13 +87,13 @@ void Manager::init()
 
 }
 
-bool Manager::loadInitialConf(const string& motion_repertoire_file)
+bool Manager::loadInitialConf()
 {
     ResourceFinder rf;
     rf.setVerbose();
     rf.setDefaultContext(this->rf->getContext().c_str());
-    string confFile = this->rf->getHomeContextPath() + "/" + motion_repertoire_file;
-    rf.setDefaultConfigFile(confFile.c_str()); //(this->rf->find("configuration-file").asString().c_str());
+//    string confFile = this->rf->findFileByName(motion_repertoire_file);
+//    rf.setDefaultConfigFile(confFile.c_str()); //(this->rf->find("configuration-file").asString().c_str());
     rf.configure(0, NULL);
 
     Bottle &bGeneral = rf.findGroup("GENERAL");
@@ -448,13 +448,14 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
     return true;
 }
 
-bool Manager::loadMotionList(const string& motion_repertoire_file)
+bool Manager::loadMotionList()
 {
     ResourceFinder rf;
     rf.setVerbose();
     rf.setDefaultContext(this->rf->getContext().c_str());
-    string confFile = this->rf->getHomeContextPath() + "/" + motion_repertoire_file;
-    rf.setDefaultConfigFile(confFile.c_str()); //(this->rf->find("configuration-file").asString().c_str());
+
+//    string confFile = this->rf->findFileByName(motion_repertoire_file);
+//    rf.setDefaultConfigFile(confFile.c_str()); //(this->rf->find("configuration-file").asString().c_str());
     rf.configure(0, NULL);
 
     Bottle &bGeneral = rf.findGroup("GENERAL");
@@ -1052,8 +1053,8 @@ bool Manager::configure(ResourceFinder &rf)
 
     string robot = rf.check("robot", Value("icub")).asString();
 
-    string motion_repertoire_file = rf.check("repertoire_file", Value("motion-repertoire.ini")).asString();
-    string sequencer_file = rf.check("sequencer_file", Value("sequencer.ini")).asString();
+//    string motion_repertoire_file = rf.check("repertoire_file", Value("motion-repertoire.ini")).asString();
+//    string sequencer_file = rf.check("sequencer_file", Value("sequencer.ini")).asString();
 
     opcPort.open(("/" + getName() + "/opc").c_str());
     scopePort.open(("/" + getName() + "/scope").c_str());
@@ -1063,8 +1064,8 @@ bool Manager::configure(ResourceFinder &rf)
     metric=NULL;
 
     init();
-    loadInitialConf(motion_repertoire_file);
-    if(!loadMotionList(motion_repertoire_file))
+    loadInitialConf();
+    if(!loadMotionList())
         return false;
 //    loadSequence(sequencer_file);
 
