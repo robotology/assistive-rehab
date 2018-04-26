@@ -17,7 +17,7 @@ service motionAnalyzer_IDL
    * Load motion repertoire from file.
    * @return true/false on success/failure.
    */
-   bool loadMotionList(1:string motion_repertoire_file);
+   bool loadMotionList();
 
    /**
    * Load sequence from file.
