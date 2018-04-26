@@ -754,6 +754,48 @@ bool Manager::loadMetric(const string &metric_tag)
 }
 
 /********************************************************/
+int getFirstUppercase(string str)
+{
+    for(int i=0; i<str.length(); i++)
+    {
+        if(isupper(str[i]))
+            return i;
+    }
+
+    return 0;
+}
+
+vector<string> Manager::listMetrics()
+{
+    vector<string> reply;
+    for (map<string,Metric*>::iterator it=motion_repertoire.begin(); it!=motion_repertoire.end(); it++)
+    {
+        string jnt=it->second->getTagJoint();
+        string part=jnt.substr(getFirstUppercase(jnt));
+        reply.push_back(it->first+" "+it->second->getMotionType()+part);
+    }
+
+    return reply;
+}
+
+/********************************************************/
+bool Manager::start()
+{
+    starting = true;
+    yInfo() << "Starting...";
+    return true;
+}
+
+/********************************************************/
+bool Manager::stop()
+{
+    starting = false;
+    yInfo() << "Stopping...";
+    metric = NULL;
+    return true;
+}
+
+/********************************************************/
 void Manager::getKeyframes()
 {
     curr_keypoints.clear();
@@ -1081,6 +1123,7 @@ bool Manager::configure(ResourceFinder &rf)
     tstart = Time::now();
 
     finishedSession = false;
+    starting = false;
 
     return true;
 }
@@ -1143,7 +1186,7 @@ double Manager::getPeriod()
 bool Manager::updateModule()
 {
     //if we query the database
-    if(opcPort.getOutputCount() > 0)
+    if(opcPort.getOutputCount() > 0 && starting)
     {
         //if no metric has been defined we do not analyze motion
         if(metric != NULL)
@@ -1160,8 +1203,8 @@ bool Manager::updateModule()
                 skeletonIn.normalize();
 
                 processor->update(skeletonIn);
-                //            if(processor->isDeviatingFromIntialPose())
-                //                yWarning() << "Deviating from initial pose\n";
+                if(processor->isDeviatingFromIntialPose())
+                    yWarning() << "Deviating from initial pose\n";
 
                 double result = processor->computeMetric();
 

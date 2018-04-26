@@ -103,6 +103,8 @@ class Manager : public RFModule,
     mat_t *matfp;
     string filename_report;
 
+    bool starting;
+
 //    Metric* metric;
 //    Processor* processor;
 
@@ -112,6 +114,9 @@ class Manager : public RFModule,
     bool loadMotionList();
 //    bool loadSequence(const string& sequencer_file);
     bool loadMetric(const string &metric_tag);
+    vector<string> listMetrics();
+    bool start();
+    bool stop();
 
     bool writeStructToMat(const string& name, const vector< vector< pair<string,Vector> > >& keypoints_skel);
     bool writeStructToMat(const string& name, const Metric& metric);
