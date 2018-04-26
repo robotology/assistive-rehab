@@ -36,7 +36,11 @@ using namespace yarp::math;
 using namespace iCub::ctrl;
 using namespace assistive_rehab;
 
-const string skeleton_unknown="?";
+/****************************************************************/
+bool is_unknown(const string &tag)
+{
+    return (tag.empty() || (tag=="?"));
+}
 
 
 /****************************************************************/
@@ -373,7 +377,7 @@ class Retriever : public RFModule
         dest->pivot=src->pivot;
 
         string oldTag=dest->skeleton->getTag();
-        dest->skeleton->setTag(src->skeleton->getTag()==skeleton_unknown?
+        dest->skeleton->setTag(is_unknown(src->skeleton->getTag())?
                                getNameFromId(dest->opc_id):
                                src->skeleton->getTag());
 
@@ -433,7 +437,7 @@ class Retriever : public RFModule
                 if (rep.get(0).asVocab()==Vocab::encode("ack"))
                 {
                     s->opc_id=rep.get(1).asList()->get(1).asInt();
-                    if (s->skeleton->getTag()==skeleton_unknown)
+                    if (is_unknown(s->skeleton->getTag()))
                     {
                         s->skeleton->setTag(getNameFromId(s->opc_id));
                         return opcSet(s);
