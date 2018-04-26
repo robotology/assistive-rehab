@@ -412,17 +412,19 @@ public:
             rpc_command_rx=false;
         }
 
-        set<string> do_gc_tags;
-        set_difference(begin(skeletons_gc_tags),end(skeletons_gc_tags),
-                       begin(skeletons_prevent_gc_tags),end(skeletons_prevent_gc_tags),
-                       inserter(do_gc_tags,end(do_gc_tags)));
-        skeletons_gc_tags.clear();
-
-        for (auto &tag:do_gc_tags)
+        if (!skeletons_gc_tags.empty())
         {
-            auto s=skeletons.find(tag);
-            if (s!=skeletons.end())
-                skeletons.erase(s);
+            set<string> do_gc_tags;
+            set_difference(begin(skeletons_gc_tags),end(skeletons_gc_tags),
+                           begin(skeletons_prevent_gc_tags),end(skeletons_prevent_gc_tags),
+                           inserter(do_gc_tags,end(do_gc_tags)));
+            for (auto &tag:do_gc_tags)
+            {
+                auto s=skeletons.find(tag);
+                if (s!=skeletons.end())
+                    skeletons.erase(s);
+            }
+            skeletons_gc_tags.clear();
         }
 
         iren->GetRenderWindow()->SetWindowName("Skeleton Viewer");
