@@ -30,8 +30,8 @@ int main(int argc, char *argv[])
 
     rf.setVerbose();
     rf.setDefaultContext("motionAnalyzer");  
-    rf.setDefaultConfigFile("motion-repertoire.ini");
-//    rf.setDefault("configuration-file", "config.ini"); //"motion-repertoire.ini");
+//    rf.setDefaultConfigFile("motion-repertoire.ini");
+    rf.setDefault("configuration-file", "motion-repertoire.ini");
     rf.configure(argc, argv);
 
     return manager.runModule(rf);
