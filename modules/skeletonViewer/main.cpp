@@ -15,6 +15,7 @@
 #include <cmath>
 #include <limits>
 #include <vector>
+#include <set>
 #include <unordered_map>
 #include <algorithm>
 #include <functional>
@@ -314,7 +315,7 @@ bool rpc_command_rx;
 Vector camera_position,camera_focalpoint,camera_viewup;
 vtkSmartPointer<vtkRenderer> vtk_renderer;
 unordered_map<string,unique_ptr<VTKSkeleton>> skeletons;
-vector<string> skeletons_gc_tags;
+set<string> skeletons_gc_tags;
 
 /****************************************************************/
 class UpdateCommand : public vtkCommand
@@ -357,6 +358,7 @@ public:
             }
         }
 
+        set<string> skeletons_prevent_gc_tags;
         if (!inputs.empty())
         {
             for (auto &input:inputs)
@@ -376,6 +378,7 @@ public:
                                     skeletons[tag]=unique_ptr<VTKSkeleton>(new VTKSkeleton(prop,vtk_renderer));
                                 else
                                     s->second->update(prop);
+                                skeletons_prevent_gc_tags.insert(tag);
                             }
                         }
                         else if (Bottle *b2=b1->find("remove-tags").asList())
@@ -385,7 +388,7 @@ public:
                                 string tag=b2->get(j).asString();
                                 auto s=skeletons.find(tag);
                                 if (s!=skeletons.end())
-                                    skeletons_gc_tags.push_back(tag);
+                                    skeletons_gc_tags.insert(tag);
                             }
                         }
                     }
@@ -412,9 +415,12 @@ public:
         {
             for (auto &tag:skeletons_gc_tags)
             {
-                auto s=skeletons.find(tag);
-                if (s!=skeletons.end())
-                    skeletons.erase(s);
+                if (skeletons_prevent_gc_tags.find(tag)==skeletons_prevent_gc_tags.end())
+                {
+                    auto s=skeletons.find(tag);
+                    if (s!=skeletons.end())
+                        skeletons.erase(s);
+                }
             }
             skeletons_gc_tags.clear();
         }
@@ -544,7 +550,7 @@ class Viewer : public RFModule
 
         for (auto s=begin(skeletons); s!=end(skeletons); s++)
             if (t-s->second->get_last_update()>deadline)
-                skeletons_gc_tags.push_back(s->first);
+                skeletons_gc_tags.insert(s->first);
     }
 
     /****************************************************************/
