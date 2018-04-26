@@ -15,7 +15,7 @@
 #include <cmath>
 #include <limits>
 #include <vector>
-#include <set>
+#include <unordered_set>
 #include <unordered_map>
 #include <algorithm>
 #include <iterator>
@@ -316,7 +316,7 @@ bool rpc_command_rx;
 Vector camera_position,camera_focalpoint,camera_viewup;
 vtkSmartPointer<vtkRenderer> vtk_renderer;
 unordered_map<string,unique_ptr<VTKSkeleton>> skeletons;
-set<string> skeletons_gc_tags;
+unordered_set<string> skeletons_gc_tags;
 
 /****************************************************************/
 class UpdateCommand : public vtkCommand
@@ -359,7 +359,7 @@ public:
             }
         }
 
-        set<string> skeletons_prevent_gc_tags;
+        unordered_set<string> skeletons_prevent_gc_tags;
         if (!inputs.empty())
         {
             for (auto &input:inputs)
@@ -414,7 +414,7 @@ public:
 
         if (!skeletons_gc_tags.empty())
         {
-            set<string> do_gc_tags;
+            unordered_set<string> do_gc_tags;
             set_difference(begin(skeletons_gc_tags),end(skeletons_gc_tags),
                            begin(skeletons_prevent_gc_tags),end(skeletons_prevent_gc_tags),
                            inserter(do_gc_tags,end(do_gc_tags)));
