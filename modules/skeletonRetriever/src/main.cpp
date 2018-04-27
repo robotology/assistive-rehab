@@ -547,10 +547,10 @@ class Retriever : public RFModule
     }
 
     /****************************************************************/
-    void enforce_tag_uniqueness_leftover(const vector<shared_ptr<MetaSkeleton>> &leftover)
+    void enforce_tag_uniqueness_pending(const vector<shared_ptr<MetaSkeleton>> &pending)
     {
         vector<shared_ptr<MetaSkeleton>> tbr;
-        for (auto &s1:leftover)
+        for (auto &s1:pending)
         {
             string tag_pivot=s1->skeleton->getTag();
             for (auto &s2:skeletons)
@@ -740,20 +740,20 @@ class Retriever : public RFModule
                     enforce_tag_uniqueness_input(new_accepted_skeletons);
 
                     vector<string> viewer_remove_tags;
-                    vector<shared_ptr<MetaSkeleton>> remaining=skeletons;
+                    vector<shared_ptr<MetaSkeleton>> pending=skeletons;
                     for (auto &n:new_accepted_skeletons)
                     {
-                        vector<double> scores=computeScores(remaining,n);
+                        vector<double> scores=computeScores(pending,n);
                         auto it=min_element(scores.begin(),scores.end());
                         if (it!=scores.end())
                         {
                             if (*it<numeric_limits<double>::infinity())
                             {
                                 auto i=distance(scores.begin(),it);
-                                auto &s=remaining[i];
+                                auto &s=pending[i];
                                 update(n,s,viewer_remove_tags);
                                 opcSet(s);
-                                remaining.erase(remaining.begin()+i);
+                                pending.erase(pending.begin()+i);
                                 continue;
                             }
                         }
@@ -762,7 +762,7 @@ class Retriever : public RFModule
                         skeletons.push_back(n);
                     }
 
-                    enforce_tag_uniqueness_leftover(remaining);
+                    enforce_tag_uniqueness_pending(pending);
                     viewerUpdate(viewer_remove_tags);
                 }
             }
