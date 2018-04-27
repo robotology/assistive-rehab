@@ -36,10 +36,12 @@ using namespace yarp::math;
 using namespace iCub::ctrl;
 using namespace assistive_rehab;
 
+const string unknown_tag("?");
+
 /****************************************************************/
 bool is_unknown(const string &tag)
 {
-    return (tag.empty() || (tag=="?"));
+    return (tag.empty() || (tag==unknown_tag));
 }
 
 
@@ -50,7 +52,7 @@ class MetaSkeleton
     unordered_map<string,shared_ptr<MedianFilter>> limbs_length;
     unordered_map<string,unsigned int> limbs_length_cnt;
     bool optimize_limblength;
-
+    
     /****************************************************************/
     vector<pair<string,Vector>> optimize_limb(const vector<string> &tags)
     {
@@ -78,16 +80,19 @@ class MetaSkeleton
     }
 
 public:
+    const int opc_id_invalid=-1;
     double timer;
     int opc_id;
     shared_ptr<SkeletonWaist> skeleton;
     vector<int> keys_acceptable_misses;
     Vector pivot;
+    double name_confidence;
 
     /****************************************************************/
     MetaSkeleton(const double t, const int filter_keypoint_order_,
                  const int filter_limblength_order_, const bool optimize_limblength_) : 
-                 timer(t), opc_id(-1), optimize_limblength(optimize_limblength_)
+                 timer(t), opc_id(opc_id_invalid), optimize_limblength(optimize_limblength_),
+                 name_confidence(0.0)
     {
         skeleton=shared_ptr<SkeletonWaist>(new SkeletonWaist());
         keys_acceptable_misses.assign(skeleton->getNumKeyPoints(),0);
@@ -335,6 +340,7 @@ class Retriever : public RFModule
                     if (tag=="Name")
                     {
                         s->skeleton->setTag(name);
+                        s->name_confidence=confidence;
                     }
                 }
             }
@@ -514,6 +520,62 @@ class Retriever : public RFModule
     }
 
     /****************************************************************/
+    void enforce_tag_uniqueness_input(const vector<shared_ptr<MetaSkeleton>> &input)
+    {
+        for (auto &s1:input)
+        {
+            string tag_pivot=s1->skeleton->getTag();
+            if (!is_unknown(tag_pivot))
+            {
+                for (auto &s2:input)
+                {
+                    if ((s1!=s2) && (tag_pivot==s2->skeleton->getTag()))
+                    {
+                        if (s1->name_confidence>=s2->name_confidence)
+                        {
+                            s2->skeleton->setTag(unknown_tag);
+                        }
+                        else
+                        {
+                            s1->skeleton->setTag(unknown_tag);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /****************************************************************/
+    void enforce_tag_uniqueness_leftover(const vector<shared_ptr<MetaSkeleton>> &leftover)
+    {
+        vector<shared_ptr<MetaSkeleton>> tbr;
+        for (auto &s1:leftover)
+        {
+            string tag_pivot=s1->skeleton->getTag();
+            for (auto &s2:skeletons)
+            {
+                if ((s1!=s2) && (tag_pivot==s2->skeleton->getTag()))
+                {
+                    opcDel(s1);
+                    tbr.push_back(s1);
+                }
+            }
+        }
+        for (auto &s:tbr)
+        {
+            for (auto it=begin(skeletons); it!=end(skeletons); it++)
+            {
+                if (s==*it)
+                {
+                    skeletons.erase(it);
+                    break;
+                }
+            }
+        }
+    }
+
+    /****************************************************************/
     void viewerUpdate(const vector<string> &remove_tags)
     {
         if (viewerPort.getOutputCount()>0)
@@ -675,21 +737,23 @@ class Retriever : public RFModule
                 // update existing skeletons / create new skeletons
                 if (!new_accepted_skeletons.empty())
                 {
+                    enforce_tag_uniqueness_input(new_accepted_skeletons);
+
                     vector<string> viewer_remove_tags;
-                    vector<shared_ptr<MetaSkeleton>> c=skeletons;
+                    vector<shared_ptr<MetaSkeleton>> remaining=skeletons;
                     for (auto &n:new_accepted_skeletons)
                     {
-                        vector<double> scores=computeScores(c,n);
+                        vector<double> scores=computeScores(remaining,n);
                         auto it=min_element(scores.begin(),scores.end());
                         if (it!=scores.end())
                         {
                             if (*it<numeric_limits<double>::infinity())
                             {
                                 auto i=distance(scores.begin(),it);
-                                auto &s=c[i];
+                                auto &s=remaining[i];
                                 update(n,s,viewer_remove_tags);
                                 opcSet(s);
-                                c.erase(c.begin()+i);
+                                remaining.erase(remaining.begin()+i);
                                 continue;
                             }
                         }
@@ -698,6 +762,7 @@ class Retriever : public RFModule
                         skeletons.push_back(n);
                     }
 
+                    enforce_tag_uniqueness_leftover(remaining);
                     viewerUpdate(viewer_remove_tags);
                 }
             }
