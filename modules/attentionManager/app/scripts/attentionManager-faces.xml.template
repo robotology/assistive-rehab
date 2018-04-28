@@ -1,0 +1,239 @@
+<application>
+<name>Assistive Rehabilitation attentionManager with Faces App</name>
+
+    <module>
+        <name>yarpdev</name>
+        <parameters>--context AssistiveRehab --from realsense2.ini</parameters>
+        <node>r1-torso</node>
+    </module>
+
+    <module>
+        <name>yarpOpenPose</name>
+        <node>r1-torso</node>
+    </module>
+
+    <module>
+        <name>human-structure</name>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>recognition-manager</name>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>linearClassifierModule</name>
+        <parameters>--BufferSize 1 --CSVM 1.0 --databaseFolder faceDatabase --WeightedSVM 1</parameters>
+        <node>cuda-machine</node>
+    </module>
+
+    <module>
+        <name>caffeCoder</name>
+        <parameters>--from caffeCoder_resnet.ini</parameters>
+        <node>cuda-machine</node>
+    </module>
+
+    <module>
+        <name>himrepClassifier</name>
+        <node>cuda-machine</node>
+    </module>
+
+    <module>
+       <name>objectsPropertiesCollector</name>
+       <parameters>--name opc --no-load-db --no-save-db --async-bc</parameters>
+       <node>localhost</node>
+    </module>
+
+    <module>
+       <name>skeletonRetriever</name>
+       <parameters></parameters>
+       <node>localhost</node>
+    </module>
+
+    <module>
+       <name>attentionManager</name>
+       <parameters>--auto-start</parameters>
+       <node>localhost</node>
+    </module>
+
+    <module>
+       <name>cer_gaze-controller</name>
+       <parameters>--cameras::context cameraCalibration --cameras::file cerEyes_320x240.ini --T 2.0 --joints-limits::pitch "(-20.0 20.0)" --joints-limits::yaw "(-40.0 40.0)"</parameters>
+       <node>r1-base</node>
+    </module>
+
+    <module>
+        <name>yarpview</name>
+        <parameters>--name /viewer/depth --x 10 --y 40 --p 50 --compact</parameters>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpview</name>
+        <parameters>--name /viewer/skeleton --x 380 --y 40 --p 50 --compact</parameters>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpview</name>
+        <parameters>--name /viewer/faces --x 750 --y 40 --p 50 --compact</parameters>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>skeletonViewer</name>
+        <parameters>--x 1120 --y 10</parameters>
+        <node>localhost</node>
+    </module>
+
+    <connection>
+        <from>/depthCamera/rgbImage:o</from>
+        <to>/yarpOpenPose/image:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/depthCamera/depthImage:o</from>
+        <to>/skeletonRetriever/depth:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonRetriever/cam:rpc</from>
+        <to>/depthCamera/rpc:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/himrepClassifier/img:o</from>
+        <to>/caffeCoder/img:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/caffeCoder/code:o</from>
+        <to>/himrepClassifier/features:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/himrepClassifier/features:o</from>
+        <to>/linearClassifier/features:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/linearClassifier/scores:o</from>
+        <to>/himrepClassifier/scores:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/himrepClassifier/classify:rpc</from>
+        <to>/linearClassifier/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/caffeCoder/img:o</from>
+        <to>/himrepClassifier/SIFTimg:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/target:o</from>
+        <to>/human-structure/skeleton:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/propag:o</from>
+        <to>/human-structure/image:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/propag:o</from>
+        <to>/recognition-manager/image:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/human-structure/target:o</from>
+        <to>/recognition-manager/target:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/human-structure/blobs:o</from>
+        <to>/recognition-manager/blobs:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/recognition-manager/classify:rpc</from>
+        <to>/himrepClassifier/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/recognition-manager/imgClassifier:o</from>
+        <to>/himrepClassifier/img:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/recognition-manager/target:o</from>
+        <to>/skeletonRetriever/skeletons:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonRetriever/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/opc/broadcast:o</from>
+        <to>/attentionManager/opc:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/attentionManager/gaze/cmd:rpc</from>
+        <to>/cer_gaze-controller/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer_gaze-controller/state:o</from>
+        <to>/attentionManager/gaze/state:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/depthCamera/depthImage:o</from>
+        <to>/viewer/depth</to>
+        <protocol>fast_tcp+recv.portmonitor+type.dll+file.depthimage</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/image:o</from>
+        <to>/viewer/skeleton</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/recognition-manager/image:o</from>
+        <to>/viewer/faces</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonRetriever/viewer:o</from>
+        <to>/skeletonViewer:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+</application>
