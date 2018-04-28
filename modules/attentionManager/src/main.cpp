@@ -14,6 +14,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <cmath>
 #include <algorithm>
 
 #include <yarp/os/all.h>
@@ -43,6 +44,7 @@ class Attention : public RFModule, public attentionManager_IDL
 
     Matrix gaze_frame;
     vector<shared_ptr<Skeleton>> skeletons;
+    vector<double> activity;
     string tag;
     string keypoint;
 
@@ -131,6 +133,41 @@ class Attention : public RFModule, public attentionManager_IDL
             }
         }
         return nullptr;
+    }
+
+    /****************************************************************/
+    bool is_inactive(const shared_ptr<Skeleton> &s)
+    {
+        double a=0.0;
+        unsigned int n=0;
+        for (unsigned int i=0; i<s->getNumKeyPoints(); i++)
+        {
+            if ((*s)[i]->isUpdated())
+            {
+                a+=norm((*s)[i]->getPoint());
+                n++;
+            }
+        }
+        activity.push_back(a/n);
+
+        if (activity.size()>=(2.0*T)/getPeriod())
+        {
+            double mean=0.0;
+            double stdev=0.0;
+            for (auto &p:activity)
+            {
+                mean+=p;
+                stdev+=p*p;
+            }
+            mean/=activity.size();
+            stdev=sqrt(stdev/activity.size()-mean*mean);
+            activity.clear();
+            return (stdev<0.05);
+        }
+        else
+        {
+            return false;
+        }
     }
 
     /****************************************************************/
@@ -257,6 +294,7 @@ class Attention : public RFModule, public attentionManager_IDL
         {
             if (seek())
             {
+                activity.clear();
                 state=State::follow;
             }
             else
@@ -302,6 +340,17 @@ class Attention : public RFModule, public attentionManager_IDL
                 x=gaze_frame*x;
                 x.pop_back();
                 look("cartesian",x);
+
+                // switch attention in auto mode
+                // if the skeleton is inactive
+                if (auto_mode)
+                {
+                    if (is_inactive(s))
+                    {
+                        state=State::seek;
+                    }
+                }
+
                 lost_t0=Time::now();
             }
             else if (Time::now()-lost_t0>=T)
