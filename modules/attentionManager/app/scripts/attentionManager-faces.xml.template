@@ -25,18 +25,18 @@
     <module>
         <name>linearClassifierModule</name>
         <parameters>--BufferSize 1 --CSVM 1.0 --databaseFolder faceDatabase --WeightedSVM 1</parameters>
-        <node>cuda-machine</node>
+        <node>r1-torso</node>
     </module>
 
     <module>
         <name>caffeCoder</name>
         <parameters>--from caffeCoder_resnet.ini</parameters>
-        <node>cuda-machine</node>
+        <node>r1-torso</node>
     </module>
 
     <module>
         <name>himrepClassifier</name>
-        <node>cuda-machine</node>
+        <node>r1-torso</node>
     </module>
 
     <module>
