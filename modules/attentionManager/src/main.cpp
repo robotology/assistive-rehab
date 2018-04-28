@@ -102,17 +102,56 @@ class Attention : public RFModule, public attentionManager_IDL
     }
 
     /****************************************************************/
+    shared_ptr<Skeleton> find_skeleton_raised_hand() const
+    {
+        for (auto &s:skeletons)
+        {
+            if (!(*s)[KeyPointTag::shoulder_center]->isUpdated())
+            {
+                continue;
+            }
+
+            bool left_raised=false;
+            if ((*s)[KeyPointTag::hand_left]->isUpdated())
+            {
+                left_raised=((*s)[KeyPointTag::hand_left]->getPoint()[1]<
+                             (*s)[KeyPointTag::shoulder_center]->getPoint()[1]);
+            }
+
+            bool right_raised=false;
+            if ((*s)[KeyPointTag::hand_right]->isUpdated())
+            {
+                right_raised=((*s)[KeyPointTag::hand_right]->getPoint()[1]<
+                              (*s)[KeyPointTag::shoulder_center]->getPoint()[1]);
+            }
+
+            if (left_raised || right_raised)
+            {
+                return s;
+            }
+        }
+        return nullptr;
+    }
+
+    /****************************************************************/
     bool seek()
     {
         if (auto_mode)
         {
             random_shuffle(begin(skeletons),end(skeletons));
-            for (auto &s:skeletons)
+            if (auto s=find_skeleton_raised_hand())
             {
                 tag=s->getTag();
-                if (tag[0]!='#')
+            }
+            else
+            {
+                for (auto &s:skeletons)
                 {
-                    break;
+                    tag=s->getTag();
+                    if (tag[0]!='#')
+                    {
+                        break;
+                    }
                 }
             }
             keypoint=KeyPointTag::head;
@@ -226,17 +265,26 @@ class Attention : public RFModule, public attentionManager_IDL
                 random[0]=Rand::scalar(-30.0,30.0);
                 random[1]=Rand::scalar(-10.0,20.0);
                 look("angular",random);
-
                 state=State::wait_still;
                 still_t0=Time::now();
             }
         }
         else if (state==State::follow)
         {
-            if (shared_ptr<Skeleton> s=find_skeleton_tag(tag))
+            // raised hand preemption in auto mode
+            if (auto_mode)
             {
-                string keypoint=((*s)[this->keypoint]?this->keypoint:
-                                                      KeyPointTag::head);
+                if (auto s=find_skeleton_raised_hand())
+                {
+                    tag=s->getTag();
+                }
+            }
+
+            if (auto s=find_skeleton_tag(tag))
+            {
+                // pick up the requested keypoint if visible,
+                // otherwise go with the first visible keypoint
+                string keypoint=((*s)[this->keypoint]?this->keypoint:KeyPointTag::head);
                 if (!(*s)[keypoint]->isUpdated())
                 {
                     for (unsigned int i=0; i<s->getNumKeyPoints(); i++)
@@ -248,16 +296,17 @@ class Attention : public RFModule, public attentionManager_IDL
                         }
                     }
                 }
+
                 Vector x=(*s)[keypoint]->getPoint();
                 x.push_back(1.0);
                 x=gaze_frame*x;
                 x.pop_back();
                 look("cartesian",x);
-
                 lost_t0=Time::now();
             }
             else if (Time::now()-lost_t0>=T)
             {
+                // lost track, go seek
                 state=State::seek;
             }
         }
