@@ -38,6 +38,7 @@ class Attention : public RFModule, public attentionManager_IDL
     enum class State { idle, seek, follow } state;
     bool auto_mode;
 
+    const int ack=Vocab::encode("ack");
     const double T=3.0;
     double inactivity_thres;
     double still_t0;
@@ -75,7 +76,7 @@ class Attention : public RFModule, public attentionManager_IDL
         state=State::idle;
         if (gazeCmdPort.write(cmd,rep))
         {
-            return (rep.get(0).asVocab()==Vocab::encode("ack"));
+            return (rep.get(0).asVocab()==ack);
         }
         return false;
     }
@@ -218,7 +219,7 @@ class Attention : public RFModule, public attentionManager_IDL
         cmd.addDouble(T);
         if (gazeCmdPort.write(cmd,rep))
         {
-            return (rep.get(0).asVocab()==Vocab::encode("ack"));
+            return (rep.get(0).asVocab()==ack);
         }
         return false;
     }
@@ -239,7 +240,7 @@ class Attention : public RFModule, public attentionManager_IDL
         cmd.addList().read(options);
         if (gazeCmdPort.write(cmd,rep))
         {
-            return (rep.get(0).asVocab()==Vocab::encode("ack"));
+            return (rep.get(0).asVocab()==ack);
         }
         return false;
     }
@@ -259,7 +260,7 @@ class Attention : public RFModule, public attentionManager_IDL
             Bottle rep;
             if (gazeCmdPort.write(cmd,rep))
             {
-                if (rep.get(0).asVocab()==Vocab::encode("ack"))
+                if (rep.get(0).asVocab()==ack)
                 {
                     if (rep.get(1).asInt()>0)
                     {
