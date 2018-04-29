@@ -35,7 +35,7 @@ using namespace assistive_rehab;
 /****************************************************************/
 class Attention : public RFModule, public attentionManager_IDL
 {
-    enum class State { idle, seek, follow } state;
+    enum class State { unconnected, idle, seek, follow } state;
     bool auto_mode;
 
     const int ack=Vocab::encode("ack");
@@ -57,26 +57,46 @@ class Attention : public RFModule, public attentionManager_IDL
     BufferedPort<Property> gazeStatePort;
     RpcServer cmdPort;
 
+    class Reporter : public PortReport {
+        Attention &attention;
+        void report(const PortInfo &info) override {
+            if (info.created && !info.incoming) {
+                attention.switch_to(attention.auto_mode?State::seek:State::idle);
+            }
+        }
+    public:
+        Reporter(Attention &attention_) : attention(attention_) { }
+    } reporter;
+
     /****************************************************************/
     bool look(const string &tag, const string &keypoint) override
     {
         LockGuard lg(mutex);
+        if (state==State::unconnected)
+        {
+            return false;
+        }
         this->tag=tag;
         this->keypoint=keypoint;
-        state=State::seek;
-        return set_gaze_T(2.0);
+        return switch_to(State::seek);
     }
 
     /****************************************************************/
     bool stop() override
     {
         LockGuard lg(mutex);
+        if (state==State::unconnected)
+        {
+            return false;
+        }
         Bottle cmd,rep;
         cmd.addVocab(Vocab::encode("stop"));
-        state=State::idle;
         if (gazeCmdPort.write(cmd,rep))
         {
-            return (rep.get(0).asVocab()==ack);
+            if (rep.get(0).asVocab()==ack)
+            {
+                return switch_to(state=State::idle);
+            }
         }
         return false;
     }
@@ -85,6 +105,10 @@ class Attention : public RFModule, public attentionManager_IDL
     bool is_running() override
     {
         LockGuard lg(mutex);
+        if (state==State::unconnected)
+        {
+            return false;
+        }
         return (state!=State::idle);
     }
 
@@ -92,9 +116,12 @@ class Attention : public RFModule, public attentionManager_IDL
     bool set_auto() override
     {
         LockGuard lg(mutex);
+        if (state==State::unconnected)
+        {
+            return false;
+        }
         auto_mode=true;
-        state=State::seek;
-        return set_gaze_T(2.0);
+        return switch_to(State::seek);
     }
 
     /****************************************************************/
@@ -177,6 +204,13 @@ class Attention : public RFModule, public attentionManager_IDL
         {
             return false;
         }
+    }
+
+    /****************************************************************/
+    bool switch_to(const State &next_state)
+    {
+        state=next_state;
+        return set_gaze_T(state==State::follow?1.0:2.0);
     }
 
     /****************************************************************/
@@ -283,14 +317,16 @@ class Attention : public RFModule, public attentionManager_IDL
     {
         auto_mode=rf.check("auto-start");
         inactivity_thres=rf.check("inactivity-thres",Value(0.05)).asDouble();
-        state=(auto_mode?State::seek:State::idle);
-
+        
         opcPort.open("/attentionManager/opc:i");
         gazeCmdPort.open("/attentionManager/gaze/cmd:rpc");
         gazeStatePort.open("/attentionManager/gaze/state:i");
         cmdPort.open("/attentionManager/cmd:rpc");
+
+        gazeStatePort.setReporter(reporter);
         attach(cmdPort);
 
+        state=State::unconnected;
         still_t0=lost_t0=Time::now();
         first_follow_look=false;
 
@@ -335,8 +371,7 @@ class Attention : public RFModule, public attentionManager_IDL
             if (seek())
             {
                 activity.clear();
-                set_gaze_T(1.0);
-                state=State::follow;
+                switch_to(State::follow);
                 first_follow_look=true;
             }
             else if (Time::now()-still_t0>T)
@@ -400,8 +435,7 @@ class Attention : public RFModule, public attentionManager_IDL
                     if (is_inactive(s))
                     {
                         yInfo()<<"[Auto]: detected inactivity => seek mode";
-                        set_gaze_T(2.0);
-                        state=State::seek;
+                        switch_to(State::seek);
                     }
                 }
 
@@ -410,8 +444,7 @@ class Attention : public RFModule, public attentionManager_IDL
             else if (Time::now()-lost_t0>=T)
             {
                 yInfo()<<"Lost track => seek mode";
-                set_gaze_T(2.0);
-                state=State::seek;
+                switch_to(State::seek);
             }
         }
 
@@ -430,6 +463,10 @@ class Attention : public RFModule, public attentionManager_IDL
         cmdPort.close();
         return true;
     }
+
+public:
+    /****************************************************************/
+    Attention() : reporter(*this) { }
 };
 
 
@@ -449,4 +486,5 @@ int main(int argc, char *argv[])
     Attention attention;
     return attention.runModule(rf);
 }
+
 
