@@ -15,19 +15,19 @@
     <module>
        <name>objectsPropertiesCollector</name>
        <parameters>--name opc --no-load-db --no-save-db --async-bc</parameters>
-       <node>localhost</node>
+       <node>console</node>
     </module>
 
     <module>
        <name>skeletonRetriever</name>
        <parameters></parameters>
-       <node>localhost</node>
+       <node>console</node>
     </module>
 
     <module>
        <name>attentionManager</name>
        <parameters>--auto-start</parameters>
-       <node>localhost</node>
+       <node>console</node>
     </module>
 
     <module>
@@ -39,19 +39,19 @@
     <module>
         <name>yarpview</name>
         <parameters>--name /viewer/depth --x 10 --y 40 --p 50 --compact</parameters>
-        <node>localhost</node>
+        <node>display</node>
     </module>
 
     <module>
         <name>yarpview</name>
         <parameters>--name /viewer/skeleton --x 380 --y 40 --p 50 --compact</parameters>
-        <node>localhost</node>
+        <node>display</node>
     </module>
 
     <module>
         <name>skeletonViewer</name>
         <parameters>--x 750 --y 10</parameters>
-        <node>localhost</node>
+        <node>display</node>
     </module>
 
     <connection>

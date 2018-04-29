@@ -39,6 +39,7 @@ class Attention : public RFModule, public attentionManager_IDL
     bool auto_mode;
 
     const double T=3.0;
+    double inactivity_thres;
     double still_t0;
     double lost_t0;
 
@@ -162,7 +163,9 @@ class Attention : public RFModule, public attentionManager_IDL
             mean/=activity.size();
             stdev=sqrt(stdev/activity.size()-mean*mean);
             activity.clear();
-            return (stdev<0.05);
+            yInfo()<<"Inactivity detection of"<<s->getTag()
+                   <<":"<<stdev<<"/"<<inactivity_thres;
+            return (stdev<inactivity_thres);
         }
         else
         {
@@ -191,6 +194,7 @@ class Attention : public RFModule, public attentionManager_IDL
                     }
                 }
             }
+            yInfo()<<"[Auto]: follow"<<tag;
             keypoint=KeyPointTag::head;
             return !skeletons.empty();
         }
@@ -227,6 +231,7 @@ class Attention : public RFModule, public attentionManager_IDL
     bool configure(ResourceFinder &rf) override
     {
         auto_mode=rf.check("auto-start");
+        inactivity_thres=rf.check("inactivity-thres",Value(0.05)).asDouble();
         state=(auto_mode?State::seek:State::idle);
 
         opcPort.open("/attentionManager/opc:i");
@@ -315,6 +320,7 @@ class Attention : public RFModule, public attentionManager_IDL
                 if (auto s=find_skeleton_raised_hand())
                 {
                     tag=s->getTag();
+                    yInfo()<<"[Auto]: found raised hand => follow"<<tag;
                 }
             }
 
@@ -347,6 +353,7 @@ class Attention : public RFModule, public attentionManager_IDL
                 {
                     if (is_inactive(s))
                     {
+                        yInfo()<<"[Auto]: detected inactivity => seek mode";
                         state=State::seek;
                     }
                 }
@@ -355,7 +362,7 @@ class Attention : public RFModule, public attentionManager_IDL
             }
             else if (Time::now()-lost_t0>=T)
             {
-                // lost track, go seek
+                yInfo()<<"Lost track => seek mode";
                 state=State::seek;
             }
         }
