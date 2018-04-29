@@ -245,25 +245,30 @@ class Attention : public RFModule, public attentionManager_IDL
     }
 
     /****************************************************************/
-    void wait_motion_done()
+    bool wait_motion_done()
     {
-        Bottle cmd,rep;
+        Bottle cmd;
         cmd.addVocab(Vocab::encode("get"));
         cmd.addVocab(Vocab::encode("done"));
-        while (true)
+
+        const double t0=Time::now();
+        while (Time::now()-t0<T)
         {
             Time::delay(getPeriod());
+
+            Bottle rep;
             if (gazeCmdPort.write(cmd,rep))
             {
                 if (rep.get(0).asVocab()==Vocab::encode("ack"))
                 {
                     if (rep.get(1).asInt()>0)
                     {
-                        return;
+                        return true;
                     }
                 }
             }
         }
+        return false;
     }
 
     /****************************************************************/
