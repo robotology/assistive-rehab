@@ -35,13 +35,14 @@ using namespace assistive_rehab;
 /****************************************************************/
 class Attention : public RFModule, public attentionManager_IDL
 {
-    enum class State { idle, wait_still, seek, follow } state;
+    enum class State { idle, seek, follow } state;
     bool auto_mode;
 
     const double T=3.0;
     double inactivity_thres;
     double still_t0;
     double lost_t0;
+    bool first_follow_look;
 
     Matrix gaze_frame;
     vector<shared_ptr<Skeleton>> skeletons;
@@ -62,7 +63,7 @@ class Attention : public RFModule, public attentionManager_IDL
         this->tag=tag;
         this->keypoint=keypoint;
         state=State::seek;
-        return true;
+        return set_gaze_T(2.0);
     }
 
     /****************************************************************/
@@ -72,7 +73,11 @@ class Attention : public RFModule, public attentionManager_IDL
         Bottle cmd,rep;
         cmd.addVocab(Vocab::encode("stop"));
         state=State::idle;
-        return gazeCmdPort.write(cmd,rep);
+        if (gazeCmdPort.write(cmd,rep))
+        {
+            return (rep.get(0).asVocab()==Vocab::encode("ack"));
+        }
+        return false;
     }
 
     /****************************************************************/
@@ -88,7 +93,7 @@ class Attention : public RFModule, public attentionManager_IDL
         LockGuard lg(mutex);
         auto_mode=true;
         state=State::seek;
-        return true;
+        return set_gaze_T(2.0);
     }
 
     /****************************************************************/
@@ -205,6 +210,20 @@ class Attention : public RFModule, public attentionManager_IDL
     }
 
     /****************************************************************/
+    bool set_gaze_T(const double T) const
+    {
+        Bottle cmd,rep;
+        cmd.addVocab(Vocab::encode("set"));
+        cmd.addString("T");
+        cmd.addDouble(T);
+        if (gazeCmdPort.write(cmd,rep))
+        {
+            return (rep.get(0).asVocab()==Vocab::encode("ack"));
+        }
+        return false;
+    }
+
+    /****************************************************************/
     bool look(const string &type, const Vector &v) const
     {
         Bottle loc;
@@ -218,7 +237,33 @@ class Attention : public RFModule, public attentionManager_IDL
         Bottle cmd,rep;
         cmd.addVocab(Vocab::encode("look"));
         cmd.addList().read(options);
-        return gazeCmdPort.write(cmd,rep);
+        if (gazeCmdPort.write(cmd,rep))
+        {
+            return (rep.get(0).asVocab()==Vocab::encode("ack"));
+        }
+        return false;
+    }
+
+    /****************************************************************/
+    void wait_motion_done()
+    {
+        Bottle cmd,rep;
+        cmd.addVocab(Vocab::encode("get"));
+        cmd.addVocab(Vocab::encode("done"));
+        while (true)
+        {
+            Time::delay(getPeriod());
+            if (gazeCmdPort.write(cmd,rep))
+            {
+                if (rep.get(0).asVocab()==Vocab::encode("ack"))
+                {
+                    if (rep.get(1).asInt()>0)
+                    {
+                        return;
+                    }
+                }
+            }
+        }
     }
 
     /****************************************************************/
@@ -239,6 +284,9 @@ class Attention : public RFModule, public attentionManager_IDL
         gazeStatePort.open("/attentionManager/gaze/state:i");
         cmdPort.open("/attentionManager/cmd:rpc");
         attach(cmdPort);
+
+        still_t0=lost_t0=Time::now();
+        first_follow_look=false;
 
         Rand::init();
         return true;
@@ -276,39 +324,22 @@ class Attention : public RFModule, public attentionManager_IDL
             }
         }
 
-        if (state==State::wait_still)
-        {
-            Bottle cmd,rep;
-            cmd.addVocab(Vocab::encode("get"));
-            cmd.addVocab(Vocab::encode("done"));
-            if (gazeCmdPort.write(cmd,rep))
-            {
-                if (rep.get(0).asVocab()==Vocab::encode("ack"))
-                {
-                    if (rep.get(1).asInt()>0)
-                    {
-                        if (Time::now()-still_t0>T)
-                        {
-                            state=State::seek;
-                        }
-                    }
-                }
-            }
-        }
-        else if (state==State::seek)
+        if (state==State::seek)
         {
             if (seek())
             {
                 activity.clear();
+                set_gaze_T(1.0);
                 state=State::follow;
+                first_follow_look=true;
             }
-            else
+            else if (Time::now()-still_t0>T)
             {
                 Vector random(2);
                 random[0]=Rand::scalar(-30.0,30.0);
                 random[1]=Rand::scalar(-10.0,20.0);
                 look("angular",random);
-                state=State::wait_still;
+                wait_motion_done();
                 still_t0=Time::now();
             }
         }
@@ -347,6 +378,15 @@ class Attention : public RFModule, public attentionManager_IDL
                 x.pop_back();
                 look("cartesian",x);
 
+                // gaze speed is faster when chasing,
+                // hence wait till the first movement is done
+                // since it may be wide causing image blur
+                if (first_follow_look)
+                {
+                    wait_motion_done();
+                    first_follow_look=false;
+                }
+
                 // switch attention in auto mode
                 // if the skeleton is inactive
                 if (auto_mode)
@@ -354,6 +394,7 @@ class Attention : public RFModule, public attentionManager_IDL
                     if (is_inactive(s))
                     {
                         yInfo()<<"[Auto]: detected inactivity => seek mode";
+                        set_gaze_T(2.0);
                         state=State::seek;
                     }
                 }
@@ -363,6 +404,7 @@ class Attention : public RFModule, public attentionManager_IDL
             else if (Time::now()-lost_t0>=T)
             {
                 yInfo()<<"Lost track => seek mode";
+                set_gaze_T(2.0);
                 state=State::seek;
             }
         }

@@ -59,7 +59,7 @@
 
     <module>
        <name>cer_gaze-controller</name>
-       <parameters>--cameras::context cameraCalibration --cameras::file cerEyes_320x240.ini --T 2.0 --joints-limits::pitch "(-20.0 20.0)" --joints-limits::yaw "(-40.0 40.0)"</parameters>
+       <parameters>--cameras::context cameraCalibration --cameras::file cerEyes_320x240.ini --joints-limits::pitch "(-20.0 20.0)" --joints-limits::yaw "(-40.0 40.0)"</parameters>
        <node>r1-base</node>
     </module>
 
@@ -282,6 +282,18 @@
     <connection>
         <from>/skeletonPlayer/viewer:o</from>
         <to>/skeletonViewer:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonScaler/player:rpc</from>
+        <to>/skeletonPlayer/cmd:rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonScaler/viewer:rpc</from>
+        <to>/skeletonViewer:rpc</to>
         <protocol>tcp</protocol>
     </connection>
 </application>

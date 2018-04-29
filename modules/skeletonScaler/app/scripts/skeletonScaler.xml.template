@@ -121,4 +121,15 @@
         <protocol>tcp</protocol>
     </connection>
 
+    <connection>
+        <from>/skeletonScaler/player:rpc</from>
+        <to>/skeletonPlayer/cmd:rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonScaler/viewer:rpc</from>
+        <to>/skeletonViewer:rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
 </application>
