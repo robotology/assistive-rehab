@@ -39,9 +39,9 @@ service attentionManager_IDL
 
    /**
     * Check if the robot is following a skeleton.
-    * @return true/false on following/not-following.
+    * @return the name of the followed skeleton (if any).
     */
-   bool is_following();
+   string is_following();
 
    /**
     * Enable autonomous mode.

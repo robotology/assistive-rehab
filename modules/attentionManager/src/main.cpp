@@ -117,10 +117,10 @@ class Attention : public RFModule, public attentionManager_IDL
     }
 
     /****************************************************************/
-    bool is_following() override
+    string is_following() override
     {
         LockGuard lg(mutex);
-        return ((state==State::follow) && (first_follow_look==false));
+        return (state==State::follow?tag:"");
     }
 
     /****************************************************************/
