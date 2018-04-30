@@ -124,21 +124,21 @@ class Attention : public RFModule, public attentionManager_IDL
     }
 
     /****************************************************************/
-    string is_any_raised_hand() override
+    vector<string> is_any_raised_hand() override
     {
         LockGuard lg(mutex);
-        if (state<State::idle)
+        vector<string> ret;
+        if (state>=State::idle)
         {
-            return false;
-        }
-        for (auto &s:skeletons)
-        {
-            if (is_with_raised_hand(s))
+            for (auto &s:skeletons)
             {
-                return s->getTag();
+                if (is_with_raised_hand(s))
+                {
+                    ret.push_back(s->getTag());
+                }
             }
         }
-        return string("");
+        return ret;
     }
 
     /****************************************************************/

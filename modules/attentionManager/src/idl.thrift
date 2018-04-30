@@ -45,9 +45,9 @@ service attentionManager_IDL
 
    /**
     * Check if any skeleton is with one hand raised.
-    * @return the tag of the skeleton; empty otherwise.
+    * @return the list of skeletons' tags.
     */
-   string is_any_raised_hand();
+   list<string> is_any_raised_hand();
 
    /**
     * Check if the specified skeleton is with one hand raised.
