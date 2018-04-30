@@ -14,12 +14,12 @@
 
     <module>
         <name>human-structure</name>
-        <node>console</node>
+        <node>r1-console-linux</node>
     </module>
 
     <module>
         <name>recognition-manager</name>
-        <node>console</node>
+        <node>r1-console-linux</node>
     </module>
 
     <module>
@@ -36,25 +36,25 @@
 
     <module>
         <name>himrepClassifier</name>
-        <node>console</node>
+        <node>r1-console-linux</node>
     </module>
 
     <module>
        <name>objectsPropertiesCollector</name>
        <parameters>--name opc --no-load-db --no-save-db --async-bc</parameters>
-       <node>console</node>
+       <node>r1-console-linux</node>
     </module>
 
     <module>
        <name>skeletonRetriever</name>
        <parameters></parameters>
-       <node>console</node>
+       <node>r1-console-linux</node>
     </module>
 
     <module>
        <name>attentionManager</name>
        <parameters>--auto-start</parameters>
-       <node>console</node>
+       <node>r1-console-linux</node>
     </module>
 
     <module>
@@ -66,49 +66,49 @@
     <module>
        <name>motionAnalyzer</name>
        <parameters></parameters>
-       <node>console</node>
+       <node>r1-console-linux</node>
     </module>
 
     <module>
        <name>skeletonPlayer</name>
        <parameters></parameters>
-       <node>console</node>
+       <node>r1-console-linux</node>
     </module>
 
     <module>
        <name>skeletonScaler</name>
        <parameters></parameters>
-       <node>console</node>
+       <node>r1-console-linux</node>
     </module>
 
     <module>
         <name>yarpview</name>
         <parameters>--name /viewer/depth --x 10 --y 40 --p 50 --compact</parameters>
-        <node>display</node>
+        <node>r1-display-linux</node>
     </module>
 
     <module>
         <name>yarpview</name>
         <parameters>--name /viewer/skeleton --x 380 --y 40 --p 50 --compact</parameters>
-        <node>display</node>
+        <node>r1-display-linux</node>
     </module>
 
     <module>
         <name>yarpview</name>
         <parameters>--name /viewer/faces --x 750 --y 40 --p 50 --compact</parameters>
-        <node>display</node>
+        <node>r1-display-linux</node>
     </module>
 
     <module>
         <name>skeletonViewer</name>
         <parameters>--x 1120 --y 10</parameters>
-        <node>display</node>
+        <node>r1-display-linux</node>
     </module>
 
     <module>
        <name>yarpscope</name>
        <parameters>--remote /motionAnalyzer/scope --x 190 --y 400 --dx 600 --dy 600 --index "(0 1 2)" --color "(blue red red)"</parameters>
-       <node>display</node>
+       <node>r1-display-linux</node>
     </module>
 
     <connection>
