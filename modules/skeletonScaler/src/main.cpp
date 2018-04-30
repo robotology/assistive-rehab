@@ -31,17 +31,19 @@ class Scaler : public RFModule
     RpcClient opcPort;
     RpcClient cmdPort;
     RpcClient rpcViewerPort;
+    RpcServer rpcPort;
 
     string file;
-    string context;
+//    string context;
     double opacity;
     int nsessions;
     double twarp;
 
+    bool hasLoaded;
+
     Matrix invT;
     Vector rot;
     Vector xyz;
-    int cnt;
 
     /****************************************************************/
     bool configure(ResourceFinder &rf)
@@ -49,72 +51,28 @@ class Scaler : public RFModule
         opcPort.open("/skeletonScaler/opc");
         cmdPort.open("/skeletonScaler/player:rpc");
         rpcViewerPort.open("/skeletonScaler/viewer:rpc");
+        rpcPort.open("/skeletonScaler/rpc");
+        attach(rpcPort);
 
-        if(!Network::connect(cmdPort.getName(),"/skeletonPlayer/cmd:rpc", "tcp"))
-        {
-            yError() << "Cannot connect to /skeletonPlayer/cmd:rpc";
-            return false;
-        }
+//        if(!Network::connect(cmdPort.getName(),"/skeletonPlayer/cmd:rpc", "tcp"))
+//        {
+//            yError() << "Cannot connect to /skeletonPlayer/cmd:rpc";
+//            return false;
+//        }
 
-        if(!Network::connect(rpcViewerPort.getName(),"/skeletonViewer:rpc", "tcp"))
-        {
-            yError() << "Cannot connect to /skeletonViewer:rpc";
-            return false;
-        }
+//        if(!Network::connect(rpcViewerPort.getName(),"/skeletonViewer:rpc", "tcp"))
+//        {
+//            yError() << "Cannot connect to /skeletonViewer:rpc";
+//            return false;
+//        }
 
-        file=rf.check("file",Value("abduction.log")).asString();
-        context=rf.check("context",Value("motionAnalyzer")).asString();
+//        file=rf.check("file",Value("abduction.log")).asString();
+//        context=rf.check("context",Value("motionAnalyzer")).asString();
 
         nsessions=rf.check("nsessions",Value(0)).asInt();
         twarp=rf.check("twarp",Value(0.5)).asDouble();
 
-        if(!loadData(file,context))
-        {
-            yError() << "Unable to load data";
-            return false;
-        }
-
-        if(!start(nsessions,twarp))
-        {
-            yError() << "Unable to start";
-            return false;
-        }
-
-        size_t idx=file.find(".");
-        setTag(file.substr(0,idx));
-
-        opacity=0.1;
-        setOpacity(opacity);
-
-        xyz.resize(3);
-        xyz.zero();
-        rot.resize(4);
-        rot.zero();
-        if(file.find("abduction")!=string::npos)
-        {
-            xyz[0]=-0.12;
-            xyz[1]=0.24;
-            xyz[2]=-1.75;
-            Vector camerapos(3,0.0),focalpoint(3,0.0);
-            camerapos[2]=-2.0;
-            rotateCam(camerapos,focalpoint);
-        }
-        if(file.find("flexion")!=string::npos)
-        {
-            xyz[0]=-0.12;
-            xyz[1]=0.24;
-            xyz[2]=-1.75;
-            Vector camerapos(3,0.0),focalpoint(3,0.0);
-            camerapos[0]=4.0;
-            rotateCam(camerapos,focalpoint);
-        }
-        if(!moveSkeleton(xyz,rot))
-            yWarning() << "Unable to move";
-
-        invT.resize(4,4);
-        invT.zero();
-
-        cnt=0;
+        hasLoaded=false;
 
         return true;
     }
@@ -126,9 +84,66 @@ class Scaler : public RFModule
     }
 
     /****************************************************************/
+    bool respond(const Bottle &command, Bottle &reply)
+    {
+        if(command.get(0).asString() == "load")
+        {
+            file = command.get(1).asString();
+            string context = command.get(2).asString();
+            loadData(file,context);
+            reply.addString("Loading file " + file + " from context " + context);
+            start(nsessions,twarp);
+
+            size_t idx=file.find(".");
+            setTag(file.substr(0,idx));
+
+            opacity=0.1;
+            setOpacity(opacity);
+
+            xyz.resize(3);
+            xyz.zero();
+            rot.resize(4);
+            rot.zero();
+            if(file.find("abduction")!=string::npos)
+            {
+                xyz[0]=-0.12;
+                xyz[1]=0.24;
+                xyz[2]=-1.75;
+                Vector camerapos(3,0.0),focalpoint(3,0.0);
+                camerapos[2]=-2.0;
+                rotateCam(camerapos,focalpoint);
+            }
+            if(file.find("flexion")!=string::npos)
+            {
+                xyz[0]=-0.12;
+                xyz[1]=0.24;
+                xyz[2]=-1.75;
+                Vector camerapos(3,0.0),focalpoint(3,0.0);
+                camerapos[0]=4.0;
+                rotateCam(camerapos,focalpoint);
+            }
+            if(!moveSkeleton(xyz,rot))
+                yWarning() << "Unable to move";
+
+            invT.resize(4,4);
+            invT.zero();
+
+            hasLoaded=true;
+        }
+        if(command.get(0).asString() == "stop")
+        {
+            stop();
+            hasLoaded=false;
+            reply.addString("Stopping...");
+        }
+
+        return true;
+    }
+
+    /****************************************************************/
     bool updateModule()
     {
-        if(opcPort.getOutputCount()>0)
+        if(opcPort.getOutputCount()>0 && hasLoaded)
         {
             SkeletonWaist retrievedSkel, playedSkel;
             getSkeletonsFromOpc(retrievedSkel,playedSkel);
