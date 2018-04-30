@@ -78,6 +78,7 @@ class Attention : public RFModule, public attentionManager_IDL
         }
         this->tag=tag;
         this->keypoint=keypoint;
+        auto_mode=false;
         return switch_to(State::seek);
     }
 
