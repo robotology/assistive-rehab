@@ -59,13 +59,15 @@ class Attention : public RFModule, public attentionManager_IDL
 
     class Reporter : public PortReport {
         Attention &attention;
+        bool first_run;
         void report(const PortInfo &info) override {
-            if (info.created && !info.incoming) {
+            if (first_run && info.created && !info.incoming) {
                 attention.switch_to(attention.auto_mode?State::seek:State::idle);
+                first_run=false;
             }
         }
     public:
-        Reporter(Attention &attention_) : attention(attention_) { }
+        Reporter(Attention &attention_) : attention(attention_), first_run(true) { }
     } reporter;
 
     /****************************************************************/
@@ -324,7 +326,7 @@ class Attention : public RFModule, public attentionManager_IDL
         gazeStatePort.open("/attentionManager/gaze/state:i");
         cmdPort.open("/attentionManager/cmd:rpc");
 
-        gazeStatePort.setReporter(reporter);
+        gazeCmdPort.setReporter(reporter);
         attach(cmdPort);
 
         state=State::unconnected;
