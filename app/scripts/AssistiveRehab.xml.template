@@ -36,33 +36,6 @@
     </module>
 
     <module>
-        <name>human-structure</name>
-        <node>r1-console-linux</node>
-    </module>
-
-    <module>
-        <name>recognition-manager</name>
-        <node>r1-console-linux</node>
-    </module>
-
-    <module>
-        <name>linearClassifierModule</name>
-        <parameters>--BufferSize 1 --CSVM 1.0 --databaseFolder faceDatabase --WeightedSVM 1</parameters>
-        <node>r1-torso</node>
-    </module>
-
-    <module>
-        <name>caffeCoder</name>
-        <parameters>--from caffeCoder_resnet.ini</parameters>
-        <node>r1-torso</node>
-    </module>
-
-    <module>
-        <name>himrepClassifier</name>
-        <node>r1-console-linux</node>
-    </module>
-
-    <module>
        <name>objectsPropertiesCollector</name>
        <parameters>--name opc --no-load-db --no-save-db --async-bc</parameters>
        <node>r1-console-linux</node>
@@ -165,85 +138,7 @@
     </connection>
 
     <connection>
-        <from>/himrepClassifier/img:o</from>
-        <to>/caffeCoder/img:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/caffeCoder/code:o</from>
-        <to>/himrepClassifier/features:i</to>
-        <protocol>tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/himrepClassifier/features:o</from>
-        <to>/linearClassifier/features:i</to>
-        <protocol>tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/linearClassifier/scores:o</from>
-        <to>/himrepClassifier/scores:i</to>
-        <protocol>tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/himrepClassifier/classify:rpc</from>
-        <to>/linearClassifier/rpc</to>
-        <protocol>tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/caffeCoder/img:o</from>
-        <to>/himrepClassifier/SIFTimg:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
         <from>/yarpOpenPose/target:o</from>
-        <to>/human-structure/skeleton:i</to>
-        <protocol>tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/yarpOpenPose/propag:o</from>
-        <to>/human-structure/image:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/yarpOpenPose/propag:o</from>
-        <to>/recognition-manager/image:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/human-structure/target:o</from>
-        <to>/recognition-manager/target:i</to>
-        <protocol>tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/human-structure/blobs:o</from>
-        <to>/recognition-manager/blobs:i</to>
-        <protocol>tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/recognition-manager/classify:rpc</from>
-        <to>/himrepClassifier/rpc</to>
-        <protocol>tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/recognition-manager/imgClassifier:o</from>
-        <to>/himrepClassifier/img:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/recognition-manager/target:o</from>
         <to>/skeletonRetriever/skeletons:i</to>
         <protocol>tcp</protocol>
     </connection>
