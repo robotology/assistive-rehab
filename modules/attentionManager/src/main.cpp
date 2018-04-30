@@ -40,6 +40,7 @@ class Attention : public RFModule, public attentionManager_IDL
 
     const int ack=Vocab::encode("ack");
     const double T=3.0;
+    double period;
     double inactivity_thres;
     double still_t0;
     double lost_t0;
@@ -326,6 +327,7 @@ class Attention : public RFModule, public attentionManager_IDL
     bool configure(ResourceFinder &rf) override
     {
         auto_mode=rf.check("auto-start");
+        period=rf.check("period",Value(0.1)).asDouble();
         inactivity_thres=rf.check("inactivity-thres",Value(0.05)).asDouble();
         
         opcPort.open("/attentionManager/opc:i");
@@ -347,7 +349,7 @@ class Attention : public RFModule, public attentionManager_IDL
     /****************************************************************/
     double getPeriod() override
     {
-        return 0.1;
+        return period;
     }
 
     /****************************************************************/

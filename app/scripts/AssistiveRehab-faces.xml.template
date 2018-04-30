@@ -1,0 +1,229 @@
+<application>
+<name>Assistive Rehabilitation with Faces App</name>
+
+    <module>
+        <name>yarpdev</name>
+        <parameters>--device speech --lingware-context speech --default-language it-IT --robot r1 --pitch 80 --speed 90</parameters>
+        <node>r1-face</node>
+    </module>
+
+    <module>
+        <name>yarpdev</name>
+        <parameters>--device faceDisplayServer</parameters>
+        <node>r1-face</node>
+    </module>
+
+    <module>
+        <name>yarpdev</name>
+        <parameters>--context AssistiveRehab --from realsense2.ini</parameters>
+        <node>r1-torso</node>
+    </module>
+
+     <module>
+        <name>faceExpressionImage</name>
+        <node>r1-console-linux</node>
+    </module>
+
+    <module>
+        <name>iSpeak</name>
+        <parameters>--package speech-dev</parameters>
+        <node>r1-face</node>
+    </module>
+
+    <module>
+        <name>yarpOpenPose</name>
+        <node>r1-torso</node>
+    </module>
+
+    <module>
+       <name>objectsPropertiesCollector</name>
+       <parameters>--name opc --no-load-db --no-save-db --async-bc</parameters>
+       <node>r1-console-linux</node>
+    </module>
+
+    <module>
+       <name>skeletonRetriever</name>
+       <parameters></parameters>
+       <node>r1-console-linux</node>
+    </module>
+
+    <module>
+       <name>attentionManager</name>
+       <parameters>--auto-start</parameters>
+       <node>r1-console-linux</node>
+    </module>
+
+    <module>
+       <name>cer_gaze-controller</name>
+       <parameters>--cameras::context cameraCalibration --cameras::file cerEyes_320x240.ini --joints-limits::pitch "(-20.0 20.0)" --joints-limits::yaw "(-40.0 40.0)"</parameters>
+       <node>r1-base</node>
+    </module>
+
+    <module>
+       <name>motionAnalyzer</name>
+       <parameters></parameters>
+       <node>r1-console-linux</node>
+    </module>
+
+    <module>
+       <name>skeletonPlayer</name>
+       <parameters></parameters>
+       <node>r1-console-linux</node>
+    </module>
+
+    <module>
+       <name>skeletonScaler</name>
+       <parameters></parameters>
+       <node>r1-console-linux</node>
+    </module>
+
+    <module>
+        <name>yarpview</name>
+        <parameters>--name /viewer/depth --x 10 --y 40 --p 50 --compact</parameters>
+        <node>r1-display-linux</node>
+    </module>
+
+    <module>
+        <name>yarpview</name>
+        <parameters>--name /viewer/skeleton --x 380 --y 40 --p 50 --compact</parameters>
+        <node>r1-display-linux</node>
+    </module>
+
+    <module>
+        <name>yarpview</name>
+        <parameters>--name /viewer/faces --x 750 --y 40 --p 50 --compact</parameters>
+        <node>r1-display-linux</node>
+    </module>
+
+    <module>
+        <name>skeletonViewer</name>
+        <parameters>--x 1120 --y 10</parameters>
+        <node>r1-display-linux</node>
+    </module>
+
+    <module>
+       <name>yarpscope</name>
+       <parameters>--remote /motionAnalyzer/scope --x 190 --y 400 --dx 600 --dy 600 --index "(0 1 2)" --color "(blue red red)"</parameters>
+       <node>r1-display-linux</node>
+    </module>
+
+    <connection>
+        <from>/faceExpressionImage/image:o</from> 
+        <to>/robot/faceDisplay/image:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/iSpeak/speech-dev/rpc</from>
+        <to>/r1/speech:rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/depthCamera/rgbImage:o</from>
+        <to>/yarpOpenPose/image:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/depthCamera/depthImage:o</from>
+        <to>/skeletonRetriever/depth:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonRetriever/cam:rpc</from>
+        <to>/depthCamera/rpc:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/target:o</from>
+        <to>/skeletonRetriever/skeletons:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonRetriever/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/opc/broadcast:o</from>
+        <to>/attentionManager/opc:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/attentionManager/gaze/cmd:rpc</from>
+        <to>/cer_gaze-controller/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer_gaze-controller/state:o</from>
+        <to>/attentionManager/gaze/state:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/motionAnalyzer/opc</from>
+        <to>/opc/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonPlayer/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonScaler/opc</from>
+        <to>/opc/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/depthCamera/depthImage:o</from>
+        <to>/viewer/depth</to>
+        <protocol>fast_tcp+recv.portmonitor+type.dll+file.depthimage</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/image:o</from>
+        <to>/viewer/skeleton</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/recognition-manager/image:o</from>
+        <to>/viewer/faces</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonRetriever/viewer:o</from>
+        <to>/skeletonViewer:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonPlayer/viewer:o</from>
+        <to>/skeletonViewer:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonScaler/player:rpc</from>
+        <to>/skeletonPlayer/cmd:rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonScaler/viewer:rpc</from>
+        <to>/skeletonViewer:rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+</application>
