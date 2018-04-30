@@ -1162,14 +1162,16 @@ bool Manager::configure(ResourceFinder &rf)
         return false;
 //    loadSequence(sequencer_file);
 
-    // Use MATIO to write the results in a .mat file
-    filename_report = rf.getHomeContextPath() + "/test_data_fdg.mat";
-    matfp = Mat_CreateVer(filename_report.c_str(),NULL,MAT_FT_MAT73);
-    if (matfp == NULL)
-        yError() << "Error creating MAT file";
+//    // Use MATIO to write the results in a .mat file
+    out_folder = rf.getHomeContextPath();
+//    filename_report = rf.getHomeContextPath() + "/test_data_fdg.mat";
+//    matfp = Mat_CreateVer(filename_report.c_str(),NULL,MAT_FT_MAT73);
+//    if (matfp == NULL)
+//        yError() << "Error creating MAT file";
 
     tstart = Time::now();
 
+    nsession = 0;
     finishedSession = false;
     starting = false;
 
@@ -1181,8 +1183,8 @@ bool Manager::configure(ResourceFinder &rf)
 /********************************************************/
 bool Manager::interruptModule()
 {
-    yInfo() << "Keypoints saved to file" << filename_report.c_str();
-    Mat_Close(matfp);
+//    yInfo() << "Keypoints saved to file" << filename_report.c_str();
+//    Mat_Close(matfp);
 
     opcPort.interrupt();
     scopePort.interrupt();
@@ -1253,8 +1255,8 @@ bool Manager::updateModule()
                 skeletonIn.normalize();
 
                 processor->update(skeletonIn);
-                if(processor->isDeviatingFromIntialPose())
-                    yWarning() << "Deviating from initial pose\n";
+//                if(processor->isDeviatingFromIntialPose())
+//                    yWarning() << "Deviating from initial pose\n";
 
                 double result = processor->computeMetric();
 
@@ -1272,8 +1274,14 @@ bool Manager::updateModule()
 
                 if(finishedSession)
                 {
+                    // Use MATIO to write the results in a .mat file
+                    string filename_report = out_folder + "/" + to_string(nsession) + ".mat";
+                    mat_t *matfp = Mat_CreateVer(filename_report.c_str(),NULL,MAT_FT_MAT73);
+                    if (matfp == NULL)
+                        yError() << "Error creating MAT file";
+
                     yInfo() << "Writing to file";
-                    if(writeKeypointsToFile())
+                    if(writeKeypointsToFile(matfp))
                     {
                         time_samples.clear();
                         all_keypoints.clear();
@@ -1281,6 +1289,11 @@ bool Manager::updateModule()
 
                     finishedSession = false;
                     tstart_session = tend_session;
+
+                    nsession++;
+
+                    yInfo() << "Keypoints saved to file" << filename_report.c_str();
+                    Mat_Close(matfp);
                 }
             }
         }
@@ -1291,7 +1304,7 @@ bool Manager::updateModule()
     return true;
 }
 
-bool Manager::writeStructToMat(const string& name, const vector< vector< pair<string,Vector> > >& keypoints_skel)
+bool Manager::writeStructToMat(const string& name, const vector< vector< pair<string,Vector> > >& keypoints_skel, mat_t *matfp)
 {
     const char *fields[numKeypoints];
     for(int i=0; i<numKeypoints; i++)
@@ -1330,8 +1343,8 @@ bool Manager::writeStructToMat(const string& name, const vector< vector< pair<st
             Mat_VarSetStructFieldByName(matvar, fields[i], 0, field);
         }
 
-//        Mat_VarWrite(matfp,matvar,MAT_COMPRESSION_NONE);
-        Mat_VarWriteAppend(matfp,matvar,MAT_COMPRESSION_NONE,1);
+        Mat_VarWrite(matfp,matvar,MAT_COMPRESSION_NONE);
+//        Mat_VarWriteAppend(matfp,matvar,MAT_COMPRESSION_NONE,1);
         Mat_VarFree(matvar);
     }
     else
@@ -1341,7 +1354,7 @@ bool Manager::writeStructToMat(const string& name, const vector< vector< pair<st
 
 }
 
-bool Manager::writeStructToMat(const string& name, const Metric& metric)
+bool Manager::writeStructToMat(const string& name, const Metric& metric, mat_t *matfp)
 {
     int numFields=8;
     const char *fields[numFields] = {"motion_type", "ref_joint", "ref_direction", "ref_plane", "max", "min", "tstart", "tend"};
@@ -1398,8 +1411,8 @@ bool Manager::writeStructToMat(const string& name, const Metric& metric)
         field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tend,&tend_session,MAT_F_DONT_COPY_DATA);
         Mat_VarSetStructFieldByName(matvar, fields[7], 0, field);
 
-//        Mat_VarWrite(matfp,matvar,MAT_COMPRESSION_NONE);
-        Mat_VarWriteAppend(matfp, matvar, MAT_COMPRESSION_NONE,1);
+        Mat_VarWrite(matfp,matvar,MAT_COMPRESSION_NONE);
+//        Mat_VarWriteAppend(matfp, matvar, MAT_COMPRESSION_NONE,1);
         Mat_VarFree(matvar);
     }
     else
@@ -1423,7 +1436,7 @@ void Manager::print(const vector< vector< pair<string,Vector> > >& keypoints_ske
     cout << endl;
 }
 
-bool Manager::writeKeypointsToFile()
+bool Manager::writeKeypointsToFile(mat_t *matfp)
 {
     // Use MATIO to write the results in a .mat file
 
@@ -1433,8 +1446,8 @@ bool Manager::writeKeypointsToFile()
     matvar_t *matvar = Mat_VarCreate("Time_samples", MAT_C_DOUBLE, MAT_T_DOUBLE, 2, dims, time_samples.data(), 0);
     if(matvar != NULL)
     {
-//        Mat_VarWrite(matfp, matvar, MAT_COMPRESSION_NONE);
-        Mat_VarWriteAppend(matfp, matvar, MAT_COMPRESSION_NONE,1);
+        Mat_VarWrite(matfp, matvar, MAT_COMPRESSION_NONE);
+//        Mat_VarWriteAppend(matfp, matvar, MAT_COMPRESSION_NONE,1);
         Mat_VarFree(matvar);
     }
     else
@@ -1447,7 +1460,7 @@ bool Manager::writeKeypointsToFile()
 //        print(all_keypoints);
 
     //Save keypoint
-    if(!writeStructToMat("Keypoints", all_keypoints))
+    if(!writeStructToMat("Keypoints", all_keypoints, matfp))
     {
         yError() << "Could not save keypoints.. the file will not be saved";
         return false;
@@ -1465,7 +1478,7 @@ bool Manager::writeKeypointsToFile()
 //    }
 
     //Save kind of metric to process
-    if(!writeStructToMat(metric->getName().c_str(), *metric))
+    if(!writeStructToMat(metric->getName().c_str(), *metric, matfp))
     {
         yError() << "Could not save metrics.. the file will not be saved";
         return false;
