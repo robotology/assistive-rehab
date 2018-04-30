@@ -107,4 +107,10 @@
         <to>/opc/rpc</to>
         <protocol>tcp</protocol>
     </connection>
+
+    <connection>
+        <from>/motionAnalyzer/scaler:cmd</from>
+        <to>/skeletonScaler/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
 </application>

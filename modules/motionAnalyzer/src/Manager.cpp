@@ -748,6 +748,15 @@ bool Manager::loadMetric(const string &metric_tag)
     processor = createProcessor(metric_tag, metric);
     processor->setInitialConf(skel, metric->getInitialConf());
 
+    //send commands to skeletonScaler
+    Bottle cmd, reply;
+    cmd.addVocab(Vocab::encode("load"));
+    string f = metric->getMotionType() + ".log";
+    string context = rf->getContext();
+    cmd.addString(f);
+    cmd.addString(context);
+    scalerPort.write(cmd, reply);
+
     tstart_session = Time::now()-tstart;
 
     return true;
@@ -790,6 +799,12 @@ bool Manager::selectSkel(const string &skel_tag)
 bool Manager::start()
 {
     starting = true;
+
+    //start skeletonScaler
+    Bottle cmd, reply;
+    cmd.addVocab(Vocab::encode("run"));
+    yInfo() << cmd.toString();
+    scalerPort.write(cmd, reply);
     yInfo() << "Starting...";
     return true;
 }
@@ -798,6 +813,10 @@ bool Manager::start()
 bool Manager::stop()
 {
     starting = false;
+    //start skeletonScaler
+    Bottle cmd, reply;
+    cmd.addVocab(Vocab::encode("stop"));
+    scalerPort.write(cmd, reply);
     yInfo() << "Stopping...";
     metric = NULL;
     skel_tag = "";
@@ -1151,6 +1170,7 @@ bool Manager::configure(ResourceFinder &rf)
 
     opcPort.open(("/" + getName() + "/opc").c_str());
     scopePort.open(("/" + getName() + "/scope").c_str());
+    scalerPort.open(("/" + getName() + "/scaler:cmd").c_str());
     rpcPort.open(("/" + getName() + "/cmd").c_str());
     attach(rpcPort);
 
@@ -1188,6 +1208,7 @@ bool Manager::interruptModule()
 
     opcPort.interrupt();
     scopePort.interrupt();
+    scalerPort.interrupt();
     rpcPort.interrupt();
     yInfo() << "Interrupted module";
 
@@ -1221,6 +1242,7 @@ bool Manager::close()
 
     opcPort.close();
     scopePort.close();
+    scalerPort.close();
     rpcPort.close();
 
     yInfo() << "Closed ports";

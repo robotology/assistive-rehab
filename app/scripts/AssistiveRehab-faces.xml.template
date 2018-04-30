@@ -285,6 +285,12 @@
     </connection>
 
     <connection>
+        <from>/motionAnalyzer/scaler:cmd</from>
+        <to>/skeletonScaler/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
         <from>/skeletonPlayer/opc:rpc</from>
         <to>/opc/rpc</to>
         <protocol>tcp</protocol>

@@ -38,6 +38,7 @@ class Manager : public RFModule,
 
     RpcClient opcPort;
     RpcServer rpcPort;
+    RpcClient scalerPort;
     BufferedPort<Bottle> scopePort;
 
     ResourceFinder *rf;

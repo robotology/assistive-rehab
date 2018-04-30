@@ -39,7 +39,7 @@ class Scaler : public RFModule
     int nsessions;
     double twarp;
 
-    bool hasLoaded;
+    bool hasStarted;
 
     Matrix invT;
     Vector rot;
@@ -72,7 +72,7 @@ class Scaler : public RFModule
         nsessions=rf.check("nsessions",Value(0)).asInt();
         twarp=rf.check("twarp",Value(0.5)).asDouble();
 
-        hasLoaded=false;
+        hasStarted=false;
 
         return true;
     }
@@ -92,7 +92,11 @@ class Scaler : public RFModule
             string context = command.get(2).asString();
             loadData(file,context);
             reply.addString("Loading file " + file + " from context " + context);
+        }
+        if(command.get(0).asString() == "run")
+        {
             start(nsessions,twarp);
+            reply.addString("Starting...");
 
             size_t idx=file.find(".");
             setTag(file.substr(0,idx));
@@ -128,12 +132,12 @@ class Scaler : public RFModule
             invT.resize(4,4);
             invT.zero();
 
-            hasLoaded=true;
+            hasStarted=true;
         }
         if(command.get(0).asString() == "stop")
         {
             stop();
-            hasLoaded=false;
+            hasStarted=false;
             reply.addString("Stopping...");
         }
 
@@ -143,7 +147,7 @@ class Scaler : public RFModule
     /****************************************************************/
     bool updateModule()
     {
-        if(opcPort.getOutputCount()>0 && hasLoaded)
+        if(opcPort.getOutputCount()>0 && hasStarted)
         {
             SkeletonWaist retrievedSkel, playedSkel;
             getSkeletonsFromOpc(retrievedSkel,playedSkel);
