@@ -35,7 +35,7 @@ using namespace assistive_rehab;
 /****************************************************************/
 class Attention : public RFModule, public attentionManager_IDL
 {
-    enum class State { unconnected, idle, seek, follow } state;
+    enum class State { unconnected, connection_trigger, idle, seek, follow } state;
     bool auto_mode;
 
     const int ack=Vocab::encode("ack");
@@ -62,7 +62,7 @@ class Attention : public RFModule, public attentionManager_IDL
         bool first_run;
         void report(const PortInfo &info) override {
             if (first_run && info.created && !info.incoming) {
-                attention.switch_to(attention.auto_mode?State::seek:State::idle);
+                attention.state=State::connection_trigger;
                 first_run=false;
             }
         }
@@ -74,7 +74,7 @@ class Attention : public RFModule, public attentionManager_IDL
     bool look(const string &tag, const string &keypoint) override
     {
         LockGuard lg(mutex);
-        if (state==State::unconnected)
+        if (state<State::idle)
         {
             return false;
         }
@@ -88,7 +88,7 @@ class Attention : public RFModule, public attentionManager_IDL
     bool stop() override
     {
         LockGuard lg(mutex);
-        if (state==State::unconnected)
+        if (state<State::idle)
         {
             return false;
         }
@@ -108,7 +108,7 @@ class Attention : public RFModule, public attentionManager_IDL
     bool is_running() override
     {
         LockGuard lg(mutex);
-        if (state==State::unconnected)
+        if (state<State::idle)
         {
             return false;
         }
@@ -119,7 +119,7 @@ class Attention : public RFModule, public attentionManager_IDL
     bool set_auto() override
     {
         LockGuard lg(mutex);
-        if (state==State::unconnected)
+        if (state<State::idle)
         {
             return false;
         }
@@ -199,8 +199,8 @@ class Attention : public RFModule, public attentionManager_IDL
             mean/=activity.size();
             stdev=sqrt(stdev/activity.size()-mean*mean);
             activity.clear();
-            yInfo()<<"Inactivity detection of"<<s->getTag()
-                   <<":"<<stdev<<"/"<<inactivity_thres;
+            yInfo()<<"Inactivity check of"<<s->getTag()
+                   <<":"<<stdev<<"<"<<inactivity_thres<<"?";
             return (stdev<inactivity_thres);
         }
         else
@@ -213,7 +213,7 @@ class Attention : public RFModule, public attentionManager_IDL
     bool switch_to(const State &next_state)
     {
         state=next_state;
-        return set_gaze_T(state==State::follow?1.0:2.0);
+        return set_gaze_T(state==State::follow?1.5:2.0);
     }
 
     /****************************************************************/
@@ -237,9 +237,16 @@ class Attention : public RFModule, public attentionManager_IDL
                     }
                 }
             }
-            yInfo()<<"[Auto]: follow"<<tag;
             keypoint=KeyPointTag::head;
-            return !skeletons.empty();
+            if (!skeletons.empty())
+            {
+                yInfo()<<"[Auto]: follow"<<tag;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
         else
         {
@@ -369,7 +376,11 @@ class Attention : public RFModule, public attentionManager_IDL
             }
         }
 
-        if (state==State::seek)
+        if (state==State::connection_trigger)
+        {
+            switch_to(auto_mode?State::seek:State::idle);
+        }
+        else if (state==State::seek)
         {
             if (seek())
             {
