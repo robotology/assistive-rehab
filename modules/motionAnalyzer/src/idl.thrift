@@ -44,6 +44,11 @@ service motionAnalyzer_IDL
    */
    bool stop();
 
-
+   /**
+   * Select skeleton by its tag.
+   * @param skel_tag tag of the skeleton to process
+   * @return true/false on success/failure.
+   */
+   bool selectSkel(1:string skel_tag);
 
 }

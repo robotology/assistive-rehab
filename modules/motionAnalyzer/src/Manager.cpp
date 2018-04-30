@@ -779,6 +779,14 @@ vector<string> Manager::listMetrics()
 }
 
 /********************************************************/
+bool Manager::selectSkel(const string &skel_tag)
+{
+    this->skel_tag = skel_tag;
+    yInfo() << "Analyzing skeleton " << this->skel_tag.c_str();
+    return true;
+}
+
+/********************************************************/
 bool Manager::start()
 {
     starting = true;
@@ -792,6 +800,7 @@ bool Manager::stop()
     starting = false;
     yInfo() << "Stopping...";
     metric = NULL;
+    skel_tag = "";
     return true;
 }
 
@@ -1040,39 +1049,78 @@ void Manager::getSkeleton()
             {
                 if(Bottle *idValues = idField->get(1).asList())
                 {
-                    //get the last id
-                    int id = idValues->get(idValues->size()-1).asInt();
-                    //                        yInfo() << id;
-
-                    //given the id, get the value of the property
-                    cmd.clear();
-                    cmd.addVocab(Vocab::encode("get"));
-                    Bottle &content = cmd.addList().addList();
-                    content.addString("id");
-                    content.addInt(id);
-                    Bottle replyProp;
-
-//                    yInfo() << "Command sent to the port: " << cmd.toString();
-                    opcPort.write(cmd, replyProp);
-//                    yInfo() << "Reply from opc:" << replyProp.toString();
-
-                    if(replyProp.get(0).asVocab() == Vocab::encode("ack"))
+                    if(!skel_tag.empty())
                     {
-                        if(Bottle *propField = replyProp.get(1).asList())
+                        for(int i=0; i<idValues->size(); i++)
                         {
-                            Property prop(propField->toString().c_str());
-                            string tag=prop.find("tag").asString();
-                            if (!tag.empty())
-                            {
-                                if (prop.check("tag"))
-                                {
-                                    Skeleton* skeleton = skeleton_factory(prop);
-//                                    skeleton->print();
-                                    skeletonIn.update_fromstd(skeleton->toProperty()) ;
-//                                    skeletonIn.print();
-                                    all_keypoints.push_back(skeletonIn.get_unordered());
+                            int id = idValues->get(i).asInt();
 
-                                    delete skeleton;
+                            //given the id, get the value of the property
+                            cmd.clear();
+                            cmd.addVocab(Vocab::encode("get"));
+                            Bottle &content = cmd.addList().addList();
+                            Bottle replyProp;
+                            content.addString("id");
+                            content.addInt(id);
+
+//                            yInfo() << "Command sent to the port: " << cmd.toString();
+                            opcPort.write(cmd, replyProp);
+//                            yInfo() << "Reply from opc:" << replyProp.toString();
+
+                            if(replyProp.get(0).asVocab() == Vocab::encode("ack"))
+                            {
+                                if(Bottle *propField = replyProp.get(1).asList())
+                                {
+                                    Property prop(propField->toString().c_str());
+                                    string tag=prop.find("tag").asString();
+                                    if(!tag.empty())
+                                    {
+                                        if (prop.check("tag") && tag==skel_tag)
+                                        {
+                                            Skeleton* skeleton = skeleton_factory(prop);
+                                            skeletonIn.update_fromstd(skeleton->toProperty()) ;
+                                            all_keypoints.push_back(skeletonIn.get_unordered());
+
+                                            delete skeleton;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        //get the last id
+                        int id = idValues->get(idValues->size()-1).asInt();
+
+                        //given the id, get the value of the property
+                        cmd.clear();
+                        cmd.addVocab(Vocab::encode("get"));
+                        Bottle &content = cmd.addList().addList();
+                        Bottle replyProp;
+                        content.addString("id");
+                        content.addInt(id);
+
+//                        yInfo() << "Command sent to the port: " << cmd.toString();
+                        opcPort.write(cmd, replyProp);
+//                        yInfo() << "Reply from opc:" << replyProp.toString();
+
+                        if(replyProp.get(0).asVocab() == Vocab::encode("ack"))
+                        {
+                            if(Bottle *propField = replyProp.get(1).asList())
+                            {
+                                Property prop(propField->toString().c_str());
+                                string tag=prop.find("tag").asString();
+                                if(!tag.empty())
+                                {
+                                    if (prop.check("tag"))
+                                    {
+                                        Skeleton* skeleton = skeleton_factory(prop);
+                                        skeletonIn.update_fromstd(skeleton->toProperty()) ;
+                                        all_keypoints.push_back(skeletonIn.get_unordered());
+
+                                        delete skeleton;
+                                    }
                                 }
                             }
                         }
@@ -1124,6 +1172,8 @@ bool Manager::configure(ResourceFinder &rf)
 
     finishedSession = false;
     starting = false;
+
+    skel_tag="";
 
     return true;
 }

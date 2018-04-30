@@ -135,13 +135,13 @@ bool Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyPoi
 //    double deviation = dev[0]+dev[1]+dev[2];
     //    if(deviation > keypoints2conf[keypoint.getTag()].second)
 //    {
-        yInfo() << keypoint.getTag().c_str()
-    //            << "(" << curr_kp[0] << "," << curr_kp[1] << "," << curr_kp[2] << ")"
-    //            << "(" << curr_kp_parent[0] << "," << curr_kp_parent[1] << "," << curr_kp_parent[2] << ")"
-    //            << "(" << curr_kp_child[0] << "," << curr_kp_child[1] << "," << curr_kp_child[2] << ")"
-                << "(" << curr_pose[0] << "," << curr_pose[1] << "," << curr_pose[2] << ")"
-                << "(" << initial_pose[0] << "," << initial_pose[1] << "," << initial_pose[2] << ")"
-                << deviation;
+//        yInfo() << keypoint.getTag().c_str()
+//    //            << "(" << curr_kp[0] << "," << curr_kp[1] << "," << curr_kp[2] << ")"
+//    //            << "(" << curr_kp_parent[0] << "," << curr_kp_parent[1] << "," << curr_kp_parent[2] << ")"
+//    //            << "(" << curr_kp_child[0] << "," << curr_kp_child[1] << "," << curr_kp_child[2] << ")"
+//                << "(" << curr_pose[0] << "," << curr_pose[1] << "," << curr_pose[2] << ")"
+//                << "(" << initial_pose[0] << "," << initial_pose[1] << "," << initial_pose[2] << ")"
+//                << deviation;
 //    }
 
     return(deviation > keypoints2conf[keypoint.getTag()].second);
