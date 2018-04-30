@@ -100,12 +100,15 @@ class Manager : public RFModule,
     double tend_session;
     bool finishedSession;
 
-    mat_t *matfp;
-    string filename_report;
+//    mat_t *matfp;
+//    string filename_report;
 
     bool starting;
 
     string skel_tag;
+
+    int nsession;
+    string out_folder;
 
 //    Metric* metric;
 //    Processor* processor;
@@ -121,9 +124,9 @@ class Manager : public RFModule,
     bool start();
     bool stop();
 
-    bool writeStructToMat(const string& name, const vector< vector< pair<string,Vector> > >& keypoints_skel);
-    bool writeStructToMat(const string& name, const Metric& metric);
-    bool writeKeypointsToFile();
+    bool writeStructToMat(const string& name, const vector< vector< pair<string,Vector> > >& keypoints_skel, mat_t *matfp);
+    bool writeStructToMat(const string& name, const Metric& metric, mat_t *matfp);
+    bool writeKeypointsToFile(mat_t *matfp);
     void print(const vector< vector< pair<string,Vector> > >& keypoints_skel);
 
     void getKeyframes();
