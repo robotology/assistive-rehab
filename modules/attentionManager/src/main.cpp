@@ -120,7 +120,43 @@ class Attention : public RFModule, public attentionManager_IDL
     string is_following() override
     {
         LockGuard lg(mutex);
-        return (state==State::follow?tag:"");
+        return (state==State::follow?tag:string(""));
+    }
+
+    /****************************************************************/
+    string is_any_raised_hand() override
+    {
+        LockGuard lg(mutex);
+        if (state<State::idle)
+        {
+            return false;
+        }
+        for (auto &s:skeletons)
+        {
+            if (is_with_raised_hand(s))
+            {
+                return s->getTag();
+            }
+        }
+        return string("");
+    }
+
+    /****************************************************************/
+    bool is_with_raised_hand(const string &tag) override
+    {
+        LockGuard lg(mutex);
+        if (state<State::idle)
+        {
+            return false;
+        }
+        for (auto &s:skeletons)
+        {
+            if (s->getTag()==tag)
+            {
+                return is_with_raised_hand(s);
+            }
+        }
+        return false;
     }
 
     /****************************************************************/
@@ -149,30 +185,36 @@ class Attention : public RFModule, public attentionManager_IDL
     }
 
     /****************************************************************/
-    shared_ptr<Skeleton> find_skeleton_raised_hand() const
+    bool is_with_raised_hand(const shared_ptr<Skeleton> &s) const
     {
-        for (auto &s:skeletons)
+        if ((*s)[KeyPointTag::shoulder_center]->isUpdated())
         {
-            if (!(*s)[KeyPointTag::shoulder_center]->isUpdated())
-            {
-                continue;
-            }
-
             bool left_raised=false;
             if ((*s)[KeyPointTag::hand_left]->isUpdated())
             {
                 left_raised=((*s)[KeyPointTag::hand_left]->getPoint()[1]<
                              (*s)[KeyPointTag::shoulder_center]->getPoint()[1]);
             }
-
             bool right_raised=false;
             if ((*s)[KeyPointTag::hand_right]->isUpdated())
             {
                 right_raised=((*s)[KeyPointTag::hand_right]->getPoint()[1]<
                               (*s)[KeyPointTag::shoulder_center]->getPoint()[1]);
             }
-
             if (left_raised || right_raised)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /****************************************************************/
+    shared_ptr<Skeleton> find_skeleton_raised_hand() const
+    {
+        for (auto &s:skeletons)
+        {
+            if (is_with_raised_hand(s))
             {
                 return s;
             }

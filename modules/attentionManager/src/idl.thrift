@@ -39,9 +39,22 @@ service attentionManager_IDL
 
    /**
     * Check if the robot is following a skeleton.
-    * @return the name of the followed skeleton (if any).
+    * @return the tag of the followed skeleton; empty otherwise.
     */
    string is_following();
+
+   /**
+    * Check if any skeleton is with one hand raised.
+    * @return the tag of the skeleton; empty otherwise.
+    */
+   string is_any_raised_hand();
+
+   /**
+    * Check if the specified skeleton is with one hand raised.
+    * @param tag the tag of the skeleton.
+    * @return true/false on success/failure.
+    */
+   bool is_with_raised_hand(1:string tag);
 
    /**
     * Enable autonomous mode.
