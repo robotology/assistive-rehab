@@ -3,8 +3,31 @@
 
     <module>
         <name>yarpdev</name>
+        <parameters>--device speech --lingware-context speech --default-language it-IT --robot r1 --pitch 80 --speed 90</parameters>
+        <node>r1-face</node>
+    </module>
+
+    <module>
+        <name>yarpdev</name>
+        <parameters>--device faceDisplayServer</parameters>
+        <node>r1-face</node>
+    </module>
+
+    <module>
+        <name>yarpdev</name>
         <parameters>--context AssistiveRehab --from realsense2.ini</parameters>
         <node>r1-torso</node>
+    </module>
+
+     <module>
+        <name>faceExpressionImage</name>
+        <node>r1-console-linux</node>
+    </module>
+
+    <module>
+        <name>iSpeak</name>
+        <parameters>--package speech-dev</parameters>
+        <node>r1-face</node>
     </module>
 
     <module>
@@ -110,6 +133,18 @@
        <parameters>--remote /motionAnalyzer/scope --x 190 --y 400 --dx 600 --dy 600 --index "(0 1 2)" --color "(blue red red)"</parameters>
        <node>r1-display-linux</node>
     </module>
+
+    <connection>
+        <from>/faceExpressionImage/image:o</from> 
+        <to>/robot/faceDisplay/image:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/iSpeak/speech-dev/rpc</from>
+        <to>/r1/speech:rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
 
     <connection>
         <from>/depthCamera/rgbImage:o</from>
