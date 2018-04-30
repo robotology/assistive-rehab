@@ -90,12 +90,6 @@
     </module>
 
     <module>
-        <name>yarpview</name>
-        <parameters>--name /viewer/faces --x 750 --y 40 --p 50 --compact</parameters>
-        <node>r1-display-linux</node>
-    </module>
-
-    <module>
         <name>skeletonViewer</name>
         <parameters>--x 1120 --y 10</parameters>
         <node>r1-display-linux</node>
@@ -194,12 +188,6 @@
     <connection>
         <from>/yarpOpenPose/image:o</from>
         <to>/viewer/skeleton</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/recognition-manager/image:o</from>
-        <to>/viewer/faces</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
