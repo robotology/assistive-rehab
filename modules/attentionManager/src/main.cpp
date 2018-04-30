@@ -43,6 +43,7 @@ class Attention : public RFModule, public attentionManager_IDL
     double inactivity_thres;
     double still_t0;
     double lost_t0;
+    bool first_follow_look;
 
     Matrix gaze_frame;
     vector<shared_ptr<Skeleton>> skeletons;
@@ -337,6 +338,7 @@ class Attention : public RFModule, public attentionManager_IDL
 
         state=State::unconnected;
         still_t0=lost_t0=Time::now();
+        first_follow_look=false;
 
         Rand::init();
         return true;
@@ -384,6 +386,7 @@ class Attention : public RFModule, public attentionManager_IDL
             {
                 activity.clear();
                 switch_to(State::follow);
+                first_follow_look=true;
             }
             else if (Time::now()-still_t0>T)
             {
@@ -429,6 +432,15 @@ class Attention : public RFModule, public attentionManager_IDL
                 x=gaze_frame*x;
                 x.pop_back();
                 look("cartesian",x);
+
+                // gaze speed is faster when chasing,
+                // hence wait till the first movement is done
+                // since it may be wide causing image blur
+                if (first_follow_look)
+                {
+                    wait_motion_done();
+                    first_follow_look=false;
+                }
 
                 // switch attention in auto mode
                 // if the skeleton is inactive
