@@ -105,6 +105,8 @@ class Manager : public RFModule,
 
     bool starting;
 
+    string skel_tag;
+
 //    Metric* metric;
 //    Processor* processor;
 
@@ -115,6 +117,7 @@ class Manager : public RFModule,
 //    bool loadSequence(const string& sequencer_file);
     bool loadMetric(const string &metric_tag);
     vector<string> listMetrics();
+    bool selectSkel(const string &skel_tag);
     bool start();
     bool stop();
 
