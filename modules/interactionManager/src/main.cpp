@@ -29,7 +29,7 @@ class Interaction : public RFModule
     const int ok=Vocab::encode("ok");
     const int fail=Vocab::encode("fail");
 
-    enum class State { seek, follow, show, engaged } state;
+    enum class State { seek, follow, engaged, assess } state;
     double period;
     string tag;
     string metric;
@@ -39,16 +39,34 @@ class Interaction : public RFModule
 
     RpcClient attentionPort;
     RpcClient analyzerPort;
-    BufferedPort<Bottle> speechPort;
+    BufferedPort<Bottle> speechStreamPort;
+    RpcClient speechRpcPort;
 
     /****************************************************************/
-    void speak(const string &value)
+    bool speak(const string &key, const bool wait=false)
     {
-        Bottle &payload=speechPort.prepare();
-        payload.clear();
+        auto it=speak_map.find(key);
+        string value=(it!=end(speak_map)?it->second:speak_map["ouch"]);
 
-        payload.addString(speak_map[value]);
-        speechPort.writeStrict();
+        Bottle &payload=speechStreamPort.prepare();
+        payload.clear();
+        payload.addString(value);
+        speechStreamPort.writeStrict();
+
+        while (wait)
+        {
+            Time::delay(getPeriod());
+            Bottle cmd,rep;
+            rep.addVocab(Vocab::encode("stat"));
+            if (speechRpcPort.write(cmd,rep))
+            {
+                if (rep.get(0).asString()=="quiet")
+                {
+                    break;
+                }
+            }
+        }
+        return (it!=end(speak_map));
     }
 
     /****************************************************************/
@@ -97,6 +115,22 @@ class Interaction : public RFModule
     }
 
     /****************************************************************/
+    bool disengage()
+    {
+        Bottle cmd,rep;
+        cmd.addString("set_auto");
+        if (attentionPort.write(cmd,rep))
+        {
+            if (rep.get(0).asVocab()==ok)
+            {
+                state=State::seek;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /****************************************************************/
     bool configure(ResourceFinder &rf) override
     {
         period=rf.check("period",Value(0.1)).asDouble();
@@ -112,7 +146,8 @@ class Interaction : public RFModule
 
         attentionPort.open("/interactionManager/attention:rpc");
         analyzerPort.open("/interactionManager/analyzer:rpc");
-        speechPort.open("/interactionManager/speech:o");
+        speechStreamPort.open("/interactionManager/speech:o");
+        speechRpcPort.open("/interactionManager/speech:rpc");
 
         state=State::seek;
         Rand::init();
@@ -144,6 +179,16 @@ class Interaction : public RFModule
             }
         }
 
+        if (state>=State::follow)
+        {
+            if (follow_tag!=tag)
+            {
+                speak("disengaged");
+                disengage();
+            }
+            return true;
+        }
+
         if (state==State::seek)
         {
             if (!follow_tag.empty())
@@ -163,40 +208,22 @@ class Interaction : public RFModule
         }
         else if (state==State::follow)
         {
-            if (follow_tag!=tag)
+            Bottle cmd,rep;
+            cmd.addString("is_with_raised_hand");
+            cmd.addString(tag);
+            if (attentionPort.write(cmd,rep))
             {
-                speak("disengaged");
-                Bottle cmd,rep;
-                cmd.addString("set_auto");
-                if (attentionPort.write(cmd,rep))
+                if (rep.get(0).asVocab()==ok)
                 {
-                    state=State::seek;
+                    speak("accepted");
+                    state=State::engaged;
+                }
+                else if (Time::now()-t0>10.0)
+                {
+                    speak("reinforce-engage");
+                    t0=Time::now();
                 }
             }
-            else
-            {
-                Bottle cmd,rep;
-                cmd.addString("is_with_raised_hand");
-                cmd.addString(tag);
-                if (attentionPort.write(cmd,rep))
-                {
-                    if (rep.get(0).asVocab()==ok)
-                    {
-                        speak("accepted");
-                        state=State::show;
-                    }
-                    else if (Time::now()-t0>10.0)
-                    {
-                        speak("reinforce-engage");
-                        t0=Time::now();
-                    }
-                }
-            }
-        }
-        else if (state==State::show)
-        {
-            speak("show");
-            state=State::engaged;
         }
         else if (state==State::engaged)
         {
@@ -210,11 +237,41 @@ class Interaction : public RFModule
                     cmd.clear();
                     cmd.addString("loadMetric");
                     cmd.addString(metric);
-//                  if (analyzerPort.write(cmd,rep))
-//                  {
-//                  }
+                    if (analyzerPort.write(cmd,rep))
+                    {
+                        if (rep.get(0).asVocab()==ok)
+                        {
+                            cmd.clear();
+                            cmd.addString("selectSkel");
+                            cmd.addString(tag);
+                            if (analyzerPort.write(cmd,rep))
+                            {
+                                if (rep.get(0).asVocab()==ok)
+                                {
+                                    cmd.clear();
+                                    cmd.addString("start");
+                                    if (analyzerPort.write(cmd,rep))
+                                    {
+                                        if (rep.get(0).asVocab()==ok)
+                                        {
+                                            speak("show",true);
+                                            state=State::assess;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
+            if (state!=State::assess)
+            {
+                speak("ouch");
+                disengage();
+            }
+        }
+        else if (state==State::assess)
+        {
         }
 
         return true;
@@ -225,7 +282,8 @@ class Interaction : public RFModule
     {
         attentionPort.close();
         analyzerPort.close();
-        speechPort.close();
+        speechStreamPort.close();
+        speechRpcPort.close();
         return true;
     }
 };

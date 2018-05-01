@@ -355,4 +355,10 @@
         <to>/iSpeak</to>
         <protocol>tcp</protocol>
     </connection>
+
+    <connection>
+        <from>/interactionManager/speech:rpc</from>
+        <to>/iSpeak/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
 </application>
