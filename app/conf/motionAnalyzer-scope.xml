@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <portscope rows="1" columns="1" carrier="mcast">
-    <plot gridx="0"
+    <plot x="190"
+          y="400"
+          dx="600"
+          dy="600"
+          gridx="0"
           gridy="0"
           bgcolor="White">
         <graph remote="/motionAnalyzer/scope"

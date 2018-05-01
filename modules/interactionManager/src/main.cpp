@@ -58,7 +58,7 @@ class Interaction : public RFModule
         {
             Time::delay(getPeriod());
             Bottle cmd,rep;
-            rep.addVocab(Vocab::encode("stat"));
+            cmd.addVocab(Vocab::encode("stat"));
             if (speechRpcPort.write(cmd,rep))
             {
                 if (rep.get(0).asString()=="quiet")
@@ -135,7 +135,7 @@ class Interaction : public RFModule
     bool assess(const string &phase)
     {
         if (assess_values.empty() ||
-            ((phase=="intermediate") && (phase=="final")))
+            ((phase!="intermediate") && (phase!="final")))
         {
             speak("ouch");
             return false;
@@ -343,6 +343,10 @@ class Interaction : public RFModule
             }
             else
             {
+                Bottle cmd,rep;
+                cmd.addString("stop");
+                analyzerPort.write(cmd,rep);
+
                 speak("end");
                 assess("final");
                 speak("greetings");
