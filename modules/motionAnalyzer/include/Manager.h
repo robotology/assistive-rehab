@@ -110,6 +110,7 @@ class Manager : public RFModule,
 
     int nsession;
     string out_folder;
+    bool updated;
 
 //    Metric* metric;
 //    Processor* processor;
