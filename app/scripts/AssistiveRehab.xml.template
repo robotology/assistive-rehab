@@ -68,13 +68,13 @@
     <module>
        <name>skeletonPlayer</name>
        <parameters></parameters>
-       <node>r1-console-linux</node>
+       <node>r1-display-linux</node>
     </module>
 
     <module>
        <name>skeletonScaler</name>
        <parameters></parameters>
-       <node>r1-console-linux</node>
+       <node>r1-display-linux</node>
     </module>
 
     <module>

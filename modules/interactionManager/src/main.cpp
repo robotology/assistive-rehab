@@ -226,8 +226,8 @@ class Interaction : public RFModule
                 }
                 speak("disengaged");
                 disengage();
+                return true;
             }
-            return true;
         }
 
         if (state==State::seek)
@@ -272,9 +272,12 @@ class Interaction : public RFModule
             cmd.addString("listMetrics");
             if (analyzerPort.write(cmd,rep))
             {
-                if (rep.size()>0)
+                Bottle &metrics=*rep.get(0).asList();
+                if (metrics.size()>0)
                 {
-                    metric=rep.get((int)(Rand::scalar(0,1)*rep.size())).asString();
+                    metric=metrics.get((int)(Rand::scalar(0,1)*metrics.size())).asString();
+                    yInfo()<<"Selected metric:"<<metric;
+
                     cmd.clear();
                     cmd.addString("loadMetric");
                     cmd.addString(metric);

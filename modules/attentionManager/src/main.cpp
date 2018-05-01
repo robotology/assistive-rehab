@@ -444,7 +444,7 @@ class Attention : public RFModule, public attentionManager_IDL
             {
                 Vector random(2);
                 random[0]=Rand::scalar(-30.0,30.0);
-                random[1]=Rand::scalar(-10.0,20.0);
+                random[1]=Rand::scalar(-5.0,5.0);
                 look("angular",random);
                 wait_motion_done();
                 still_t0=Time::now();
