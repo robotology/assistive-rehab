@@ -102,7 +102,7 @@ class Scaler : public RFModule
         if(command.get(0).asString() == "run")
         {
             start(nsessions,twarp);
-            reply.addString("Starting...");
+            reply.addVocab(Vocab::encode("ok"));
 
             size_t idx=file.find(".");
             setTag(file.substr(0,idx));
@@ -151,7 +151,7 @@ class Scaler : public RFModule
         {
             stop();
             hasStarted=false;
-            reply.addString("Stopping...");
+            reply.addVocab(Vocab::encode("ok"));
         }
 
         return true;

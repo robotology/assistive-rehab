@@ -50,11 +50,10 @@ public:
     void update(SkeletonWaist& curr_skeleton_);
     bool isDeviatingFromIntialPose();
     double isDeviatingFromIntialPose(const KeyPoint &keypoint, const KeyPoint &keypoint_init);
-    double getDeviation() { return deviation; };
+    double getDeviation() { return deviation; }
     bool isOutOfSphere(const KeyPoint& keypoint, const KeyPoint& keypoint_init);
     virtual double computeMetric() { return 0.0; }
     virtual string getProcessedMetric() = 0;
-    virtual double getTimeout() const = 0;
 
 };
 
@@ -69,7 +68,6 @@ public:
 //    void setInitialConf(const SkeletonWaist& skeleton_init_, const map<string, pair<string,double>>& keypoints2conf_) override;
     double computeMetric();
     string getProcessedMetric() { return rom->getName(); }
-    double getTimeout() const { return rom->getTimeout(); }
 
     static const string motion_type;
 

@@ -39,7 +39,7 @@ public:
     virtual Vector getPlane() const = 0;
     virtual double getMax() const = 0;
     virtual double getMin() const = 0;
-    virtual double getTimeout() const = 0;
+    virtual double getDuration() const = 0;
     virtual map<string, pair<string,double>> getInitialConf() const = 0;
 };
 
@@ -52,13 +52,13 @@ class Rom : public Metric
     Vector plane_normal;
     double min;
     double max;
-    double timeout;
+    double duration;
     map<string, pair<string,double>> keypoints2conf;
 
 public:
     Rom();
     Rom(const string &name_, const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
-        const Vector &plane_normal_, const double &min_, const double &max_, const double &timeout_,
+        const Vector &plane_normal_, const double &min_, const double &max_, const double &duration_,
         const map<string, pair<string,double>> &keypoints2conf_);
 
     string getName() const { return name; }
@@ -68,7 +68,7 @@ public:
     Vector getPlane() const { return plane_normal; }
     double getMax() const { return max; }
     double getMin() const { return min; }
-    double getTimeout() const { return timeout; }
+    double getDuration() const { return duration; }
     map<string, pair<string,double>> getInitialConf() const { return keypoints2conf; }
     void print();
 

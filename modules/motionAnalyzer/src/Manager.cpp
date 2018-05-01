@@ -487,7 +487,7 @@ bool Manager::loadMotionList()
                                 string tag_joint = bMotion.find("tag_joint").asString();
                                 double min = bMotion.find("min").asDouble();
                                 double max = bMotion.find("max").asDouble();
-                                double timeout = bMotion.find("timeout").asDouble();
+                                double duration = bMotion.find("duration").asDouble();
 
                                 Vector ref_dir;
                                 ref_dir.resize(3);
@@ -649,7 +649,7 @@ bool Manager::loadMotionList()
                                     yError() << "Could not load ankle right configuration";
 
                                 metric_repertoire = new Rom(curr_tag, motion_type, tag_joint,
-                                                    ref_dir, plane_normal, min, max, timeout, keypoints2conf);
+                                                    ref_dir, plane_normal, min, max, duration, keypoints2conf);
                             }
 
                             //add the current metric to the repertoire
@@ -818,31 +818,36 @@ double Manager::getQuality()
 }
 
 /********************************************************/
-bool Manager::start()
+double Manager::start()
 {
-    starting = true;
-
     //start skeletonScaler
     Bottle cmd, reply;
     cmd.addVocab(Vocab::encode("run"));
-    yInfo() << cmd.toString();
+//    yInfo() << cmd.toString();
     scalerPort.write(cmd, reply);
-    yInfo() << "Starting...";
-    return true;
+    if(reply.get(0).asVocab()==Vocab::encode("ok"))
+    {
+        starting = true;
+        return metric->getDuration();
+    }
+    return -1.0;
 }
 
 /********************************************************/
 bool Manager::stop()
 {
-    starting = false;
-    //start skeletonScaler
+    //stop skeletonScaler
     Bottle cmd, reply;
     cmd.addVocab(Vocab::encode("stop"));
     scalerPort.write(cmd, reply);
-    yInfo() << "Stopping...";
-    metric = NULL;
-    skel_tag = "";
-    return true;
+    if(reply.get(0).asVocab()==Vocab::encode("ok"))
+    {
+        starting = false;
+        metric = NULL;
+        skel_tag = "";
+        return true;
+    }
+    return false;
 }
 
 /********************************************************/
@@ -1278,7 +1283,7 @@ bool Manager::updateModule()
                 scopePort.write();
 
                 tend_session = Time::now()-tstart;
-                if(tend_session-tstart_session > 5.0)
+                if(tend_session-tstart_session > metric->getDuration())
                     finishedSession = true;
 
                 if(finishedSession)

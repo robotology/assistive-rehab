@@ -33,7 +33,7 @@ Rom::Rom()
 }
 
 Rom::Rom(const string &name_, const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
-         const Vector &plane_normal_, const double &min_, const double &max_, const double &timeout_,
+         const Vector &plane_normal_, const double &min_, const double &max_, const double &duration_,
          const map<string, pair<string,double>> &keypoints2conf_)
 {
     name = name_; //"ROM";
@@ -43,7 +43,7 @@ Rom::Rom(const string &name_, const string &motion_type_, const string &tag_join
     plane_normal = plane_normal_;
     min = min_;
     max = max_;
-    timeout = timeout_;
+    duration = duration_;
     keypoints2conf = keypoints2conf_;
 }
 
@@ -54,7 +54,7 @@ void Rom::print()
     yInfo() << "Tag joint = " << tag_joint;
     yInfo() << "Min = " << min;
     yInfo() << "Max = " << max;
-    yInfo() << "Timeout = " << timeout;
+    yInfo() << "Duration = " << duration;
 
     yInfo() << KeyPointTag::elbow_left << keypoints2conf[KeyPointTag::elbow_left].first;
     yInfo() << KeyPointTag::elbow_right << keypoints2conf[KeyPointTag::elbow_right].first;

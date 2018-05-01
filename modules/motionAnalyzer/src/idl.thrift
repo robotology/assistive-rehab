@@ -34,9 +34,9 @@ service motionAnalyzer_IDL
 
    /**
    * Start processing.
-   * @return true/false on success/failure.
+   * @return session duration in seconds / -1 on failure.
    */
-   bool start();
+   double start();
 
    /**
    * Stop processing.
