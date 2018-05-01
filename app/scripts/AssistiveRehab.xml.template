@@ -97,7 +97,7 @@
 
     <module>
        <name>yarpscope</name>
-       <parameters>--remote /motionAnalyzer/scope --x 190 --y 400 --dx 600 --dy 600 --index "(0 1 2)" --color "(blue red red)"</parameters>
+       <parameters>--context AssistiveRehab --xml motionAnalyzer-scope.xml</parameters>
        <node>r1-display-linux</node>
     </module>
 
