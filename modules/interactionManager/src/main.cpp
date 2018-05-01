@@ -300,9 +300,8 @@ class Interaction : public RFModule
                                         if (T>0.0)
                                         {
                                             speak("explain",true);
-                                            Time::delay(2.0);
                                             speak("ready",true);
-                                            Time::delay(2.0);
+                                            Time::delay(1.0);
                                             speak("start",true);
 
                                             state=State::assess;
