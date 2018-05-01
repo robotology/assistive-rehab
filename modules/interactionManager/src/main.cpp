@@ -33,9 +33,10 @@ class Interaction : public RFModule
     double period;
     string tag;
     string metric;
-    double t0;
+    double T,t0,t1;
 
     unordered_map<string,string> speak_map;
+    vector<double> assess_values;
 
     RpcClient attentionPort;
     RpcClient analyzerPort;
@@ -131,6 +132,40 @@ class Interaction : public RFModule
     }
 
     /****************************************************************/
+    bool assess(const string &phase)
+    {
+        if (assess_values.empty() ||
+            ((phase=="intermediate") && (phase=="final")))
+        {
+            speak("ouch");
+            return false;
+        }
+
+        double mean=0.0;
+        for (auto &v:assess_values)
+        {
+            mean+=v;
+        }
+        mean/=assess_values.size();
+
+        string grade;
+        if (mean<0.33)
+        {
+            grade="low";
+        }
+        else if (mean<0.66)
+        {
+            grade="medium";
+        }
+        else
+        {
+            grade="high";
+        }
+        speak("assess-"+phase+"-"+grade);
+        return true;
+    }
+
+    /****************************************************************/
     bool configure(ResourceFinder &rf) override
     {
         period=rf.check("period",Value(0.1)).asDouble();
@@ -183,6 +218,12 @@ class Interaction : public RFModule
         {
             if (follow_tag!=tag)
             {
+                if (state==State::assess)
+                {
+                    Bottle cmd,rep;
+                    cmd.addString("stop");
+                    analyzerPort.write(cmd,rep);
+                }
                 speak("disengaged");
                 disengage();
             }
@@ -252,14 +293,19 @@ class Interaction : public RFModule
                                     cmd.addString("start");
                                     if (analyzerPort.write(cmd,rep))
                                     {
-                                        if (rep.get(0).asVocab()==ok)
+                                        T=rep.get(0).asDouble();
+                                        if (T>0.0)
                                         {
                                             speak("explain",true);
                                             Time::delay(2.0);
                                             speak("ready",true);
                                             Time::delay(2.0);
                                             speak("start",true);
+
                                             state=State::assess;
+                                            assess_values.clear();
+                                            t0=Time::now();
+                                            t1=t0;
                                         }
                                     }
                                 }
@@ -276,6 +322,29 @@ class Interaction : public RFModule
         }
         else if (state==State::assess)
         {
+            double t_0=(Time::now()-t0)/T;
+            double t_1=(Time::now()-t1)/T;
+            if (t_0<=1.0)
+            {
+                Bottle cmd,rep;
+                cmd.addString("getQuality");
+                if (analyzerPort.write(cmd,rep))
+                {
+                    assess_values.push_back(rep.get(0).asDouble());
+                }
+                if (t_1>0.55)
+                {
+                    assess("intermediate");
+                    t1=Time::now();
+                }
+            }
+            else
+            {
+                speak("end");
+                assess("final");
+                speak("greetings");
+                disengage();
+            }
         }
 
         return true;
