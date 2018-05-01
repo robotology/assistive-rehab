@@ -1118,43 +1118,6 @@ void Manager::getSkeleton()
                             }
                         }
                     }
-//                    else
-//                    {
-//                        //get the last id
-//                        int id = idValues->get(idValues->size()-1).asInt();
-
-//                        //given the id, get the value of the property
-//                        cmd.clear();
-//                        cmd.addVocab(Vocab::encode("get"));
-//                        Bottle &content = cmd.addList().addList();
-//                        Bottle replyProp;
-//                        content.addString("id");
-//                        content.addInt(id);
-
-////                        yInfo() << "Command sent to the port: " << cmd.toString();
-//                        opcPort.write(cmd, replyProp);
-////                        yInfo() << "Reply from opc:" << replyProp.toString();
-
-//                        if(replyProp.get(0).asVocab() == Vocab::encode("ack"))
-//                        {
-//                            if(Bottle *propField = replyProp.get(1).asList())
-//                            {
-//                                Property prop(propField->toString().c_str());
-//                                string tag=prop.find("tag").asString();
-//                                if(!tag.empty())
-//                                {
-//                                    if (prop.check("tag"))
-//                                    {
-//                                        Skeleton* skeleton = skeleton_factory(prop);
-//                                        skeletonIn.update_fromstd(skeleton->toProperty()) ;
-//                                        all_keypoints.push_back(skeletonIn.get_unordered());
-
-//                                        delete skeleton;
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
                 }
             }
         }
@@ -1264,7 +1227,7 @@ bool Manager::close()
 /********************************************************/
 double Manager::getPeriod()
 {
-    return 1.0; //0.01;
+    return 0.01;
 }
 
 /********************************************************/
