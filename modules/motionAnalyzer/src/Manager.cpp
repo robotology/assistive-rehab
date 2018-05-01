@@ -779,9 +779,10 @@ vector<string> Manager::listMetrics()
     vector<string> reply;
     for (map<string,Metric*>::iterator it=motion_repertoire.begin(); it!=motion_repertoire.end(); it++)
     {
-        string jnt=it->second->getTagJoint();
-        string part=jnt.substr(getFirstUppercase(jnt));
-        reply.push_back(it->first+" "+it->second->getMotionType()+part);
+//        string jnt=it->second->getTagJoint();
+//        string part=jnt.substr(getFirstUppercase(jnt));
+//        reply.push_back(it->first+" "+it->second->getMotionType()+part);
+        reply.push_back(it->first);
     }
 
     return reply;
