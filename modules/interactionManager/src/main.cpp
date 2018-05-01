@@ -254,7 +254,11 @@ class Interaction : public RFModule
                                     {
                                         if (rep.get(0).asVocab()==ok)
                                         {
-                                            speak("show",true);
+                                            speak("explain",true);
+                                            Time::delay(2.0);
+                                            speak("ready",true);
+                                            Time::delay(2.0);
+                                            speak("start",true);
                                             state=State::assess;
                                         }
                                     }
