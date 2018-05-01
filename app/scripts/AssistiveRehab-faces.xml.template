@@ -134,6 +134,12 @@
        <node>r1-display-linux</node>
     </module>
 
+    <module>
+        <name>interactionManager</name>
+        <parameters></parameters>
+        <node>r1-console-linux</node>
+    </module>
+
     <connection>
         <from>/faceExpressionImage/image:o</from> 
         <to>/robot/faceDisplay/image:i</to>
@@ -329,6 +335,24 @@
     <connection>
         <from>/skeletonScaler/viewer:rpc</from>
         <to>/skeletonViewer:rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/interactionManager/attention:rpc</from>
+        <to>/attentionManager/cmd:rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/interactionManager/analyzer:rpc</from>
+        <to>/motionAnalyzer/cmd</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/interactionManager/speech:o</from>
+        <to>/iSpeak</to>
         <protocol>tcp</protocol>
     </connection>
 </application>
