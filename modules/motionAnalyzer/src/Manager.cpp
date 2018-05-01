@@ -805,6 +805,19 @@ bool Manager::selectSkel(const string &skel_tag)
 }
 
 /********************************************************/
+double Manager::getQuality()
+{
+    double dev=processor->getDeviation();
+    double dev1=2.0,score1=0.6;
+    double dev2=6.0,score2=0.3;
+    double score=score1+((score2-score1)/(dev2-dev1))*(dev-dev1);
+    if( score>score1 && (result-metric->getMax())<0.0 && (result-metric->getMin())>0.0 )
+        score+=0.25;
+
+    return score;
+}
+
+/********************************************************/
 bool Manager::start()
 {
     starting = true;
@@ -1251,10 +1264,10 @@ bool Manager::updateModule()
                 skeletonIn.normalize();
 
                 processor->update(skeletonIn);
-//                if(processor->isDeviatingFromIntialPose())
-//                    yWarning() << "Deviating from initial pose\n";
+                if(processor->isDeviatingFromIntialPose())
+                    yWarning() << "Deviating from initial pose\n";
 
-                double result = processor->computeMetric();
+                result = processor->computeMetric();
 
                 //write on output port
                 Bottle &scopebottleout = scopePort.prepare();

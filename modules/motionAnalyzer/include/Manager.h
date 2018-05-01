@@ -111,6 +111,7 @@ class Manager : public RFModule,
     int nsession;
     string out_folder;
     bool updated;
+    double result;
 
 //    Metric* metric;
 //    Processor* processor;
@@ -123,6 +124,7 @@ class Manager : public RFModule,
     bool loadMetric(const string &metric_tag);
     vector<string> listMetrics();
     bool selectSkel(const string &skel_tag);
+    double getQuality();
     bool start();
     bool stop();
 
