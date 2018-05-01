@@ -150,6 +150,7 @@ class Scaler : public RFModule
         if(command.get(0).asString() == "stop")
         {
             stop();
+            hide();
             hasStarted=false;
             reply.addVocab(Vocab::encode("ok"));
         }
@@ -267,6 +268,7 @@ class Scaler : public RFModule
                 else
                 {
                     stop();
+                    hide();
 
                     //invert current transformation to go back to the center
                     xyz.zero();
@@ -560,14 +562,29 @@ class Scaler : public RFModule
     }
 
     /****************************************************************/
-    void stop()
+    bool stop()
     {
         xyz.zero();
         Bottle cmd,rep;
         cmd.addString("stop");
-        yInfo() << cmd.toString();
         cmdPort.write(cmd,rep);
-        prev_tag="";
+        if(rep.get(0).asVocab()==Vocab::encode("ok"))
+        {
+            prev_tag="";
+            return true;
+        }
+        return false;
+    }
+
+    /****************************************************************/
+    bool hide()
+    {
+        Bottle cmd,rep;
+        cmd.addString("remove_from_opc");
+        cmdPort.write(cmd,rep);
+        if(rep.get(0).asVocab()==Vocab::encode("ok"))
+            return true;
+        return false;
     }
 
     /****************************************************************/
@@ -595,6 +612,7 @@ class Scaler : public RFModule
     bool interruptModule()
     {
        stop();
+       hide();
        opcPort.interrupt();
        cmdPort.interrupt();
        rpcViewerPort.interrupt();
