@@ -26,6 +26,9 @@ using namespace yarp::math;
 /****************************************************************/
 class Interaction : public RFModule
 {
+    const int ok=Vocab::encode("ok");
+    const int fail=Vocab::encode("fail");
+
     enum class State { seek, follow, show, engaged } state;
     double period;
     string tag;
@@ -163,7 +166,12 @@ class Interaction : public RFModule
             if (follow_tag!=tag)
             {
                 speak("disengaged");
-                state=State::seek;
+                Bottle cmd,rep;
+                cmd.addString("set_auto");
+                if (attentionPort.write(cmd,rep))
+                {
+                    state=State::seek;
+                }
             }
             else
             {
@@ -172,12 +180,12 @@ class Interaction : public RFModule
                 cmd.addString(tag);
                 if (attentionPort.write(cmd,rep))
                 {
-                    if (rep.get(0).asBool())
+                    if (rep.get(0).asVocab()==ok)
                     {
                         speak("accepted");
                         state=State::show;
                     }
-                    else if (Time::now()-t0>5.0)
+                    else if (Time::now()-t0>10.0)
                     {
                         speak("reinforce-engage");
                         t0=Time::now();

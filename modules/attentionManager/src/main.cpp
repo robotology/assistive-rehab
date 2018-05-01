@@ -79,10 +79,17 @@ class Attention : public RFModule, public attentionManager_IDL
         {
             return false;
         }
-        this->tag=tag;
         this->keypoint=keypoint;
         auto_mode=false;
-        return switch_to(State::seek);
+        if ((state==State::follow) && (this->tag==tag))
+        {
+            return true;
+        }
+        else
+        {
+            this->tag=tag;
+            return switch_to(State::seek);
+        }
     }
 
     /****************************************************************/
@@ -93,16 +100,10 @@ class Attention : public RFModule, public attentionManager_IDL
         {
             return false;
         }
-        Bottle cmd,rep;
-        cmd.addVocab(Vocab::encode("stop"));
-        if (gazeCmdPort.write(cmd,rep))
-        {
-            if (rep.get(0).asVocab()==ack)
-            {
-                return switch_to(state=State::idle);
-            }
-        }
-        return false;
+        bool ret=true;
+        ret&=switch_to(state=State::idle);
+        ret&=look("angular",zeros(2));
+        return ret;
     }
 
     /****************************************************************/

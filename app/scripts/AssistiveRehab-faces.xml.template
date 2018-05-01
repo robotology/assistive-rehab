@@ -3,7 +3,7 @@
 
     <module>
         <name>yarpdev</name>
-        <parameters>--device speech --lingware-context speech --default-language it-IT --robot r1 --pitch 80 --speed 90</parameters>
+        <parameters>--device speech --lingware-context speech --default-language it-IT --robot r1 --pitch 80 --speed 110</parameters>
         <node>r1-face</node>
     </module>
 
