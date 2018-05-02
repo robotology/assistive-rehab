@@ -1290,7 +1290,10 @@ bool Manager::updateModule()
                 if(finishedSession)
                 {
                     // Use MATIO to write the results in a .mat file
-                    string filename_report = out_folder + "/" + to_string(nsession) + ".mat";
+                    string tagtosave = skeletonIn.getTag();
+                    int itag = tagtosave.find("#");
+                    tagtosave.erase(itag,1);
+                    string filename_report = out_folder + "/" + tagtosave + "_" + metric->getMotionType() + "_" + to_string(nsession) + ".mat";
                     mat_t *matfp = Mat_CreateVer(filename_report.c_str(),NULL,MAT_FT_MAT73);
                     if (matfp == NULL)
                         yError() << "Error creating MAT file";
