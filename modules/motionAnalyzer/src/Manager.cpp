@@ -757,8 +757,6 @@ double Manager::loadMetric(const string &metric_tag)
     cmd.addString(context);
     scalerPort.write(cmd, reply);
 
-    tstart_session = Time::now()-tstart;
-
     if(metric!=NULL && reply.get(0).asVocab()==Vocab::encode("ok"))
         return metric->getDuration();
 
@@ -831,6 +829,7 @@ bool Manager::start()
     scalerPort.write(cmd, reply);
     if(reply.get(0).asVocab()==Vocab::encode("ok"))
     {
+        tstart_session = Time::now()-tstart;
         starting = true;
         return true;
     }
@@ -851,6 +850,7 @@ bool Manager::stop()
         starting = false;
 //        metric = NULL;
         skel_tag = "";
+        tend_session = Time::now()-tstart;
 
         // Use MATIO to write the results in a .mat file
         string filename_report = out_folder + "/user-" + skeletonIn.getTag() + "-" + metric->getMotionType() + "-" + to_string(nsession) + ".mat";
@@ -1299,12 +1299,12 @@ bool Manager::updateModule()
                 scopebottleout.addDouble(metric->getMax());
                 scopePort.write();
 
-                tend_session = Time::now()-tstart;
-                if(tend_session-tstart_session > metric->getDuration())
-                    finishedSession = true;
+//                tend_session = Time::now()-tstart;
+//                if(tend_session-tstart_session > metric->getDuration())
+//                    finishedSession = true;
 
-                if(finishedSession)
-                {
+//                if(finishedSession)
+//                {
 //                    // Use MATIO to write the results in a .mat file
 //                    string filename_report = out_folder + "/user-" + skeletonIn.getTag() + "-" + metric->getMotionType() + "-" + to_string(nsession) + ".mat";
 //                    mat_t *matfp = Mat_CreateVer(filename_report.c_str(),NULL,MAT_FT_MAT73);
@@ -1325,7 +1325,7 @@ bool Manager::updateModule()
 
 //                    yInfo() << "Keypoints saved to file" << filename_report.c_str();
 //                    Mat_Close(matfp);
-                }
+//                }
             }
         }
         else

@@ -100,13 +100,6 @@ class Scaler : public RFModule
             {
                 reply.addVocab(Vocab::encode("ok"));
                 reply.addString("Loading file " + file + " from context " + context);
-            }
-        }
-        if(command.get(0).asString() == "run")
-        {
-            if(start(nsessions,twarp))
-            {
-                reply.addVocab(Vocab::encode("ok"));
 
                 size_t idx=file.find(".");
                 setTag(file.substr(0,idx));
@@ -143,7 +136,13 @@ class Scaler : public RFModule
 
                 invT.resize(4,4);
                 invT.zero();
-
+            }
+        }
+        if(command.get(0).asString() == "run")
+        {
+            if(start(nsessions,twarp))
+            {
+                reply.addVocab(Vocab::encode("ok"));
                 hasStarted=true;
             }
         }
