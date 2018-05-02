@@ -67,8 +67,16 @@ endif()
 file(GLOB ini app/conf/*.ini)
 file(GLOB xml app/conf/*.xml)
 file(GLOB scripts app/scripts/*.template)
-set(report report/convert.sh report/report.ipynb)
+file(GLOB ipynb report/*.ipynb)
+file(GLOB sh report/*.sh)
 yarp_install(FILES ${ini} DESTINATION ${ICUBCONTRIB_CONTEXTS_INSTALL_DIR}/${PROJECT_NAME})
 yarp_install(FILES ${xml} DESTINATION ${ICUBCONTRIB_CONTEXTS_INSTALL_DIR}/${PROJECT_NAME})
 yarp_install(FILES ${scripts} DESTINATION ${ICUBCONTRIB_APPLICATIONS_TEMPLATES_INSTALL_DIR})
-yarp_install(FILES ${report} DESTINATION ${ICUBCONTRIB_CONTEXTS_INSTALL_DIR}/${PROJECT_NAME})
+yarp_install(FILES ${ipynb} DESTINATION ${ICUBCONTRIB_CONTEXTS_INSTALL_DIR}/${PROJECT_NAME})
+
+add_custom_target(copy_sh_in_build ALL)
+add_custom_command(TARGET copy_sh_in_build POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy ${sh} ${CMAKE_BINARY_DIR}/bin/${CMAKE_CFG_INTDIR}
+                   COMMENT "Copying ${sh} to ${CMAKE_BINARY_DIR}/bin/${CMAKE_CFG_INTDIR}/")
+install(PROGRAMS ${sh} DESTINATION bin)
+
