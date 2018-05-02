@@ -247,7 +247,8 @@ class Interaction : public RFModule
                 }                
             }
         }
-        else if (state==State::follow)
+
+        if (state==State::follow)
         {
             Bottle cmd,rep;
             cmd.addString("is_with_raised_hand");
@@ -266,7 +267,8 @@ class Interaction : public RFModule
                 }
             }
         }
-        else if (state==State::engaged)
+
+        if (state==State::engaged)
         {
             Bottle cmd,rep;
             cmd.addString("listMetrics");
@@ -322,7 +324,8 @@ class Interaction : public RFModule
                 disengage();
             }
         }
-        else if (state==State::assess)
+
+        if (state==State::assess)
         {
             double t_0=(Time::now()-t0)/T;
             double t_1=(Time::now()-t1)/T;
