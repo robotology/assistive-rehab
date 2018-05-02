@@ -65,12 +65,18 @@ class Interaction : public RFModule
         string value_ext;
         if (!p.empty())
         {
-            size_t i=0;
-            size_t pos=0;
-            while (((pos=value.find("%"))!=string::npos) && (i<p.size()))
+            for (size_t i=0;;)
             {
+                size_t pos=value.find("%");
                 value_ext+=value.substr(0,pos);
-                value_ext+=p[i++].get();
+                if (i<p.size())
+                {
+                    value_ext+=p[i++].get();
+                }
+                if (pos==string::npos)
+                {
+                    break;
+                }
                 value.erase(0,pos+1);
             }
         }
