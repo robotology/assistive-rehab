@@ -730,7 +730,7 @@ bool Manager::loadMotionList()
 //}
 
 /********************************************************/
-bool Manager::loadMetric(const string &metric_tag)
+double Manager::loadMetric(const string &metric_tag)
 {
     metric = motion_repertoire.at(metric_tag);
     yInfo() << "Metric to analyze";
@@ -759,7 +759,10 @@ bool Manager::loadMetric(const string &metric_tag)
 
     tstart_session = Time::now()-tstart;
 
-    return true;
+    if(metric!=NULL && reply.get(0).asVocab()==Vocab::encode("ok"))
+        return metric->getDuration();
+
+    return -1.0;
 }
 
 /********************************************************/
@@ -819,7 +822,7 @@ double Manager::getQuality()
 }
 
 /********************************************************/
-double Manager::start()
+bool Manager::start()
 {
     //start skeletonScaler
     Bottle cmd, reply;
@@ -829,9 +832,9 @@ double Manager::start()
     if(reply.get(0).asVocab()==Vocab::encode("ok"))
     {
         starting = true;
-        return metric->getDuration();
+        return true;
     }
-    return -1.0;
+    return false;
 }
 
 /********************************************************/

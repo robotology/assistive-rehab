@@ -121,11 +121,11 @@ class Manager : public RFModule,
     bool loadInitialConf(const Bottle& b, SkeletonWaist *skeletonInit);
     bool loadMotionList();
 //    bool loadSequence(const string& sequencer_file);
-    bool loadMetric(const string &metric_tag);
+    double loadMetric(const string &metric_tag);
     vector<string> listMetrics();
     bool selectSkel(const string &skel_tag);
     double getQuality();
-    double start();
+    bool start();
     bool stop();
 
     bool writeStructToMat(const string& name, const vector< vector< pair<string,Vector> > >& keypoints_skel, mat_t *matfp);

@@ -22,9 +22,9 @@ service motionAnalyzer_IDL
    /**
    * Load metric to analyze.
    * @param metric_tag name of the metric to analyze
-   * @return true/false on success/failure.
+   * @return session duration in seconds / -1 on failure.
    */
-   bool loadMetric(1:string metric_tag);
+   double loadMetric(1:string metric_tag);
 
    /**
    * List available metrics.
@@ -34,9 +34,9 @@ service motionAnalyzer_IDL
 
    /**
    * Start processing.
-   * @return session duration in seconds / -1 on failure.
+   * @return true/false on success/failure.
    */
-   double start();
+   bool start();
 
    /**
    * Stop processing.
