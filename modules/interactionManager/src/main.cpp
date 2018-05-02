@@ -24,6 +24,18 @@ using namespace yarp::math;
 
 
 /****************************************************************/
+class SpeechParam
+{
+    ostringstream ss;
+public:
+    SpeechParam(const int d) { ss<<d; }
+    SpeechParam(const double g) { ss<<g; }
+    SpeechParam(const string &s) { ss<<s; }
+    string get() const { return ss.str(); }
+};
+
+
+/****************************************************************/
 class Interaction : public RFModule
 {
     const int ok=Vocab::encode("ok");
@@ -44,14 +56,32 @@ class Interaction : public RFModule
     RpcClient speechRpcPort;
 
     /****************************************************************/
-    bool speak(const string &key, const bool wait=false)
+    bool speak(const string &key, const bool wait,
+               const vector<SpeechParam> &p=vector<SpeechParam>())
     {
         auto it=speak_map.find(key);
         string value=(it!=end(speak_map)?it->second:speak_map["ouch"]);
 
+        string value_ext;
+        if (!p.empty())
+        {
+            size_t i=0;
+            size_t pos=0;
+            while (((pos=value.find("%"))!=string::npos) && (i<p.size()))
+            {
+                value_ext+=value.substr(0,pos);
+                value_ext+=p[i++].get();
+                value.erase(0,pos+1);
+            }
+        }
+        else
+        {
+            value_ext=value;
+        }
+
         Bottle &payload=speechStreamPort.prepare();
         payload.clear();
-        payload.addString(value);
+        payload.addString(value_ext);
         speechStreamPort.writeStrict();
 
         while (wait)
@@ -137,7 +167,7 @@ class Interaction : public RFModule
         if (assess_values.empty() ||
             ((phase!="intermediate") && (phase!="final")))
         {
-            speak("ouch");
+            speak("ouch",false);
             return false;
         }
 
@@ -161,7 +191,7 @@ class Interaction : public RFModule
         {
             grade="high";
         }
-        speak("assess-"+phase+"-"+grade);
+        speak("assess-"+phase+"-"+grade,false);
         return true;
     }
 
@@ -224,7 +254,7 @@ class Interaction : public RFModule
                     cmd.addString("stop");
                     analyzerPort.write(cmd,rep);
                 }
-                speak("disengaged");
+                speak("disengaged",false);
                 disengage();
                 return true;
             }
@@ -240,8 +270,8 @@ class Interaction : public RFModule
                 cmd.addString(tag);
                 if (attentionPort.write(cmd,rep))
                 {
-                    speak("invite");
-                    speak("engage");
+                    speak("invite",false);
+                    speak("engage",false);
                     state=State::follow;
                     t0=Time::now();
                 }                
@@ -257,12 +287,12 @@ class Interaction : public RFModule
             {
                 if (rep.get(0).asVocab()==ok)
                 {
-                    speak("accepted");
+                    speak("accepted",false);
                     state=State::engaged;
                 }
                 else if (Time::now()-t0>10.0)
                 {
-                    speak("reinforce-engage");
+                    speak("reinforce-engage",false);
                     t0=Time::now();
                 }
             }
@@ -285,7 +315,8 @@ class Interaction : public RFModule
                     cmd.addString(metric);
                     if (analyzerPort.write(cmd,rep))
                     {
-                        if (rep.get(0).asVocab()==ok)
+                        T=rep.get(0).asDouble();
+                        if (T>0.0)
                         {
                             cmd.clear();
                             cmd.addString("selectSkel");
@@ -295,6 +326,11 @@ class Interaction : public RFModule
                                 if (rep.get(0).asVocab()==ok)
                                 {
                                     speak("explain",true);
+
+                                    vector<SpeechParam> p;
+                                    p.push_back(SpeechParam(T));
+                                    speak("duration",true,p);
+
                                     speak("ready",true);
                                     Time::delay(1.0);
                                     speak("start",true);
@@ -303,8 +339,7 @@ class Interaction : public RFModule
                                     cmd.addString("start");
                                     if (analyzerPort.write(cmd,rep))
                                     {
-                                        T=rep.get(0).asDouble();
-                                        if (T>0.0)
+                                        if (rep.get(0).asVocab()==ok)
                                         {
                                             state=State::assess;
                                             assess_values.clear();
@@ -320,7 +355,7 @@ class Interaction : public RFModule
             }
             if (state!=State::assess)
             {
-                speak("ouch");
+                speak("ouch",false);
                 disengage();
             }
         }
@@ -349,9 +384,9 @@ class Interaction : public RFModule
                 cmd.addString("stop");
                 analyzerPort.write(cmd,rep);
 
-                speak("end");
+                speak("end",false);
                 assess("final");
-                speak("greetings");
+                speak("greetings",false);
                 disengage();
             }
         }
