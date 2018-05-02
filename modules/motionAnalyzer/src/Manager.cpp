@@ -1283,8 +1283,8 @@ bool Manager::updateModule()
                 skeletonIn.normalize();
 
                 processor->update(skeletonIn);
-//                if(processor->isDeviatingFromIntialPose())
-//                    yWarning() << "Deviating from initial pose\n";
+                if(processor->isDeviatingFromIntialPose())
+                    yWarning() << "Deviating from initial pose\n";
 
                 result = processor->computeMetric();
 
