@@ -2,7 +2,7 @@
 
 #This script converts ipynb notebook file into html
 
-FILENAME=report.ipynb
+FILENAME=$(yarp resource --context AssistiveRehab --from report.ipynb | awk '{gsub(/\"/,"")};1')
 
 #Convert to notebook
 echo "Converting $FILENAME to notebook..."
