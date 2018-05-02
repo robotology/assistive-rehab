@@ -567,12 +567,16 @@ class Scaler : public RFModule
         xyz.zero();
         Bottle cmd,rep;
         cmd.addString("stop");
-        cmdPort.write(cmd,rep);
-        if(rep.get(0).asVocab()==Vocab::encode("ok"))
+        if(cmdPort.write(cmd,rep))
         {
-            prev_tag="";
-            return true;
+            if(rep.get(0).asVocab()==Vocab::encode("ok"))
+            {
+                yInfo() << "Stopping";
+                prev_tag="";
+                return true;
+            }
         }
+
         return false;
     }
 

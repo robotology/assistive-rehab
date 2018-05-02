@@ -841,11 +841,27 @@ bool Manager::stop()
     Bottle cmd, reply;
     cmd.addVocab(Vocab::encode("stop"));
     scalerPort.write(cmd, reply);
+    yInfo() << reply.get(0).toString();
     if(reply.get(0).asVocab()==Vocab::encode("ok"))
     {
+//        yInfo() << "stopping";
         starting = false;
-        metric = NULL;
+//        metric = NULL;
         skel_tag = "";
+
+        // Use MATIO to write the results in a .mat file
+        string filename_report = out_folder + "/user-" + skeletonIn.getTag() + "-" + metric->getMotionType() + "-" + to_string(nsession) + ".mat";
+        mat_t *matfp = Mat_CreateVer(filename_report.c_str(),NULL,MAT_FT_MAT73);
+        if (matfp == NULL)
+            yError() << "Error creating MAT file";
+
+        yInfo() << "Writing to file";
+        if(!writeKeypointsToFile(matfp))
+            yError() << "Could not save to file";
+
+        yInfo() << "Keypoints saved to file" << filename_report.c_str();
+        Mat_Close(matfp);
+
         return true;
     }
     return false;
@@ -1196,9 +1212,6 @@ bool Manager::configure(ResourceFinder &rf)
 /********************************************************/
 bool Manager::interruptModule()
 {
-//    yInfo() << "Keypoints saved to file" << filename_report.c_str();
-//    Mat_Close(matfp);
-
     opcPort.interrupt();
     scopePort.interrupt();
     scalerPort.interrupt();
@@ -1270,8 +1283,8 @@ bool Manager::updateModule()
                 skeletonIn.normalize();
 
                 processor->update(skeletonIn);
-                if(processor->isDeviatingFromIntialPose())
-                    yWarning() << "Deviating from initial pose\n";
+//                if(processor->isDeviatingFromIntialPose())
+//                    yWarning() << "Deviating from initial pose\n";
 
                 result = processor->computeMetric();
 
@@ -1289,29 +1302,26 @@ bool Manager::updateModule()
 
                 if(finishedSession)
                 {
-                    // Use MATIO to write the results in a .mat file
-                    string tagtosave = skeletonIn.getTag();
-                    int itag = tagtosave.find("#");
-                    tagtosave.erase(itag,1);
-                    string filename_report = out_folder + "/" + tagtosave + "_" + metric->getMotionType() + "_" + to_string(nsession) + ".mat";
-                    mat_t *matfp = Mat_CreateVer(filename_report.c_str(),NULL,MAT_FT_MAT73);
-                    if (matfp == NULL)
-                        yError() << "Error creating MAT file";
+//                    // Use MATIO to write the results in a .mat file
+//                    string filename_report = out_folder + "/user-" + skeletonIn.getTag() + "-" + metric->getMotionType() + "-" + to_string(nsession) + ".mat";
+//                    mat_t *matfp = Mat_CreateVer(filename_report.c_str(),NULL,MAT_FT_MAT73);
+//                    if (matfp == NULL)
+//                        yError() << "Error creating MAT file";
 
-                    yInfo() << "Writing to file";
-                    if(writeKeypointsToFile(matfp))
-                    {
-                        time_samples.clear();
-                        all_keypoints.clear();
-                    }
+//                    yInfo() << "Writing to file";
+//                    if(writeKeypointsToFile(matfp))
+//                    {
+//                        time_samples.clear();
+//                        all_keypoints.clear();
+//                    }
 
-                    finishedSession = false;
-                    tstart_session = tend_session;
+//                    finishedSession = false;
+//                    tstart_session = tend_session;
 
-                    nsession++;
+//                    nsession++;
 
-                    yInfo() << "Keypoints saved to file" << filename_report.c_str();
-                    Mat_Close(matfp);
+//                    yInfo() << "Keypoints saved to file" << filename_report.c_str();
+//                    Mat_Close(matfp);
                 }
             }
         }
