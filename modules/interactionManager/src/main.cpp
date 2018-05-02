@@ -292,6 +292,11 @@ class Interaction : public RFModule
                             {
                                 if (rep.get(0).asVocab()==ok)
                                 {
+                                    speak("explain",true);
+                                    speak("ready",true);
+                                    Time::delay(1.0);
+                                    speak("start",true);
+
                                     cmd.clear();
                                     cmd.addString("start");
                                     if (analyzerPort.write(cmd,rep))
@@ -299,11 +304,6 @@ class Interaction : public RFModule
                                         T=rep.get(0).asDouble();
                                         if (T>0.0)
                                         {
-                                            speak("explain",true);
-                                            speak("ready",true);
-                                            Time::delay(1.0);
-                                            speak("start",true);
-
                                             state=State::assess;
                                             assess_values.clear();
                                             t0=Time::now();
