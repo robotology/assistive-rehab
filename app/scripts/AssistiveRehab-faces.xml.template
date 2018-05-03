@@ -130,7 +130,7 @@
 
     <module>
        <name>yarpscope</name>
-       <parameters>--context AssistiveRehab --xml motionAnalyzer-scope.xml</parameters>
+       <parameters>--x 190 --y 400 --dx 1000 --dy 600 --context AssistiveRehab --xml motionAnalyzer-scope.xml</parameters>
        <node>r1-display-linux</node>
     </module>
 
