@@ -276,7 +276,9 @@ class Interaction : public RFModule
                 cmd.addString(tag);
                 if (attentionPort.write(cmd,rep))
                 {
-                    speak("invite",false);
+                    vector<SpeechParam> p;
+                    p.push_back(SpeechParam(tag[0]!='#'?tag:string("")));
+                    speak("invite",false,p);
                     speak("engage",false);
                     state=State::follow;
                     t0=Time::now();
