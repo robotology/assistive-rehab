@@ -150,12 +150,13 @@ double Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyP
     //    if(deviation > keypoints2conf[keypoint.getTag()].second)
 //    {
 //        yInfo() << keypoint.getTag().c_str()
-//    //            << "(" << curr_kp[0] << "," << curr_kp[1] << "," << curr_kp[2] << ")"
+//                << "(" << curr_kp[0] << "," << curr_kp[1] << "," << curr_kp[2] << ")"
+//                << "(" << curr_kp_init[0] << "," << curr_kp_init[1] << "," << curr_kp_init[2] << ")"
 //    //            << "(" << curr_kp_parent[0] << "," << curr_kp_parent[1] << "," << curr_kp_parent[2] << ")"
 //    //            << "(" << curr_kp_child[0] << "," << curr_kp_child[1] << "," << curr_kp_child[2] << ")"
-//                << "(" << curr_pose[0] << "," << curr_pose[1] << "," << curr_pose[2] << ")"
-//                << "(" << initial_pose[0] << "," << initial_pose[1] << "," << initial_pose[2] << ")"
-//                << deviation;
+////                << "(" << curr_pose[0] << "," << curr_pose[1] << "," << curr_pose[2] << ")"
+////                << "(" << initial_pose[0] << "," << initial_pose[1] << "," << initial_pose[2] << ")"
+//                << dev;
 //    }
 
     if(dev > keypoints2conf[keypoint.getTag()].second)

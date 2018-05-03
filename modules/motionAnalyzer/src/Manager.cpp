@@ -26,6 +26,10 @@
 
 #include "matio.h"
 
+#define LOW 0.0
+#define MEDIUM 0.5
+#define HIGH 1.0
+
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
@@ -808,15 +812,51 @@ bool Manager::selectSkel(const string &skel_tag)
 
 /********************************************************/
 double Manager::getQuality()
-{
+{  
     double dev=processor->getDeviation();
     double dev1=2.0,score1=0.6;
     double dev2=6.0,score2=0.3;
-    double score=score1+((score2-score1)/(dev2-dev1))*(dev-dev1);
-    if( score>score1 && (result-metric->getMax())<0.0 && (result-metric->getMin())>0.0 )
-        score+=0.25;
+    double score_static=score1+((score2-score1)/(dev2-dev1))*(dev-dev1);
+
+//    double score_dynamic=fabs(result_der)/(metric->getMax()-metric->getMin());
+    double score_dynamic=0.0;
+    if(fabs(result_der)>30.0 && result>metric->getMin() && result<metric->getMax())
+        score_dynamic=0.7;
+
+    yInfo() << score_static << score_dynamic << dev;
+    cout << "\n";
+
+    double score;
+    if(score_dynamic<0.6 && score_static>0.6)
+        score=LOW;
+    else if(score_dynamic<0.6 && score_static>0.3 && score_static<0.6)
+        score=LOW;
+    else if(score_dynamic<0.6 && score_static<0.3)
+        score=LOW;
+
+    else if(score_dynamic>0.6 && score_static>0.6)
+        score=HIGH;
+    else if(score_dynamic>0.6 && score_static>0.3 && score_static<0.6)
+        score=MEDIUM;
+    else if(score_dynamic>0.6 && score_static<0.3)
+        score=LOW;
 
     return score;
+}
+
+/********************************************************/
+void Manager::computeMetricDerivative()
+{
+    int i=result_time.size()-1;
+    result_der=0.0;
+    double win=20.0;
+
+    if(i>(int)win)
+    {
+        for(int j=i;j>i-(int)win;j--)
+            result_der+=(result_time[j]-result_time[j-1])/(time_samples[j]-time_samples[j-1]);
+        result_der/=win;
+    }
 }
 
 /********************************************************/
@@ -1287,14 +1327,19 @@ bool Manager::updateModule()
 
                 processor->update(skeletonIn);
                 if(processor->isDeviatingFromIntialPose())
-                    yWarning() << "Deviating from initial pose\n";
+                {
+//                    yWarning() << "Deviating from initial pose\n";
+                }
 
                 result = processor->computeMetric();
+                result_time.push_back(result);
+                computeMetricDerivative();
 
                 //write on output port
                 Bottle &scopebottleout = scopePort.prepare();
                 scopebottleout.clear();
                 scopebottleout.addDouble(result);
+                scopebottleout.addDouble(result_der);
                 scopebottleout.addDouble(metric->getMin());
                 scopebottleout.addDouble(metric->getMax());
                 scopePort.write();

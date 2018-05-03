@@ -112,6 +112,10 @@ class Manager : public RFModule,
     string out_folder;
     bool updated;
     double result;
+//    vector<double> result_time;
+    Vector result_time;
+    double result_der;
+
 
 //    Metric* metric;
 //    Processor* processor;
@@ -122,6 +126,7 @@ class Manager : public RFModule,
     bool loadMotionList();
 //    bool loadSequence(const string& sequencer_file);
     double loadMetric(const string &metric_tag);
+    void computeMetricDerivative();
     vector<string> listMetrics();
     bool selectSkel(const string &skel_tag);
     double getQuality();
