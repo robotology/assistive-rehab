@@ -140,7 +140,7 @@ class Interaction : public RFModule
             }
             if (!bSection.check("key") || !bSection.check("value"))
             {
-                yError()<<"Unable to find key \"kaye\" and/or \"value\"";
+                yError()<<"Unable to find key \"key\" and/or \"value\"";
                 return false;
             }
             string key=bSection.find("key").asString();
