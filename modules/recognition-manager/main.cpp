@@ -354,7 +354,7 @@ public:
                         getIndex = i;
                     }
                     else
-                        yError() << "Skeleton" << i << "check";
+                        yInfo() << "Skeleton" << i << "check";
                 }
 
                 if (getIndex > -1)
@@ -574,11 +574,13 @@ public:
                             yInfo() << "DIFF NECK" << i << "with  abs(cog - neck[i].x) " << abs(cog - neck[i].x);
                             yInfo() << "DIFF LEAR" << i << "with  abs(cog - lear[i].x) " << abs(cog - lear[i].x);
                             yInfo() << "DIFF REAR" << i << "with  abs(cog - rear[i].x) " << abs(cog - rear[i].x);
-                            if ( abs(cog - neck[i].x) < 30 || abs(cog - lear[i].x) < 30 || abs(cog - rear[i].x) < 30)
+                            if ( abs(cog - neck[i].x) < 50 || abs(cog - lear[i].x) < 50 || abs(cog - rear[i].x) < 50)
                             {
                                 yInfo() << "adding " << i << j; 
                                 elements.push_back(std::make_pair(i, j));
                             }
+			    else
+				elements.push_back(std::make_pair(i, -1));
                         }
                     }
                     else
@@ -608,6 +610,8 @@ public:
                 yarp::os::Bottle &options=skeleton->addList();
 
                 options.addString("Name");
+
+		yInfo() << "******************************** target.size() " << target.get(0).asList()->size() << i;
                 
                 if (blobs.size() > 0)
                 {
