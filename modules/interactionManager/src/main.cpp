@@ -154,13 +154,13 @@ class Interaction : public RFModule
     /****************************************************************/
     bool disengage()
     {
+        state=State::seek;
         Bottle cmd,rep;
         cmd.addString("set_auto");
         if (attentionPort.write(cmd,rep))
         {
             if (rep.get(0).asVocab()==ok)
             {
-                state=State::seek;
                 return true;
             }
         }
