@@ -174,7 +174,7 @@ class Interaction : public RFModule
         if (assess_values.empty() ||
             ((phase!="intermediate") && (phase!="final")))
         {
-            speak("ouch",false);
+            speak("ouch",true);
             return false;
         }
 
@@ -262,7 +262,7 @@ class Interaction : public RFModule
                     cmd.addString("stop");
                     analyzerPort.write(cmd,rep);
                 }
-                speak("disengaged",false);
+                speak("disengaged",true);
                 disengage();
                 return true;
             }
@@ -288,8 +288,8 @@ class Interaction : public RFModule
                 {
                     vector<SpeechParam> p;
                     p.push_back(SpeechParam(tag[0]!='#'?tag:string("")));
-                    speak("invite",false,p);
-                    speak("engage",false);
+                    speak("invite",true,p);
+                    speak("engage",true);
                     state=State::follow;
                     t0=Time::now();
                 }                
@@ -305,12 +305,12 @@ class Interaction : public RFModule
             {
                 if (rep.get(0).asVocab()==ok)
                 {
-                    speak("accepted",false);
+                    speak("accepted",true);
                     state=State::engaged;
                 }
                 else if (Time::now()-t0>10.0)
                 {
-                    speak("reinforce-engage",false);
+                    speak("reinforce-engage",true);
                     t0=Time::now();
                 }
             }
@@ -373,7 +373,7 @@ class Interaction : public RFModule
             }
             if (state!=State::assess)
             {
-                speak("ouch",false);
+                speak("ouch",true);
                 disengage();
             }
         }
@@ -402,9 +402,9 @@ class Interaction : public RFModule
                 cmd.addString("stop");
                 analyzerPort.write(cmd,rep);
 
-                speak("end",false);
+                speak("end",true);
                 assess("final");
-                speak("greetings",false);
+                speak("greetings",true);
                 disengage();
             }
         }
