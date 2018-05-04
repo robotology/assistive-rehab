@@ -141,10 +141,74 @@ class Scaler : public RFModule
         }
         if(command.get(0).asString() == "run")
         {
-            if(start(nsessions,twarp))
+            SkeletonWaist retrievedSkel, playedSkel;
+            getSkeletonsFromOpc(retrievedSkel,playedSkel);
+
+            if(!retrievedSkel.getTag().empty() && retrievedSkel.getTag()!="#8c"
+                    && retrievedSkel.getTag()!="flexion" && retrievedSkel.getTag()!="abduction")
             {
-                reply.addVocab(Vocab::encode("ok"));
-                hasStarted=true;
+                yInfo() << retrievedSkel.getTag();
+                xyz=retrievedSkel[KeyPointTag::shoulder_center]->getPoint();
+                Vector p1=retrievedSkel.getCoronal();
+                Vector p2=playedSkel.getCoronal();
+                Vector axis=cross(p2,p1);
+                if(norm(axis)>0.0)
+                    axis/=norm(axis);
+                double angle=acos(dot(p2,p1)/norm(p1)*norm(p2));
+                rot[0]=axis[0];
+                rot[1]=axis[1];
+                rot[2]=axis[2];
+                rot[3]=angle;
+
+                Matrix T=axis2dcm(rot);
+                T(0,3)=xyz[0];
+                T(1,3)=xyz[1];
+                T(2,3)=xyz[2];
+
+                //current transformation
+                Matrix currT;
+                Vector curr_rot,xyz_inv(3,0.0);
+                curr_rot.resize(3);
+                if(!isZero(invT))
+                {
+                    currT=multiply(T,invT.transposed());
+                    curr_rot=dcm2axis(currT);
+
+                    Matrix prevRot(4,4);
+                    prevRot.setSubmatrix(invT.submatrix(0,2,0,2).transposed(),0,0);
+                    Vector v(4,0.0);
+                    v[3]=1.0;
+                    prevRot.setSubrow(v,3,3);
+                    prevRot.setSubcol(v,3,3);
+                    xyz_inv=(prevRot*invT).subcol(0,3,3);
+                }
+                else
+                    curr_rot=rot;
+
+                double n=norm(xyz_prev-xyz);
+                xyz_prev=xyz;
+                if(n<pow(10.0,-5.0))
+                    curr_rot.zero();
+
+                xyz+=xyz_inv;
+
+                if(!moveSkeleton(xyz,curr_rot))
+                    yWarning() << "Unable to move";
+
+                double maxpath;
+                getMaxPath(maxpath);
+                double scale=retrievedSkel.getMaxPath()/maxpath;
+                if(!setScale(scale))
+                {
+                    yError() << "Unable to scale";
+                    return false;
+                }
+
+                if(start(nsessions,twarp))
+                {
+                    reply.addVocab(Vocab::encode("ok"));
+                    hasStarted=true;
+                }
             }
         }
         if(command.get(0).asString() == "tag")
@@ -168,165 +232,165 @@ class Scaler : public RFModule
     /****************************************************************/
     bool updateModule()
     {
-        if(opcPort.getOutputCount()>0 && hasStarted)
-        {
-            SkeletonWaist retrievedSkel, playedSkel;
-            getSkeletonsFromOpc(retrievedSkel,playedSkel);
+//        if(opcPort.getOutputCount()>0 && hasStarted)
+//        {
+//            SkeletonWaist retrievedSkel, playedSkel;
+//            getSkeletonsFromOpc(retrievedSkel,playedSkel);
 
-            if(!retrievedSkel.getTag().empty() && retrievedSkel.getTag()!="#8c"
-                    && retrievedSkel.getTag()!="flexion" && retrievedSkel.getTag()!="abduction")
-            {
-                yInfo() << retrievedSkel.getTag();
-                if(retrievedSkel.getTag()==prev_tag || prev_tag.empty())
-                {
-                    xyz=retrievedSkel[KeyPointTag::shoulder_center]->getPoint();
-                    Vector p1=retrievedSkel.getCoronal();
-                    Vector p2=playedSkel.getCoronal();
-                    Vector axis=cross(p2,p1);
-                    if(norm(axis)>0.0)
-                        axis/=norm(axis);
-                    double angle=acos(dot(p2,p1)/norm(p1)*norm(p2));
-                    rot[0]=axis[0];
-                    rot[1]=axis[1];
-                    rot[2]=axis[2];
-                    rot[3]=angle;
+//            if(!retrievedSkel.getTag().empty() && retrievedSkel.getTag()!="#8c"
+//                    && retrievedSkel.getTag()!="flexion" && retrievedSkel.getTag()!="abduction")
+//            {
+//                yInfo() << retrievedSkel.getTag();
+//                if(retrievedSkel.getTag()==prev_tag || prev_tag.empty())
+//                {
+//                    xyz=retrievedSkel[KeyPointTag::shoulder_center]->getPoint();
+//                    Vector p1=retrievedSkel.getCoronal();
+//                    Vector p2=playedSkel.getCoronal();
+//                    Vector axis=cross(p2,p1);
+//                    if(norm(axis)>0.0)
+//                        axis/=norm(axis);
+//                    double angle=acos(dot(p2,p1)/norm(p1)*norm(p2));
+//                    rot[0]=axis[0];
+//                    rot[1]=axis[1];
+//                    rot[2]=axis[2];
+//                    rot[3]=angle;
 
-                    Matrix T=axis2dcm(rot);
-                    T(0,3)=xyz[0];
-                    T(1,3)=xyz[1];
-                    T(2,3)=xyz[2];
+//                    Matrix T=axis2dcm(rot);
+//                    T(0,3)=xyz[0];
+//                    T(1,3)=xyz[1];
+//                    T(2,3)=xyz[2];
 
-                    //current transformation
-                    Matrix currT;
-                    Vector curr_rot,xyz_inv(3,0.0);
-                    curr_rot.resize(3);
-                    if(!isZero(invT))
-                    {
-                        currT=multiply(T,invT.transposed());
-                        curr_rot=dcm2axis(currT);
-
-                        Matrix prevRot(4,4);
-                        prevRot.setSubmatrix(invT.submatrix(0,2,0,2).transposed(),0,0);
-                        Vector v(4,0.0);
-                        v[3]=1.0;
-                        prevRot.setSubrow(v,3,3);
-                        prevRot.setSubcol(v,3,3);
-                        xyz_inv=(prevRot*invT).subcol(0,3,3);
-                    }
-                    else
-                        curr_rot=rot;
-
-                    double n=norm(xyz_prev-xyz);
-                    xyz_prev=xyz;
-                    if(n<pow(10.0,-5.0))
-                        curr_rot.zero();
-
-                    xyz+=xyz_inv;
-
-                    if(!moveSkeleton(xyz,curr_rot))
-                        yWarning() << "Unable to move";
-
-                    invT=SE3inv(T);
-
-//                    //retrieve previous translation
-//                    Matrix prevRot(4,4);
-//                    prevRot.setSubmatrix(invT.submatrix(0,2,0,2).transposed(),0,0);
-//                    Vector v(4,0.0);
-//                    v[3]=1;
-//                    prevRot.setSubrow(v,3,3);
-//                    prevRot.setSubcol(v,3,3);
-//                    xyz_inv=(prevRot*invT).subcol(0,3,3);
-
-//                    Vector rot2;
+//                    //current transformation
+//                    Matrix currT;
+//                    Vector curr_rot,xyz_inv(3,0.0);
+//                    curr_rot.resize(3);
 //                    if(!isZero(invT))
 //                    {
-//                        Matrix rotback=multiply(T.submatrix(0,2,0,2),(invT.submatrix(0,2,0,2)).transposed());
-//                        rot2=dcm2axis(rotback);
+//                        currT=multiply(T,invT.transposed());
+//                        curr_rot=dcm2axis(currT);
+
+//                        Matrix prevRot(4,4);
+//                        prevRot.setSubmatrix(invT.submatrix(0,2,0,2).transposed(),0,0);
+//                        Vector v(4,0.0);
+//                        v[3]=1.0;
+//                        prevRot.setSubrow(v,3,3);
+//                        prevRot.setSubcol(v,3,3);
+//                        xyz_inv=(prevRot*invT).subcol(0,3,3);
 //                    }
 //                    else
-//                        rot2=rot;
+//                        curr_rot=rot;
 
-////                    double n=norm(xyz_prev-xyz);
-////                    xyz_prev=xyz;
-////                    if(n<pow(10.0,-6.0))
-////                        rot2.zero();
+//                    double n=norm(xyz_prev-xyz);
+//                    xyz_prev=xyz;
+//                    if(n<pow(10.0,-5.0))
+//                        curr_rot.zero();
 
-//                    xyz[0]+=xyz_inv[0];
-//                    xyz[1]+=xyz_inv[1];
-//                    xyz[2]+=xyz_inv[2];
+//                    xyz+=xyz_inv;
 
-//                    if(!moveSkeleton(xyz,rot2))
+//                    if(!moveSkeleton(xyz,curr_rot))
 //                        yWarning() << "Unable to move";
 
-//                    //retrieve transformation from unmoved skeleton
 //                    invT=SE3inv(T);
 
-                    double maxpath;
-                    getMaxPath(maxpath);
-                    double scale=retrievedSkel.getMaxPath()/maxpath;
-                    if(!setScale(scale))
-                    {
-                        yError() << "Unable to scale";
-                        return false;
-                    }
+////                    //retrieve previous translation
+////                    Matrix prevRot(4,4);
+////                    prevRot.setSubmatrix(invT.submatrix(0,2,0,2).transposed(),0,0);
+////                    Vector v(4,0.0);
+////                    v[3]=1;
+////                    prevRot.setSubrow(v,3,3);
+////                    prevRot.setSubcol(v,3,3);
+////                    xyz_inv=(prevRot*invT).subcol(0,3,3);
 
-                    prev_tag=retrievedSkel.getTag();
-                }
-                else
-                {
-                    stop();
-                    hide();
+////                    Vector rot2;
+////                    if(!isZero(invT))
+////                    {
+////                        Matrix rotback=multiply(T.submatrix(0,2,0,2),(invT.submatrix(0,2,0,2)).transposed());
+////                        rot2=dcm2axis(rotback);
+////                    }
+////                    else
+////                        rot2=rot;
 
-                    //invert current transformation to go back to the center
-                    xyz.zero();
+//////                    double n=norm(xyz_prev-xyz);
+//////                    xyz_prev=xyz;
+//////                    if(n<pow(10.0,-6.0))
+//////                        rot2.zero();
 
-                    //get axis-angle to align coronal planes
-                    Vector p1(3,0.0);
-                    p1[2]=-1.0;
-                    Vector p2=playedSkel.getCoronal();
-                    Vector axis=cross(p2,p1);
-                    if(norm(axis)>0.0)
-                        axis/=norm(axis);
-                    double angle=acos(dot(p2,p1)/norm(p1)*norm(p2));
-                    rot[0]=axis[0];
-                    rot[1]=axis[1];
-                    rot[2]=axis[2];
-                    rot[3]=angle;
+////                    xyz[0]+=xyz_inv[0];
+////                    xyz[1]+=xyz_inv[1];
+////                    xyz[2]+=xyz_inv[2];
 
-                    Matrix T=axis2dcm(rot);
-                    T(0,3)=xyz[0];
-                    T(1,3)=xyz[1];
-                    T(2,3)=xyz[2];
+////                    if(!moveSkeleton(xyz,rot2))
+////                        yWarning() << "Unable to move";
 
-                    //current transformation
-                    Matrix currT;
-                    Vector curr_rot,xyz_inv(3,0.0);
-                    curr_rot.resize(3);
-                    if(!isZero(invT))
-                    {
-                        currT=multiply(T,invT.transposed());
-                        curr_rot=dcm2axis(currT);
+////                    //retrieve transformation from unmoved skeleton
+////                    invT=SE3inv(T);
 
-                        Matrix prevRot(4,4);
-                        prevRot.setSubmatrix(invT.submatrix(0,2,0,2).transposed(),0,0);
-                        Vector v(4,0.0);
-                        v[3]=1.0;
-                        prevRot.setSubrow(v,3,3);
-                        prevRot.setSubcol(v,3,3);
-                        xyz_inv=(prevRot*invT).subcol(0,3,3);
-                    }
-                    else
-                        curr_rot=rot;
-                    xyz+=xyz_inv;
+//                    double maxpath;
+//                    getMaxPath(maxpath);
+//                    double scale=retrievedSkel.getMaxPath()/maxpath;
+//                    if(!setScale(scale))
+//                    {
+//                        yError() << "Unable to scale";
+//                        return false;
+//                    }
 
-                    if(!moveSkeleton(xyz,curr_rot))
-                        yWarning() << "Unable to move";
+//                    prev_tag=retrievedSkel.getTag();
+//                }
+//                else
+//                {
+//                    stop();
+//                    hide();
 
-                    invT.zero();
+//                    //invert current transformation to go back to the center
+//                    xyz.zero();
 
-                }
-            }
-        }
+//                    //get axis-angle to align coronal planes
+//                    Vector p1(3,0.0);
+//                    p1[2]=-1.0;
+//                    Vector p2=playedSkel.getCoronal();
+//                    Vector axis=cross(p2,p1);
+//                    if(norm(axis)>0.0)
+//                        axis/=norm(axis);
+//                    double angle=acos(dot(p2,p1)/norm(p1)*norm(p2));
+//                    rot[0]=axis[0];
+//                    rot[1]=axis[1];
+//                    rot[2]=axis[2];
+//                    rot[3]=angle;
+
+//                    Matrix T=axis2dcm(rot);
+//                    T(0,3)=xyz[0];
+//                    T(1,3)=xyz[1];
+//                    T(2,3)=xyz[2];
+
+//                    //current transformation
+//                    Matrix currT;
+//                    Vector curr_rot,xyz_inv(3,0.0);
+//                    curr_rot.resize(3);
+//                    if(!isZero(invT))
+//                    {
+//                        currT=multiply(T,invT.transposed());
+//                        curr_rot=dcm2axis(currT);
+
+//                        Matrix prevRot(4,4);
+//                        prevRot.setSubmatrix(invT.submatrix(0,2,0,2).transposed(),0,0);
+//                        Vector v(4,0.0);
+//                        v[3]=1.0;
+//                        prevRot.setSubrow(v,3,3);
+//                        prevRot.setSubcol(v,3,3);
+//                        xyz_inv=(prevRot*invT).subcol(0,3,3);
+//                    }
+//                    else
+//                        curr_rot=rot;
+//                    xyz+=xyz_inv;
+
+//                    if(!moveSkeleton(xyz,curr_rot))
+//                        yWarning() << "Unable to move";
+
+//                    invT.zero();
+
+//                }
+//            }
+//        }
 
         return true;
     }

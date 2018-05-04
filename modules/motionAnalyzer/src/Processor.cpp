@@ -173,7 +173,21 @@ Rom_Processor::Rom_Processor()
 
 Rom_Processor::Rom_Processor(const Metric *rom_)
 {
-    rom = (Rom*)rom_;   
+    rom = (Rom*)rom_;
+
+    if(rom->getTagPlane() == "coronal")
+    {
+        plane_normal = curr_skeleton.getCoronal();
+    }
+    else if(rom->getTagPlane() == "sagittal")
+    {
+        plane_normal = curr_skeleton.getSagittal();
+    }
+    else if(rom->getTagPlane() == "transverse")
+    {
+        plane_normal = curr_skeleton.getSagittal();
+    }
+
 }
 
 //void Rom_Processor::setInitialConf(const SkeletonWaist &skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_)
@@ -182,7 +196,7 @@ Rom_Processor::Rom_Processor(const Metric *rom_)
 //    keypoints2conf = keypoints2conf_;
 //}
 
-double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal, Vector &ref_dir, double &score_exercise)
+double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &ref_dir, double &score_exercise)
 {
     //get reference keypoint from skeleton
     string tag_joint = rom->getTagJoint();
@@ -198,22 +212,24 @@ double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal, Vector &re
         int component_to_check;
         if(rom->getTagPlane() == "coronal")
         {
-            plane_normal = curr_skeleton.getCoronal()-kp_child;
-            plane_normal /= norm(plane_normal);
+//            plane_normal = curr_skeleton.getCoronal()-kp_child;
+//            plane_normal /= norm(plane_normal);
             component_to_check = 2;
         }
         else if(rom->getTagPlane() == "sagittal")
         {
-            plane_normal = curr_skeleton.getSagittal()-kp_child;
-            plane_normal /= norm(plane_normal);
+//            plane_normal = curr_skeleton.getSagittal()-kp_child;
+//            plane_normal /= norm(plane_normal);
             component_to_check = 0;
         }
         else if(rom->getTagPlane() == "transverse")
         {
-            plane_normal = curr_skeleton.getSagittal()-kp_child;
-            plane_normal /= norm(plane_normal);
+//            plane_normal = curr_skeleton.getSagittal()-kp_child;
+//            plane_normal /= norm(plane_normal);
             component_to_check = 1;
         }
+        plane_normal = plane_normal-kp_child;
+        plane_normal /= norm(plane_normal);
 
         ref_dir = rom->getRefDir();
 
@@ -234,6 +250,8 @@ double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal, Vector &re
         double dot_p = dot(v1,ref_dir);
 
         theta = acos(dot_p/(v1_norm*v2_norm));
+
+        plane_normal_=plane_normal;
 
         return ( theta * (180/M_PI) );
     }

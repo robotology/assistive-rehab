@@ -60,13 +60,14 @@ public:
 class Rom_Processor : public Processor
 {
     const Rom* rom;
+    Vector plane_normal;
 
 public:
 
     Rom_Processor();
     Rom_Processor(const Metric *rom_);
 //    void setInitialConf(const SkeletonWaist& skeleton_init_, const map<string, pair<string,double>>& keypoints2conf_) override;
-    double computeMetric(Vector &v1, Vector &plane_normal, Vector &ref_dir, double &score_exercise);
+    double computeMetric(Vector &v1, Vector &plane_normal_, Vector &ref_dir, double &score_exercise);
     string getProcessedMetric() { return rom->getName(); }
 
     static const string motion_type;
