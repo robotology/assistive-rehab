@@ -504,16 +504,19 @@ bool Manager::loadMotionList()
                                 else
                                     yError() << "Could not find reference direction";
 
-                                Vector plane_normal;
-                                plane_normal.resize(3);
-                                if(Bottle *bPlane = bMotion.find("plane_normal").asList())
-                                {
-                                    plane_normal[0] = bPlane->get(0).asDouble();
-                                    plane_normal[1] = bPlane->get(1).asDouble();
-                                    plane_normal[2] = bPlane->get(2).asDouble();
-                                }
-                                else
-                                    yError() << "Could not find reference plane";
+                                string tag_plane = bMotion.find("tag_plane").asString();
+                                double range_plane = bMotion.find("range_plane").asDouble();
+
+//                                Vector plane_normal;
+//                                plane_normal.resize(3);
+//                                if(Bottle *bPlane = bMotion.find("plane_normal").asList())
+//                                {
+//                                    plane_normal[0] = bPlane->get(0).asDouble();
+//                                    plane_normal[1] = bPlane->get(1).asDouble();
+//                                    plane_normal[2] = bPlane->get(2).asDouble();
+//                                }
+//                                else
+//                                    yError() << "Could not find reference plane";
 
 //                                metrics.push_back(newMetric);
 
@@ -652,8 +655,8 @@ bool Manager::loadMotionList()
                                 else
                                     yError() << "Could not load ankle right configuration";
 
-                                metric_repertoire = new Rom(curr_tag, motion_type, tag_joint,
-                                                    ref_dir, plane_normal, min, max, duration, keypoints2conf);
+                                metric_repertoire = new Rom(curr_tag, motion_type, tag_joint, ref_dir, tag_plane,
+                                                            range_plane, min, max, duration, keypoints2conf);
                             }
 
                             //add the current metric to the repertoire
@@ -820,18 +823,28 @@ double Manager::getQuality()
 
 //    double score_dynamic=fabs(result_der)/(metric->getMax()-metric->getMin());
     double score_dynamic=0.0;
-    if(fabs(result_der)>30.0 && result>metric->getMin() && result<metric->getMax())
-        score_dynamic=0.7;
+    if(fabs(result_der)>30.0)
+        score_dynamic=score_exercise;
+
+    if(score_dynamic>0.6 && result>metric->getMin() && result<metric->getMax())
+        score_dynamic+=0.1;
+
+//    if(fabs(result_der)>30.0 && result>metric->getMin() && result<metric->getMax())
+//        score_dynamic=0.7;
 
     yInfo() << score_static << score_dynamic << dev;
     cout << "\n";
 
     double score;
-    if(score_dynamic<0.6 && score_static>0.6)
+    if(score_dynamic<0.3 &&
+            ( score_static>0.6 || (score_static>0.3 && score_static<0.6) || score_static<0.3) )
         score=LOW;
-    else if(score_dynamic<0.6 && score_static>0.3 && score_static<0.6)
-        score=LOW;
-    else if(score_dynamic<0.6 && score_static<0.3)
+
+    else if( (score_dynamic>0.3 && score_dynamic<0.6) && score_static>0.6)
+        score=MEDIUM;
+    else if( (score_dynamic>0.3 && score_dynamic<0.6) && (score_static>0.3 && score_static<0.6) )
+        score=MEDIUM;
+    else if( (score_dynamic>0.3 && score_dynamic<0.6) && score_static<0.3)
         score=LOW;
 
     else if(score_dynamic>0.6 && score_static>0.6)
@@ -840,6 +853,20 @@ double Manager::getQuality()
         score=MEDIUM;
     else if(score_dynamic>0.6 && score_static<0.3)
         score=LOW;
+
+//    if(score_dynamic<0.6 && score_static>0.6)
+//        score=LOW;
+//    else if(score_dynamic<0.6 && score_static>0.3 && score_static<0.6)
+//        score=LOW;
+//    else if(score_dynamic<0.6 && score_static<0.3)
+//        score=LOW;
+
+//    else if(score_dynamic>0.6 && score_static>0.6)
+//        score=HIGH;
+//    else if(score_dynamic>0.6 && score_static>0.3 && score_static<0.6)
+//        score=MEDIUM;
+//    else if(score_dynamic>0.6 && score_static<0.3)
+//        score=LOW;
 
     return score;
 }
@@ -903,6 +930,7 @@ bool Manager::stop()
         {
             time_samples.clear();
             all_keypoints.clear();
+            all_planes.clear();
         }
         else
             yError() << "Could not save to file";
@@ -1343,7 +1371,8 @@ bool Manager::updateModule()
                 }
 
                 Vector v1,plane_normal,ref_dir;
-                result = processor->computeMetric(v1,plane_normal,ref_dir);
+                result = processor->computeMetric(v1,plane_normal,ref_dir,score_exercise);
+                all_planes.push_back(plane_normal);
 
                 log_file << yarp::os::Time::now()-tstart << " " << v1[0] << " " << v1[1] << " " << v1[2] << " "
                          << plane_normal[0] << " " << plane_normal[1] << " " << plane_normal[2]
@@ -1478,10 +1507,15 @@ bool Manager::writeStructToMat(const string& name, const Metric& metric, mat_t *
         field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_dir,ref_met.data(),MAT_F_DONT_COPY_DATA);
         Mat_VarSetStructFieldByName(matvar, fields[2], 0, field);
 
-        size_t dims_field_plane[2] = {1,3};
-        Vector plane_met = metric.getPlane();
-        field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_plane,plane_met.data(),MAT_F_DONT_COPY_DATA);
+        size_t nPlanes = all_planes.size();
+        size_t dims_field_plane[2] = {nPlanes,3};
+        field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_plane,all_planes.data(),MAT_F_DONT_COPY_DATA);
         Mat_VarSetStructFieldByName(matvar, fields[3], 0, field);
+
+//        size_t dims_field_plane[2] = {1,3};
+//        Vector plane_met = plane_normal;
+//        field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_plane,plane_met.data(),MAT_F_DONT_COPY_DATA);
+//        Mat_VarSetStructFieldByName(matvar, fields[3], 0, field);
 
         size_t dims_field_max[2] = {1,1};
         double max_val = metric.getMax();

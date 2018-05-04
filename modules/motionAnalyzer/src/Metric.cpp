@@ -33,14 +33,15 @@ Rom::Rom()
 }
 
 Rom::Rom(const string &name_, const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
-         const Vector &plane_normal_, const double &min_, const double &max_, const double &duration_,
-         const map<string, pair<string,double>> &keypoints2conf_)
+         const string &tag_plane_, const double &range_plane_, const double &min_, const double &max_,
+         const double &duration_, const map<string, pair<string,double>> &keypoints2conf_)
 {
     name = name_; //"ROM";
     motion_type = motion_type_;
     tag_joint = tag_joint_;
     ref_dir = ref_dir_;
-    plane_normal = plane_normal_;
+    tag_plane = tag_plane_;
+    range_plane = range_plane_;
     min = min_;
     max = max_;
     duration = duration_;

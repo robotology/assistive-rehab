@@ -55,6 +55,7 @@ class Manager : public RFModule,
     vector<pair<string,Vector>> curr_keypoints;
     vector< vector <pair<string,Vector>> > all_keypoints;
     vector<double> time_samples;
+    vector<Vector > all_planes;
     SkeletonWaist* skeletonInit;
     vector<SkeletonWaist*> skeletonsInit;
 
@@ -119,6 +120,7 @@ class Manager : public RFModule,
     Vector result_time;
     double result_der;
 
+    double score_exercise;
 
 //    Metric* metric;
 //    Processor* processor;
