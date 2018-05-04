@@ -57,6 +57,7 @@ class Interaction : public RFModule
     RpcClient analyzerPort;
     BufferedPort<Bottle> speechStreamPort;
     RpcClient speechRpcPort;
+    bool interrupting;
 
     /****************************************************************/
     bool speak(const string &key, const bool wait,
@@ -105,7 +106,7 @@ class Interaction : public RFModule
                     break;
                 }
             }
-            else
+            if (interrupting)
             {
                 break;
             }
@@ -230,6 +231,7 @@ class Interaction : public RFModule
 
         Rand::init();
         state=State::idle;
+        interrupting=false;
         t0=Time::now();
         return true;
     }
@@ -367,18 +369,10 @@ class Interaction : public RFModule
                                     {
                                         if (rep.get(0).asVocab()==ok)
                                         {
-                                            cmd.clear();
-                                            cmd.addString("stop");
-                                            if (attentionPort.write(cmd,rep))
-                                            {
-                                                if (rep.get(0).asVocab()==ok)
-                                                {
-                                                    state=State::assess;
-                                                    assess_values.clear();
-                                                    t0=Time::now();
-                                                    t1=t0;
-                                                }
-                                            }
+                                            state=State::assess;
+                                            assess_values.clear();
+                                            t0=Time::now();
+                                            t1=t0;
                                         }
                                     }
                                 }
@@ -431,6 +425,7 @@ class Interaction : public RFModule
     /****************************************************************/
     bool interruptModule() override
     {
+        interrupting=true;
         attentionPort.interrupt();
         analyzerPort.interrupt();
         speechRpcPort.interrupt();
