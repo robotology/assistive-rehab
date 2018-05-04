@@ -104,7 +104,7 @@ class Scaler : public RFModule
                 size_t idx=file.find(".");
                 setTag(file.substr(0,idx));
 
-                opacity=0.7;
+                opacity=0.5;
                 setOpacity(opacity);
 
                 xyz.resize(3);
@@ -582,9 +582,12 @@ class Scaler : public RFModule
                 yInfo() << "Stopping";
                 prev_tag="";
 
-                Vector camerapos(3,0.0),focalpoint(3,0.0);
-                camerapos[2]=-4.0;
-                rotateCam(camerapos,focalpoint);
+                if(file.find("flexion")!=string::npos)
+                {
+                    Vector camerapos(3,0.0),focalpoint(3,0.0);
+                    camerapos[2]=-4.0;
+                    rotateCam(camerapos,focalpoint);
+                }
 
                 return true;
             }
