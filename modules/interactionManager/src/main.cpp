@@ -18,9 +18,12 @@
 #include <yarp/os/all.h>
 #include <yarp/math/Rand.h>
 
+#include "AssistiveRehab/skeleton.h"
+
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::math;
+using namespace assistive_rehab;
 
 
 /****************************************************************/
@@ -284,6 +287,7 @@ class Interaction : public RFModule
                 Bottle cmd,rep;
                 cmd.addString("look");
                 cmd.addString(tag);
+                cmd.addString(KeyPointTag::shoulder_center);
                 if (attentionPort.write(cmd,rep))
                 {
                     vector<SpeechParam> p;
