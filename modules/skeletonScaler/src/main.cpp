@@ -104,7 +104,7 @@ class Scaler : public RFModule
                 size_t idx=file.find(".");
                 setTag(file.substr(0,idx));
 
-                opacity=0.5;
+                opacity=0.3;
                 setOpacity(opacity);
 
                 xyz.resize(3);
@@ -135,14 +135,14 @@ class Scaler : public RFModule
                 if(!moveSkeleton(xyz,rot))
                     yWarning() << "Unable to move";
 
-                Matrix T=axis2dcm(rot);
+/*                Matrix T=axis2dcm(rot);
                 T(0,3)=xyz[0];
                 T(1,3)=xyz[1];
                 T(2,3)=xyz[2];
                 invT=SE3inv(T);
-                
-                //invT.resize(4,4);
-                //invT.zero();
+*/                
+                invT.resize(4,4);
+                invT.zero();
 
             }
         }
@@ -618,10 +618,10 @@ class Scaler : public RFModule
 
             xyz+=xyz_inv;
 
-            if(!moveSkeleton(xyz,curr_rot))
+            if(!moveSkeleton(xyz,rot))
                 yWarning() << "Unable to move";
 
-            double maxpath;
+/*            double maxpath;
             getMaxPath(maxpath);
             double scale=retrievedSkel.getMaxPath()/maxpath;
             if(!setScale(scale))
@@ -629,6 +629,7 @@ class Scaler : public RFModule
                 yError() << "Unable to scale";
                 return false;
             }
+*/
         }
 
         Bottle cmd,rep;
