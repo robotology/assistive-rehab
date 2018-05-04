@@ -105,6 +105,10 @@ class Interaction : public RFModule
                     break;
                 }
             }
+            else
+            {
+                break;
+            }
         }
         return (it!=end(speak_map));
     }
@@ -363,10 +367,18 @@ class Interaction : public RFModule
                                     {
                                         if (rep.get(0).asVocab()==ok)
                                         {
-                                            state=State::assess;
-                                            assess_values.clear();
-                                            t0=Time::now();
-                                            t1=t0;
+                                            cmd.clear();
+                                            cmd.addString("stop");
+                                            if (attentionPort.write(cmd,rep))
+                                            {
+                                                if (rep.get(0).asVocab()==ok)
+                                                {
+                                                    state=State::assess;
+                                                    assess_values.clear();
+                                                    t0=Time::now();
+                                                    t1=t0;
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -413,6 +425,15 @@ class Interaction : public RFModule
             }
         }
 
+        return true;
+    }
+
+    /****************************************************************/
+    bool interruptModule() override
+    {
+        attentionPort.interrupt();
+        analyzerPort.interrupt();
+        speechRpcPort.interrupt();
         return true;
     }
 
