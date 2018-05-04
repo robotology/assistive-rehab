@@ -41,7 +41,7 @@ class Interaction : public RFModule
     const int ok=Vocab::encode("ok");
     const int fail=Vocab::encode("fail");
 
-    enum class State { seek, follow, engaged, assess } state;
+    enum class State { idle, seek, follow, engaged, assess } state;
     double period;
     string tag;
     string metric;
@@ -154,7 +154,7 @@ class Interaction : public RFModule
     /****************************************************************/
     bool disengage()
     {
-        state=State::seek;
+        state=State::idle;
         Bottle cmd,rep;
         cmd.addString("set_auto");
         if (attentionPort.write(cmd,rep))
@@ -164,6 +164,7 @@ class Interaction : public RFModule
                 return true;
             }
         }
+        t0=Time::now();
         return false;
     }
 
@@ -220,8 +221,9 @@ class Interaction : public RFModule
         speechStreamPort.open("/interactionManager/speech:o");
         speechRpcPort.open("/interactionManager/speech:rpc");
 
-        state=State::seek;
         Rand::init();
+        state=State::idle;
+        t0=Time::now();
         return true;
     }
 
@@ -263,6 +265,14 @@ class Interaction : public RFModule
                 speak("disengaged",false);
                 disengage();
                 return true;
+            }
+        }
+
+        if (state==State::idle)
+        {
+            if (Time::now()-t0>10.0)
+            {
+                state=State::seek;
             }
         }
 
