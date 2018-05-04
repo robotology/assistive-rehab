@@ -90,7 +90,7 @@ class Interaction : public RFModule
         payload.addString(value_ext);
         speechStreamPort.writeStrict();
 
-        while (wait)
+        while (wait && (speechRpcPort.getOutputCount()>0))
         {
             Time::delay(getPeriod());
             Bottle cmd,rep;
