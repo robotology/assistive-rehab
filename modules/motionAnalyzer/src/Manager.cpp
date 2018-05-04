@@ -1220,7 +1220,7 @@ void Manager::getSkeleton()
                                         if (prop.check("tag") && tag==skel_tag)
                                         {
                                             Skeleton* skeleton = skeleton_factory(prop);
-                                            skeletonIn.update_fromstd(skeleton->toProperty()) ;
+                                            skeletonIn.update_fromstd(skeleton->toProperty());
                                             all_keypoints.push_back(skeletonIn.get_unordered());
                                             updated=true;
 
@@ -1508,9 +1508,20 @@ bool Manager::writeStructToMat(const string& name, const Metric& metric, mat_t *
         Mat_VarSetStructFieldByName(matvar, fields[2], 0, field);
 
         size_t nPlanes = all_planes.size();
+        vector<double> field_vector;
+        field_vector.resize(3*nPlanes);
         size_t dims_field_plane[2] = {nPlanes,3};
-        field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_plane,all_planes.data(),MAT_F_DONT_COPY_DATA);
+        for(size_t i=0; i<nPlanes; i++)
+        {
+            field_vector[i] = all_planes[i][0];
+            field_vector[i+nPlanes] = all_planes[i][1];
+            field_vector[i+2*nPlanes] = all_planes[i][2];
+        }
+        field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_plane,field_vector.data(),MAT_F_GLOBAL);
         Mat_VarSetStructFieldByName(matvar, fields[3], 0, field);
+
+//        field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_plane,all_planes.data(),MAT_F_GLOBAL);
+//        Mat_VarSetStructFieldByName(matvar, fields[3], 0, field);
 
 //        size_t dims_field_plane[2] = {1,3};
 //        Vector plane_met = plane_normal;
