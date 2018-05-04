@@ -13,6 +13,7 @@
 #ifndef __MANAGER_H__
 #define __MANAGER_H__
 
+#include <fstream>
 #include <list>
 
 #include <yarp/os/all.h>
@@ -40,6 +41,8 @@ class Manager : public RFModule,
     RpcServer rpcPort;
     RpcClient scalerPort;
     BufferedPort<Bottle> scopePort;
+
+    ofstream log_file;
 
     ResourceFinder *rf;
 

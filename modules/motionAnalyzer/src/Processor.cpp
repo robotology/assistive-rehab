@@ -182,7 +182,7 @@ Rom_Processor::Rom_Processor(const Metric *rom_)
 //    keypoints2conf = keypoints2conf_;
 //}
 
-double Rom_Processor::computeMetric()
+double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal, Vector &ref_dir)
 {
     //get reference keypoint from skeleton
     string tag_joint = rom->getTagJoint();
@@ -190,22 +190,32 @@ double Rom_Processor::computeMetric()
 //    cout << "compute metric for " << tag_joint.c_str() << endl;
     Vector kp_ref = curr_skeleton[tag_joint]->getPoint();
 
-    Vector v1;
+//    Vector v1;
     double theta;
     if(curr_skeleton[tag_joint]->getNumChild())
     {
         Vector kp_child = curr_skeleton[tag_joint]->getChild(0)->getPoint();
 
-        Vector plane_normal = rom->getPlane();
-        v1 = kp_child-kp_ref;
-        double dist = dot(v1, plane_normal);
-        v1 = v1-dist*plane_normal;
+        plane_normal = rom->getPlane(); //curr_skeleton.getCoronal();
+        ref_dir = rom->getRefDir();
 
-        Vector ref_dir = rom->getRefDir();
+//        yInfo() << "plane" << plane_normal[0] << plane_normal[1] << plane_normal[2];
+        v1 = kp_child-kp_ref;
+
+        double dist = dot(v1,plane_normal);
+//        yInfo() << "v1 before" << v1[0] << v1[1] << v1[2] << dist;
+//        Vector test1 = dist*plane_normal;
+//        yInfo() << "test" << test1[0] << test1[1] << test1[2];
+
+        v1 = v1-dist*plane_normal;
+//        yInfo() << "v1" << v1[0] << v1[1] << v1[2];
+        v1/=norm(v1);
+
+//        yInfo() << "ref" << ref_dir[0] << ref_dir[1] << ref_dir[2];
 
         double v1_norm = norm(v1);
         double v2_norm = norm(ref_dir);
-        double dot_p = dot(v1, ref_dir);
+        double dot_p = dot(v1,ref_dir);
 
         //        double minval = rom->getMinVal() * (M_PI/180);
         //        double maxval = rom->getMaxVal() * (M_PI/180);
@@ -213,6 +223,7 @@ double Rom_Processor::computeMetric()
         //        double scale = (maxval-minval)/range;
         //        theta = scale*acos(dot_p/(v1_norm*v2_norm))+minval;
         theta = acos(dot_p/(v1_norm*v2_norm));
+//        yInfo() << "v1" << v1[0] << v1[1] << v1[2] << dot_p << theta * (180/M_PI);
 
         return ( theta * (180/M_PI) );
     }

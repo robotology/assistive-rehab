@@ -899,11 +899,18 @@ bool Manager::stop()
             yError() << "Error creating MAT file";
 
         yInfo() << "Writing to file";
-        if(!writeKeypointsToFile(matfp))
+        if(writeKeypointsToFile(matfp))
+        {
+            time_samples.clear();
+            all_keypoints.clear();
+        }
+        else
             yError() << "Could not save to file";
 
         yInfo() << "Keypoints saved to file" << filename_report.c_str();
         Mat_Close(matfp);
+
+        nsession++;
 
         return true;
     }
@@ -1249,6 +1256,8 @@ bool Manager::configure(ResourceFinder &rf)
 
     skel_tag="";
 
+    log_file.open("logfile.txt");
+
     return true;
 }
 
@@ -1270,6 +1279,8 @@ bool Manager::close()
 //    yInfo() << "Writing to file";
 //    if(writeKeypointsToFile())
 //        yInfo() << "Keypoints saved to file" << filename_report.c_str();
+
+    log_file.close();
 
     delete metric_repertoire;
     delete metric;
@@ -1328,10 +1339,16 @@ bool Manager::updateModule()
                 processor->update(skeletonIn);
                 if(processor->isDeviatingFromIntialPose())
                 {
-//                    yWarning() << "Deviating from initial pose\n";
+                    //                    yWarning() << "Deviating from initial pose\n";
                 }
 
-                result = processor->computeMetric();
+                Vector v1,plane_normal,ref_dir;
+                result = processor->computeMetric(v1,plane_normal,ref_dir);
+
+                log_file << yarp::os::Time::now()-tstart << " " << v1[0] << " " << v1[1] << " " << v1[2] << " "
+                         << plane_normal[0] << " " << plane_normal[1] << " " << plane_normal[2]
+                         << " " << ref_dir[0] << " " << ref_dir[1] << " " << ref_dir[2] << "\n";
+
                 result_time.push_back(result);
                 computeMetricDerivative();
 
@@ -1339,38 +1356,37 @@ bool Manager::updateModule()
                 Bottle &scopebottleout = scopePort.prepare();
                 scopebottleout.clear();
                 scopebottleout.addDouble(result);
-                scopebottleout.addDouble(result_der);
                 scopebottleout.addDouble(metric->getMin());
                 scopebottleout.addDouble(metric->getMax());
                 scopePort.write();
 
-//                tend_session = Time::now()-tstart;
-//                if(tend_session-tstart_session > metric->getDuration())
-//                    finishedSession = true;
+                //                tend_session = Time::now()-tstart;
+                //                if(tend_session-tstart_session > metric->getDuration())
+                //                    finishedSession = true;
 
-//                if(finishedSession)
-//                {
-//                    // Use MATIO to write the results in a .mat file
-//                    string filename_report = out_folder + "/user-" + skeletonIn.getTag() + "-" + metric->getMotionType() + "-" + to_string(nsession) + ".mat";
-//                    mat_t *matfp = Mat_CreateVer(filename_report.c_str(),NULL,MAT_FT_MAT73);
-//                    if (matfp == NULL)
-//                        yError() << "Error creating MAT file";
+                //                if(finishedSession)
+                //                {
+                //                    // Use MATIO to write the results in a .mat file
+                //                    string filename_report = out_folder + "/user-" + skeletonIn.getTag() + "-" + metric->getMotionType() + "-" + to_string(nsession) + ".mat";
+                //                    mat_t *matfp = Mat_CreateVer(filename_report.c_str(),NULL,MAT_FT_MAT73);
+                //                    if (matfp == NULL)
+                //                        yError() << "Error creating MAT file";
 
-//                    yInfo() << "Writing to file";
-//                    if(writeKeypointsToFile(matfp))
-//                    {
-//                        time_samples.clear();
-//                        all_keypoints.clear();
-//                    }
+                //                    yInfo() << "Writing to file";
+                //                    if(writeKeypointsToFile(matfp))
+                //                    {
+                //                        time_samples.clear();
+                //                        all_keypoints.clear();
+                //                    }
 
-//                    finishedSession = false;
-//                    tstart_session = tend_session;
+                //                    finishedSession = false;
+                //                    tstart_session = tend_session;
 
-//                    nsession++;
+                //                    nsession++;
 
-//                    yInfo() << "Keypoints saved to file" << filename_report.c_str();
-//                    Mat_Close(matfp);
-//                }
+                //                    yInfo() << "Keypoints saved to file" << filename_report.c_str();
+                //                    Mat_Close(matfp);
+                //                }
             }
         }
         else

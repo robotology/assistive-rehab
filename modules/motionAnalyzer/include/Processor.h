@@ -52,7 +52,7 @@ public:
     double isDeviatingFromIntialPose(const KeyPoint &keypoint, const KeyPoint &keypoint_init);
     double getDeviation() { return deviation; }
     bool isOutOfSphere(const KeyPoint& keypoint, const KeyPoint& keypoint_init);
-    virtual double computeMetric() { return 0.0; }
+    virtual double computeMetric(Vector &v1, Vector &plane_normal, Vector &ref_dir) { return 0.0; }
     virtual string getProcessedMetric() = 0;
 
 };
@@ -66,7 +66,7 @@ public:
     Rom_Processor();
     Rom_Processor(const Metric *rom_);
 //    void setInitialConf(const SkeletonWaist& skeleton_init_, const map<string, pair<string,double>>& keypoints2conf_) override;
-    double computeMetric();
+    double computeMetric(Vector &v1, Vector &plane_normal, Vector &ref_dir);
     string getProcessedMetric() { return rom->getName(); }
 
     static const string motion_type;

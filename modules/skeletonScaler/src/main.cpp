@@ -129,6 +129,7 @@ class Scaler : public RFModule
                     xyz[2]=-1.75;
                     Vector camerapos(3,0.0),focalpoint(3,0.0);
                     camerapos[0]=4.0;
+                    focalpoint[2]=1.0;
                     rotateCam(camerapos,focalpoint);
                 }
                 if(!moveSkeleton(xyz,rot))
@@ -447,14 +448,15 @@ class Scaler : public RFModule
     {
         Bottle cmd,rep;
         cmd.addString("set_camera");
-        Bottle &content = cmd.addList();
-        content.addString("position");
-        Bottle &position = content.addList();
+        Bottle &content1 = cmd.addList();
+        content1.addString("position");
+        Bottle &position = content1.addList();
         position.addDouble(camerapos[0]);
         position.addDouble(camerapos[1]);
         position.addDouble(camerapos[2]);
-        content.addString("focalpoint");
-        Bottle &fp = content.addList();
+        Bottle &content2 = cmd.addList();
+        content2.addString("focalpoint");
+        Bottle &fp = content2.addList();
         fp.addDouble(focalpoint[0]);
         fp.addDouble(focalpoint[1]);
         fp.addDouble(focalpoint[2]);
