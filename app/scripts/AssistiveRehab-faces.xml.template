@@ -89,7 +89,7 @@
     <module>
        <name>motionAnalyzer</name>
        <parameters></parameters>
-       <node>r1-display-linux</node>
+       <node>r1-console-linux</node>
     </module>
 
     <module>
