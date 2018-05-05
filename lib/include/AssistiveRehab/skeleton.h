@@ -111,8 +111,6 @@ protected:
                       const double s);
     double helper_getmaxpath(KeyPoint* k, std::vector<bool> &visited) const;
 
-    virtual bool update_planes() = 0;
-
 public:
     Skeleton();
     Skeleton(const Skeleton&) = delete;
@@ -146,6 +144,7 @@ public:
     virtual void update(const std::vector<yarp::sig::Vector> &ordered);
     virtual void update(const std::vector<std::pair<std::string,yarp::sig::Vector>> &unordered);
     virtual void update(const yarp::os::Property &prop);
+    virtual bool update_planes() = 0;
 
     virtual std::vector<yarp::sig::Vector> get_ordered() const;
     virtual std::vector<std::pair<std::string,yarp::sig::Vector>> get_unordered() const;
@@ -157,25 +156,23 @@ public:
 
 class SkeletonStd : public Skeleton
 {
-protected:
-    bool update_planes() override;
-
 public:
     SkeletonStd();
+    bool update_planes() override;
 };
 
 class SkeletonWaist : public SkeletonStd
 {
 protected:
     unsigned int waist_pos;
-    bool update_planes() override;
-
+    
 public:
     SkeletonWaist();
 
     virtual void update_fromstd(const std::vector<yarp::sig::Vector> &ordered);
     virtual void update_fromstd(const std::vector<std::pair<std::string, yarp::sig::Vector>> &unordered);
     virtual void update_fromstd(const yarp::os::Property &prop);
+    bool update_planes() override;
 };
 
 Skeleton *skeleton_factory(const yarp::os::Property &prop);
