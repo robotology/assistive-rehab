@@ -42,8 +42,8 @@ class Scaler : public RFModule
     bool hasStarted;
 
     Matrix invT;
-    Vector rot;
-    Vector xyz;
+//    Vector rot;
+//    Vector xyz;
     Vector xyz_prev;
 
     string sel_tag;
@@ -107,33 +107,33 @@ class Scaler : public RFModule
                 opacity=0.3;
                 setOpacity(opacity);
 
-                xyz.resize(3);
-                xyz.zero();
-                xyz_prev.resize(3);
-                xyz_prev.zero();
-                rot.resize(4);
-                rot.zero();
+//                xyz.resize(3);
+//                xyz.zero();
+//                xyz_prev.resize(3);
+//                xyz_prev.zero();
+//                rot.resize(4);
+//                rot.zero();
                 if(file.find("abduction")!=string::npos)
                 {
-                    xyz[0]=-0.12;
-                    xyz[1]=0.24;
-                    xyz[2]=-1.75;
+//                    xyz[0]=-0.12;
+//                    xyz[1]=0.24;
+//                    xyz[2]=-1.75;
                     Vector camerapos(3,0.0),focalpoint(3,0.0);
                     camerapos[2]=-2.0;
                     rotateCam(camerapos,focalpoint);
                 }
                 if(file.find("flexion")!=string::npos)
                 {
-                    xyz[0]=-0.12;
-                    xyz[1]=0.24;
-                    xyz[2]=-1.75;
+//                    xyz[0]=-0.12;
+//                    xyz[1]=0.24;
+//                    xyz[2]=-1.75;
                     Vector camerapos(3,0.0),focalpoint(3,0.0);
                     camerapos[0]=4.0;
                     focalpoint[2]=1.0;
                     rotateCam(camerapos,focalpoint);
                 }
-                if(!moveSkeleton(xyz,rot))
-                    yWarning() << "Unable to move";
+//                if(!moveSkeleton(xyz,rot))
+//                    yWarning() << "Unable to move";
 
 /*                Matrix T=axis2dcm(rot);
                 T(0,3)=xyz[0];
@@ -141,8 +141,8 @@ class Scaler : public RFModule
                 T(2,3)=xyz[2];
                 invT=SE3inv(T);
 */                
-                invT.resize(4,4);
-                invT.zero();
+//                invT.resize(4,4);
+//                invT.zero();
 
             }
         }
@@ -553,7 +553,17 @@ class Scaler : public RFModule
         if(cmdPort.write(cmd,rep))
         {
             if(rep.get(0).asVocab()==Vocab::encode("ok"))
-                return true;
+            {
+                Bottle cmd2,rep2;
+                cmd2.addString("put_in_opc");
+                cmd2.addDouble(0.0);
+                yInfo() << cmd2.toString();
+                if(cmdPort.write(cmd2,rep2))
+                {
+                    if(rep2.get(0).asVocab()==Vocab::encode("ok"))
+                        return true;
+                }
+            }
         }
 
         return false;
@@ -567,12 +577,39 @@ class Scaler : public RFModule
         getSkeletonsFromOpc(retrievedSkel,playedSkel);
         yInfo() << retrievedSkel.getTag() << playedSkel.getTag();
 
-
         if(!retrievedSkel.getTag().empty() && retrievedSkel.getTag()!="#8c"
                 && retrievedSkel.getTag()!="flexion" && retrievedSkel.getTag()!="abduction")
         {
-            xyz=retrievedSkel[KeyPointTag::shoulder_center]->getPoint();
-            Vector xyz_inv=invT.subcol(0,3,3);
+            Vector p1=retrievedSkel[KeyPointTag::shoulder_center]->getPoint();
+            Vector c1=retrievedSkel.getCoronal();
+            Vector t1=retrievedSkel.getTransverse();
+            Vector s1=retrievedSkel.getSagittal();
+            Matrix Temp1 =zeros(4,4);
+            Temp1.setSubcol(c1,0,0);
+            Temp1.setSubcol(s1,0,1);
+            Temp1.setSubcol(t1,0,2);
+            Temp1.setSubcol(p1,0,3);
+            Temp1(3,3)=1.0;
+
+            Vector p2=playedSkel[KeyPointTag::shoulder_center]->getPoint();
+            Vector c2=playedSkel.getCoronal();
+            Vector t2=playedSkel.getTransverse();
+            Vector s2=playedSkel.getSagittal();
+            Matrix Temp2 =zeros(4,4);
+            Temp2.setSubcol(c2,0,0);
+            Temp2.setSubcol(s2,0,1);
+            Temp2.setSubcol(t2,0,2);
+            Temp2.setSubcol(p2,0,3);
+            Temp2(3,3)=1.0;
+
+            Matrix T = Temp1*SE3inv(Temp2);
+            Vector tr = T.getCol(3).subVector(0,2);
+            Vector rot = dcm2axis(T);
+
+            if(!moveSkeleton(tr,rot))
+                yWarning() << "Unable to move";
+
+////            Vector xyz_inv=invT.subcol(0,3,3);
 //            Vector p1=retrievedSkel.getCoronal();
 //            Vector p2=playedSkel.getCoronal();
 //            Vector axis=cross(p2,p1);
@@ -583,13 +620,10 @@ class Scaler : public RFModule
 //            rot[1]=axis[1];
 //            rot[2]=axis[2];
 //            rot[3]=angle;
-           
-            Matrix T=axis2dcm(rot);
-            T(0,3)=xyz[0];
-            T(1,3)=xyz[1];
-            T(2,3)=xyz[2];
-                       
-            
+//            Matrix T=axis2dcm(rot);
+//            T(0,3)=xyz[0];
+//            T(1,3)=xyz[1];
+//            T(2,3)=xyz[2];
 
 //            //current transformation
 //            Matrix currT;
@@ -616,12 +650,10 @@ class Scaler : public RFModule
 //            if(n<pow(10.0,-5.0))
 //                curr_rot.zero();
 
-            xyz+=xyz_inv;
+//            xyz+=xyz_inv;
 
-            if(!moveSkeleton(xyz,rot))
-                yWarning() << "Unable to move";
 
-/*            double maxpath;
+            double maxpath;
             getMaxPath(maxpath);
             double scale=retrievedSkel.getMaxPath()/maxpath;
             if(!setScale(scale))
@@ -629,7 +661,7 @@ class Scaler : public RFModule
                 yError() << "Unable to scale";
                 return false;
             }
-*/
+
         }
 
         Bottle cmd,rep;
@@ -649,7 +681,7 @@ class Scaler : public RFModule
     /****************************************************************/
     bool stop()
     {
-        xyz.zero();
+//        xyz.zero();
         Bottle cmd,rep;
         cmd.addString("stop");
         if(cmdPort.write(cmd,rep))
