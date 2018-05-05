@@ -359,16 +359,16 @@ class Interaction : public RFModule
                                     p.push_back(SpeechParam(T));
                                     speak("duration",true,p);
 
-                                    speak("ready",true);
-                                    Time::delay(1.0);
-                                    speak("start",true);
-
                                     cmd.clear();
                                     cmd.addString("start");
                                     if (analyzerPort.write(cmd,rep))
                                     {
                                         if (rep.get(0).asVocab()==ok)
                                         {
+                                            speak("ready",true);
+                                            Time::delay(1.0);
+                                            speak("start",true);
+
                                             state=State::assess;
                                             assess_values.clear();
                                             t0=Time::now();
