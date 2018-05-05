@@ -47,7 +47,6 @@ class Interaction : public RFModule
     enum class State { idle, seek, follow, engaged, assess } state;
     double period;
     string tag;
-    string metric;
     double T,t0,t1;
 
     unordered_map<string,string> speak_map;
@@ -336,7 +335,7 @@ class Interaction : public RFModule
                 Bottle &metrics=*rep.get(0).asList();
                 if (metrics.size()>0)
                 {
-                    metric=metrics.get((int)(Rand::scalar(0,1)*metrics.size())).asString();
+                    string metric=metrics.get((int)(Rand::scalar(0,1)*metrics.size())).asString();
                     yInfo()<<"Selected metric:"<<metric;
 
                     cmd.clear();
