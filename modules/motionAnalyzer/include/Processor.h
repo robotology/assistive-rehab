@@ -40,12 +40,16 @@ protected:
     SkeletonWaist skeleton_init;
     map<string, pair<string,double>> keypoints2conf;
     SkeletonWaist curr_skeleton;
+    Matrix inv_reference_system;
+    Vector plane_normal;
+    Vector coronal,sagittal,transverse;
 
 public:
     Processor();
     virtual ~Processor() {;}
 //    virtual string getMotionType();
-    void setInitialConf(const SkeletonWaist &skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_);
+    void setInitialConf(const SkeletonWaist &skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_,
+                        SkeletonWaist &skeleton);
     bool isStatic(const KeyPoint& keypoint);
     void update(SkeletonWaist& curr_skeleton_);
     bool isDeviatingFromIntialPose();
@@ -60,7 +64,6 @@ public:
 class Rom_Processor : public Processor
 {
     const Rom* rom;
-    Vector plane_normal;
     double prev_result;
 
 public:

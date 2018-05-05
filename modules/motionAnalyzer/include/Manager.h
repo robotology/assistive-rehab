@@ -58,6 +58,7 @@ class Manager : public RFModule,
     vector<double> time_samples;
     vector<Vector > all_planes;
     SkeletonWaist* skeletonInit;
+    SkeletonWaist skel;
     vector<SkeletonWaist*> skeletonsInit;
 
     SkeletonWaist skeletonIn;

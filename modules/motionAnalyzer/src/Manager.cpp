@@ -749,7 +749,6 @@ double Manager::loadMetric(const string &metric_tag)
     metric = motion_repertoire.at(metric_tag);
     yInfo() << "Metric to analyze";
     metric->print();
-    SkeletonWaist skel;
     for(int j=0; j<skeletonsInit.size(); j++)
     {
         if(skeletonsInit[j]->getTag() == metric_tag)
@@ -760,7 +759,8 @@ double Manager::loadMetric(const string &metric_tag)
     }
 
     processor = createProcessor(metric_tag, metric);
-    processor->setInitialConf(skel, metric->getInitialConf());
+//    getSkeleton();
+//    processor->setInitialConf(skel, metric->getInitialConf(),skeletonIn);
 
     //send commands to skeletonScaler
     Bottle cmd, reply;
@@ -812,6 +812,9 @@ bool Manager::selectSkel(const string &skel_tag)
 
     this->skel_tag = skel_tag;
     yInfo() << "Analyzing skeleton " << this->skel_tag.c_str();
+
+    getSkeleton();
+    processor->setInitialConf(skel, metric->getInitialConf(),skeletonIn);
 
     //send tag to skeletonScaler
     Bottle cmd, reply;
@@ -1411,7 +1414,9 @@ bool Manager::updateModule()
                 }
 
                 Vector v1,plane_normal,ref_dir;
+
                 result = processor->computeMetric(v1,plane_normal,ref_dir,score_exercise);
+
                 all_planes.push_back(plane_normal);
 
                 log_file << yarp::os::Time::now()-tstart << " " << v1[0] << " " << v1[1] << " " << v1[2] << " "
