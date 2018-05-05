@@ -37,13 +37,47 @@ Processor::Processor()
     invT.zero();
 }
 
-void Processor::setInitialConf(const SkeletonWaist &skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_)
+void print(const Matrix& m)
+{
+    for(int i=0;i<m.rows();i++)
+    {
+        for(int j=0;j<m.cols();j++)
+        {
+            cout << m[i][j] << " ";
+        }
+        cout << "\n";
+    }
+}
+
+void Processor::setInitialConf(const SkeletonWaist &skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_,
+                               SkeletonWaist &skeleton)
 {
     skeleton_init.update(skeleton_init_.get_unordered());
     skeleton_init.setTag("init");
     keypoints2conf = keypoints2conf_;
 
-//    skeleton_init.print();
+    if(!skeleton.update_planes())
+        yError() << "Not all planes are updated";
+
+    coronal = skeleton.getCoronal();
+    sagittal = skeleton.getSagittal();
+    transverse = skeleton.getTransverse();
+    Vector p = skeleton[KeyPointTag::shoulder_center]->getPoint();
+    Matrix T1(3,4);
+    T1.setCol(0,coronal);
+    T1.setCol(1,sagittal);
+    T1.setCol(2,transverse);
+    T1.setCol(3,p);
+
+    Matrix T2(4,4);
+    T2.setSubmatrix(T1,0,0);
+    Vector v(4,0.0);
+    v[3]=1.0;
+    T2.setRow(3,v);
+
+    inv_reference_system = SE3inv(T2);
+
+    //    skeleton_init.print();
 }
 
 bool Processor::isStatic(const KeyPoint& keypoint)
@@ -174,20 +208,6 @@ Rom_Processor::Rom_Processor()
 Rom_Processor::Rom_Processor(const Metric *rom_)
 {
     rom = (Rom*)rom_;
-
-    if(rom->getTagPlane() == "coronal")
-    {
-        plane_normal = curr_skeleton.getCoronal();
-    }
-    else if(rom->getTagPlane() == "sagittal")
-    {
-        plane_normal = curr_skeleton.getSagittal();
-    }
-    else if(rom->getTagPlane() == "transverse")
-    {
-        plane_normal = curr_skeleton.getSagittal();
-    }
-
 }
 
 //void Rom_Processor::setInitialConf(const SkeletonWaist &skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_)
@@ -208,7 +228,6 @@ double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &r
 
     if(curr_skeleton[tag_joint]->isUpdated() && curr_skeleton[tag_joint]->getChild(0)->isUpdated())
     {
-      
         Vector kp_ref = curr_skeleton[tag_joint]->getPoint();
 
         double theta;
@@ -219,37 +238,57 @@ double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &r
             int component_to_check;
             if(rom->getTagPlane() == "coronal")
             {
+                plane_normal_ = coronal;
     //            plane_normal = curr_skeleton.getCoronal()-kp_child;
-    //            plane_normal /= norm(plane_normal);
-                component_to_check = 2;
-            }
-            else if(rom->getTagPlane() == "sagittal")
-            {
-    //            plane_normal = curr_skeleton.getSagittal()-kp_child;
     //            plane_normal /= norm(plane_normal);
                 component_to_check = 0;
             }
-            else if(rom->getTagPlane() == "transverse")
+            else if(rom->getTagPlane() == "sagittal")
             {
+                plane_normal_ = sagittal;
     //            plane_normal = curr_skeleton.getSagittal()-kp_child;
     //            plane_normal /= norm(plane_normal);
                 component_to_check = 1;
             }
-            plane_normal = plane_normal-kp_child;
-            plane_normal /= norm(plane_normal);
+            else if(rom->getTagPlane() == "transverse")
+            {
+                plane_normal_ = transverse;
+    //            plane_normal = curr_skeleton.getSagittal()-kp_child;
+    //            plane_normal /= norm(plane_normal);
+                component_to_check = 2;
+            }
+            plane_normal_ = plane_normal_-kp_child;
+            plane_normal_ /= norm(plane_normal_);
 
             ref_dir = rom->getRefDir();
 
             v1 = kp_child-kp_ref;
             score_exercise = 0.7;
-            if(abs(v1[component_to_check])>rom->getRangePlane())
+
+            Vector k1(4,0.0);
+            k1[0] = kp_ref[0];
+            k1[1] = kp_ref[1];
+            k1[2] = kp_ref[2];
+            k1[3] = 1.0;
+            Vector k2(4,0.0);
+            k2[0] = kp_child[0];
+            k2[1] = kp_child[1];
+            k2[2] = kp_child[2];
+            k2[3] = 1.0;
+            Vector transformed_kp_ref = inv_reference_system*k1;
+            Vector transformed_kp_child = inv_reference_system*k2;
+
+            Vector diff = transformed_kp_child-transformed_kp_ref;
+
+            yInfo() << diff[component_to_check] << diff[1] << diff[2];
+            if(abs(diff[component_to_check])>rom->getRangePlane())
             {
-                yInfo() << "out of the plane band" << v1[component_to_check];
+//                yInfo() << "out of the plane band" << diff[component_to_check];
                 score_exercise = 0.4;
             }
 
-            double dist = dot(v1,plane_normal);
-            v1 = v1-dist*plane_normal;
+            double dist = dot(v1,plane_normal_);
+            v1 = v1-dist*plane_normal_;
             v1 /= norm(v1);
 
             double v1_norm = norm(v1);
@@ -258,7 +297,7 @@ double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &r
 
             theta = acos(dot_p/(v1_norm*v2_norm));
 
-            plane_normal_=plane_normal;
+//            plane_normal_=plane_normal;
 
             result = theta * (180/M_PI);
             prev_result = result;    
