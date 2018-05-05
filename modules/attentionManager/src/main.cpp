@@ -186,24 +186,19 @@ class Attention : public RFModule, public attentionManager_IDL
     /****************************************************************/
     bool is_with_raised_hand(const shared_ptr<Skeleton> &s) const
     {
-        if ((*s)[KeyPointTag::shoulder_center]->isUpdated())
+        if ((*s)[KeyPointTag::elbow_left]->isUpdated() &&
+            (*s)[KeyPointTag::hand_left]->isUpdated())
         {
-            bool left_raised=false;
-            if ((*s)[KeyPointTag::hand_left]->isUpdated())
-            {
-                left_raised=((*s)[KeyPointTag::hand_left]->getPoint()[1]<
-                             (*s)[KeyPointTag::shoulder_center]->getPoint()[1]);
-            }
-            bool right_raised=false;
-            if ((*s)[KeyPointTag::hand_right]->isUpdated())
-            {
-                right_raised=((*s)[KeyPointTag::hand_right]->getPoint()[1]<
-                              (*s)[KeyPointTag::shoulder_center]->getPoint()[1]);
-            }
-            if (left_raised || right_raised)
-            {
+            if (((*s)[KeyPointTag::elbow_left]->getPoint()[1]>
+                 (*s)[KeyPointTag::hand_left]->getPoint()[1]))
                 return true;
-            }
+        }
+        if ((*s)[KeyPointTag::elbow_right]->isUpdated() &&
+            (*s)[KeyPointTag::hand_right]->isUpdated())
+        {
+            if (((*s)[KeyPointTag::elbow_right]->getPoint()[1]>
+                 (*s)[KeyPointTag::hand_right]->getPoint()[1]))
+                return true;
         }
         return false;
     }
