@@ -11,6 +11,7 @@
  */
 
 #include <cstdlib>
+#include <cmath>
 #include <unordered_map>
 #include <string>
 #include <sstream>
@@ -335,7 +336,7 @@ class Interaction : public RFModule
                 Bottle &metrics=*rep.get(0).asList();
                 if (metrics.size()>0)
                 {
-                    string metric=metrics.get((int)(Rand::scalar(0,1)*metrics.size())).asString();
+                    string metric=metrics.get((int)floor(Rand::scalar(0,1)*metrics.size())).asString();
                     yInfo()<<"Selected metric:"<<metric;
 
                     cmd.clear();
