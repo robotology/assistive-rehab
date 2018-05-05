@@ -62,7 +62,7 @@
     <module>
        <name>motionAnalyzer</name>
        <parameters></parameters>
-       <node>r1-console-linux</node>
+       <node>r1-display-linux</node>
     </module>
 
     <module>
@@ -104,7 +104,7 @@
     <module>
         <name>interactionManager</name>
         <parameters></parameters>
-        <node>r1-console-linux</node>
+        <node>r1-display-linux</node>
     </module>
 
     <connection>
