@@ -198,11 +198,11 @@ Rom_Processor::Rom_Processor(const Metric *rom_)
 
 double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &ref_dir, double &score_exercise)
 {
-    if(curr_skeleton[tag_joint]->isUpdated() && curr_skeleton[tag_joint]->getChild(0)->isUpdated())
-    {
-
     //get reference keypoint from skeleton
     string tag_joint = rom->getTagJoint();
+
+    if(curr_skeleton[tag_joint]->isUpdated() && curr_skeleton[tag_joint]->getChild(0)->isUpdated())
+    {
 
 //    cout << "compute metric for " << tag_joint.c_str() << endl;
     Vector kp_ref = curr_skeleton[tag_joint]->getPoint();
