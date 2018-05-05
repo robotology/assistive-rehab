@@ -367,7 +367,7 @@ class Interaction : public RFModule
                                         if (rep.get(0).asVocab()==ok)
                                         {
                                             speak("ready",true);
-                                            Time::delay(1.0);
+                                            Time::delay(3.0);
                                             speak("start",true);
 
                                             state=State::assess;
