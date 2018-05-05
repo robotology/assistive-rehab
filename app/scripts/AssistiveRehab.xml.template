@@ -32,7 +32,7 @@
 
     <module>
         <name>yarpOpenPose</name>
-        <node>r1-torso</node>
+        <node>r1-cuda-linux</node>
     </module>
 
     <module>

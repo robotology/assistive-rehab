@@ -32,7 +32,7 @@
 
     <module>
         <name>yarpOpenPose</name>
-        <node>r1-torso</node>
+        <node>r1-cuda-linux</node>
     </module>
 
     <module>
@@ -48,18 +48,18 @@
     <module>
         <name>linearClassifierModule</name>
         <parameters>--BufferSize 1 --CSVM 1.0 --databaseFolder faceDatabase --WeightedSVM 1</parameters>
-        <node>r1-cuda-linux</node>
+        <node>r1-torso</node>
     </module>
 
     <module>
         <name>caffeCoder</name>
-        <parameters>--from caffeCoder_resnet.ini</parameters>
-        <node>r1-cuda-linux</node>
+        <parameters>--from caffeCoder_caffenet.ini</parameters>
+        <node>r1-torso</node>
     </module>
 
     <module>
         <name>himrepClassifier</name>
-        <node>r1-cuda-linux</node>
+        <node>r1-torso</node>
     </module>
 
     <module>
