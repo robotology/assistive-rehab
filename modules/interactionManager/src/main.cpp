@@ -245,7 +245,8 @@ class Interaction : public RFModule
     /****************************************************************/
     bool updateModule() override
     {
-        if (attentionPort.getOutputCount()==0)
+        if ((attentionPort.getOutputCount()==0) || (analyzerPort.getOutputCount()==0) ||
+            (speechStreamPort.getOutputCount()==0) || (speechRpcPort.getOutputCount()==0))
         {
             yInfo()<<"not connected";
             return true;
