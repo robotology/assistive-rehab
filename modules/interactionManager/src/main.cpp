@@ -426,9 +426,6 @@ class Interaction : public RFModule
     bool interruptModule() override
     {
         interrupting=true;
-        attentionPort.interrupt();
-        analyzerPort.interrupt();
-        speechRpcPort.interrupt();
         return true;
     }
 
