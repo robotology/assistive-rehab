@@ -813,9 +813,6 @@ bool Manager::selectSkel(const string &skel_tag)
     this->skel_tag = skel_tag;
     yInfo() << "Analyzing skeleton " << this->skel_tag.c_str();
 
-    getSkeleton();
-    processor->setInitialConf(skel, metric->getInitialConf(),skeletonIn);
-
     //send tag to skeletonScaler
     Bottle cmd, reply;
     cmd.addVocab(Vocab::encode("tag"));
@@ -927,6 +924,9 @@ double Manager::findMax()
 bool Manager::start()
 {
     LockGuard lg(mutex);
+
+    getSkeleton();
+    processor->setInitialConf(skel, metric->getInitialConf(),skeletonIn);
 
     //start skeletonScaler
     Bottle cmd, reply;
