@@ -57,7 +57,7 @@ bool Processor::isStatic(const KeyPoint& keypoint)
 /****************************************************************/
 void Processor::update(SkeletonWaist &curr_skeleton_)
 {
-    curr_skeleton.update_fromstd(curr_skeleton_.toProperty());
+    curr_skeleton.update(curr_skeleton_.toProperty());
 //    curr_skeleton.print();
 
     Vector xyz=curr_skeleton[KeyPointTag::shoulder_center]->getPoint();
@@ -198,18 +198,22 @@ Rom_Processor::Rom_Processor(const Metric *rom_)
 
 double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &ref_dir, double &score_exercise)
 {
+    double result;
+    v1.resize(3);
+    plane_normal_.resize(3);
+    ref_dir.resize(3);
+
     //get reference keypoint from skeleton
     string tag_joint = rom->getTagJoint();
 
     if(curr_skeleton[tag_joint]->isUpdated() && curr_skeleton[tag_joint]->getChild(0)->isUpdated())
     {
+      
+        Vector kp_ref = curr_skeleton[tag_joint]->getPoint();
 
-//    cout << "compute metric for " << tag_joint.c_str() << endl;
-    Vector kp_ref = curr_skeleton[tag_joint]->getPoint();
-
-    double theta;
-    if(curr_skeleton[tag_joint]->getNumChild())
-    {
+        double theta;
+        if(curr_skeleton[tag_joint]->getNumChild())
+        {
             Vector kp_child = curr_skeleton[tag_joint]->getChild(0)->getPoint();
 
             int component_to_check;
@@ -240,7 +244,7 @@ double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &r
             score_exercise = 0.7;
             if(abs(v1[component_to_check])>rom->getRangePlane())
             {
-                yInfo() << "out of the plane band" << v1[component_to_check];
+                //yInfo() << "out of the plane band" << v1[component_to_check];
                 score_exercise = 0.4;
             }
 
@@ -256,13 +260,28 @@ double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &r
 
             plane_normal_=plane_normal;
 
-            return ( theta * (180/M_PI) );
+            result = theta * (180/M_PI);
+
         }
         else
         {
             yError() << "The keypoint does not have a child ";
-            return 0.0;
+            result = 0.0;
+            score_exercise = 0.0;
+            v1.zero();
+            plane_normal_.zero();
+            ref_dir.zero();
         }
     }
-    return 0.0;
+    else
+    { 
+        result = 0.0;
+        score_exercise = 0.0;
+        v1.zero();
+        plane_normal_.zero();
+        ref_dir.zero();
+    }    
+ 
+    return result;
+
 }

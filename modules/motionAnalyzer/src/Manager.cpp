@@ -1258,7 +1258,7 @@ void Manager::getSkeleton()
                                         if (prop.check("tag") && tag==skel_tag)
                                         {
                                             Skeleton* skeleton = skeleton_factory(prop);
-                                            skeletonIn.update_fromstd(skeleton->toProperty());
+                                            skeletonIn.update(skeleton->toProperty());
                                             all_keypoints.push_back(skeletonIn.get_unordered());
                                             updated=true;
 
@@ -1412,6 +1412,7 @@ bool Manager::updateModule()
 
                 Vector v1,plane_normal,ref_dir;
                 result = processor->computeMetric(v1,plane_normal,ref_dir,score_exercise);
+                yDebug() << __LINE__ << result; 
                 all_planes.push_back(plane_normal);
 
                 log_file << yarp::os::Time::now()-tstart << " " << v1[0] << " " << v1[1] << " " << v1[2] << " "
