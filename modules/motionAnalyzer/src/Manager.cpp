@@ -492,6 +492,8 @@ bool Manager::loadMotionList()
                                 double min = bMotion.find("min").asDouble();
                                 double max = bMotion.find("max").asDouble();
                                 double duration = bMotion.find("duration").asDouble();
+                                double tempwin = bMotion.find("tempwin").asDouble();
+                                double threshold = bMotion.find("threshold").asDouble();
 
                                 Vector ref_dir;
                                 ref_dir.resize(3);
@@ -656,7 +658,8 @@ bool Manager::loadMotionList()
                                     yError() << "Could not load ankle right configuration";
 
                                 metric_repertoire = new Rom(curr_tag, motion_type, tag_joint, ref_dir, tag_plane,
-                                                            range_plane, min, max, duration, keypoints2conf);
+                                                            range_plane, min, max, duration, tempwin, threshold,
+                                                            keypoints2conf);
                             }
 
                             //add the current metric to the repertoire
@@ -815,15 +818,20 @@ bool Manager::selectSkel(const string &skel_tag)
 
 /********************************************************/
 double Manager::getQuality()
-{  
+{
     double dev=processor->getDeviation();
     double dev1=2.0,score1=0.6;
     double dev2=6.0,score2=0.3;
     double score_static=score1+((score2-score1)/(dev2-dev1))*(dev-dev1);
 
 //    double score_dynamic=fabs(result_der)/(metric->getMax()-metric->getMin());
+//    double score_dynamic=0.0;
+//    if(fabs(result_der)>30.0)
+//        score_dynamic=score_exercise;
+
+    double range=max_res-min_res;
     double score_dynamic=0.0;
-    if(fabs(result_der)>30.0)
+    if(range>metric->getThresh())
         score_dynamic=score_exercise;
 
     if(score_dynamic>0.6 && result>metric->getMin() && result<metric->getMax())
@@ -832,8 +840,7 @@ double Manager::getQuality()
 //    if(fabs(result_der)>30.0 && result>metric->getMin() && result<metric->getMax())
 //        score_dynamic=0.7;
 
-    yInfo() << score_static << score_dynamic << dev;
-    cout << "\n";
+    yInfo() << "score_static" << score_static << " score_dynamic" << score_dynamic << " deviation" << dev;
 
     double score;
     if(score_dynamic<0.3 &&
@@ -861,13 +868,6 @@ double Manager::getQuality()
 //    else if(score_dynamic<0.6 && score_static<0.3)
 //        score=LOW;
 
-//    else if(score_dynamic>0.6 && score_static>0.6)
-//        score=HIGH;
-//    else if(score_dynamic>0.6 && score_static>0.3 && score_static<0.6)
-//        score=MEDIUM;
-//    else if(score_dynamic>0.6 && score_static<0.3)
-//        score=LOW;
-
     return score;
 }
 
@@ -884,6 +884,30 @@ void Manager::computeMetricDerivative()
             result_der+=(result_time[j]-result_time[j-1])/(time_samples[j]-time_samples[j-1]);
         result_der/=win;
     }
+}
+
+double Manager::findMin()
+{
+    double min=result_time[0];
+    for(int i=0;i<result_time.size();i++)
+    {
+        if(result_time[i]<min)
+            min=result_time[i];
+    }
+
+    return min;
+}
+
+double Manager::findMax()
+{
+    double max=result_time[0];
+    for(int i=0;i<result_time.size();i++)
+    {
+        if(result_time[i]>max)
+            max=result_time[i];
+    }
+
+    return max;
 }
 
 /********************************************************/
@@ -1379,7 +1403,13 @@ bool Manager::updateModule()
                          << " " << ref_dir[0] << " " << ref_dir[1] << " " << ref_dir[2] << "\n";
 
                 result_time.push_back(result);
-                computeMetricDerivative();
+                if((Time::now()-tstart)-tstart_session>metric->getTempWin())
+                    result_time.pop_front();
+
+                min_res=findMin();
+                max_res=findMax();
+
+//                computeMetricDerivative();
 
                 //write on output port
                 Bottle &scopebottleout = scopePort.prepare();

@@ -15,6 +15,7 @@
 
 #include <fstream>
 #include <list>
+#include <deque>
 
 #include <yarp/os/all.h>
 #include <yarp/sig/Vector.h>
@@ -117,8 +118,10 @@ class Manager : public RFModule,
     bool updated;
     double result;
 //    vector<double> result_time;
-    Vector result_time;
+    deque<double> result_time;
+//    Vector result_time;
     double result_der;
+    double min_res,max_res;
 
     double score_exercise;
 
@@ -132,6 +135,8 @@ class Manager : public RFModule,
 //    bool loadSequence(const string& sequencer_file);
     double loadMetric(const string &metric_tag);
     void computeMetricDerivative();
+    double findMin();
+    double findMax();
     vector<string> listMetrics();
     bool selectSkel(const string &skel_tag);
     double getQuality();

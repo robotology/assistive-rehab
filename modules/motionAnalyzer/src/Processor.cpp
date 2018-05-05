@@ -237,7 +237,7 @@ double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &r
         score_exercise = 0.7;
         if(abs(v1[component_to_check])>rom->getRangePlane())
         {
-            yInfo() << v1[component_to_check];
+//            yInfo() << v1[component_to_check];
             score_exercise = 0.4;
         }
 
