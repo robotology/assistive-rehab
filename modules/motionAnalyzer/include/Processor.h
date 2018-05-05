@@ -61,6 +61,7 @@ class Rom_Processor : public Processor
 {
     const Rom* rom;
     Vector plane_normal;
+    double prev_result;
 
 public:
 

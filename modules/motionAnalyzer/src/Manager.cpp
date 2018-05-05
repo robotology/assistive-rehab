@@ -1412,7 +1412,6 @@ bool Manager::updateModule()
 
                 Vector v1,plane_normal,ref_dir;
                 result = processor->computeMetric(v1,plane_normal,ref_dir,score_exercise);
-                yDebug() << __LINE__ << result; 
                 all_planes.push_back(plane_normal);
 
                 log_file << yarp::os::Time::now()-tstart << " " << v1[0] << " " << v1[1] << " " << v1[2] << " "

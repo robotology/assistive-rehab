@@ -244,7 +244,7 @@ double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &r
             score_exercise = 0.7;
             if(abs(v1[component_to_check])>rom->getRangePlane())
             {
-                //yInfo() << "out of the plane band" << v1[component_to_check];
+                yInfo() << "out of the plane band" << v1[component_to_check];
                 score_exercise = 0.4;
             }
 
@@ -261,7 +261,7 @@ double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &r
             plane_normal_=plane_normal;
 
             result = theta * (180/M_PI);
-
+            prev_result = result;    
         }
         else
         {
@@ -275,13 +275,14 @@ double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &r
     }
     else
     { 
-        result = 0.0;
+        result = prev_result;
         score_exercise = 0.0;
         v1.zero();
         plane_normal_.zero();
         ref_dir.zero();
-    }    
- 
+    }
+
+
     return result;
 
 }
