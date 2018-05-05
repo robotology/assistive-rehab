@@ -456,6 +456,8 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
 
 bool Manager::loadMotionList()
 {
+    LockGuard lg(mutex);
+
     ResourceFinder rf;
     rf.setVerbose();
     rf.setDefaultContext(this->rf->getContext().c_str());
@@ -742,6 +744,8 @@ bool Manager::loadMotionList()
 /********************************************************/
 double Manager::loadMetric(const string &metric_tag)
 {
+    LockGuard lg(mutex);
+
     metric = motion_repertoire.at(metric_tag);
     yInfo() << "Metric to analyze";
     metric->print();
@@ -787,6 +791,8 @@ int getFirstUppercase(string str)
 
 vector<string> Manager::listMetrics()
 {
+    LockGuard lg(mutex);
+
     vector<string> reply;
     for (map<string,Metric*>::iterator it=motion_repertoire.begin(); it!=motion_repertoire.end(); it++)
     {
@@ -802,6 +808,8 @@ vector<string> Manager::listMetrics()
 /********************************************************/
 bool Manager::selectSkel(const string &skel_tag)
 {
+    LockGuard lg(mutex);
+
     this->skel_tag = skel_tag;
     yInfo() << "Analyzing skeleton " << this->skel_tag.c_str();
 
@@ -819,6 +827,8 @@ bool Manager::selectSkel(const string &skel_tag)
 /********************************************************/
 double Manager::getQuality()
 {
+    LockGuard lg(mutex);
+
     double dev=processor->getDeviation();
     double dev1=2.0,score1=0.6;
     double dev2=6.0,score2=0.3;
@@ -829,7 +839,7 @@ double Manager::getQuality()
 //    if(fabs(result_der)>30.0)
 //        score_dynamic=score_exercise;
 
-    double range=max_res-min_res;
+    double range=findMax()-findMin();
     double score_dynamic=0.0;
     if(range>metric->getThresh())
         score_dynamic=score_exercise;
@@ -913,6 +923,8 @@ double Manager::findMax()
 /********************************************************/
 bool Manager::start()
 {
+    LockGuard lg(mutex);
+
     //start skeletonScaler
     Bottle cmd, reply;
     cmd.addVocab(Vocab::encode("run"));
@@ -930,6 +942,8 @@ bool Manager::start()
 /********************************************************/
 bool Manager::stop()
 {
+    LockGuard lg(mutex);
+
     //stop skeletonScaler
     Bottle cmd, reply;
     cmd.addVocab(Vocab::encode("stop"));
@@ -1371,6 +1385,8 @@ double Manager::getPeriod()
 /********************************************************/
 bool Manager::updateModule()
 {
+    LockGuard lg(mutex);
+
     //if we query the database
     if(opcPort.getOutputCount() > 0 && starting)
     {
@@ -1405,9 +1421,6 @@ bool Manager::updateModule()
                 result_time.push_back(result);
                 if((Time::now()-tstart)-tstart_session>metric->getTempWin())
                     result_time.pop_front();
-
-                min_res=findMin();
-                max_res=findMax();
 
 //                computeMetricDerivative();
 

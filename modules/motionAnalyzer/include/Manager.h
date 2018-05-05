@@ -121,9 +121,10 @@ class Manager : public RFModule,
     deque<double> result_time;
 //    Vector result_time;
     double result_der;
-    double min_res,max_res;
 
     double score_exercise;
+
+    Mutex mutex;
 
 //    Metric* metric;
 //    Processor* processor;
