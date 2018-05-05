@@ -198,6 +198,9 @@ Rom_Processor::Rom_Processor(const Metric *rom_)
 
 double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &ref_dir, double &score_exercise)
 {
+    if(curr_skeleton[tag_joint]->isUpdated() && curr_skeleton[tag_joint]->getChild(0)->isUpdated())
+    {
+
     //get reference keypoint from skeleton
     string tag_joint = rom->getTagJoint();
 
@@ -207,57 +210,59 @@ double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &r
     double theta;
     if(curr_skeleton[tag_joint]->getNumChild())
     {
-        Vector kp_child = curr_skeleton[tag_joint]->getChild(0)->getPoint();
+            Vector kp_child = curr_skeleton[tag_joint]->getChild(0)->getPoint();
 
-        int component_to_check;
-        if(rom->getTagPlane() == "coronal")
-        {
-//            plane_normal = curr_skeleton.getCoronal()-kp_child;
-//            plane_normal /= norm(plane_normal);
-            component_to_check = 2;
+            int component_to_check;
+            if(rom->getTagPlane() == "coronal")
+            {
+    //            plane_normal = curr_skeleton.getCoronal()-kp_child;
+    //            plane_normal /= norm(plane_normal);
+                component_to_check = 2;
+            }
+            else if(rom->getTagPlane() == "sagittal")
+            {
+    //            plane_normal = curr_skeleton.getSagittal()-kp_child;
+    //            plane_normal /= norm(plane_normal);
+                component_to_check = 0;
+            }
+            else if(rom->getTagPlane() == "transverse")
+            {
+    //            plane_normal = curr_skeleton.getSagittal()-kp_child;
+    //            plane_normal /= norm(plane_normal);
+                component_to_check = 1;
+            }
+            plane_normal = plane_normal-kp_child;
+            plane_normal /= norm(plane_normal);
+
+            ref_dir = rom->getRefDir();
+
+            v1 = kp_child-kp_ref;
+            score_exercise = 0.7;
+            if(abs(v1[component_to_check])>rom->getRangePlane())
+            {
+                yInfo() << "out of the plane band" << v1[component_to_check];
+                score_exercise = 0.4;
+            }
+
+            double dist = dot(v1,plane_normal);
+            v1 = v1-dist*plane_normal;
+            v1 /= norm(v1);
+
+            double v1_norm = norm(v1);
+            double v2_norm = norm(ref_dir);
+            double dot_p = dot(v1,ref_dir);
+
+            theta = acos(dot_p/(v1_norm*v2_norm));
+
+            plane_normal_=plane_normal;
+
+            return ( theta * (180/M_PI) );
         }
-        else if(rom->getTagPlane() == "sagittal")
+        else
         {
-//            plane_normal = curr_skeleton.getSagittal()-kp_child;
-//            plane_normal /= norm(plane_normal);
-            component_to_check = 0;
+            yError() << "The keypoint does not have a child ";
+            return 0.0;
         }
-        else if(rom->getTagPlane() == "transverse")
-        {
-//            plane_normal = curr_skeleton.getSagittal()-kp_child;
-//            plane_normal /= norm(plane_normal);
-            component_to_check = 1;
-        }
-        plane_normal = plane_normal-kp_child;
-        plane_normal /= norm(plane_normal);
-
-        ref_dir = rom->getRefDir();
-
-        v1 = kp_child-kp_ref;
-        score_exercise = 0.7;
-        if(abs(v1[component_to_check])>rom->getRangePlane())
-        {
-//            yInfo() << v1[component_to_check];
-            score_exercise = 0.4;
-        }
-
-        double dist = dot(v1,plane_normal);
-        v1 = v1-dist*plane_normal;
-        v1 /= norm(v1);
-
-        double v1_norm = norm(v1);
-        double v2_norm = norm(ref_dir);
-        double dot_p = dot(v1,ref_dir);
-
-        theta = acos(dot_p/(v1_norm*v2_norm));
-
-        plane_normal_=plane_normal;
-
-        return ( theta * (180/M_PI) );
     }
-    else
-    {
-        yError() << "The keypoint does not have a child ";
-        return 0.0;
-    }
+    return 0.0;
 }
