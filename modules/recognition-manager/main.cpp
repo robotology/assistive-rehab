@@ -511,8 +511,6 @@ public:
             if (skeletonSize>0)
                 internalElements = target.get(0).asList()->get(0).asList()->size();
 
-
-
             for (int i = 0; i < skeletonSize; i++)
             {
                 if (yarp::os::Bottle *propField = skeletons.get(0).asList()->get(i).asList())
@@ -696,6 +694,7 @@ public:
         getImage();
         yarp::os::Bottle blobs = getBlobs();
         yarp::os::Bottle skeletons = getSkeletons();
+        yarp::os::Bottle labels;
 
         if (interrupting)
             return false;
@@ -732,54 +731,60 @@ public:
                 time_spent = 0.0;
             }
         }
-
-        yarp::os::Bottle scores;
-        yarp::os::Bottle labels;
-
-        scores.clear();
-        labels.clear();
-
-        if (blobs.size()!=0)
-            scores = classify(blobs);
-
-        if (scores.size()!=0 && scores.get(0).asList()->size() > 0)
-        {
-            for (int i=0; i<blobs.size(); i++)
-            {
-                yarp::os::Bottle &labelblobs = labels.addList();
-                if (scores.get(i).asList()->size() > 0 && scores.get(i).asList()->get(1).asList()->size() > 0)
-                {
-                    int elements = scores.get(i).asList()->get(1).asList()->size();
-                    for (int x=0; x<elements; x++)
-                    {
-                        std::string tmp = scores.get(i).asList()->get(1).asList()->get(x).asList()->get(0).asString();
-                        double conf = scores.get(i).asList()->get(1).asList()->get(x).asList()->get(1).asDouble();
-                        yarp::os::Bottle &item=labelblobs.addList();
-                        item.addString(tmp);
-                        item.addDouble(conf);
-                    }
-                }
-                else
-                    yError() << "no classes avaiblable";
-            }
-        }
         else
         {
-            for (int i=0; i<blobs.size(); i++)
-            {
-                yarp::os::Bottle &fillScores = scores.addList();
-                yarp::os::Bottle &labelblobs = labels.addList();
-            }
 
-            if (blobs.size() == 0)
+            yarp::os::Bottle scores;
+
+            scores.clear();
+            labels.clear();
+
+            if (blobs.size()!=0)
+                scores = classify(blobs);
+
+            if (scores.size()!=0 && scores.get(0).asList()->size() > 0)
             {
-                yarp::os::Bottle &fillScores = scores.addList();
-                yarp::os::Bottle &labelblobs = labels.addList();
+                for (int i=0; i<blobs.size(); i++)
+                {
+                    yarp::os::Bottle &labelblobs = labels.addList();
+                    if (scores.get(i).asList()->size() > 0 && scores.get(i).asList()->get(1).asList()->size() > 0)
+                    {
+                        int elements = scores.get(i).asList()->get(1).asList()->size();
+                        for (int x=0; x<elements; x++)
+                        {
+                            std::string tmp = scores.get(i).asList()->get(1).asList()->get(x).asList()->get(0).asString();
+                            double conf = scores.get(i).asList()->get(1).asList()->get(x).asList()->get(1).asDouble();
+                            yarp::os::Bottle &item=labelblobs.addList();
+                            item.addString(tmp);
+                            item.addDouble(conf);
+                        }
+                    }
+                    else
+                        yError() << "no classes avaiblable";
+                }
+            }
+            else
+            {
+                for (int i=0; i<blobs.size(); i++)
+                {
+                    yarp::os::Bottle &fillScores = scores.addList();
+                    yarp::os::Bottle &labelblobs = labels.addList();
+                }
+
+                if (blobs.size() == 0)
+                {
+                    yarp::os::Bottle &fillScores = scores.addList();
+                    yarp::os::Bottle &labelblobs = labels.addList();
+                }
             }
         }
-
-        yarp::os::Bottle winners = sendOutputImage(blobs, person, labels);
-        sendTargetData(blobs, winners, skeletons);
+        if (allowedTrain)
+            sendOutputImage(blobs, person, labels);
+        else
+        {
+            yarp::os::Bottle winners = sendOutputImage(blobs, person, labels);
+            sendTargetData(blobs, winners, skeletons);
+        }
 
         return !closing;
     }
