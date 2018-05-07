@@ -418,7 +418,9 @@ class Interaction : public RFModule
                                     }
                                     else
                                     {
-                                        speak("in-the-know",true);
+                                        vector<SpeechParam> p;
+                                        p.push_back(SpeechParam(tag[0]!='#'?tag:string("")));
+                                        speak("in-the-know",true,p);
                                     }
 
                                     cmd.clear();
