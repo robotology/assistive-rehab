@@ -401,11 +401,13 @@ class Interaction : public RFModule
                             {
                                 if (rep.get(0).asVocab()==ok)
                                 {
-                                    speak("explain",true);
-
-                                    vector<SpeechParam> p;
-                                    p.push_back(SpeechParam(T));
-                                    speak("duration",true,p);
+                                    if (history.find(tag)==end(history))
+                                    {
+                                        speak("explain",true);
+                                        vector<SpeechParam> p;
+                                        p.push_back(SpeechParam(T));
+                                        speak("duration",true,p);
+                                    }
 
                                     cmd.clear();
                                     cmd.addString("start");
