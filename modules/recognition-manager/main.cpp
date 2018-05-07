@@ -71,6 +71,8 @@ class Module : public yarp::os::RFModule, public recognition_IDL
 
     bool                isLiftArm;
     bool                gotTime;
+    int                 skip_frames;
+    int                 frame_counter;
 
 public:
 
@@ -100,17 +102,17 @@ public:
         {
             cmd.addVocab(yarp::os::Vocab::encode("forget"));
             cmd.addString("all");
-            yInfo() << "Sending clearing request:" << cmd.toString();
+            //yInfo() << "Sending clearing request:" << cmd.toString();
             rpcClassifier.write(cmd,reply);
-            yInfo() << "Received reply:" << reply.toString();
+            //yInfo() << "Received reply:" << reply.toString();
         }
         else
         {
             cmd.addVocab(yarp::os::Vocab::encode("forget"));
             cmd.addString(label.c_str());
-            yInfo() << "Sending clearing request" << cmd.toString();
+            //yInfo() << "Sending clearing request" << cmd.toString();
             rpcClassifier.write(cmd,reply);
-            yInfo() << "Received reply:" << reply.toString();
+            //yInfo() << "Received reply:" << reply.toString();
         }
         return true;
     }
@@ -155,6 +157,8 @@ public:
 
         trainingTime = rf.check("training_time",yarp::os::Value(10)).asDouble();
 
+        skip_frames = rf.check("skip_frames",yarp::os::Value(3)).asInt();
+
         rpcPort.open(("/"+getName("/rpc")).c_str());
 
         blobsPort.open(("/"+getName("/blobs:i")).c_str());
@@ -164,6 +168,8 @@ public:
         imageOutPort.open(("/"+getName("/image:o")).c_str());
         targetOutPort.open(("/"+getName("/target:o")).c_str());
         targetInPort.open(("/"+getName("/target:i")).c_str());
+
+        frame_counter = 0;
 
         closing = false;
         interrupting = false;
@@ -242,9 +248,9 @@ public:
             item.addString(tag.str().c_str());
             item.addList()=*blobs.get(i).asList();
         }
-        yInfo() << "Sending classification request:" << cmd.toString();
+        //yInfo() << "Sending classification request:" << cmd.toString();
         rpcClassifier.write(cmd,reply);
-        yInfo() << "Received reply:" << reply.toString();
+        //yInfo() << "Received reply:" << reply.toString();
 
         return reply;
     }
@@ -345,16 +351,16 @@ public:
                 {
                     if ( relbow[i].y - rwrist[i].y > 20 && relbow[i].y > 0 && rwrist[i].y > 0 )
                     {
-                        yInfo() << "Skeleton" << i << "right-hand raised";
+                        //yInfo() << "Skeleton" << i << "right-hand raised";
                         getIndex = i;
                     }
-                    else if ( lelbow[i].y - lwrist[i].y > 20 && lelbow[i].y > 0 && lwrist[i].y > 0 )
+                    else if( lelbow[i].y - lwrist[i].y > 20 && lelbow[i].y > 0 && lwrist[i].y > 0 )
                     {
-                        yInfo() << "Skeleton" << i << "left-hand raised";
+                        //yInfo() << "Skeleton" << i << "left-hand raised";
                         getIndex = i;
                     }
-                    else
-                        yInfo() << "Skeleton" << i << "check";
+                    //else
+                        //yInfo() << "Skeleton" << i << "check";
                 }
 
                 if (getIndex > -1)
@@ -386,9 +392,9 @@ public:
         yarp::os::Bottle &options=cmd.addList().addList();
         options.addString(object.c_str());
         options.add(blobs.get(i));
-        yInfo() << "Sending training request:" << cmd.toString();
+        //yInfo() << "Sending training request:" << cmd.toString();
         rpcClassifier.write(cmd,reply);
-        yInfo() << "Received reply:" << reply.toString();
+        //yInfo() << "Received reply:" << reply.toString();
     }
 
     /**********************************************************/
@@ -480,14 +486,14 @@ public:
                         const yarp::os::Bottle &labels,
                         const yarp::os::Bottle &skeletons)
     {
-        yInfo() << "*************************************************************";
+        //yInfo() << "*************************************************************";
         if (skeletons.size() > 0)
         {
 
             yarp::os::Bottle &target  = targetOutPort.prepare();
 
             target = skeletons;
-            yInfo() << "******************************** SIZE TARGET " << target.get(0).asList()->size();
+            //yInfo() << "******************************** SIZE TARGET " << target.get(0).asList()->size();
 
             yarp::os::Bottle toSend;
             toSend.clear();
@@ -511,7 +517,7 @@ public:
             {
                 if (yarp::os::Bottle *propField = skeletons.get(0).asList()->get(i).asList())
                 {
-                    yInfo() << propField->toString();
+                    //yInfo() << propField->toString();
                     for (int ii = 0; ii < internalElements; ii++)
                     {
                         if (yarp::os::Bottle *propFieldPos = propField->get(ii).asList())
@@ -539,7 +545,7 @@ public:
                 }
             }
 
-            for (int i = 0; i < skeletonSize; i++)
+            /*for (int i = 0; i < skeletonSize; i++)
             {
                 yInfo() << i << "point neck" <<neck[i].x << neck[i].y;
                 yInfo() << i << "point lear" <<lear[i].x << lear[i].y;
@@ -548,15 +554,16 @@ public:
             }
 
             yInfo() << "******************************** SIZE BLOB " << blobs.size();
+            */
             int index =-1;
 
             std::vector<std::pair <int,int> > elements;
 
 
-            yInfo() << "******************************** SIZE TARGET " << target.get(0).asList()->size();
+            /*yInfo() << "******************************** SIZE TARGET " << target.get(0).asList()->size();
             yInfo() << "******************************** SIZE BLOB " << blobs.size();
             yInfo() << "******************************** SIZE NECKS " << neck.size();
-            yInfo() << "******************************** SIZE LABELS " << labels.size();
+            yInfo() << "******************************** SIZE LABELS " << labels.size();*/
 
 
             //consider only if we get blobs and valid necks
@@ -570,13 +577,13 @@ public:
                         {
                             yarp::os::Bottle *item=blobs.get(j).asList();
                             int cog = item->get(2).asInt() - ( (item->get(2).asInt() -item->get(0).asInt()) / 2);
-                            yInfo() << "COG = " << j << " with " << cog;
+                            /*yInfo() << "COG = " << j << " with " << cog;
                             yInfo() << "DIFF NECK" << i << "with  abs(cog - neck[i].x) " << abs(cog - neck[i].x);
                             yInfo() << "DIFF LEAR" << i << "with  abs(cog - lear[i].x) " << abs(cog - lear[i].x);
-                            yInfo() << "DIFF REAR" << i << "with  abs(cog - rear[i].x) " << abs(cog - rear[i].x);
+                            yInfo() << "DIFF REAR" << i << "with  abs(cog - rear[i].x) " << abs(cog - rear[i].x);*/
                             if ( abs(cog - neck[i].x) < 50 || abs(cog - lear[i].x) < 50 || abs(cog - rear[i].x) < 50)
                             {
-                                yInfo() << "adding " << i << j;
+                                //yInfo() << "adding " << i << j;
                                 elements.push_back(std::make_pair(i, j));
                             }
                         }
@@ -593,18 +600,18 @@ public:
                     elements.push_back(std::make_pair(0, 0));
             }
 
+            /*
+            yInfo() << "******************************** SIZE ELEMENTS " << elements.size();
+            for (int i = 0; i < elements.size(); i++)
+                yInfo() << "******************************** skeleton " << elements[i].first << "blob " << elements[i].second;
 
-            //yInfo() << "******************************** SIZE ELEMENTS " << elements.size();
-            //for (int i = 0; i < elements.size(); i++)
-                //yInfo() << "******************************** skeleton " << elements[i].first << "blob " << elements[i].second;
+            yInfo() << "******************************** SIZE blob " << blobs.size();
 
-            //yInfo() << "******************************** SIZE blob " << blobs.size();
+            yInfo() << "******************************** SIZE labels " << labels.size();
+            for (int i = 0; i < labels.size(); i++)
+                yInfo() << "******************************** labels " << labels.get(i).asList()->get(0).asString();
 
-            //yInfo() << "******************************** SIZE labels " << labels.size();
-            //for (int i = 0; i < labels.size(); i++)
-                //yInfo() << "******************************** labels " << labels.get(i).asList()->get(0).asString();
-
-            //yInfo() << "******************************** target  " << target.get(0).asList()->size();
+            yInfo() << "******************************** target  " << target.get(0).asList()->size();*/
             yarp::os::Bottle &addSkeletons = addStructure.addList();
 
             for (int i=0; i<target.get(0).asList()->size(); i++)
@@ -617,24 +624,24 @@ public:
 
 		        //yInfo() << "******************************** target.size() " << target.get(0).asList()->size() << i;
 
-                if (blobs.size() > 0)
+                if (blobs.size() > 0 )
                 {
-                    if (elements[i].second != -1 && labels.size()>0 )
+                    if (elements[i].second != -1 && labels.size() > 0 && i<=elements.size()-1 )
                     {
-                        yInfo() << "Adding name for skeleton " << i << "with blob " << elements[i].second;
+                        //yInfo() << "Adding name for skeleton " << i << "with blob " << elements[i].second;
                         options.addString(labels.get(elements[i].second).asList()->get(0).asString());
                         options.addDouble(labels.get(elements[i].second).asList()->get(1).asDouble());
                     }
                     else
                     {
-                        yInfo() << "Adding empty name";
+                        //yInfo() << "Adding empty name";
                         options.addString("?");
                         options.addDouble(0.0);
                     }
                 }
                 else
                 {
-                    yInfo() << "Adding empty name AS NO BLOB FOUND";
+                    //yInfo() << "Adding empty name AS NO BLOB FOUND";
                     options.addString("?");
                     options.addDouble(0.0);
                 }
@@ -707,10 +714,17 @@ public:
                 begin = clock();
                 gotTime = true;
             }
+            //yError() << "frame_counter " << frame_counter;
 
-            sendTrain(label, blobs, person);
+            if (frame_counter<skip_frames)
+			    frame_counter++;
+			else
+            {
+                sendTrain(label, blobs, person);
+                frame_counter = 0;
+            }
             time_spent = (double)( clock() - begin) / CLOCKS_PER_SEC;
-            yInfo() << "time spent " << time_spent*100;
+            //yInfo() << "time spent " << time_spent*100;
 
             if (time_spent*100 > 10)
             {
