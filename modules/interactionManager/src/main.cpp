@@ -416,6 +416,10 @@ class Interaction : public RFModule
                                         p.push_back(SpeechParam(T));
                                         speak("duration",true,p);
                                     }
+                                    else
+                                    {
+                                        speak("in-the-know",true);
+                                    }
 
                                     cmd.clear();
                                     cmd.addString("start");
