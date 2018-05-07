@@ -280,7 +280,7 @@ double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &r
 
             Vector diff = transformed_kp_child-transformed_kp_ref;
 
-            yInfo() << diff[component_to_check] << diff[1] << diff[2];
+//            yInfo() << diff[component_to_check] << diff[1] << diff[2];
             if(abs(diff[component_to_check])>rom->getRangePlane())
             {
 //                yInfo() << "out of the plane band" << diff[component_to_check];

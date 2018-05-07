@@ -1487,13 +1487,13 @@ bool Manager::writeStructToMat(const string& name, const vector< vector< pair<st
 
     size_t dim_struct[2] = {1,1};
 
-    size_t nSamples = keypoints_skel.size();
+    size_t nSamples = keypoints_skel.size()-1;
 
     matvar_t *matvar = Mat_VarCreateStruct(name.c_str(),2,dim_struct,fields,numKeypoints);
     if(matvar != NULL)
     {
         vector<double> field_vector;
-        field_vector.resize(3*nSamples);
+        field_vector.resize(3*(nSamples));
 
         size_t dims_field[2] = {nSamples,3};
 
