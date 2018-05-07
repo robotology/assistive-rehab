@@ -574,51 +574,59 @@ class Scaler : public RFModule
                 return false;
         }
 
+        bool out=false;
+        Matrix T(4,4);
+        Vector tr(3,0.0),rot(3,0.0);
         SkeletonWaist retrievedSkel, playedSkel;
-        getSkeletonsFromOpc(retrievedSkel,playedSkel);
-        yInfo() << retrievedSkel.getTag() << playedSkel.getTag();
-
-        if(!retrievedSkel.getTag().empty() && retrievedSkel.getTag()!="#8c"
-                && retrievedSkel.getTag()!="flexion" && retrievedSkel.getTag()!="abduction")
+        while(out==false)
         {
-            Vector p1=retrievedSkel[KeyPointTag::shoulder_center]->getPoint();
-            Vector c1=retrievedSkel.getCoronal();
-            Vector t1=retrievedSkel.getTransverse();
-            Vector s1=retrievedSkel.getSagittal();
-            Matrix Temp1 =zeros(4,4);
-            Temp1.setSubcol(c1,0,0);
-            Temp1.setSubcol(s1,0,1);
-            Temp1.setSubcol(t1,0,2);
-            Temp1.setSubcol(p1,0,3);
-            Temp1(3,3)=1.0;
+            getSkeletonsFromOpc(retrievedSkel,playedSkel);
+            yInfo() << retrievedSkel.getTag() << playedSkel.getTag();
 
-            Vector p2=playedSkel[KeyPointTag::shoulder_center]->getPoint();
-            Vector c2=playedSkel.getCoronal();
-            Vector t2=playedSkel.getTransverse();
-            Vector s2=playedSkel.getSagittal();
-            Matrix Temp2 =zeros(4,4);
-            Temp2.setSubcol(c2,0,0);
-            Temp2.setSubcol(s2,0,1);
-            Temp2.setSubcol(t2,0,2);
-            Temp2.setSubcol(p2,0,3);
-            Temp2(3,3)=1.0;
-
-            Matrix T = Temp1*SE3inv(Temp2);
-            Vector tr = T.getCol(3).subVector(0,2);
-            Vector rot = dcm2axis(T);
-
-            if(!moveSkeleton(tr,rot))
-                yWarning() << "Unable to move";
-
-            double maxpath;
-            getMaxPath(maxpath);
-            double scale=retrievedSkel.getMaxPath()/maxpath;
-            if(!setScale(scale))
+            if(!retrievedSkel.getTag().empty() && retrievedSkel.getTag()!="#8c"
+                    && retrievedSkel.getTag()!="flexion" && retrievedSkel.getTag()!="abduction")
             {
-                yError() << "Unable to scale";
-                return false;
-            }
+                Vector p1=retrievedSkel[KeyPointTag::shoulder_center]->getPoint();
+                Vector c1=retrievedSkel.getCoronal();
+                Vector t1=retrievedSkel.getTransverse();
+                Vector s1=retrievedSkel.getSagittal();
+                Matrix Temp1 =zeros(4,4);
+                Temp1.setSubcol(c1,0,0);
+                Temp1.setSubcol(s1,0,1);
+                Temp1.setSubcol(t1,0,2);
+                Temp1.setSubcol(p1,0,3);
+                Temp1(3,3)=1.0;
 
+                Vector p2=playedSkel[KeyPointTag::shoulder_center]->getPoint();
+                Vector c2=playedSkel.getCoronal();
+                Vector t2=playedSkel.getTransverse();
+                Vector s2=playedSkel.getSagittal();
+                Matrix Temp2 =zeros(4,4);
+                Temp2.setSubcol(c2,0,0);
+                Temp2.setSubcol(s2,0,1);
+                Temp2.setSubcol(t2,0,2);
+                Temp2.setSubcol(p2,0,3);
+                Temp2(3,3)=1.0;
+
+                T = Temp1*SE3inv(Temp2);
+                tr = T.getCol(3).subVector(0,2);
+                rot = dcm2axis(T);
+
+                out=retrievedSkel.update_planes();
+                Time::yield();
+            }
+        }
+
+        if(!moveSkeleton(tr,rot))
+            yWarning() << "Unable to move";
+
+        double maxpath;
+        getMaxPath(maxpath);
+        double scale=retrievedSkel.getMaxPath()/maxpath;
+        if(!setScale(scale))
+        {
+            yError() << "Unable to scale";
+            return false;
         }
 
         Bottle cmd,rep;
