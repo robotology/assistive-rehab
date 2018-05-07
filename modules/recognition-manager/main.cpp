@@ -85,6 +85,7 @@ public:
     /**********************************************************/
     bool train(const std::string &name) override
     {
+        burst("start");
         allowedTrain = true;
         gotTime = false;
         label = name;
@@ -392,9 +393,20 @@ public:
         yarp::os::Bottle &options=cmd.addList().addList();
         options.addString(object.c_str());
         options.add(blobs.get(i));
-        //yInfo() << "Sending training request:" << cmd.toString();
+        yInfo() << "Sending training request:" << cmd.toString();
         rpcClassifier.write(cmd,reply);
-        //yInfo() << "Received reply:" << reply.toString();
+        yInfo() << "Received reply:" << reply.toString();
+    }
+
+    void burst(const std::string &tag)
+    {
+        yarp::os::Bottle cmd,reply;
+        cmd.addVocab(yarp::os::Vocab::encode("burst"));
+        cmd.addVocab(yarp::os::Vocab::encode(tag.c_str()));
+
+        yInfo("Sending burst training request: %s",cmd.toString().c_str());
+        rpcClassifier.write(cmd,reply);
+        yInfo("Received reply: %s",reply.toString().c_str());
     }
 
     /**********************************************************/
@@ -713,7 +725,6 @@ public:
                 begin = clock();
                 gotTime = true;
             }
-            //yError() << "frame_counter " << frame_counter;
 
             if (frame_counter<skip_frames)
 			    frame_counter++;
@@ -721,6 +732,7 @@ public:
             {
                 sendTrain(label, blobs, person);
                 frame_counter = 0;
+                //yInfo() << "train image sent ";
             }
             time_spent = (double)( clock() - begin) / CLOCKS_PER_SEC;
             //yInfo() << "time spent " << time_spent*100;
@@ -729,6 +741,7 @@ public:
             {
                 allowedTrain = false;
                 time_spent = 0.0;
+                burst("stop");
             }
         }
         else
