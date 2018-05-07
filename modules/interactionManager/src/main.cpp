@@ -12,7 +12,11 @@
 
 #include <cstdlib>
 #include <cmath>
+#include <iterator>
 #include <unordered_map>
+#include <unordered_set>
+#include <vector>
+#include <algorithm>
 #include <string>
 #include <sstream>
 
@@ -50,6 +54,7 @@ class Interaction : public RFModule
     string tag;
     double T,t0,t1;
 
+    unordered_map<string,unordered_set<string>> history;
     unordered_map<string,string> speak_map;
     vector<double> assess_values;
 
@@ -177,6 +182,36 @@ class Interaction : public RFModule
     }
 
     /****************************************************************/
+    string select_metric(const Bottle &metrics)
+    {
+        string metric;
+        auto it=history.find(tag); 
+        if (it==end(history))
+        {
+            metric=metrics.get((int)floor(Rand::scalar(0,1)*metrics.size())).asString();
+        }
+        else
+        {
+            unordered_set<string> s1,diff;
+            for (int i=0; i<metrics.size(); i++)
+            {
+                s1.insert(metrics.get(i).asString());
+            }
+            auto &s2=it->second;
+            set_difference(begin(s1),end(s1),begin(s2),end(s2),inserter(diff,end(diff)));
+            if (diff.empty())
+            {
+                diff=s1;
+                s2.clear();
+            }
+            auto i=diff.begin();
+            advance(i,(int)floor(Rand::scalar(0,1)*diff.size()));
+            metric=*i;
+        }
+        return metric;
+    }
+
+    /****************************************************************/
     bool assess(const string &phase)
     {
         if (assess_values.empty() ||
@@ -299,7 +334,8 @@ class Interaction : public RFModule
                 {
                     vector<SpeechParam> p;
                     p.push_back(SpeechParam(tag[0]!='#'?tag:string("")));
-                    speak("invite",true,p);
+                    speak(history.find(tag)==end(history)?
+                          "invite-start":"invite-cont",true,p);
                     speak("engage",true);
                     state=State::follow;
                     t0=Time::now();
@@ -336,7 +372,7 @@ class Interaction : public RFModule
                 Bottle &metrics=*rep.get(0).asList();
                 if (metrics.size()>0)
                 {
-                    string metric=metrics.get((int)floor(Rand::scalar(0,1)*metrics.size())).asString();
+                    string metric=select_metric(metrics);
                     yInfo()<<"Selected metric:"<<metric;
 
                     cmd.clear();
@@ -369,6 +405,7 @@ class Interaction : public RFModule
                                             speak("ready",true);
                                             Time::delay(3.0);
                                             speak("start",true);
+                                            history[tag].insert(metric);
 
                                             state=State::assess;
                                             assess_values.clear();
