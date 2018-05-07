@@ -52,6 +52,7 @@ class Interaction : public RFModule
     enum class State { idle, seek, follow, engaged, assess } state;
     double period;
     string tag;
+    int reinforce_engage_cnt;
     double T,t0,t1;
 
     unordered_map<string,unordered_set<string>> history;
@@ -339,6 +340,7 @@ class Interaction : public RFModule
                           "invite-start":"invite-cont",true,p);
                     speak("engage",true);
                     state=State::follow;
+                    reinforce_engage_cnt=0;
                     t0=Time::now();
                 }                
             }
@@ -358,8 +360,16 @@ class Interaction : public RFModule
                 }
                 else if (Time::now()-t0>10.0)
                 {
-                    speak("reinforce-engage",true);
-                    t0=Time::now();
+                    if (++reinforce_engage_cnt<=1)
+                    {
+                        speak("reinforce-engage",true);
+                        t0=Time::now();
+                    }
+                    else
+                    {
+                        speak("disengaged",true);
+                        disengage();
+                    }
                 }
             }
         }
