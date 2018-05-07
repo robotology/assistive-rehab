@@ -170,12 +170,20 @@ class Interaction : public RFModule
     {
         state=State::idle;
         Bottle cmd,rep;
-        cmd.addString("set_auto");
+        cmd.addString("stop");
         if (attentionPort.write(cmd,rep))
         {
             if (rep.get(0).asVocab()==ok)
             {
-                return true;
+                cmd.clear();
+                cmd.addString("set_auto");
+                if (attentionPort.write(cmd,rep))
+                {
+                    if (rep.get(0).asVocab()==ok)
+                    {
+                        return true;
+                    }
+                }
             }
         }
         t0=Time::now();
