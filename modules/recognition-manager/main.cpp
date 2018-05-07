@@ -140,7 +140,7 @@ public:
             isLiftArm = false;
         else
             success = false;
-        
+
         return success;
     }
 
@@ -276,12 +276,12 @@ public:
                     const yarp::os::Bottle &skeletons)
     {
         int index = -1;
-        
+
         if (skeletons.size() > 0)
         {
             int skeletonSize = skeletons.get(0).asList()->size();
             int internalElements = 0;
-            
+
             std::vector<cv::Point> relbow;
             std::vector<cv::Point> rwrist;
             std::vector<cv::Point> lelbow;
@@ -336,9 +336,9 @@ public:
                     }
                 }
             }
-            
+
             int getIndex = -1;
-     
+
             if (neck.size() > 0)
             {
                 for (int i = 0; i < skeletonSize; i++)
@@ -358,20 +358,20 @@ public:
                 }
 
                 if (getIndex > -1)
-                { 
+                {
                     for (int i=0;i<blobs.size(); i++)
                     {
                         yarp::os::Bottle *item=blobs.get(i).asList();
-                        
-                        int cog = item->get(2).asInt() - ( (item->get(2).asInt() -item->get(0).asInt()) / 2);             
-                        
+
+                        int cog = item->get(2).asInt() - ( (item->get(2).asInt() -item->get(0).asInt()) / 2);
+
                         if ( abs(cog - neck[getIndex].x) < 20)
                             index = i;
                     }
                 }
             }
         }
-        
+
         return index;
     }
 
@@ -426,10 +426,10 @@ public:
 
             double confidence = 0.0;
             int largest = 0;
- 
+
             int classSize = 0;
 
-            if (labels.size() > 0)       
+            if (labels.size() > 0)
                 classSize = labels.get(j).asList()->size();
 
             int elementSize = 0;
@@ -461,7 +461,7 @@ public:
                     tag<<"-";
                 }
 
-                
+
                 cv::putText(imgMat,tag.str().c_str(),txtLoc,  cv::FONT_HERSHEY_SIMPLEX ,
                             0.5,(j==i)?highlight:lowlight,2);
             }
@@ -476,14 +476,14 @@ public:
     }
 
     /**********************************************************/
-    void sendTargetData(const yarp::os::Bottle &blobs, 
+    void sendTargetData(const yarp::os::Bottle &blobs,
                         const yarp::os::Bottle &labels,
                         const yarp::os::Bottle &skeletons)
     {
         yInfo() << "*************************************************************";
         if (skeletons.size() > 0)
         {
-            
+
             yarp::os::Bottle &target  = targetOutPort.prepare();
 
             target = skeletons;
@@ -505,8 +505,8 @@ public:
             if (skeletonSize>0)
                 internalElements = target.get(0).asList()->get(0).asList()->size();
 
-            
-            
+
+
             for (int i = 0; i < skeletonSize; i++)
             {
                 if (yarp::os::Bottle *propField = skeletons.get(0).asList()->get(i).asList())
@@ -545,42 +545,40 @@ public:
                 yInfo() << i << "point lear" <<lear[i].x << lear[i].y;
                 yInfo() << i << "point rear" <<rear[i].x << rear[i].y;
                 yInfo() << "";
-            }   
+            }
 
             yInfo() << "******************************** SIZE BLOB " << blobs.size();
             int index =-1;
 
             std::vector<std::pair <int,int> > elements;
-            
-            
+
+
             yInfo() << "******************************** SIZE TARGET " << target.get(0).asList()->size();
             yInfo() << "******************************** SIZE BLOB " << blobs.size();
             yInfo() << "******************************** SIZE NECKS " << neck.size();
             yInfo() << "******************************** SIZE LABELS " << labels.size();
-            
-            
+
+
             //consider only if we get blobs and valid necks
             if (blobs.size() > 1 )
             {
                 for (int i=0; i<neck.size(); i++)
-                {           
+                {
                     if (neck[i].x >0)
-                    {     
+                    {
                         for (int j=0; j<blobs.size(); j++)
-                        { 
-                            yarp::os::Bottle *item=blobs.get(j).asList(); 
+                        {
+                            yarp::os::Bottle *item=blobs.get(j).asList();
                             int cog = item->get(2).asInt() - ( (item->get(2).asInt() -item->get(0).asInt()) / 2);
-                            yInfo() << "COG = " << j << " with " << cog; 
+                            yInfo() << "COG = " << j << " with " << cog;
                             yInfo() << "DIFF NECK" << i << "with  abs(cog - neck[i].x) " << abs(cog - neck[i].x);
                             yInfo() << "DIFF LEAR" << i << "with  abs(cog - lear[i].x) " << abs(cog - lear[i].x);
                             yInfo() << "DIFF REAR" << i << "with  abs(cog - rear[i].x) " << abs(cog - rear[i].x);
                             if ( abs(cog - neck[i].x) < 50 || abs(cog - lear[i].x) < 50 || abs(cog - rear[i].x) < 50)
                             {
-                                yInfo() << "adding " << i << j; 
+                                yInfo() << "adding " << i << j;
                                 elements.push_back(std::make_pair(i, j));
                             }
-			    else
-				elements.push_back(std::make_pair(i, -1));
                         }
                     }
                     else
@@ -594,13 +592,19 @@ public:
                 if (skeletonSize > 0 && blobs.size() > 0)
                     elements.push_back(std::make_pair(0, 0));
             }
-                
-   
-            yInfo() << "******************************** SIZE ELEMENTS " << elements.size();
-            for (int i = 0; i < elements.size(); i++)
-                yInfo() << "******************************** skeleton " << elements[i].first << "blob " << elements[i].second;
-        
-            
+
+
+            //yInfo() << "******************************** SIZE ELEMENTS " << elements.size();
+            //for (int i = 0; i < elements.size(); i++)
+                //yInfo() << "******************************** skeleton " << elements[i].first << "blob " << elements[i].second;
+
+            //yInfo() << "******************************** SIZE blob " << blobs.size();
+
+            //yInfo() << "******************************** SIZE labels " << labels.size();
+            //for (int i = 0; i < labels.size(); i++)
+                //yInfo() << "******************************** labels " << labels.get(i).asList()->get(0).asString();
+
+            //yInfo() << "******************************** target  " << target.get(0).asList()->size();
             yarp::os::Bottle &addSkeletons = addStructure.addList();
 
             for (int i=0; i<target.get(0).asList()->size(); i++)
@@ -611,11 +615,11 @@ public:
 
                 options.addString("Name");
 
-		yInfo() << "******************************** target.size() " << target.get(0).asList()->size() << i;
-                
+		        //yInfo() << "******************************** target.size() " << target.get(0).asList()->size() << i;
+
                 if (blobs.size() > 0)
                 {
-                    if (elements[i].second != -1 && labels.size()>0 && i<=labels.size()-1)
+                    if (elements[i].second != -1 && labels.size()>0 )
                     {
                         yInfo() << "Adding name for skeleton " << i << "with blob " << elements[i].second;
                         options.addString(labels.get(elements[i].second).asList()->get(0).asString());
@@ -627,7 +631,6 @@ public:
                         options.addString("?");
                         options.addDouble(0.0);
                     }
-                    
                 }
                 else
                 {
@@ -637,7 +640,7 @@ public:
                 }
                 addSkeletons=*skeleton;
             }
-            
+
             targetOutPort.write();
         }
     }
@@ -749,7 +752,7 @@ public:
         else
         {
             for (int i=0; i<blobs.size(); i++)
-            {   
+            {
                 yarp::os::Bottle &fillScores = scores.addList();
                 yarp::os::Bottle &labelblobs = labels.addList();
             }
