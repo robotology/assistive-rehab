@@ -185,10 +185,11 @@ class Interaction : public RFModule
     string select_metric(const Bottle &metrics)
     {
         string metric;
-        auto it=history.find(tag); 
-        if (it==end(history))
+        double p=Rand::scalar(0,1);
+        auto it1=history.find(tag);
+        if (it1==end(history))
         {
-            metric=metrics.get((int)floor(Rand::scalar(0,1)*metrics.size())).asString();
+            metric=metrics.get((int)floor(p*metrics.size())).asString();
         }
         else
         {
@@ -197,16 +198,16 @@ class Interaction : public RFModule
             {
                 s1.insert(metrics.get(i).asString());
             }
-            auto &s2=it->second;
+            auto &s2=it1->second;
             set_difference(begin(s1),end(s1),begin(s2),end(s2),inserter(diff,end(diff)));
             if (diff.empty())
             {
                 diff=s1;
                 s2.clear();
             }
-            auto i=diff.begin();
-            advance(i,(int)floor(Rand::scalar(0,1)*diff.size()));
-            metric=*i;
+            auto it2=diff.begin();
+            advance(it2,(int)floor(p*diff.size()));
+            metric=*it2;
         }
         return metric;
     }
