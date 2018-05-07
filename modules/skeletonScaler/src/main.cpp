@@ -554,15 +554,7 @@ class Scaler : public RFModule
         {
             if(rep.get(0).asVocab()==Vocab::encode("ok"))
             {
-                Bottle cmd2,rep2;
-                cmd2.addString("put_in_opc");
-                cmd2.addDouble(0.0);
-                yInfo() << cmd2.toString();
-                if(cmdPort.write(cmd2,rep2))
-                {
-                    if(rep2.get(0).asVocab()==Vocab::encode("ok"))
-                        return true;
-                }
+                return true;
             }
         }
 
@@ -572,6 +564,15 @@ class Scaler : public RFModule
     /****************************************************************/
     bool start(const int& nsessions_, const double& twarp_)
     {
+        Bottle cmd1,rep1;
+        cmd1.addString("put_in_opc");
+        cmd1.addDouble(0.0);
+        yInfo() << cmd1.toString();
+        if(cmdPort.write(cmd1,rep1))
+        {
+            if(!rep1.get(0).asVocab()==Vocab::encode("ok"))
+                return false;
+        }
 
         SkeletonWaist retrievedSkel, playedSkel;
         getSkeletonsFromOpc(retrievedSkel,playedSkel);
@@ -608,50 +609,6 @@ class Scaler : public RFModule
 
             if(!moveSkeleton(tr,rot))
                 yWarning() << "Unable to move";
-
-////            Vector xyz_inv=invT.subcol(0,3,3);
-//            Vector p1=retrievedSkel.getCoronal();
-//            Vector p2=playedSkel.getCoronal();
-//            Vector axis=cross(p2,p1);
-//            if(norm(axis)>0.0)
-//                axis/=norm(axis);
-//            double angle=acos(dot(p2,p1)/norm(p1)*norm(p2));
-//            rot[0]=axis[0];
-//            rot[1]=axis[1];
-//            rot[2]=axis[2];
-//            rot[3]=angle;
-//            Matrix T=axis2dcm(rot);
-//            T(0,3)=xyz[0];
-//            T(1,3)=xyz[1];
-//            T(2,3)=xyz[2];
-
-//            //current transformation
-//            Matrix currT;
-//            Vector curr_rot,xyz_inv(3,0.0);
-//            curr_rot.resize(3);
-//            if(!isZero(invT))
-//            {
-//                currT=multiply(T,invT.transposed());
-//                curr_rot=dcm2axis(currT);
-
-//                Matrix prevRot(4,4);
-//                prevRot.setSubmatrix(invT.submatrix(0,2,0,2).transposed(),0,0);
-//                Vector v(4,0.0);
-//                v[3]=1.0;
-//                prevRot.setSubrow(v,3,3);
-//                prevRot.setSubcol(v,3,3);
-//                xyz_inv=(prevRot*invT).subcol(0,3,3);
-//            }
-//            else
-//                curr_rot=rot;
-
-//            double n=norm(xyz_prev-xyz);
-//            xyz_prev=xyz;
-//            if(n<pow(10.0,-5.0))
-//                curr_rot.zero();
-
-//            xyz+=xyz_inv;
-
 
             double maxpath;
             getMaxPath(maxpath);

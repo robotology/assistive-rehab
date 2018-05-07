@@ -1545,7 +1545,8 @@ bool Manager::writeStructToMat(const string& name, const Metric& metric, mat_t *
         string joint_met = metric.getTagJoint();
         char *joint_c = new char[joint_met.length() + 1];
         strcpy(joint_c, joint_met.c_str());
-        size_t dims_field_joint[2] = {1,2*sizeof(joint_c)/sizeof(joint_c[0])};
+        size_t dims_field_joint[2] = {1,joint_met.size()};
+
         field = Mat_VarCreate(NULL,MAT_C_CHAR,MAT_T_UTF8,2,dims_field_joint,joint_c,0);
         Mat_VarSetStructFieldByName(matvar, fields[1], 0, field);
         delete [] joint_c;
