@@ -83,6 +83,9 @@
     <module>
        <name>cer_gaze-controller</name>
        <parameters>--cameras::context cameraCalibration --cameras::file cerEyes_320x240.ini --joints-limits::pitch "(-20.0 20.0)" --joints-limits::yaw "(-40.0 40.0)"</parameters>
+       <ensure>
+          <wait when="stop">3</wait>
+       </ensure>
        <node>r1-base</node>
     </module>
 
