@@ -63,19 +63,13 @@ void Processor::setInitialConf(const SkeletonWaist &skeleton_init_, const map<st
     sagittal = skeleton.getSagittal();
     transverse = skeleton.getTransverse();
     Vector p = skeleton[KeyPointTag::shoulder_center]->getPoint();
-    Matrix T1(3,4);
-    T1.setCol(0,coronal);
-    T1.setCol(1,sagittal);
-    T1.setCol(2,transverse);
-    T1.setCol(3,p);
+    Matrix T1(4,4);
+    T1.setSubcol(coronal,0,0);
+    T1.setSubcol(sagittal,0,1);
+    T1.setSubcol(transverse,0,2);
+    T1.setSubcol(p,0,3);
 
-    Matrix T2(4,4);
-    T2.setSubmatrix(T1,0,0);
-    Vector v(4,0.0);
-    v[3]=1.0;
-    T2.setRow(3,v);
-
-    inv_reference_system = SE3inv(T2);
+    inv_reference_system = SE3inv(T1);
 
     //    skeleton_init.print();
 }
@@ -238,52 +232,41 @@ double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &r
             int component_to_check;
             if(rom->getTagPlane() == "coronal")
             {
-                plane_normal_ = coronal;
-    //            plane_normal = curr_skeleton.getCoronal()-kp_child;
-    //            plane_normal /= norm(plane_normal);
+                Vector cor(3,0.0);
+                cor[0]=1.0;
+                plane_normal_ = cor;
                 component_to_check = 0;
             }
             else if(rom->getTagPlane() == "sagittal")
             {
-                plane_normal_ = sagittal;
-    //            plane_normal = curr_skeleton.getSagittal()-kp_child;
-    //            plane_normal /= norm(plane_normal);
+                Vector sag(3,0.0);
+                sag[1]=1.0;
+                plane_normal_ = sag;
                 component_to_check = 1;
             }
             else if(rom->getTagPlane() == "transverse")
             {
-                plane_normal_ = transverse;
-    //            plane_normal = curr_skeleton.getSagittal()-kp_child;
-    //            plane_normal /= norm(plane_normal);
+                Vector trans(3,0.0);
+                trans[2]=1.0;
+                plane_normal_ = trans;
                 component_to_check = 2;
             }
-            plane_normal_ = plane_normal_-kp_child;
-            plane_normal_ /= norm(plane_normal_);
 
             ref_dir = rom->getRefDir();
 
-            v1 = kp_child-kp_ref;
-            score_exercise = 0.7;
-
-            Vector k1(4,0.0);
-            k1[0] = kp_ref[0];
-            k1[1] = kp_ref[1];
-            k1[2] = kp_ref[2];
-            k1[3] = 1.0;
-            Vector k2(4,0.0);
-            k2[0] = kp_child[0];
-            k2[1] = kp_child[1];
-            k2[2] = kp_child[2];
-            k2[3] = 1.0;
+            Vector k1=kp_ref;
+            k1.push_back(1.0);
+            Vector k2=kp_child;
+            k2.push_back(1.0);
             Vector transformed_kp_ref = inv_reference_system*k1;
             Vector transformed_kp_child = inv_reference_system*k2;
 
-            Vector diff = transformed_kp_child-transformed_kp_ref;
+            v1 = transformed_kp_child.subVector(0,2)-transformed_kp_ref.subVector(0,2);
 
-//            yInfo() << diff[component_to_check] << diff[1] << diff[2];
-            if(abs(diff[component_to_check])>rom->getRangePlane())
+            score_exercise = 0.7;
+            if(abs(v1[component_to_check])>rom->getRangePlane())
             {
-//                yInfo() << "out of the plane band" << diff[component_to_check];
+                yInfo() << "out of the plane band" << v1[component_to_check];
                 score_exercise = 0.4;
             }
 

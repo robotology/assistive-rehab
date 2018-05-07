@@ -1537,7 +1537,7 @@ bool Manager::writeStructToMat(const string& name, const Metric& metric, mat_t *
         string motion_met = metric.getMotionType();
         char *motion_c = new char[motion_met.length() + 1];
         strcpy(motion_c, motion_met.c_str());
-        size_t dims_field_motion[2] = {1,2*sizeof(motion_c)/sizeof(motion_c[0])};
+        size_t dims_field_motion[2] = {1,motion_met.size()};
         field = Mat_VarCreate(NULL,MAT_C_CHAR,MAT_T_UTF8,2,dims_field_motion,motion_c,0);
         Mat_VarSetStructFieldByName(matvar, fields[0], 0, field);
         delete [] motion_c;
