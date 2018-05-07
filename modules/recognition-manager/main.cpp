@@ -632,7 +632,7 @@ public:
 
                 options.addString("Name");
 
-		        //yInfo() << "******************************** target.size() " << target.get(0).asList()->size() << i;
+                //yInfo() << "******************************** target.size() " << target.get(0).asList()->size() << i;
 
                 if (blobs.size() > 0 )
                 {
@@ -727,8 +727,8 @@ public:
             }
 
             if (frame_counter<skip_frames)
-			    frame_counter++;
-			else
+                frame_counter++;
+            else
             {
                 sendTrain(label, blobs, person);
                 frame_counter = 0;
