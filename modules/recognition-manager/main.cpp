@@ -32,7 +32,6 @@
 #include <vector>
 #include <sstream>
 #include <iostream>
-#include <ctime>
 #include <cstring>
 
 #include "recognition_IDL.h"
@@ -66,8 +65,7 @@ class Module : public yarp::os::RFModule, public recognition_IDL
     double              trainingTime;
     double              confidenceThreshold;
 
-    double              time_spent;
-    clock_t             begin, end;
+    double              t0;
 
     bool                isLiftArm;
     bool                gotTime;
@@ -178,7 +176,6 @@ public:
         allowedTrain = false;
 
         confidenceThreshold = 0.70;
-        time_spent = 0.0;
         isLiftArm = true;
         gotTime = false;
 
@@ -722,7 +719,7 @@ public:
         {
             if (!gotTime)
             {
-                begin = clock();
+                t0 = yarp::os::Time::now();
                 gotTime = true;
             }
 
@@ -734,15 +731,15 @@ public:
                 frame_counter = 0;
                 //yInfo() << "train image sent ";
             }
-            time_spent = (double)( clock() - begin) / CLOCKS_PER_SEC;
-            //yInfo() << "time spent " << time_spent*100;
 
-            if (time_spent*100 > trainingTime)
+            if (gotTime)
             {
-                allowedTrain = false;
-                time_spent = 0.0;
-                burst("stop");
-                gotTime = false;
+                if (yarp::os::Time::now() - t0 > trainingTime)
+                {
+                    allowedTrain = false;
+                    burst("stop");
+                    gotTime = false;
+                }
             }
         }
         else
