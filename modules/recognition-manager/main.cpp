@@ -155,7 +155,9 @@ public:
         setName(moduleName.c_str());
 
         blobs_detection_timeout  = rf.check("blobs_detection_timeout",yarp::os::Value(0.2)).asDouble();
-        trainingTime = rf.check("training_time",yarp::os::Value(15)).asDouble();
+
+        trainingTime = rf.check("training_time",yarp::os::Value(10.0)).asDouble();
+
         skip_frames = rf.check("skip_frames",yarp::os::Value(3)).asInt();
 
         rpcPort.open(("/"+getName("/rpc")).c_str());
@@ -735,11 +737,12 @@ public:
             time_spent = (double)( clock() - begin) / CLOCKS_PER_SEC;
             //yInfo() << "time spent " << time_spent*100;
 
-            if (time_spent*100 > 10)
+            if (time_spent*100 > trainingTime)
             {
                 allowedTrain = false;
                 time_spent = 0.0;
                 burst("stop");
+                gotTime = false;
             }
         }
         else
