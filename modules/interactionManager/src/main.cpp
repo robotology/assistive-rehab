@@ -100,7 +100,7 @@ class Interaction : public RFModule
         payload.addString(value_ext);
         speechStreamPort.writeStrict();
 
-        while (wait && (speechRpcPort.getOutputCount()>0))
+        while (wait && !interrupting && (speechRpcPort.getOutputCount()>0))
         {
             Time::delay(getPeriod());
             Bottle cmd,rep;
@@ -111,10 +111,6 @@ class Interaction : public RFModule
                 {
                     break;
                 }
-            }
-            if (interrupting)
-            {
-                break;
             }
         }
         return (it!=end(speak_map));
