@@ -155,9 +155,7 @@ public:
         setName(moduleName.c_str());
 
         blobs_detection_timeout  = rf.check("blobs_detection_timeout",yarp::os::Value(0.2)).asDouble();
-
-        trainingTime = rf.check("training_time",yarp::os::Value(10)).asDouble();
-
+        trainingTime = rf.check("training_time",yarp::os::Value(15)).asDouble();
         skip_frames = rf.check("skip_frames",yarp::os::Value(3)).asInt();
 
         rpcPort.open(("/"+getName("/rpc")).c_str());
