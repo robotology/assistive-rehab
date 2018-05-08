@@ -186,14 +186,22 @@ void Skeleton::helper_normalize(KeyPoint* k, const vector<Vector> &helperpoints)
 {
     if (k!=nullptr)
     {
-        for (auto &c:k->child)
+        if (k->isUpdated())
         {
-            Vector dir=helperpoints[key2id[c]]-helperpoints[key2id[k]];
-            double n=norm(dir);
-            if (n>0.0)
-                dir/=norm(dir);
-            c->point=k->point+dir;
-            helper_normalize(c,helperpoints);
+            for (auto &c:k->child)
+            {
+                if (c->isUpdated())
+                {
+                    Vector dir=helperpoints[key2id[c]]-helperpoints[key2id[k]];
+                    double n=norm(dir);
+                    if (n>0.0)
+                    {
+                        dir/=norm(dir);
+                    }
+                    c->point=k->point+dir;
+                    helper_normalize(c,helperpoints);
+                }
+            }
         }
     }
 }
@@ -203,11 +211,17 @@ void Skeleton::helper_scale(KeyPoint* k, const vector<Vector> &helperpoints,
 {
     if (k!=nullptr)
     {
-        for (auto &c:k->child)
+        if (k->isUpdated())
         {
-            Vector dir=s*(helperpoints[key2id[c]]-helperpoints[key2id[k]]);
-            c->point=k->point+dir;
-            helper_scale(c,helperpoints,s);
+            for (auto &c:k->child)
+            {
+                if (c->isUpdated())
+                {
+                    Vector dir=s*(helperpoints[key2id[c]]-helperpoints[key2id[k]]);
+                    c->point=k->point+dir;
+                    helper_scale(c,helperpoints,s);
+                }
+            }
         }
     }
 }
