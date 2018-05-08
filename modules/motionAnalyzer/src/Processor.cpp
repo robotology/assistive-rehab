@@ -87,6 +87,8 @@ bool Processor::isStatic(const KeyPoint& keypoint)
 void Processor::update(SkeletonWaist &curr_skeleton_)
 {
     curr_skeleton.update(curr_skeleton_.toProperty());
+    curr_skeleton.normalize();
+
 //    curr_skeleton.print();
 
     //    skeleton_init.print();
@@ -127,16 +129,15 @@ bool Processor::isOutOfSphere(const KeyPoint& keypoint, const KeyPoint& keypoint
 
 double Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyPoint& keypoint_init)
 {
-    Vector curr_kp(keypoint.getPoint()), curr_kp_init(keypoint_init.getPoint());
-    Vector k1=curr_kp;
+    Vector k1=keypoint.getPoint();
     k1.push_back(1.0);
-    Vector transformed_kp = inv_reference_system*k1;
-    double dev = norm(transformed_kp.subVector(0,2)-curr_kp_init);
+    Vector transformed_kp = (inv_reference_system*k1).subVector(0,2);
+    double dev = norm(transformed_kp-keypoint_init.getPoint());
 
     yInfo() << keypoint.getTag().c_str()
             << dev
-            << transformed_kp.subVector(0,2).toString()
-            << curr_kp_init.toString();
+            << transformed_kp.toString()
+            << keypoint_init.getPoint().toString();
 
     if(dev > keypoints2conf[keypoint.getTag()].second)
         return dev;

@@ -925,7 +925,14 @@ bool Manager::start()
 {
     LockGuard lg(mutex);
 
-    getSkeleton();
+    bool out=false;
+    while(out==false)
+    {    
+        getSkeleton();
+        out=skeletonIn.update_planes();
+        Time::yield();
+    }    
+
     processor->setInitialConf(skel, metric->getInitialConf(),skeletonIn);
 
     //start skeletonScaler
@@ -1262,7 +1269,8 @@ void Manager::getSkeleton()
                                         {
                                             Skeleton* skeleton = skeleton_factory(prop);
                                             skeletonIn.update(skeleton->toProperty());
-                                            all_keypoints.push_back(skeletonIn.get_unordered());
+                                            if(skeleton->update_planes())
+                                                all_keypoints.push_back(skeletonIn.get_unordered());
                                             updated=true;
 
                                             delete skeleton;
@@ -1405,7 +1413,7 @@ bool Manager::updateModule()
                 time_samples.push_back(Time::now()-tstart);
 
                 //        skeletonIn.print();
-                skeletonIn.normalize();
+                //skeletonIn.normalize();
 
                 processor->update(skeletonIn);
                 if(processor->isDeviatingFromIntialPose())
