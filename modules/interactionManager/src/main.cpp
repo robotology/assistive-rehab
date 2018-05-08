@@ -235,11 +235,11 @@ class Interaction : public RFModule
         mean/=assess_values.size();
 
         string grade;
-        if (mean<0.33)
+        if (mean<0.4)
         {
             grade="low";
         }
-        else if (mean<0.66)
+        else if (mean<0.8)
         {
             grade="medium";
         }
