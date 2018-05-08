@@ -49,11 +49,10 @@ void print(const Matrix& m)
     }
 }
 
-void Processor::setInitialConf(const SkeletonWaist &skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_,
+void Processor::setInitialConf(SkeletonWaist* skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_,
                                SkeletonWaist &skeleton)
 {
-    skeleton_init.update(skeleton_init_.get_unordered());
-    skeleton_init.setTag("init");
+    skeleton_init = skeleton_init_;
     keypoints2conf = keypoints2conf_;
 
     if(!skeleton.update_planes())
@@ -108,7 +107,7 @@ bool Processor::isDeviatingFromIntialPose()
         {
             if(isStatic(*curr_skeleton[i]))
             {
-                deviation+= isDeviatingFromIntialPose(*curr_skeleton[i], *skeleton_init[i]);
+                deviation+= isDeviatingFromIntialPose(*curr_skeleton[i], *(*skeleton_init)[i]);
                 isDeviating = true;
 //                yWarning() << curr_skeleton[i]->getTag() << "deviating from initial pose";
             }

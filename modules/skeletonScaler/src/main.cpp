@@ -581,8 +581,7 @@ class Scaler : public RFModule
         getSkeletonsFromOpc(retrievedSkel,playedSkel);
         yInfo() << retrievedSkel.getTag() << playedSkel.getTag();
 
-        if(!retrievedSkel.getTag().empty() && retrievedSkel.getTag()!="#8c"
-                && retrievedSkel.getTag()!="flexion" && retrievedSkel.getTag()!="abduction")
+        if(!retrievedSkel.getTag().empty())
         {
             Vector p1=retrievedSkel[KeyPointTag::shoulder_center]->getPoint();
             Vector c1=retrievedSkel.getCoronal();
@@ -610,13 +609,13 @@ class Scaler : public RFModule
             tr = T.getCol(3).subVector(0,2);
             rot = dcm2axis(T);
         }
-                
+
         double maxpath;
         getMaxPath(maxpath);
         double scale=retrievedSkel.getMaxPath()/maxpath;
         if(!setScale(scale))
             yWarning() << "Unable to scale";
-
+                        
         if(!moveSkeleton(tr,rot))
             yWarning() << "Unable to move";        
 

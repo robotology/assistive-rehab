@@ -37,7 +37,7 @@ class Processor
     Matrix invT;
 
 protected:
-    SkeletonWaist skeleton_init;
+    SkeletonWaist *skeleton_init;
     map<string, pair<string,double>> keypoints2conf;
     SkeletonWaist curr_skeleton;
     Matrix inv_reference_system;
@@ -48,7 +48,7 @@ public:
     Processor();
     virtual ~Processor() {;}
 //    virtual string getMotionType();
-    void setInitialConf(const SkeletonWaist &skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_,
+    void setInitialConf(SkeletonWaist *skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_,
                         SkeletonWaist &skeleton);
     bool isStatic(const KeyPoint& keypoint);
     void update(SkeletonWaist& curr_skeleton_);

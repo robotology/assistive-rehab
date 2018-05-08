@@ -53,12 +53,13 @@ class Manager : public RFModule,
 
     int numKeypoints;
     vector<pair<string,Vector>> initial_keypoints;
+    vector<pair<string,Vector>> new_keypoints;
     vector<pair<string,Vector>> curr_keypoints;
     vector< vector <pair<string,Vector>> > all_keypoints;
     vector<double> time_samples;
     vector<Vector > all_planes;
     SkeletonWaist* skeletonInit;
-    SkeletonWaist skel;
+    SkeletonWaist* skel;
     vector<SkeletonWaist*> skeletonsInit;
 
     SkeletonWaist skeletonIn;
@@ -79,6 +80,7 @@ class Manager : public RFModule,
     Vector kneeRight_init;
     Vector ankleLeft_init;
     Vector ankleRight_init;
+    Vector hipCenter_init;
 
     Vector elbowLeft;
     Vector elbowRight;

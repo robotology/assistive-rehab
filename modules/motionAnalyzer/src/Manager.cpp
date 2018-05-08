@@ -54,8 +54,10 @@ void Manager::init()
     kneeRight_init.resize(3);
     ankleLeft_init.resize(3);
     ankleRight_init.resize(3);
+    hipCenter_init.resize(3);
 
-    initial_keypoints.resize(numKeypoints-1);
+    initial_keypoints.resize(numKeypoints);
+    new_keypoints.resize(numKeypoints);
 
     elbowLeft.resize(3);
     elbowRight.resize(3);
@@ -246,6 +248,15 @@ bool Manager::loadInitialConf()
         }
         else
             yError() << "Could not load initial pose for ankle right";
+        if(Bottle *bHipCenter_init = bGeneral.find("hip_center_init_pose").asList())
+        {
+            hipCenter_init[0] = bHipCenter_init->get(0).asDouble();
+            hipCenter_init[1] = bHipCenter_init->get(1).asDouble();
+            hipCenter_init[2] = bHipCenter_init->get(2).asDouble();
+            initial_keypoints.push_back(make_pair(KeyPointTag::hip_center,hipCenter_init));
+        }
+        else
+            yError() << "Could not load initial pose for hip center";
     }
 
     return true;
@@ -253,16 +264,17 @@ bool Manager::loadInitialConf()
 
 bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
 {
+    new_keypoints = initial_keypoints;
     if(Bottle *bElbowLeft_init = b.find("elbow_left_init_pose").asList())
     {
         elbowLeft_init[0] = bElbowLeft_init->get(0).asDouble();
         elbowLeft_init[1] = bElbowLeft_init->get(1).asDouble();
         elbowLeft_init[2] = bElbowLeft_init->get(2).asDouble();
 
-        for(int i=0; i<initial_keypoints.size(); i++)
+        for(int i=0; i<new_keypoints.size(); i++)
         {
-            if(initial_keypoints[i].first == KeyPointTag::elbow_left)
-                initial_keypoints[i] = make_pair(KeyPointTag::elbow_left,elbowLeft_init);
+            if(new_keypoints[i].first == KeyPointTag::elbow_left)
+                new_keypoints[i] = make_pair(KeyPointTag::elbow_left,elbowLeft_init);
         }
         yInfo() << "Updated initial pose for elbow left";
     }
@@ -273,10 +285,10 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
         elbowRight_init[1] = bElbowRight_init->get(1).asDouble();
         elbowRight_init[2] = bElbowRight_init->get(2).asDouble();
 
-        for(int i=0; i<initial_keypoints.size(); i++)
+        for(int i=0; i<new_keypoints.size(); i++)
         {
-            if(initial_keypoints[i].first == KeyPointTag::elbow_right)
-                initial_keypoints[i] = make_pair(KeyPointTag::elbow_right,elbowRight_init);
+            if(new_keypoints[i].first == KeyPointTag::elbow_right)
+                new_keypoints[i] = make_pair(KeyPointTag::elbow_right,elbowRight_init);
         }
         yInfo() << "Updated initial pose for elbow right";
     }
@@ -287,10 +299,10 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
         handLeft_init[1] = bHandLeft_init->get(1).asDouble();
         handLeft_init[2] = bHandLeft_init->get(2).asDouble();
 
-        for(int i=0; i<initial_keypoints.size(); i++)
+        for(int i=0; i<new_keypoints.size(); i++)
         {
-            if(initial_keypoints[i].first == KeyPointTag::hand_left)
-                initial_keypoints[i] = make_pair(KeyPointTag::hand_left,handLeft_init);
+            if(new_keypoints[i].first == KeyPointTag::hand_left)
+                new_keypoints[i] = make_pair(KeyPointTag::hand_left,handLeft_init);
         }
         yInfo() << "Updated initial pose for hand left";
     }
@@ -301,10 +313,10 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
         handRight_init[1] = bHandRight_init->get(1).asDouble();
         handRight_init[2] = bHandRight_init->get(2).asDouble();
 
-        for(int i=0; i<initial_keypoints.size(); i++)
+        for(int i=0; i<new_keypoints.size(); i++)
         {
-            if(initial_keypoints[i].first == KeyPointTag::hand_right)
-                initial_keypoints[i] = make_pair(KeyPointTag::hand_right,handRight_init);
+            if(new_keypoints[i].first == KeyPointTag::hand_right)
+                new_keypoints[i] = make_pair(KeyPointTag::hand_right,handRight_init);
         }
         yInfo() << "Updated initial pose for hand right";
     }
@@ -315,10 +327,10 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
         head_init[1] = bHead_init->get(1).asDouble();
         head_init[2] = bHead_init->get(2).asDouble();
 
-        for(int i=0; i<initial_keypoints.size(); i++)
+        for(int i=0; i<new_keypoints.size(); i++)
         {
-            if(initial_keypoints[i].first == KeyPointTag::head)
-                initial_keypoints[i] = make_pair(KeyPointTag::head,head_init);
+            if(new_keypoints[i].first == KeyPointTag::head)
+                new_keypoints[i] = make_pair(KeyPointTag::head,head_init);
         }
         yInfo() << "Updated initial pose for head";
     }
@@ -329,10 +341,10 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
         shoulderCenter_init[1] = bShoulderCenter_init->get(1).asDouble();
         shoulderCenter_init[2] = bShoulderCenter_init->get(2).asDouble();
 
-        for(int i=0; i<initial_keypoints.size(); i++)
+        for(int i=0; i<new_keypoints.size(); i++)
         {
-            if(initial_keypoints[i].first == KeyPointTag::shoulder_center)
-                initial_keypoints[i] = make_pair(KeyPointTag::shoulder_center,shoulderCenter_init);
+            if(new_keypoints[i].first == KeyPointTag::shoulder_center)
+                new_keypoints[i] = make_pair(KeyPointTag::shoulder_center,shoulderCenter_init);
         }
         yInfo() << "Updated initial pose for shoulder center";
     }
@@ -343,10 +355,10 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
         shoulderLeft_init[1] = bShoulderLeft_init->get(1).asDouble();
         shoulderLeft_init[2] = bShoulderLeft_init->get(2).asDouble();
 
-        for(int i=0; i<initial_keypoints.size(); i++)
+        for(int i=0; i<new_keypoints.size(); i++)
         {
-            if(initial_keypoints[i].first == KeyPointTag::shoulder_left)
-                initial_keypoints[i] = make_pair(KeyPointTag::shoulder_left,shoulderLeft_init);
+            if(new_keypoints[i].first == KeyPointTag::shoulder_left)
+                new_keypoints[i] = make_pair(KeyPointTag::shoulder_left,shoulderLeft_init);
         }
         yInfo() << "Updated initial pose for shoulder left";
     }
@@ -357,10 +369,10 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
         shoulderRight_init[1] = bShoulderRight_init->get(1).asDouble();
         shoulderRight_init[2] = bShoulderRight_init->get(2).asDouble();
 
-        for(int i=0; i<initial_keypoints.size(); i++)
+        for(int i=0; i<new_keypoints.size(); i++)
         {
-            if(initial_keypoints[i].first == KeyPointTag::shoulder_right)
-                initial_keypoints[i] = make_pair(KeyPointTag::shoulder_right,shoulderRight_init);
+            if(new_keypoints[i].first == KeyPointTag::shoulder_right)
+                new_keypoints[i] = make_pair(KeyPointTag::shoulder_right,shoulderRight_init);
         }
         yInfo() << "Updated initial pose for shoulder right";
     }
@@ -371,10 +383,10 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
         hipLeft_init[1] = bHipLeft_init->get(1).asDouble();
         hipLeft_init[2] = bHipLeft_init->get(2).asDouble();
 
-        for(int i=0; i<initial_keypoints.size(); i++)
+        for(int i=0; i<new_keypoints.size(); i++)
         {
-            if(initial_keypoints[i].first == KeyPointTag::hip_left)
-                initial_keypoints[i] = make_pair(KeyPointTag::hip_left,hipLeft_init);
+            if(new_keypoints[i].first == KeyPointTag::hip_left)
+                new_keypoints[i] = make_pair(KeyPointTag::hip_left,hipLeft_init);
         }
         yInfo() << "Updated initial pose for hip left";
     }
@@ -385,10 +397,10 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
         hipRight_init[1] = bhipRight_init->get(1).asDouble();
         hipRight_init[2] = bhipRight_init->get(2).asDouble();
 
-        for(int i=0; i<initial_keypoints.size(); i++)
+        for(int i=0; i<new_keypoints.size(); i++)
         {
-            if(initial_keypoints[i].first == KeyPointTag::hip_right)
-                initial_keypoints[i] = make_pair(KeyPointTag::hip_right,hipRight_init);
+            if(new_keypoints[i].first == KeyPointTag::hip_right)
+                new_keypoints[i] = make_pair(KeyPointTag::hip_right,hipRight_init);
         }
         yInfo() << "Updated initial pose for hip right";
     }
@@ -399,10 +411,10 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
         kneeLeft_init[1] = bKneeLeft_init->get(1).asDouble();
         kneeLeft_init[2] = bKneeLeft_init->get(2).asDouble();
 
-        for(int i=0; i<initial_keypoints.size(); i++)
+        for(int i=0; i<new_keypoints.size(); i++)
         {
-            if(initial_keypoints[i].first == KeyPointTag::knee_left)
-                initial_keypoints[i] = make_pair(KeyPointTag::knee_left,kneeLeft_init);
+            if(new_keypoints[i].first == KeyPointTag::knee_left)
+                new_keypoints[i] = make_pair(KeyPointTag::knee_left,kneeLeft_init);
         }
         yInfo() << "Updated initial pose for knee left";
     }
@@ -413,10 +425,10 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
         kneeRight_init[1] = bKneeRight_init->get(1).asDouble();
         kneeRight_init[2] = bKneeRight_init->get(2).asDouble();
 
-        for(int i=0; i<initial_keypoints.size(); i++)
+        for(int i=0; i<new_keypoints.size(); i++)
         {
-            if(initial_keypoints[i].first == KeyPointTag::knee_right)
-                initial_keypoints[i] = make_pair(KeyPointTag::knee_right,kneeRight_init);
+            if(new_keypoints[i].first == KeyPointTag::knee_right)
+                new_keypoints[i] = make_pair(KeyPointTag::knee_right,kneeRight_init);
         }
         yInfo() << "Updated initial pose for knee right";
     }
@@ -427,10 +439,10 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
         ankleLeft_init[1] = bAnkleLeft_init->get(1).asDouble();
         ankleLeft_init[2] = bAnkleLeft_init->get(2).asDouble();
 
-        for(int i=0; i<initial_keypoints.size(); i++)
+        for(int i=0; i<new_keypoints.size(); i++)
         {
-            if(initial_keypoints[i].first == KeyPointTag::ankle_left)
-                initial_keypoints[i] = make_pair(KeyPointTag::ankle_left,ankleLeft_init);
+            if(new_keypoints[i].first == KeyPointTag::ankle_left)
+                new_keypoints[i] = make_pair(KeyPointTag::ankle_left,ankleLeft_init);
         }
         yInfo() << "Updated initial pose for ankle left";
     }
@@ -441,15 +453,28 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
         ankleRight_init[1] = bAnkleRight_init->get(1).asDouble();
         ankleRight_init[2] = bAnkleRight_init->get(2).asDouble();
 
-        for(int i=0; i<initial_keypoints.size(); i++)
+        for(int i=0; i<new_keypoints.size(); i++)
         {
-            if(initial_keypoints[i].first == KeyPointTag::ankle_right)
-                initial_keypoints[i] = make_pair(KeyPointTag::ankle_right,ankleRight_init);
+            if(new_keypoints[i].first == KeyPointTag::ankle_right)
+                new_keypoints[i] = make_pair(KeyPointTag::ankle_right,ankleRight_init);
         }
         yInfo() << "Updated initial pose for ankle right";
     }
+    if(Bottle *bHipCenter_init = b.find("ankle_right_init_pose").asList())
+    {
+        hipCenter_init[0] = bHipCenter_init->get(0).asDouble();
+        hipCenter_init[1] = bHipCenter_init->get(1).asDouble();
+        hipCenter_init[2] = bHipCenter_init->get(2).asDouble();
 
-    skeletonInit->update(initial_keypoints);
+        for(int i=0; i<new_keypoints.size(); i++)
+        {
+            if(new_keypoints[i].first == KeyPointTag::hip_center)
+                new_keypoints[i] = make_pair(KeyPointTag::hip_center,hipCenter_init);
+        }
+        yInfo() << "Updated initial pose for hip center";
+    }
+
+    skeletonInit->update(new_keypoints);
 
     return true;
 }
@@ -753,17 +778,13 @@ double Manager::loadMetric(const string &metric_tag)
     {
         if(skeletonsInit[j]->getTag() == metric_tag)
         {
-            skel.update(skeletonsInit[j]->get_unordered());
-//            skeletonsInit[j]->print();
+            skel = skeletonsInit[j];
+            skel->print();
+            break;               
         }
     }
 
-//    yInfo() << "Skeleton standard:";
-//    skel.print();
-
     processor = createProcessor(metric_tag, metric);
-//    getSkeleton();
-//    processor->setInitialConf(skel, metric->getInitialConf(),skeletonIn);
 
     //send commands to skeletonScaler
     Bottle cmd, reply;
@@ -937,7 +958,6 @@ bool Manager::start()
     }    
 
     processor->setInitialConf(skel, metric->getInitialConf(),skeletonIn);
-//    skel.print();
 
     //start skeletonScaler
     Bottle cmd, reply;
@@ -1338,6 +1358,9 @@ bool Manager::configure(ResourceFinder &rf)
     skel_tag="";
 
     log_file.open("logfile.txt");
+
+    for(int i=0; i<skeletonsInit.size(); i++)
+        skeletonsInit[i]->print();
 
     return true;
 }
