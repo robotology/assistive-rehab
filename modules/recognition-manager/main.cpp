@@ -771,7 +771,7 @@ public:
                         }
                     }
                     else
-                        yError() << "no classes avaiblable";
+                        yError() << "no classes available";
                 }
             }
             else
