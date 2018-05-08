@@ -616,18 +616,15 @@ class Scaler : public RFModule
                 Time::yield();
             }
         }
-
-        if(!moveSkeleton(tr,rot))
-            yWarning() << "Unable to move";
-
+        
         double maxpath;
         getMaxPath(maxpath);
         double scale=retrievedSkel.getMaxPath()/maxpath;
         if(!setScale(scale))
-        {
-            yError() << "Unable to scale";
-            return false;
-        }
+            yWarning() << "Unable to scale";
+
+        if(!moveSkeleton(tr,rot))
+            yWarning() << "Unable to move";        
 
         Bottle cmd,rep;
         cmd.addString("start");

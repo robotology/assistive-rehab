@@ -153,6 +153,7 @@ Rom_Processor::Rom_Processor()
 Rom_Processor::Rom_Processor(const Metric *rom_)
 {
     rom = (Rom*)rom_;
+    prev_result = 0.0;
 }
 
 //void Rom_Processor::setInitialConf(const SkeletonWaist &skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_)
@@ -230,9 +231,8 @@ double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &r
             double n2 = norm(ref_dir);
             double dot_p = dot(v1,ref_dir);
 
-            theta = acos(dot_p/(n1*n2));
-
-            result = theta * (180/M_PI);
+            theta = acos(dot_p/n2); 
+            result = theta * (180/M_PI);           
             prev_result = result;    
         }
         else
@@ -253,7 +253,6 @@ double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &r
         plane_normal_.zero();
         ref_dir.zero();
     }
-
 
     return result;
 
