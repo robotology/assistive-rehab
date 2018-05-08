@@ -24,6 +24,7 @@
 #include <yarp/math/Rand.h>
 
 #include "AssistiveRehab/skeleton.h"
+#include "src/interactionManager_IDL.h"
 
 using namespace std;
 using namespace yarp::os;
@@ -44,12 +45,12 @@ public:
 
 
 /****************************************************************/
-class Interaction : public RFModule
+class Interaction : public RFModule, public interactionManager_IDL
 {
     const int ok=Vocab::encode("ok");
     const int fail=Vocab::encode("fail");
 
-    enum class State { idle, seek, follow, engaged, assess } state;
+    enum class State { stopped, idle, seek, follow, engaged, assess } state;
     double period;
     string tag;
     int reinforce_engage_cnt;
@@ -59,11 +60,46 @@ class Interaction : public RFModule
     unordered_map<string,string> speak_map;
     vector<double> assess_values;
 
+    Mutex mutex;
+
     RpcClient attentionPort;
     RpcClient analyzerPort;
     BufferedPort<Bottle> speechStreamPort;
     RpcClient speechRpcPort;
+    RpcServer cmdPort;
     bool interrupting;
+
+    /****************************************************************/
+    bool start() override
+    {
+        LockGuard lg(mutex);
+        return disengage();
+    }
+
+    /****************************************************************/
+    bool stop() override
+    {
+        LockGuard lg(mutex);
+        bool ret=false;
+
+        Bottle cmd,rep;
+        cmd.addString("stop");
+        if (attentionPort.write(cmd,rep))
+        {
+            if (rep.get(0).asVocab()==ok)
+            {
+                if (state==State::assess)
+                {
+                    Bottle cmd,rep;
+                    cmd.addString("stop");
+                    analyzerPort.write(cmd,rep);
+                }
+                ret=true;
+            }
+        }
+        state=State::stopped;
+        return ret;
+    }
 
     /****************************************************************/
     bool speak(const string &key, const bool wait,
@@ -114,6 +150,12 @@ class Interaction : public RFModule
             }
         }
         return (it!=end(speak_map));
+    }
+
+    /****************************************************************/
+    bool attach(RpcServer &source) override
+    {
+        return yarp().attachAsServer(source);
     }
 
     /****************************************************************/
@@ -269,6 +311,8 @@ class Interaction : public RFModule
         analyzerPort.open("/interactionManager/analyzer:rpc");
         speechStreamPort.open("/interactionManager/speech:o");
         speechRpcPort.open("/interactionManager/speech:rpc");
+        cmdPort.open("/interactionManager/cmd:rpc");
+        attach(cmdPort);
 
         Rand::init();
         state=State::idle;
@@ -286,6 +330,7 @@ class Interaction : public RFModule
     /****************************************************************/
     bool updateModule() override
     {
+        LockGuard lg(mutex);
         if ((attentionPort.getOutputCount()==0) || (analyzerPort.getOutputCount()==0) ||
             (speechStreamPort.getOutputCount()==0) || (speechRpcPort.getOutputCount()==0))
         {
@@ -497,6 +542,7 @@ class Interaction : public RFModule
         analyzerPort.close();
         speechStreamPort.close();
         speechRpcPort.close();
+        cmdPort.close();
         return true;
     }
 };
