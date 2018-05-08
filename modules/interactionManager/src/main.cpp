@@ -415,7 +415,7 @@ class Interaction : public RFModule
                                     else
                                     {
                                         vector<SpeechParam> p;
-                                        p.push_back(SpeechParam(tag[0]!='#'?tag:string("")));
+                                        p.push_back(SpeechParam(tag[0]!='#'?(tag+","):string("")));
                                         speak("in-the-know",true,p);
                                     }
 
