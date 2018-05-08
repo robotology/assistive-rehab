@@ -217,24 +217,36 @@ double Skeleton::helper_getmaxpath(KeyPoint* k, vector<bool> &visited) const
     Vector paths(1,0.0);
     if (k!=nullptr)
     {
-        auto id=key2id.find(k)->second;
-        visited[id]=true;
+        if (k->isUpdated())
+        {
+            auto id=key2id.find(k)->second;
+            visited[id]=true;
 
-        for (auto &p:k->parent)
-        {
-            auto id=key2id.find(p)->second;
-            if (!visited[id])
-                paths.push_back(norm(k->getPoint()-p->getPoint())+
-                                helper_getmaxpath(p,visited));
+            for (auto &p:k->parent)
+            {
+                if (p->isUpdated())
+                {
+                    auto id=key2id.find(p)->second;
+                    if (!visited[id])
+                    {
+                        paths.push_back(norm(k->getPoint()-p->getPoint())+
+                                        helper_getmaxpath(p,visited));
+                    }
+                }
+            }
+            for (auto &c:k->child)
+            {
+                if (c->isUpdated())
+                {
+                    auto id=key2id.find(c)->second;
+                    if (!visited[id])
+                    {
+                        paths.push_back(norm(k->getPoint()-c->getPoint())+
+                                        helper_getmaxpath(c,visited));
+                    }
+                }
+            }
         }
-        for (auto &c:k->child)
-        {
-            auto id=key2id.find(c)->second;
-            if (!visited[id])
-                paths.push_back(norm(k->getPoint()-c->getPoint())+
-                                helper_getmaxpath(c,visited));
-        }
-        
     }
     return findMax(paths);
 }
