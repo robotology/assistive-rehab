@@ -91,7 +91,7 @@
 
     <module>
        <name>motionAnalyzer</name>
-       <parameters></parameters>
+       <parameters>--from motion-repertoire-rom6.ini</parameters>
        <node>r1-console-linux</node>
     </module>
 
