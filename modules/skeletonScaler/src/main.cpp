@@ -576,7 +576,7 @@ class Scaler : public RFModule
 
         bool out=false;
         Matrix T(4,4);
-        Vector tr(3,0.0),rot(3,0.0);
+        Vector tr(3,0.0),rot(4,0.0);
         SkeletonWaist retrievedSkel, playedSkel;
         while(out==false)
         {

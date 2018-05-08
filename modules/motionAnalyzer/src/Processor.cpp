@@ -89,24 +89,7 @@ void Processor::update(SkeletonWaist &curr_skeleton_)
     curr_skeleton.update(curr_skeleton_.toProperty());
 //    curr_skeleton.print();
 
-    Vector xyz=curr_skeleton[KeyPointTag::shoulder_center]->getPoint();
-    Vector xyz_inv=invT.subcol(0,3,3);
-    Vector rot(4,0.0);
-    Matrix T=axis2dcm(rot);
-    T(0,3)=xyz[0];
-    T(1,3)=xyz[1];
-    T(2,3)=xyz[2];
-    invT=SE3inv(T);
-
-    xyz+=xyz_inv;
-
-    T(0,3)=xyz[0];
-    T(1,3)=xyz[1];
-    T(2,3)=xyz[2];
-
-    skeleton_init.setTransformation(T);
-    skeleton_init.update();
-//    skeleton_init.print();
+    //    skeleton_init.print();
 //    cout << endl;
 
 
@@ -128,6 +111,7 @@ bool Processor::isDeviatingFromIntialPose()
             }
         }
     }
+    cout << "\n";
 
     return isDeviating;
 }
@@ -144,49 +128,15 @@ bool Processor::isOutOfSphere(const KeyPoint& keypoint, const KeyPoint& keypoint
 double Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyPoint& keypoint_init)
 {
     Vector curr_kp(keypoint.getPoint()), curr_kp_init(keypoint_init.getPoint());
-//    Vector curr_pose, initial_pose;
+    Vector k1=curr_kp;
+    k1.push_back(1.0);
+    Vector transformed_kp = inv_reference_system*k1;
+    double dev = norm(transformed_kp.subVector(0,2)-curr_kp_init);
 
-//    //if the current keypoint has child and parent
-//    if(keypoint.getNumChild() && keypoint.getNumParent())
-//    {
-//        Vector curr_kp_parent = keypoint.getParent(0)->getPoint();
-//        Vector curr_kp_child = keypoint.getChild(0)->getPoint();
-
-//        Vector curr_kp_parent_init = keypoint_init.getParent(0)->getPoint();
-//        Vector curr_kp_child_init = keypoint_init.getChild(0)->getPoint();
-
-//        curr_pose = curr_kp + curr_kp_parent + curr_kp_child;
-//        initial_pose = curr_kp_init + curr_kp_parent_init + curr_kp_child_init;
-//    }
-//    else if(keypoint.getNumParent()) //if the current keypoint has parent and not child
-//    {
-//        Vector curr_kp_parent = keypoint.getParent(0)->getPoint();
-//        Vector curr_kp_parent_init = keypoint_init.getParent(0)->getPoint();
-
-//        curr_pose = curr_kp + curr_kp_parent;
-//        initial_pose = curr_kp_init + curr_kp_parent_init;
-//    }
-//    else
-//    {
-//        curr_pose = curr_kp;
-//        initial_pose = curr_kp_init;
-//    }
-
-    double dev = norm(curr_kp-curr_kp_init);
-//    double dev = norm(curr_pose-initial_pose);
-//    Vector dev = curr_pose-initial_pose;
-//    double deviation = dev[0]+dev[1]+dev[2];
-    //    if(deviation > keypoints2conf[keypoint.getTag()].second)
-//    {
-//        yInfo() << keypoint.getTag().c_str()
-//                << "(" << curr_kp[0] << "," << curr_kp[1] << "," << curr_kp[2] << ")"
-//                << "(" << curr_kp_init[0] << "," << curr_kp_init[1] << "," << curr_kp_init[2] << ")"
-//    //            << "(" << curr_kp_parent[0] << "," << curr_kp_parent[1] << "," << curr_kp_parent[2] << ")"
-//    //            << "(" << curr_kp_child[0] << "," << curr_kp_child[1] << "," << curr_kp_child[2] << ")"
-////                << "(" << curr_pose[0] << "," << curr_pose[1] << "," << curr_pose[2] << ")"
-////                << "(" << initial_pose[0] << "," << initial_pose[1] << "," << initial_pose[2] << ")"
-//                << dev;
-//    }
+    yInfo() << keypoint.getTag().c_str()
+            << dev
+            << transformed_kp.subVector(0,2).toString()
+            << curr_kp_init.toString();
 
     if(dev > keypoints2conf[keypoint.getTag()].second)
         return dev;
@@ -267,21 +217,20 @@ double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &r
             score_exercise = 0.7;
             if(abs(v1[component_to_check])>rom->getRangePlane())
             {
-                yInfo() << "out of the plane band" << v1[component_to_check];
+//                yInfo() << "out of the plane band" << v1[component_to_check];
                 score_exercise = 0.4;
             }
 
             double dist = dot(v1,plane_normal_);
             v1 = v1-dist*plane_normal_;
-            v1 /= norm(v1);
+            double n1 = norm(v1);
+            if(n1 > 0.0)
+                v1 /= n1;
 
-            double v1_norm = norm(v1);
-            double v2_norm = norm(ref_dir);
+            double n2 = norm(ref_dir);
             double dot_p = dot(v1,ref_dir);
 
-            theta = acos(dot_p/(v1_norm*v2_norm));
-
-//            plane_normal_=plane_normal;
+            theta = acos(dot_p/(n1*n2));
 
             result = theta * (180/M_PI);
             prev_result = result;    
