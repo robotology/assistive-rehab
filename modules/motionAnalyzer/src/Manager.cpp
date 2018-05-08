@@ -96,7 +96,7 @@ bool Manager::loadInitialConf()
     ResourceFinder rf;
     rf.setVerbose();
     rf.setDefaultContext(this->rf->getContext().c_str());
-    rf.setDefaultConfigFile(this->rf->find("configuration-file").asString().c_str()); //(this->rf->find("motion-repertoire").asString().c_str());
+    rf.setDefaultConfigFile(this->rf->find("from").asString().c_str()); //(this->rf->find("motion-repertoire").asString().c_str());
 
 //    string confFile = this->rf->findFileByName(motion_repertoire_file);
 //    rf.setDefaultConfigFile(confFile.c_str()); //(this->rf->find("configuration-file").asString().c_str());
@@ -461,7 +461,7 @@ bool Manager::loadMotionList()
     ResourceFinder rf;
     rf.setVerbose();
     rf.setDefaultContext(this->rf->getContext().c_str());
-    rf.setDefaultConfigFile(this->rf->find("configuration-file").asString().c_str());
+    rf.setDefaultConfigFile(this->rf->find("from").asString().c_str());
 
 //    string confFile = this->rf->findFileByName(motion_repertoire_file);
 //    rf.setDefaultConfigFile(confFile.c_str()); //(this->rf->find("configuration-file").asString().c_str());
