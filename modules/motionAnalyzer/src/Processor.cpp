@@ -68,6 +68,7 @@ void Processor::setInitialConf(const SkeletonWaist &skeleton_init_, const map<st
     T1.setSubcol(sagittal,0,1);
     T1.setSubcol(transverse,0,2);
     T1.setSubcol(p,0,3);
+    T1(3,3)=1.0;
 
     inv_reference_system = SE3inv(T1);
 
