@@ -72,7 +72,7 @@ void Processor::setInitialConf(const SkeletonWaist &skeleton_init_, const map<st
 
     inv_reference_system = SE3inv(T1);
 
-    //    skeleton_init.print();
+ //   skeleton_init.print();
 }
 
 bool Processor::isStatic(const KeyPoint& keypoint)
@@ -101,6 +101,7 @@ bool Processor::isDeviatingFromIntialPose()
 {
     bool isDeviating = false;
     deviation = 0.0;
+
     for(unsigned int i=0; i<curr_skeleton.getNumKeyPoints(); i++)
     {
         if(curr_skeleton[i]->isUpdated() && curr_skeleton[i]->getTag() != KeyPointTag::hip_center)
@@ -113,7 +114,7 @@ bool Processor::isDeviatingFromIntialPose()
             }
         }
     }
-    cout << "\n";
+//    cout << "\n";
 
     return isDeviating;
 }
@@ -134,10 +135,10 @@ double Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyP
     Vector transformed_kp = (inv_reference_system*k1).subVector(0,2);
     double dev = norm(transformed_kp-keypoint_init.getPoint());
 
-    yInfo() << keypoint.getTag().c_str()
+    yInfo() << keypoint.getTag()
             << dev
-            << transformed_kp.toString()
-            << keypoint_init.getPoint().toString();
+            << transformed_kp.toString(3,3)
+            << keypoint_init.getPoint().toString(3,3);
 
     if(dev > keypoints2conf[keypoint.getTag()].second)
         return dev;

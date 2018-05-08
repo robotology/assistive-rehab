@@ -528,7 +528,7 @@ bool Manager::loadMotionList()
                                 skeletonInit = new SkeletonWaist();
                                 loadInitialConf(bMotion,skeletonInit);
                                 skeletonInit->setTag(curr_tag+"_"+to_string(j));
-//                                skeletonInit->print();
+                                //skeletonInit->print();
                                 skeletonsInit.push_back(skeletonInit);
 //                                for(int i=0; i<skeletonsInit.size(); i++)
 //                                    skeletonsInit[i]->print();
@@ -758,6 +758,9 @@ double Manager::loadMetric(const string &metric_tag)
         }
     }
 
+//    yInfo() << "Skeleton standard:";
+//    skel.print();
+
     processor = createProcessor(metric_tag, metric);
 //    getSkeleton();
 //    processor->setInitialConf(skel, metric->getInitialConf(),skeletonIn);
@@ -934,6 +937,7 @@ bool Manager::start()
     }    
 
     processor->setInitialConf(skel, metric->getInitialConf(),skeletonIn);
+//    skel.print();
 
     //start skeletonScaler
     Bottle cmd, reply;
