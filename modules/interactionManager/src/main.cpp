@@ -239,7 +239,7 @@ class Interaction : public RFModule
         {
             grade="low";
         }
-        else if (mean<0.8)
+        else if (mean<0.7)
         {
             grade="medium";
         }
