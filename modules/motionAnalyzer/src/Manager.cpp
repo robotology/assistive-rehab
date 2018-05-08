@@ -949,6 +949,8 @@ bool Manager::start()
 {
     LockGuard lg(mutex);
 
+    result_time.clear();
+
     bool out=false;
     while(out==false)
     {    
