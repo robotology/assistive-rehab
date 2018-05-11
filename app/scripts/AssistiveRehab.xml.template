@@ -21,7 +21,7 @@
 
      <module>
         <name>faceExpressionImage</name>
-        <node>r1-console-linux</node>
+        <node>r1-face</node>
     </module>
 
     <module>
