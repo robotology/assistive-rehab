@@ -11,7 +11,6 @@
  */
 
 #include <algorithm>
-#include <iostream>
 #include <yarp/math/Math.h>
 #include "AssistiveRehab/skeleton.h"
 
@@ -545,23 +544,23 @@ void Skeleton::scale(const double s)
     }
 }
 
-void Skeleton::print() const
+void Skeleton::print(ostream &os) const
 {
-    cout<<"tag = \""<<tag<<"\""<<endl;
-    cout<<"transformation ="<<endl<<T.toString(3,3)<<endl;
-    cout<<"coronal = ("<<coronal.toString(3,3)<<")"<<endl;
-    cout<<"sagittal = ("<<sagittal.toString(3,3)<<")"<<endl;
-    cout<<"transverse = ("<<transverse.toString(3,3)<<")"<<endl;
+    os<<"tag = \""<<tag<<"\""<<endl;
+    os<<"transformation ="<<endl<<T.toString(3,3)<<endl;
+    os<<"coronal = ("<<coronal.toString(3,3)<<")"<<endl;
+    os<<"sagittal = ("<<sagittal.toString(3,3)<<")"<<endl;
+    os<<"transverse = ("<<transverse.toString(3,3)<<")"<<endl;
     for (auto &k:keypoints)
     {
-        cout<<"keypoint[\""<<k->getTag()<<"\"] = ("
-            <<k->getPoint().toString(3,3)<<"); status="
-            <<(k->isUpdated()?"updated":"stale")
-            <<"; parent={";
-            for (auto &p:k->parent) cout<<"\""<<p->getTag()<<"\" ";
-            cout<<"}; child={";
-            for (auto &c:k->child) cout<<"\""<<c->getTag()<<"\" ";
-            cout<<"}"<<endl;
+        os<<"keypoint[\""<<k->getTag()<<"\"] = ("
+          <<k->getPoint().toString(3,3)<<"); status="
+          <<(k->isUpdated()?"updated":"stale")
+          <<"; parent={";
+          for (auto &p:k->parent) os<<"\""<<p->getTag()<<"\" ";
+          os<<"}; child={";
+          for (auto &c:k->child) os<<"\""<<c->getTag()<<"\" ";
+          os<<"}"<<endl;
     }
 }
 

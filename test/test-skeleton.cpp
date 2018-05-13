@@ -15,6 +15,7 @@
 #include <cmath>
 #include <utility>
 #include <iostream>
+#include <fstream>
 #include <yarp/os/Property.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/math/Math.h>
@@ -121,6 +122,12 @@ int main()
     unique_ptr<Skeleton> skeleton2(skeleton_factory(prop));
     cout<<"type = \""<<skeleton2->getType()<<"\""<<endl;
     skeleton2->print();
+    cout<<endl;
+
+    cout<<"### Testing printing on file"<<endl;
+    ofstream fout("test.log");
+    skeleton1.print(fout);
+    fout.close();
     cout<<endl;
 
     return EXIT_SUCCESS;

@@ -17,6 +17,8 @@
 #include <vector>
 #include <unordered_map>
 #include <utility>
+#include <ostream>
+#include <iostream>
 #include <yarp/os/Bottle.h>
 #include <yarp/os/Property.h>
 #include <yarp/sig/Vector.h>
@@ -150,7 +152,7 @@ public:
 
     void normalize(const double n=1.0);
     void scale(const double s);
-    void print() const;
+    void print(std::ostream &os=std::cout) const;
 };
 
 class SkeletonStd : public Skeleton
