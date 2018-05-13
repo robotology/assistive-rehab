@@ -182,7 +182,8 @@ void Skeleton::helper_updatefromproperty(Bottle *prop)
     }
 }
 
-void Skeleton::helper_normalize(KeyPoint* k, const vector<Vector> &helperpoints)
+void Skeleton::helper_normalize(KeyPoint* k, const vector<Vector> &helperpoints,
+                                const double n)
 {
     if (k!=nullptr)
     {
@@ -193,13 +194,13 @@ void Skeleton::helper_normalize(KeyPoint* k, const vector<Vector> &helperpoints)
                 if (c->isUpdated())
                 {
                     Vector dir=helperpoints[key2id[c]]-helperpoints[key2id[k]];
-                    double n=norm(dir);
-                    if (n>0.0)
+                    double d=norm(dir);
+                    if (d>0.0)
                     {
-                        dir/=norm(dir);
+                        dir*=n/d;
                     }
                     c->point=k->point+dir;
-                    helper_normalize(c,helperpoints);
+                    helper_normalize(c,helperpoints,n);
                 }
             }
         }
@@ -522,14 +523,14 @@ vector<pair<string,Vector>> Skeleton::get_unordered() const
     return unordered;
 }
 
-void Skeleton::normalize()
+void Skeleton::normalize(const double n)
 {
     if (keypoints.size()>0)
     {
         vector<Vector> helperpoints;
         for (auto &k:keypoints)
             helperpoints.push_back(k->getPoint());
-        helper_normalize(keypoints[0],helperpoints);
+        helper_normalize(keypoints[0],helperpoints,n);
     }
 }
 
