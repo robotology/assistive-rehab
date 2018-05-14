@@ -38,13 +38,9 @@ class Scaler : public RFModule
     double opacity;
     int nsessions;
     double twarp;
+    double tbegin;
 
     bool hasStarted;
-
-    Matrix invT;
-//    Vector rot;
-//    Vector xyz;
-    Vector xyz_prev;
 
     string sel_tag;
     string prev_tag;
@@ -58,23 +54,9 @@ class Scaler : public RFModule
         rpcPort.open("/skeletonScaler/rpc");
         attach(rpcPort);
 
-//        if(!Network::connect(cmdPort.getName(),"/skeletonPlayer/cmd:rpc", "tcp"))
-//        {
-//            yError() << "Cannot connect to /skeletonPlayer/cmd:rpc";
-//            return false;
-//        }
-
-//        if(!Network::connect(rpcViewerPort.getName(),"/skeletonViewer:rpc", "tcp"))
-//        {
-//            yError() << "Cannot connect to /skeletonViewer:rpc";
-//            return false;
-//        }
-
-//        file=rf.check("file",Value("abduction.log")).asString();
-//        context=rf.check("context",Value("motionAnalyzer")).asString();
-
         nsessions=rf.check("nsessions",Value(0)).asInt();
         twarp=rf.check("twarp",Value(0.5)).asDouble();
+        tbegin=rf.check("tbegin",Value(0.0)).asDouble();
 
         hasStarted=false;
         sel_tag="";
@@ -107,43 +89,19 @@ class Scaler : public RFModule
                 opacity=0.3;
                 setOpacity(opacity);
 
-//                xyz.resize(3);
-//                xyz.zero();
-//                xyz_prev.resize(3);
-//                xyz_prev.zero();
-//                rot.resize(4);
-//                rot.zero();
                 if(file.find("abduction")!=string::npos)
                 {
-//                    xyz[0]=-0.12;
-//                    xyz[1]=0.24;
-//                    xyz[2]=-1.75;
                     Vector camerapos(3,0.0),focalpoint(3,0.0);
                     camerapos[2]=-2.0;
                     rotateCam(camerapos,focalpoint);
                 }
                 if(file.find("flexion")!=string::npos)
                 {
-//                    xyz[0]=-0.12;
-//                    xyz[1]=0.24;
-//                    xyz[2]=-1.75;
                     Vector camerapos(3,0.0),focalpoint(3,0.0);
                     camerapos[0]=4.0;
                     focalpoint[2]=1.0;
                     rotateCam(camerapos,focalpoint);
                 }
-//                if(!moveSkeleton(xyz,rot))
-//                    yWarning() << "Unable to move";
-
-/*                Matrix T=axis2dcm(rot);
-                T(0,3)=xyz[0];
-                T(1,3)=xyz[1];
-                T(2,3)=xyz[2];
-                invT=SE3inv(T);
-*/                
-//                invT.resize(4,4);
-//                invT.zero();
-
             }
         }
         if(command.get(0).asString() == "run")
@@ -175,166 +133,6 @@ class Scaler : public RFModule
     /****************************************************************/
     bool updateModule()
     {
- //       if(opcPort.getOutputCount()>0 && hasStarted)
-//        {
-//            SkeletonWaist retrievedSkel, playedSkel;
-//            getSkeletonsFromOpc(retrievedSkel,playedSkel);
-
-//            if(!retrievedSkel.getTag().empty() && retrievedSkel.getTag()!="#8c"
-//                    && retrievedSkel.getTag()!="flexion" && retrievedSkel.getTag()!="abduction")
-//            {
-//                yInfo() << retrievedSkel.getTag();
-//                if(retrievedSkel.getTag()==prev_tag || prev_tag.empty())
-//                {
-//                    xyz=retrievedSkel[KeyPointTag::shoulder_center]->getPoint();
-//                    Vector p1=retrievedSkel.getCoronal();
-//                    Vector p2=playedSkel.getCoronal();
-//                    Vector axis=cross(p2,p1);
-//                    if(norm(axis)>0.0)
-//                        axis/=norm(axis);
-//                    double angle=acos(dot(p2,p1)/norm(p1)*norm(p2));
-//                    rot[0]=axis[0];
-//                    rot[1]=axis[1];
-//                    rot[2]=axis[2];
-//                    rot[3]=angle;
-
-//                    Matrix T=axis2dcm(rot);
-//                    T(0,3)=xyz[0];
-//                    T(1,3)=xyz[1];
-//                    T(2,3)=xyz[2];
-
-                    //current transformation
-//                    Matrix currT;
-//                    Vector curr_rot,xyz_inv(3,0.0);
-//                    curr_rot.resize(3);
-//                    if(!isZero(invT))
-//                    {
-//                        currT=multiply(T,invT.transposed());
-//                        curr_rot=dcm2axis(currT);
-
-//                        Matrix prevRot(4,4);
-//                        prevRot.setSubmatrix(invT.submatrix(0,2,0,2).transposed(),0,0);
-//                        Vector v(4,0.0);
-//                        v[3]=1.0;
-//                        prevRot.setSubrow(v,3,3);
-//                        prevRot.setSubcol(v,3,3);
-//                        xyz_inv=(prevRot*invT).subcol(0,3,3);
-//                    }
-//                    else
-//                        curr_rot=rot;
-
-//                    double n=norm(xyz_prev-xyz);
-//                    xyz_prev=xyz;
-//                    if(n<pow(10.0,-5.0))
-//                        curr_rot.zero();
-
-//                    xyz+=xyz_inv;
-//
-//                    if(!moveSkeleton(xyz,curr_rot))
-//                        yWarning() << "Unable to move";
-
-//                    invT=SE3inv(T);
-
-//                    //retrieve previous translation
-//                    Matrix prevRot(4,4);
-//                    prevRot.setSubmatrix(invT.submatrix(0,2,0,2).transposed(),0,0);
-//                    Vector v(4,0.0);
-//                    v[3]=1;
-//                    prevRot.setSubrow(v,3,3);
-//                    prevRot.setSubcol(v,3,3);
-//                    xyz_inv=(prevRot*invT).subcol(0,3,3);
-
-//                    Vector rot2;
-//                    if(!isZero(invT))
-//                    {
-//                        Matrix rotback=multiply(T.submatrix(0,2,0,2),(invT.submatrix(0,2,0,2)).transposed());
-//                        rot2=dcm2axis(rotback);
-//                    }
-//                    else
-//                        rot2=rot;
-
-////                    double n=norm(xyz_prev-xyz);
-////                    xyz_prev=xyz;
-////                    if(n<pow(10.0,-6.0))
-////                        rot2.zero();
-
-//                    xyz[0]+=xyz_inv[0];
-//                    xyz[1]+=xyz_inv[1];
-//                    xyz[2]+=xyz_inv[2];
-
-//                    if(!moveSkeleton(xyz,rot2))
-//                        yWarning() << "Unable to move";
-
-//                    //retrieve transformation from unmoved skeleton
-//                    invT=SE3inv(T);
-
-//                    double maxpath;
-//                    getMaxPath(maxpath);
-//                    double scale=retrievedSkel.getMaxPath()/maxpath;
-//                    if(!setScale(scale))
-//                    {
-//                        yError() << "Unable to scale";
-//                        return false;
-//                    }
-
-//                    prev_tag=retrievedSkel.getTag();
-//                }
-//                else
-//                {
-//                    stop();
-//                    hide();
-
-                    //invert current transformation to go back to the center
-//                    xyz.zero();
-
-                    //get axis-angle to align coronal planes
-/*                    Vector p1(3,0.0);
-                    p1[2]=-1.0;
-                    Vector p2=playedSkel.getCoronal();
-                    Vector axis=cross(p2,p1);
-                    if(norm(axis)>0.0)
-                        axis/=norm(axis);
-                    double angle=acos(dot(p2,p1)/norm(p1)*norm(p2));
-                    rot[0]=axis[0];
-                    rot[1]=axis[1];
-                    rot[2]=axis[2];
-                    rot[3]=angle;
-
-                    Matrix T=axis2dcm(rot);
-                    T(0,3)=xyz[0];
-                    T(1,3)=xyz[1];
-                    T(2,3)=xyz[2];
-
-                    //current transformation
-                    Matrix currT;
-                    Vector curr_rot,xyz_inv(3,0.0);
-                    curr_rot.resize(3);
-                    if(!isZero(invT))
-                    {
-                        currT=multiply(T,invT.transposed());
-                        curr_rot=dcm2axis(currT);
-
-                        Matrix prevRot(4,4);
-                        prevRot.setSubmatrix(invT.submatrix(0,2,0,2).transposed(),0,0);
-                        Vector v(4,0.0);
-                        v[3]=1.0;
-                        prevRot.setSubrow(v,3,3);
-                        prevRot.setSubcol(v,3,3);
-                        xyz_inv=(prevRot*invT).subcol(0,3,3);
-                    }
-                    else
-                        curr_rot=rot;
-                    xyz+=xyz_inv;
-
-                    if(!moveSkeleton(xyz,curr_rot))
-                        yWarning() << "Unable to move";
-
-                    invT.zero();
-
-                }
-            }
-        } */
-
         return true;
     }
 
@@ -481,10 +279,9 @@ class Scaler : public RFModule
     /****************************************************************/
     bool moveSkeleton(const Matrix& T)
     {
-        Bottle cmd,payload,rep;
-        payload.read(const_cast<Matrix&>(T));
+        Bottle cmd,rep;
         cmd.addString("move");
-        cmd.append(payload);
+        cmd.addList().read(const_cast<Matrix&>(T));
         yInfo() << cmd.toString();
         if(cmdPort.write(cmd,rep))
         {
@@ -496,10 +293,11 @@ class Scaler : public RFModule
     }
 
     /****************************************************************/
-    void getMaxPath(double& maxpath)
+    void getMaxPath(double& maxpath,const double& tbegin_)
     {
         Bottle cmd,rep;
         cmd.addString("get_maxpath");
+        cmd.addDouble(tbegin_);
 //        yInfo() << cmd.toString();
         if(cmdPort.write(cmd,rep))
             maxpath=rep.get(0).asDouble();
@@ -602,11 +400,11 @@ class Scaler : public RFModule
             T = Temp1*SE3inv(Temp2);
         }
 
-        double maxpath;
-        getMaxPath(maxpath);
-        double scale=retrievedSkel.getMaxPath()/maxpath;
-        if(!setScale(scale))
-            yWarning() << "Unable to scale";
+//        double maxpath;
+//        getMaxPath(maxpath,tbegin);
+//        double scale=retrievedSkel.getMaxPath()/maxpath;
+//        if(!setScale(scale))
+//            yWarning() << "Unable to scale";
                         
         if(!moveSkeleton(T))
             yWarning() << "Unable to move";        
@@ -628,7 +426,6 @@ class Scaler : public RFModule
     /****************************************************************/
     bool stop()
     {
-//        xyz.zero();
         Bottle cmd,rep;
         cmd.addString("stop");
         if(cmdPort.write(cmd,rep))
