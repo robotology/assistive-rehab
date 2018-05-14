@@ -10,6 +10,12 @@
  * @authors: Ugo Pattacini <ugo.pattacini@iit.it>
  */
 
+struct Matrix { }
+(
+   yarp.name="yarp::sig::Matrix"
+   yarp.includefile="yarp/sig/Matrix.h"
+)
+
 /**
  * skeletonPlayer_IDL
  *
@@ -91,17 +97,10 @@ service skeletonPlayer_IDL
 
    /**
     * Apply homogeneous transformation to the skeleton.
-    * @param x the x-coordinate.
-    * @param y the y-coordinate.
-    * @param z the z-coordinate.
-    * @param ax the x-coordinate of the rotation axis.
-    * @param ay the y-coordinate of the rotation axis.
-    * @param az the z-coordinate of the rotation axis.
-    * @param theta the rotation angle.
+    * @param T is the 4x4 homogeneous matrix.
     * @return true/false on success/failure.
     */
-   bool move(1:double x, 2:double y, 3:double z,
-             4:double ax, 5:double ay, 6:double az, 7:double theta);
+   bool move(1:Matrix T);
 
    /**
     * Set opacity.

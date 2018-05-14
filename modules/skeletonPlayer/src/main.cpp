@@ -438,9 +438,7 @@ class Player : public RFModule, public skeletonPlayer_IDL
     }
 
     /****************************************************************/
-    bool move(const double x, const double y, const double z,
-              const double ax, const double ay, const double az,
-              const double theta) override
+    bool move(const Matrix &T) override
     {
         LockGuard lg(mutex);
         if (skeletons.empty())
@@ -449,19 +447,13 @@ class Player : public RFModule, public skeletonPlayer_IDL
             return false;
         }
 
-        Vector rot(4);
-        rot[0]=ax;
-        rot[1]=ay;
-        rot[2]=az;
-        rot[3]=theta;
-        Matrix T=axis2dcm(rot);
-        T(0,3)=x;
-        T(1,3)=y;
-        T(2,3)=z;
-
         for (auto &sk:skeletons)
         {
-            sk.s->setTransformation(T);
+            if (!sk.s->setTransformation(T))
+            {
+                yError()<<"Invalid transformation!";
+                return false;
+            }
             sk.s->update();
         }
         return true;

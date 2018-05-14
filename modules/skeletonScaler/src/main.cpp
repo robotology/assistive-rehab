@@ -479,17 +479,12 @@ class Scaler : public RFModule
     }
 
     /****************************************************************/
-    bool moveSkeleton(const Vector& xyz,const Vector& rot)
+    bool moveSkeleton(const Matrix& T)
     {
-        Bottle cmd,rep;
+        Bottle cmd,payload,rep;
+        payload.read(const_cast<Matrix&>(T));
         cmd.addString("move");
-        cmd.addDouble(xyz[0]);
-        cmd.addDouble(xyz[1]);
-        cmd.addDouble(xyz[2]);
-        cmd.addDouble(rot[0]);
-        cmd.addDouble(rot[1]);
-        cmd.addDouble(rot[2]);
-        cmd.addDouble(rot[3]);
+        cmd.append(payload);
         yInfo() << cmd.toString();
         if(cmdPort.write(cmd,rep))
         {
@@ -574,13 +569,12 @@ class Scaler : public RFModule
                 return false;
         }
 
-        Matrix T(4,4);
-        Vector tr(3,0.0),rot(4,0.0);
         SkeletonWaist retrievedSkel, playedSkel;
 
         getSkeletonsFromOpc(retrievedSkel,playedSkel);
         yInfo() << retrievedSkel.getTag() << playedSkel.getTag();
 
+        Matrix T;
         if(!retrievedSkel.getTag().empty())
         {
             Vector p1=retrievedSkel[KeyPointTag::shoulder_center]->getPoint();
@@ -606,8 +600,6 @@ class Scaler : public RFModule
             Temp2(3,3)=1.0;
 
             T = Temp1*SE3inv(Temp2);
-            tr = T.getCol(3).subVector(0,2);
-            rot = dcm2axis(T);
         }
 
         double maxpath;
@@ -616,7 +608,7 @@ class Scaler : public RFModule
         if(!setScale(scale))
             yWarning() << "Unable to scale";
                         
-        if(!moveSkeleton(tr,rot))
+        if(!moveSkeleton(T))
             yWarning() << "Unable to move";        
 
         Bottle cmd,rep;
