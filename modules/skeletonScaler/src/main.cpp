@@ -89,19 +89,37 @@ class Scaler : public RFModule
                 opacity=0.3;
                 setOpacity(opacity);
 
-                if(file.find("abduction")!=string::npos)
-                {
-                    Vector camerapos(3,0.0),focalpoint(3,0.0);
-                    camerapos[2]=-2.0;
-                    rotateCam(camerapos,focalpoint);
-                }
-                if(file.find("flexion")!=string::npos)
-                {
-                    Vector camerapos(3,0.0),focalpoint(3,0.0);
-                    camerapos[0]=4.0;
-                    focalpoint[2]=1.0;
-                    rotateCam(camerapos,focalpoint);
-                }
+//                if(file.find("abduction")!=string::npos)
+//                {
+//                    Vector camerapos(3,0.0),focalpoint(3,0.0);
+//                    camerapos[2]=-2.0;
+//                    rotateCam(camerapos,focalpoint);
+//                }
+//                if(file.find("flexion")!=string::npos)
+//                {
+//                    Vector camerapos(3,0.0),focalpoint(3,0.0);
+//                    camerapos[0]=4.0;
+//                    focalpoint[2]=1.0;
+//                    rotateCam(camerapos,focalpoint);
+//                }
+            }
+        }
+        if(command.get(0).asString() == "rot")
+        {
+            Vector camerapos(3,0.0),focalpoint(3,0.0);
+            Bottle *cp = command.get(1).asList();
+            Bottle *fp = command.get(2).asList();
+            camerapos[0] = cp->get(0).asDouble();
+            camerapos[1] = cp->get(1).asDouble();
+            camerapos[2] = cp->get(2).asDouble();
+
+            focalpoint[0] = fp->get(0).asDouble();
+            focalpoint[1] = fp->get(1).asDouble();
+            focalpoint[2] = fp->get(2).asDouble();
+
+            if(rotateCam(camerapos,focalpoint))
+            {
+                reply.addVocab(Vocab::encode("ok"));
             }
         }
         if(command.get(0).asString() == "run")
@@ -269,7 +287,7 @@ class Scaler : public RFModule
         yInfo() << cmd.toString();
         if(rpcViewerPort.write(cmd,rep))
         {
-            if(rep.get(0).asVocab()==Vocab::encode("ok"))
+            if(rep.get(0).asVocab()==Vocab::encode("ack"))
                 return true;
         }
 
@@ -434,14 +452,6 @@ class Scaler : public RFModule
             {
                 yInfo() << "Stopping";
                 prev_tag="";
-
-                if(file.find("flexion")!=string::npos)
-                {
-                    Vector camerapos(3,0.0),focalpoint(3,0.0);
-                    camerapos[2]=-4.0;
-                    rotateCam(camerapos,focalpoint);
-                }
-
                 return true;
             }
         }

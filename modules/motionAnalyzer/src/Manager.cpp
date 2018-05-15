@@ -76,6 +76,9 @@ void Manager::init()
 
     curr_keypoints.resize(numKeypoints-1);
 
+    cameraposinit.resize(3);
+    focalpointinit.resize(3);
+
     keypoints2conf[KeyPointTag::shoulder_center] = make_pair("static", 0.0);
     keypoints2conf[KeyPointTag::head] = make_pair("static", 0.0);
     keypoints2conf[KeyPointTag::shoulder_left] = make_pair("static", 0.0);
@@ -109,6 +112,24 @@ bool Manager::loadInitialConf()
     if(!bGeneral.isNull())
     {
 //        nmovements = bGeneral.find("number_movements").asInt();
+        if(Bottle *bCamerapos_init = bGeneral.find("cameraposinit").asList())
+        {
+            cameraposinit[0] = bCamerapos_init->get(0).asDouble();
+            cameraposinit[1] = bCamerapos_init->get(1).asDouble();
+            cameraposinit[2] = bCamerapos_init->get(2).asDouble();
+        }
+        else
+            yError() << "Could not load initial camera pos";
+
+        if(Bottle *bFocalpoint_init = bGeneral.find("focalpointinit").asList())
+        {
+            focalpointinit[0] = bFocalpoint_init->get(0).asDouble();
+            focalpointinit[1] = bFocalpoint_init->get(1).asDouble();
+            focalpointinit[2] = bFocalpoint_init->get(2).asDouble();
+        }
+        else
+            yError() << "Could not load initial focal point";
+
         if(Bottle *bElbowLeft_init = bGeneral.find("elbow_left_init_pose").asList())
         {
             elbowLeft_init[0] = bElbowLeft_init->get(0).asDouble();
@@ -521,6 +542,27 @@ bool Manager::loadMotionList()
                                 double duration = bMotion.find("duration").asDouble();
                                 double tempwin = bMotion.find("tempwin").asDouble();
                                 double threshold = bMotion.find("threshold").asDouble();
+                                Vector camerapos;
+                                camerapos.resize(3);
+                                if(Bottle *bCamerapos = bMotion.find("camerapos").asList())
+                                {
+                                    camerapos[0] = bCamerapos->get(0).asDouble();
+                                    camerapos[1] = bCamerapos->get(1).asDouble();
+                                    camerapos[2] = bCamerapos->get(2).asDouble();
+                                }
+                                else
+                                    yError() << "Could not find camera position";
+
+                                Vector focalpoint;
+                                focalpoint.resize(3);
+                                if(Bottle *bFocalpoint = bMotion.find("focalpoint").asList())
+                                {
+                                    focalpoint[0] = bFocalpoint->get(0).asDouble();
+                                    focalpoint[1] = bFocalpoint->get(1).asDouble();
+                                    focalpoint[2] = bFocalpoint->get(2).asDouble();
+                                }
+                                else
+                                    yError() << "Could not find focal point";
 
                                 Vector ref_dir;
                                 ref_dir.resize(3);
@@ -686,7 +728,7 @@ bool Manager::loadMotionList()
 
                                 metric_repertoire = new Rom(curr_tag, motion_type, tag_joint, ref_dir, tag_plane,
                                                             range_plane, min, max, duration, tempwin, threshold,
-                                                            keypoints2conf);
+                                                            camerapos, focalpoint, keypoints2conf);
                             }
 
                             //add the current metric to the repertoire
@@ -794,6 +836,15 @@ double Manager::loadMetric(const string &metric_tag)
     cmd.addString(f);
     cmd.addString(context);
     scalerPort.write(cmd, reply);
+
+    Bottle cmd2, reply2;
+    cmd2.addVocab(Vocab::encode("rot"));
+    Vector cp = metric->getCameraPos();
+    Vector fp = metric->getFocalPoint();
+    cmd2.addList().read(cp);
+    cmd2.addList().read(fp);
+    yInfo() << cmd2.toString();
+    scalerPort.write(cmd2, reply2);
 
     if(metric!=NULL && reply.get(0).asVocab()==Vocab::encode("ok"))
         return metric->getDuration();
@@ -987,6 +1038,13 @@ bool Manager::stop()
     yInfo() << reply.get(0).toString();
     if(reply.get(0).asVocab()==Vocab::encode("ok"))
     {
+        Bottle cmd2, reply2;
+        cmd2.addVocab(Vocab::encode("rot"));
+        cmd2.addList().read(cameraposinit);
+        cmd2.addList().read(focalpointinit);
+        yInfo() << cmd2.toString();
+        scalerPort.write(cmd2, reply2);
+
 //        yInfo() << "stopping";
         starting = false;
 //        metric = NULL;

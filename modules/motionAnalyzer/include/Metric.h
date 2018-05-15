@@ -43,6 +43,8 @@ public:
     virtual double getDuration() const = 0;
     virtual double getTempWin() const = 0;
     virtual double getThresh() const = 0;
+    virtual Vector getCameraPos() const = 0;
+    virtual Vector getFocalPoint() const = 0;
     virtual map<string, pair<string,double>> getInitialConf() const = 0;
 };
 
@@ -59,6 +61,8 @@ class Rom : public Metric
     double duration;
     double tempwin;
     double threshold;
+    Vector camerapos;
+    Vector focalpoint;
     map<string, pair<string,double>> keypoints2conf;
 
 public:
@@ -66,6 +70,7 @@ public:
     Rom(const string &name_, const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
         const string &tag_plane_, const double &range_plane_, const double &min_, const double &max_,
         const double &duration_, const double &tempwin_, const double &threshold_,
+        const Vector &camerapos_, const Vector &focalpoint_,
         const map<string, pair<string,double>> &keypoints2conf_);
 
     string getName() const { return name; }
@@ -79,6 +84,8 @@ public:
     double getDuration() const { return duration; }
     double getTempWin() const { return tempwin; }
     double getThresh() const { return threshold; }
+    Vector getCameraPos() const { return camerapos; }
+    Vector getFocalPoint() const { return focalpoint; }
     map<string, pair<string,double>> getInitialConf() const { return keypoints2conf; }
     void print();
 

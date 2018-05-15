@@ -34,8 +34,8 @@ Rom::Rom()
 
 Rom::Rom(const string &name_, const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
          const string &tag_plane_, const double &range_plane_, const double &min_, const double &max_,
-         const double &duration_, const double &tempwin_, const double &threshold_,
-         const map<string, pair<string,double>> &keypoints2conf_)
+         const double &duration_, const double &tempwin_, const double &threshold_, const Vector &camerapos_,
+         const Vector &focalpoint_, const map<string, pair<string,double>> &keypoints2conf_)
 {
     name = name_; //"ROM";
     motion_type = motion_type_;
@@ -48,6 +48,8 @@ Rom::Rom(const string &name_, const string &motion_type_, const string &tag_join
     duration = duration_;
     tempwin = tempwin_;
     threshold = threshold_;
+    camerapos = camerapos_;
+    focalpoint = focalpoint_;
     keypoints2conf = keypoints2conf_;
 }
 

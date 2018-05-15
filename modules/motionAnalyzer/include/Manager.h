@@ -97,6 +97,9 @@ class Manager : public RFModule,
     Vector ankleLeft;
     Vector ankleRight;
 
+    Vector cameraposinit;
+    Vector focalpointinit;
+
 //    vector<Metric*> metrics;
 //    vector<Processor*> processors;
 
