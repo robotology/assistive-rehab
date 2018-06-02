@@ -19,7 +19,6 @@ if(OpenCV_FOUND)
 
     include_directories(${PROJECT_SOURCE_DIR}/include
                         ${OpenCV_INCLUDE_DIRS}
-                        ${YARP_INCLUDE_DIRS}
                         ${ICUB_INCLUDE_DIRS})
 
     add_executable(${PROJECT_NAME} ${header} ${source} ${idl} ${IDL_GEN_FILES})
