@@ -449,13 +449,13 @@ class Viewer : public RFModule
         }
     } inputPort;
 
-    class SkeletonsGC : public RateThread {
+    class SkeletonsGC : public PeriodicThread {
         Viewer *viewer;
         void run() override {
             viewer->gc();
         }
     public:
-        SkeletonsGC(Viewer *viewer_) : RateThread(1000), viewer(viewer_) { }
+        SkeletonsGC(Viewer *viewer_) : PeriodicThread(1.0), viewer(viewer_) { }
     } skeletonsGC;
 
     RpcServer rpcPort;
@@ -482,7 +482,7 @@ class Viewer : public RFModule
         rpcPort.open("/skeletonViewer:rpc");
         attach(rpcPort);
 
-        skeletonsGC.setRate((int)(gc_period*1000.0));
+        skeletonsGC.setPeriod(gc_period);
         skeletonsGC.start();
 
         vtk_renderer=vtkSmartPointer<vtkRenderer>::New();
@@ -548,7 +548,7 @@ class Viewer : public RFModule
     {
         LockGuard lg(mutex);
         double t=Time::now();
-        double deadline=0.001*skeletonsGC.getRate();
+        double deadline=skeletonsGC.getPeriod();
 
         for (auto s=begin(skeletons); s!=end(skeletons); s++)
             if (t-s->second->get_last_update()>deadline)
