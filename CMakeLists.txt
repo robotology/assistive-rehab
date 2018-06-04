@@ -3,7 +3,7 @@
 # Authors: Ugo Pattacini <ugo.pattacini@iit.it>
 
 cmake_minimum_required(VERSION 3.1)
-project(AssistiveRehab LANGUAGES CXX VERSION 1.0.0)
+project(AssistiveRehab LANGUAGES CXX C VERSION 1.0.0)
 
 include(GNUInstallDirs)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
