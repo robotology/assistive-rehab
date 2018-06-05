@@ -134,10 +134,10 @@ double Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyP
     Vector transformed_kp = (inv_reference_system*k1).subVector(0,2);
     double dev = norm(transformed_kp-keypoint_init.getPoint());
 
-    yInfo() << keypoint.getTag()
+/*    yInfo() << keypoint.getTag()
             << dev
             << transformed_kp.toString(3,3)
-            << keypoint_init.getPoint().toString(3,3);
+            << keypoint_init.getPoint().toString(3,3); */
 
     if(dev > keypoints2conf[keypoint.getTag()].second)
         return dev;
@@ -155,6 +155,7 @@ Rom_Processor::Rom_Processor(const Metric *rom_)
 {
     rom = (Rom*)rom_;
     prev_result = 0.0;
+    prev_score = 0.0;
 }
 
 //void Rom_Processor::setInitialConf(const SkeletonWaist &skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_)
@@ -217,11 +218,11 @@ double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &r
             v1 = transformed_kp_child.subVector(0,2)-transformed_kp_ref.subVector(0,2);
 
             score_exercise = 0.7;
-            if(abs(v1[component_to_check])>rom->getRangePlane())
-            {
-//                yInfo() << "out of the plane band" << v1[component_to_check];
-                score_exercise = 0.4;
-            }
+            //if(abs(v1[component_to_check])>rom->getRangePlane())
+            //{
+            //    yInfo() << "out of the plane band" << v1[component_to_check];
+            //    score_exercise = 0.4;
+            //}
 
             double dist = dot(v1,plane_normal_);
             v1 = v1-dist*plane_normal_;
@@ -234,7 +235,8 @@ double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &r
 
             theta = acos(dot_p/n2); 
             result = theta * (180/M_PI);           
-            prev_result = result;    
+            prev_result = result;
+            prev_score = score_exercise;    
         }
         else
         {
@@ -249,7 +251,7 @@ double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &r
     else
     { 
         result = prev_result;
-        score_exercise = 0.0;
+        score_exercise = prev_score;
         v1.zero();
         plane_normal_.zero();
         ref_dir.zero();

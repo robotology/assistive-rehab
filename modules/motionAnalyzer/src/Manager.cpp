@@ -752,63 +752,6 @@ bool Manager::loadMotionList()
 }
 
 /********************************************************/
-//bool Manager::loadSequence(const string &sequencer_file)
-//{
-//    ResourceFinder rf;
-//    rf.setVerbose();
-//    rf.setDefaultContext(this->rf->getContext().c_str());
-//    string confFile = this->rf->getHomeContextPath() + "/" + sequencer_file;
-//    rf.setDefaultConfigFile(confFile.c_str()); //(this->rf->find("configuration-file").asString().c_str());
-//    rf.configure(0, NULL);
-
-//    if(Bottle *metric_type = rf.find("metric_type").asList())
-//    {
-//        if(Bottle *motion_type = rf.find("motion_type").asList())
-//        {
-//            metrics.resize(motion_type->size());
-//            processors.resize(motion_type->size());
-
-//            if(Bottle *tag_joint = rf.find("tag_joint").asList())
-//            {
-//                if(Bottle *n_rep = rf.find("number_repetitions").asList())
-//                {
-//                    for(int i=0; i<motion_type->size(); i++)
-//                    {
-//                        string single_motion = motion_type->get(i).asString();
-//                        string joint = tag_joint->get(i).asString();
-//                        string metric_tag = metric_type->get(i).asString();
-//                        int n = n_rep->get(i).asInt();
-
-//                        yInfo() << "Exercise to perform:" << n << single_motion << "for" << joint;
-
-//                        metrics[i] = motion_repertoire.at(metric_tag);
-//                        metrics[i]->print();
-
-//                        SkeletonWaist skel;
-//                        for(int j=0; j<skeletonsInit.size(); j++)
-//                        {
-//                            if(skeletonsInit[j]->getTag() == metric_tag)
-//                            {
-//                                skel.update(skeletonsInit[j]->get_unordered());
-//                                skeletonsInit[j]->print();
-//                            }
-//                        }
-
-//                        Processor* newProcessor = createProcessor(metric_tag, metrics[i]);
-////                        skeletonsInit[i]->print();
-//                        newProcessor->setInitialConf(skel, metrics[i]->getInitialConf());
-////                        newProcessor->setInitialConf(skeletonInit, metrics[i]->getInitialConf());
-//                        processors[i] = newProcessor;
-//                    }
-//                }
-//            }
-//        }
-//    }
-
-//    return true;
-//}
-
-/********************************************************/
 double Manager::loadMetric(const string &metric_tag)
 {
     LockGuard lg(mutex);
@@ -915,28 +858,29 @@ double Manager::getQuality()
 //        score_dynamic=score_exercise;
 
     double range=findMax()-findMin();
-    double score_dynamic=0.0;
-    if(range>metric->getThresh())
-        score_dynamic=score_exercise;
+    double idealRange=metric->getMax()-metric->getMin();
+    double score_dynamic=range/idealRange;
+    
+//    double score_dynamic=0.0;
+//    if(range>metric->getThresh())
+//        score_dynamic=score_exercise;
 
-    if(score_dynamic>0.6 && result>metric->getMin() && result<metric->getMax())
-        score_dynamic+=0.1;
+//    if(score_dynamic>0.6 && result>metric->getMin() && result<metric->getMax())
+//        score_dynamic+=0.1;
 
-//    if(fabs(result_der)>30.0 && result>metric->getMin() && result<metric->getMax())
-//        score_dynamic=0.7;
-
-    yInfo() << "score_static" << score_static << " score_dynamic" << score_dynamic << " deviation" << dev;
+    yInfo() << "score_static" << score_static << " score_dynamic" << score_dynamic 
+            << " deviation" << dev << "range min-max" << range;
 
     double score;
-    if(score_dynamic<0.3 &&
+    if(score_dynamic<0.4 &&
             ( score_static>0.6 || (score_static>0.3 && score_static<0.6) || score_static<0.3) )
         score=LOW;
 
-    else if( (score_dynamic>0.3 && score_dynamic<0.6) && score_static>0.6)
+    else if( (score_dynamic>0.4 && score_dynamic<0.6) && score_static>0.6)
         score=MEDIUM;
-    else if( (score_dynamic>0.3 && score_dynamic<0.6) && (score_static>0.3 && score_static<0.6) )
+    else if( (score_dynamic>0.4 && score_dynamic<0.6) && (score_static>0.3 && score_static<0.6) )
         score=MEDIUM;
-    else if( (score_dynamic>0.3 && score_dynamic<0.6) && score_static<0.3)
+    else if( (score_dynamic>0.4 && score_dynamic<0.6) && score_static<0.3)
         score=LOW;
 
     else if(score_dynamic>0.6 && score_static>0.6)

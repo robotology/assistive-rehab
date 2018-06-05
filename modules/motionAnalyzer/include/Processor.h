@@ -64,7 +64,7 @@ public:
 class Rom_Processor : public Processor
 {
     const Rom* rom;
-    double prev_result;
+    double prev_result, prev_score;
 
 public:
 
