@@ -848,8 +848,8 @@ double Manager::getQuality()
     LockGuard lg(mutex);
 
     double dev=processor->getDeviation();
-    double dev1=2.0,score1=0.6;
-    double dev2=6.0,score2=0.3;
+    double dev1=0.0,score1=1.0;
+    double dev2=2.5,score2=0.3;
     double score_static=score1+((score2-score1)/(dev2-dev1))*(dev-dev1);
 
 //    double score_dynamic=fabs(result_der)/(metric->getMax()-metric->getMin());
@@ -868,11 +868,20 @@ double Manager::getQuality()
 //    if(score_dynamic>0.6 && result>metric->getMin() && result<metric->getMax())
 //        score_dynamic+=0.1;
 
-    yInfo() << "score_static" << score_static << " score_dynamic" << score_dynamic 
-            << " deviation" << dev << "range min-max" << range;
-
     double score;
-    if(score_dynamic<0.4 &&
+    if(score_static > 0.0)
+        score = score_static;
+    else
+        score = 0.0;
+        
+    if(score_static > score_dynamic)
+    {
+        score = score_dynamic;
+        if(score_dynamic > 1.0)
+            score = 1.0;
+    }
+    
+/*    if(score_dynamic<0.4 &&
             ( score_static>0.6 || (score_static>0.3 && score_static<0.6) || score_static<0.3) )
         score=LOW;
 
@@ -888,7 +897,7 @@ double Manager::getQuality()
     else if(score_dynamic>0.6 && score_static>0.3 && score_static<0.6)
         score=MEDIUM;
     else if(score_dynamic>0.6 && score_static<0.3)
-        score=LOW;
+        score=LOW; */
 
 //    if(score_dynamic<0.6 && score_static>0.6)
 //        score=LOW;
@@ -896,6 +905,10 @@ double Manager::getQuality()
 //        score=LOW;
 //    else if(score_dynamic<0.6 && score_static<0.3)
 //        score=LOW;
+
+    yInfo() << "score_static" << score_static << " score_dynamic" << score_dynamic 
+            << " deviation" << dev << "range min-max" << range
+            << "final_score" << score;
 
     return score;
 }

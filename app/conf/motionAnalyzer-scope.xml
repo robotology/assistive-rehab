@@ -2,6 +2,8 @@
 <portscope rows="1" columns="1" carrier="tcp">
     <plot gridx="0"
           gridy="0"
+          minval="-10"
+          maxval="110"
           bgcolor="White">
         <graph remote="/motionAnalyzer/scope"
                index="0"
