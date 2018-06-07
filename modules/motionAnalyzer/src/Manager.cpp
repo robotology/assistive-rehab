@@ -297,7 +297,6 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
             if(new_keypoints[i].first == KeyPointTag::elbow_left)
                 new_keypoints[i] = make_pair(KeyPointTag::elbow_left,elbowLeft_init);
         }
-        yInfo() << "Updated initial pose for elbow left";
     }
 
     if(Bottle *bElbowRight_init = b.find("elbow_right_init_pose").asList())
@@ -311,7 +310,6 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
             if(new_keypoints[i].first == KeyPointTag::elbow_right)
                 new_keypoints[i] = make_pair(KeyPointTag::elbow_right,elbowRight_init);
         }
-        yInfo() << "Updated initial pose for elbow right";
     }
 
     if(Bottle *bHandLeft_init = b.find("hand_left_init_pose").asList())
@@ -325,7 +323,6 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
             if(new_keypoints[i].first == KeyPointTag::hand_left)
                 new_keypoints[i] = make_pair(KeyPointTag::hand_left,handLeft_init);
         }
-        yInfo() << "Updated initial pose for hand left";
     }
 
     if(Bottle *bHandRight_init = b.find("hand_right_init_pose").asList())
@@ -339,7 +336,6 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
             if(new_keypoints[i].first == KeyPointTag::hand_right)
                 new_keypoints[i] = make_pair(KeyPointTag::hand_right,handRight_init);
         }
-        yInfo() << "Updated initial pose for hand right";
     }
 
     if(Bottle *bHead_init = b.find("head_init_pose").asList())
@@ -353,7 +349,6 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
             if(new_keypoints[i].first == KeyPointTag::head)
                 new_keypoints[i] = make_pair(KeyPointTag::head,head_init);
         }
-        yInfo() << "Updated initial pose for head";
     }
 
     if(Bottle *bShoulderCenter_init = b.find("shoulder_center_init_pose").asList())
@@ -367,7 +362,6 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
             if(new_keypoints[i].first == KeyPointTag::shoulder_center)
                 new_keypoints[i] = make_pair(KeyPointTag::shoulder_center,shoulderCenter_init);
         }
-        yInfo() << "Updated initial pose for shoulder center";
     }
 
     if(Bottle *bShoulderLeft_init = b.find("shoulder_left_init_pose").asList())
@@ -381,7 +375,6 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
             if(new_keypoints[i].first == KeyPointTag::shoulder_left)
                 new_keypoints[i] = make_pair(KeyPointTag::shoulder_left,shoulderLeft_init);
         }
-        yInfo() << "Updated initial pose for shoulder left";
     }
 
     if(Bottle *bShoulderRight_init = b.find("shoulder_right_init_pose").asList())
@@ -395,7 +388,6 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
             if(new_keypoints[i].first == KeyPointTag::shoulder_right)
                 new_keypoints[i] = make_pair(KeyPointTag::shoulder_right,shoulderRight_init);
         }
-        yInfo() << "Updated initial pose for shoulder right";
     }
 
     if(Bottle *bHipLeft_init = b.find("hip_left_init_pose").asList())
@@ -409,7 +401,6 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
             if(new_keypoints[i].first == KeyPointTag::hip_left)
                 new_keypoints[i] = make_pair(KeyPointTag::hip_left,hipLeft_init);
         }
-        yInfo() << "Updated initial pose for hip left";
     }
 
     if(Bottle *bhipRight_init = b.find("hip_right_init_pose").asList())
@@ -423,7 +414,6 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
             if(new_keypoints[i].first == KeyPointTag::hip_right)
                 new_keypoints[i] = make_pair(KeyPointTag::hip_right,hipRight_init);
         }
-        yInfo() << "Updated initial pose for hip right";
     }
 
     if(Bottle *bKneeLeft_init = b.find("knee_left_init_pose").asList())
@@ -437,7 +427,6 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
             if(new_keypoints[i].first == KeyPointTag::knee_left)
                 new_keypoints[i] = make_pair(KeyPointTag::knee_left,kneeLeft_init);
         }
-        yInfo() << "Updated initial pose for knee left";
     }
 
     if(Bottle *bKneeRight_init = b.find("knee_right_init_pose").asList())
@@ -451,7 +440,6 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
             if(new_keypoints[i].first == KeyPointTag::knee_right)
                 new_keypoints[i] = make_pair(KeyPointTag::knee_right,kneeRight_init);
         }
-        yInfo() << "Updated initial pose for knee right";
     }
 
     if(Bottle *bAnkleLeft_init = b.find("ankle_left_init_pose").asList())
@@ -465,7 +453,6 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
             if(new_keypoints[i].first == KeyPointTag::ankle_left)
                 new_keypoints[i] = make_pair(KeyPointTag::ankle_left,ankleLeft_init);
         }
-        yInfo() << "Updated initial pose for ankle left";
     }
 
     if(Bottle *bAnkleRight_init = b.find("ankle_right_init_pose").asList())
@@ -479,7 +466,6 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
             if(new_keypoints[i].first == KeyPointTag::ankle_right)
                 new_keypoints[i] = make_pair(KeyPointTag::ankle_right,ankleRight_init);
         }
-        yInfo() << "Updated initial pose for ankle right";
     }
     if(Bottle *bHipCenter_init = b.find("ankle_right_init_pose").asList())
     {
@@ -492,7 +478,6 @@ bool Manager::loadInitialConf(const Bottle& b, SkeletonWaist* skeletonInit)
             if(new_keypoints[i].first == KeyPointTag::hip_center)
                 new_keypoints[i] = make_pair(KeyPointTag::hip_center,hipCenter_init);
         }
-        yInfo() << "Updated initial pose for hip center";
     }
 
     skeletonInit->update(new_keypoints);
@@ -517,14 +502,14 @@ bool Manager::loadMotionList()
 
     if(!bGeneral.isNull())
     {
-        if(Bottle *motion_tag = bGeneral.find("motion_tag").asList())
+        if(Bottle *metric_tag = bGeneral.find("metric_tag").asList())
         {
-            if(Bottle *n_motion_tag = bGeneral.find("number_motion").asList())
+            if(Bottle *n_metric_tag = bGeneral.find("number_metrics").asList())
             {
-                for(int i=0; i<motion_tag->size(); i++)
+                for(int i=0; i<metric_tag->size(); i++)
                 {
-                    string curr_tag = motion_tag->get(i).asString();
-                    int motion_number = n_motion_tag->get(i).asInt();
+                    string curr_tag = metric_tag->get(i).asString();
+                    int motion_number = n_metric_tag->get(i).asInt();
 //                    skeletonsInit.resize(motion_number);
 
                     for(int j=0; j<motion_number; j++)
@@ -532,8 +517,7 @@ bool Manager::loadMotionList()
                         Bottle &bMotion = rf.findGroup(curr_tag+"_"+to_string(j));
                         if(!bMotion.isNull())
                         {
-//                            Metric* newMetric;
-                            if(curr_tag == Rom_Processor::motion_type)
+                            if(curr_tag == Rom_Processor::metric_tag)
                             {
                                 string motion_type = bMotion.find("motion_type").asString();
                                 string tag_joint = bMotion.find("tag_joint").asString();
@@ -580,163 +564,63 @@ bool Manager::loadMotionList()
                                 string tag_plane = bMotion.find("tag_plane").asString();
                                 double range_plane = bMotion.find("range_plane").asDouble();
 
-//                                Vector plane_normal;
-//                                plane_normal.resize(3);
-//                                if(Bottle *bPlane = bMotion.find("plane_normal").asList())
-//                                {
-//                                    plane_normal[0] = bPlane->get(0).asDouble();
-//                                    plane_normal[1] = bPlane->get(1).asDouble();
-//                                    plane_normal[2] = bPlane->get(2).asDouble();
-//                                }
-//                                else
-//                                    yError() << "Could not find reference plane";
-
-//                                metrics.push_back(newMetric);
-
-                                //overwrites initial configuration if different
-                                skeletonInit = new SkeletonWaist();
-                                loadInitialConf(bMotion,skeletonInit);
-                                skeletonInit->setTag(curr_tag+"_"+to_string(j));
-                                //skeletonInit->print();
-                                skeletonsInit.push_back(skeletonInit);
-//                                for(int i=0; i<skeletonsInit.size(); i++)
-//                                    skeletonsInit[i]->print();
-
-                                Bottle *elbowLC = bMotion.find("elbow_left_configuration").asList();
-                                if(elbowLC)
-                                {
-                                    string eLC = elbowLC->get(0).asString();
-                                    keypoints2conf[KeyPointTag::elbow_left] = make_pair(eLC, elbowLC->get(1).asDouble());
-                                }
-                                else
-                                    yError() << "Could not load elbow left configuration";
-
-                                Bottle *elbowRC = bMotion.find("elbow_right_configuration").asList();
-                                if(elbowRC)
-                                {
-                                    string eRC = elbowRC->get(0).asString();
-                                    keypoints2conf[KeyPointTag::elbow_right] = make_pair(eRC, elbowRC->get(1).asDouble());
-                                }
-                                else
-                                    yError() << "Could not load elbow right configuration";
-
-                                Bottle *handLC = bMotion.find("hand_left_configuration").asList();
-                                if(handLC)
-                                {
-                                    string hnLC = handLC->get(0).asString();
-                                    keypoints2conf[KeyPointTag::hand_left] = make_pair(hnLC, handLC->get(1).asDouble());
-                                }
-                                else
-                                    yError() << "Could not load hand left configuration";
-
-                                Bottle *handRC = bMotion.find("hand_right_configuration").asList();
-                                if(handRC)
-                                {
-                                    string hnRC = handRC->get(0).asString();
-                                    keypoints2conf[KeyPointTag::hand_right] = make_pair(hnRC, handRC->get(1).asDouble());
-                                }
-                                else
-                                    yError() << "Could not load hand right configuration";
-
-                                Bottle *headC = bMotion.find("head_configuration").asList();
-                                if(headC)
-                                {
-                                    string hC = headC->get(0).asString();
-                                    keypoints2conf[KeyPointTag::head] = make_pair(hC, headC->get(1).asDouble());
-                                }
-                                else
-                                    yError() << "Could not load head configuration";
-
-                                Bottle *shoulderCC = bMotion.find("shoulder_center_configuration").asList();
-                                if(shoulderCC)
-                                {
-                                    string sCC = shoulderCC->get(0).asString();
-                                    keypoints2conf[KeyPointTag::shoulder_center] = make_pair(sCC, shoulderCC->get(1).asDouble());
-                                }
-                                else
-                                    yError() << "Could not load shoulder center configuration";
-
-                                Bottle *shoulderLC = bMotion.find("shoulder_left_configuration").asList();
-                                if(shoulderLC)
-                                {
-                                    string sLC = shoulderLC->get(0).asString();
-                                    keypoints2conf[KeyPointTag::shoulder_left] = make_pair(sLC, shoulderLC->get(1).asDouble());
-                                }
-                                else
-                                    yError() << "Could not load shoulder left configuration";
-
-                                Bottle *shoulderRC = bMotion.find("shoulder_right_configuration").asList();
-                                if(shoulderRC)
-                                {
-                                    string sRC = shoulderRC->get(0).asString();
-                                    keypoints2conf[KeyPointTag::shoulder_right] = make_pair(sRC, shoulderRC->get(1).asDouble());
-                                }
-                                else
-                                    yError() << "Could not load shoulder right configuration";
-
-                                Bottle *hipLC = bMotion.find("hip_left_configuration").asList();
-                                if(hipLC)
-                                {
-                                    string hLC = hipLC->get(0).asString();
-                                    keypoints2conf[KeyPointTag::hip_left] = make_pair(hLC, hipLC->get(1).asDouble());
-                                }
-                                else
-                                    yError() << "Could not load hip left configuration";
-
-                                Bottle *hipRC = bMotion.find("hip_right_configuration").asList();
-                                if(hipRC)
-                                {
-                                    string hRC = hipRC->get(0).asString();
-                                    keypoints2conf[KeyPointTag::hip_right] = make_pair(hRC, hipRC->get(1).asDouble());
-                                }
-                                else
-                                    yError() << "Could not load hip right configuration";
-
-                                Bottle *kneeLC = bMotion.find("knee_left_configuration").asList();
-                                if(kneeLC)
-                                {
-                                    string kLC = kneeLC->get(0).asString();
-                                    keypoints2conf[KeyPointTag::knee_left] = make_pair(kLC, kneeLC->get(1).asDouble());
-                                }
-                                else
-                                    yError() << "Could not load knee left configuration";
-
-                                Bottle *kneeRC = bMotion.find("knee_right_configuration").asList();
-                                if(kneeRC)
-                                {
-                                    string kRC = kneeRC->get(0).asString();
-                                    keypoints2conf[KeyPointTag::knee_right] = make_pair(kRC, kneeRC->get(1).asDouble());
-                                }
-                                else
-                                    yError() << "Could not load knee right configuration";
-
-                                Bottle *ankleLC = bMotion.find("ankle_left_configuration").asList();
-                                if(ankleLC)
-                                {
-                                    string aLC = ankleLC->get(0).asString();
-                                    keypoints2conf[KeyPointTag::ankle_left] = make_pair(aLC, ankleLC->get(1).asDouble());
-                                }
-                                else
-                                    yError() << "Could not load ankle left configuration";
-
-                                Bottle *ankleRC = bMotion.find("ankle_right_configuration").asList();
-                                if(ankleRC)
-                                {
-                                    string aRC = ankleRC->get(0).asString();
-                                    keypoints2conf[KeyPointTag::ankle_right] = make_pair(aRC, ankleRC->get(1).asDouble());
-                                }
-                                else
-                                    yError() << "Could not load ankle right configuration";
+                                string s = curr_tag+"_"+to_string(j);
+                                getJointInitialConf(bMotion,s);
 
                                 metric_repertoire = new Rom(curr_tag, motion_type, tag_joint, ref_dir, tag_plane,
-                                                            range_plane, min, max, duration, nrep, nenv, tempwin,
-                                                            threshold, camerapos, focalpoint, keypoints2conf);
+                                                            range_plane, min, max, duration, tempwin, threshold,
+                                                            camerapos, focalpoint, keypoints2conf);
+                            }
+
+                            if(curr_tag == EndPoint_Processor::metric_tag)
+                            {
+                                string motion_type = bMotion.find("motion_type").asString();
+                                string tag_joint = bMotion.find("tag_joint").asString();
+                                string tag_plane = bMotion.find("tag_plane").asString();
+                                double duration = bMotion.find("duration").asDouble();
+                                Vector camerapos;
+                                camerapos.resize(3);
+                                if(Bottle *bCamerapos = bMotion.find("camerapos").asList())
+                                {
+                                    camerapos[0] = bCamerapos->get(0).asDouble();
+                                    camerapos[1] = bCamerapos->get(1).asDouble();
+                                    camerapos[2] = bCamerapos->get(2).asDouble();
+                                }
+                                else
+                                    yError() << "Could not find camera position";
+
+                                Vector focalpoint;
+                                focalpoint.resize(3);
+                                if(Bottle *bFocalpoint = bMotion.find("focalpoint").asList())
+                                {
+                                    focalpoint[0] = bFocalpoint->get(0).asDouble();
+                                    focalpoint[1] = bFocalpoint->get(1).asDouble();
+                                    focalpoint[2] = bFocalpoint->get(2).asDouble();
+                                }
+                                else
+                                    yError() << "Could not find focal point";
+
+                                Vector target;
+                                target.resize(3);
+                                if(Bottle *bTarget = bMotion.find("target").asList())
+                                {
+                                    target[0] = bTarget->get(0).asDouble();
+                                    target[1] = bTarget->get(1).asDouble();
+                                    target[2] = bTarget->get(2).asDouble();
+                                }
+                                else
+                                    yError() << "Could not find target";
+
+                                string s = curr_tag+"_"+to_string(j);
+                                getJointInitialConf(bMotion,s);
+
+                                metric_repertoire = new EndPoint(curr_tag, motion_type, tag_joint, tag_plane, target,
+                                                                 duration, camerapos, focalpoint, keypoints2conf);
+
                             }
 
                             //add the current metric to the repertoire
-                            motion_repertoire.insert(pair<string, Metric*>(curr_tag+"_"+to_string(j), metric_repertoire)); // metrics[j]));
-//                            loadMetric(curr_tag+"_"+to_string(j));
-
+                            motion_repertoire.insert(pair<string, Metric*>(curr_tag+"_"+to_string(j), metric_repertoire));
 //                            motion_repertoire[curr_tag+"_"+to_string(j)]->print();
                         }
                     }
@@ -751,6 +635,143 @@ bool Manager::loadMotionList()
     }
 
     return true;
+}
+
+/********************************************************/
+void Manager::getJointInitialConf(const Bottle &bMotion, const string &tag)
+{
+    skeletonInit = new SkeletonWaist();
+
+    //overwrites initial configuration if different
+    loadInitialConf(bMotion,skeletonInit);
+    skeletonInit->setTag(tag);
+    skeletonsInit.push_back(skeletonInit);
+
+    Bottle *elbowLC = bMotion.find("elbow_left_configuration").asList();
+    if(elbowLC)
+    {
+        string eLC = elbowLC->get(0).asString();
+        keypoints2conf[KeyPointTag::elbow_left] = make_pair(eLC, elbowLC->get(1).asDouble());
+    }
+    else
+        yError() << "Could not load elbow left configuration";
+
+    Bottle *elbowRC = bMotion.find("elbow_right_configuration").asList();
+    if(elbowRC)
+    {
+        string eRC = elbowRC->get(0).asString();
+        keypoints2conf[KeyPointTag::elbow_right] = make_pair(eRC, elbowRC->get(1).asDouble());
+    }
+    else
+        yError() << "Could not load elbow right configuration";
+
+    Bottle *handLC = bMotion.find("hand_left_configuration").asList();
+    if(handLC)
+    {
+        string hnLC = handLC->get(0).asString();
+        keypoints2conf[KeyPointTag::hand_left] = make_pair(hnLC, handLC->get(1).asDouble());
+    }
+    else
+        yError() << "Could not load hand left configuration";
+
+    Bottle *handRC = bMotion.find("hand_right_configuration").asList();
+    if(handRC)
+    {
+        string hnRC = handRC->get(0).asString();
+        keypoints2conf[KeyPointTag::hand_right] = make_pair(hnRC, handRC->get(1).asDouble());
+    }
+    else
+        yError() << "Could not load hand right configuration";
+
+    Bottle *headC = bMotion.find("head_configuration").asList();
+    if(headC)
+    {
+        string hC = headC->get(0).asString();
+        keypoints2conf[KeyPointTag::head] = make_pair(hC, headC->get(1).asDouble());
+    }
+    else
+        yError() << "Could not load head configuration";
+
+    Bottle *shoulderCC = bMotion.find("shoulder_center_configuration").asList();
+    if(shoulderCC)
+    {
+        string sCC = shoulderCC->get(0).asString();
+        keypoints2conf[KeyPointTag::shoulder_center] = make_pair(sCC, shoulderCC->get(1).asDouble());
+    }
+    else
+        yError() << "Could not load shoulder center configuration";
+
+    Bottle *shoulderLC = bMotion.find("shoulder_left_configuration").asList();
+    if(shoulderLC)
+    {
+        string sLC = shoulderLC->get(0).asString();
+        keypoints2conf[KeyPointTag::shoulder_left] = make_pair(sLC, shoulderLC->get(1).asDouble());
+    }
+    else
+        yError() << "Could not load shoulder left configuration";
+
+    Bottle *shoulderRC = bMotion.find("shoulder_right_configuration").asList();
+    if(shoulderRC)
+    {
+        string sRC = shoulderRC->get(0).asString();
+        keypoints2conf[KeyPointTag::shoulder_right] = make_pair(sRC, shoulderRC->get(1).asDouble());
+    }
+    else
+        yError() << "Could not load shoulder right configuration";
+
+    Bottle *hipLC = bMotion.find("hip_left_configuration").asList();
+    if(hipLC)
+    {
+        string hLC = hipLC->get(0).asString();
+        keypoints2conf[KeyPointTag::hip_left] = make_pair(hLC, hipLC->get(1).asDouble());
+    }
+    else
+        yError() << "Could not load hip left configuration";
+
+    Bottle *hipRC = bMotion.find("hip_right_configuration").asList();
+    if(hipRC)
+    {
+        string hRC = hipRC->get(0).asString();
+        keypoints2conf[KeyPointTag::hip_right] = make_pair(hRC, hipRC->get(1).asDouble());
+    }
+    else
+        yError() << "Could not load hip right configuration";
+
+    Bottle *kneeLC = bMotion.find("knee_left_configuration").asList();
+    if(kneeLC)
+    {
+        string kLC = kneeLC->get(0).asString();
+        keypoints2conf[KeyPointTag::knee_left] = make_pair(kLC, kneeLC->get(1).asDouble());
+    }
+    else
+        yError() << "Could not load knee left configuration";
+
+    Bottle *kneeRC = bMotion.find("knee_right_configuration").asList();
+    if(kneeRC)
+    {
+        string kRC = kneeRC->get(0).asString();
+        keypoints2conf[KeyPointTag::knee_right] = make_pair(kRC, kneeRC->get(1).asDouble());
+    }
+    else
+        yError() << "Could not load knee right configuration";
+
+    Bottle *ankleLC = bMotion.find("ankle_left_configuration").asList();
+    if(ankleLC)
+    {
+        string aLC = ankleLC->get(0).asString();
+        keypoints2conf[KeyPointTag::ankle_left] = make_pair(aLC, ankleLC->get(1).asDouble());
+    }
+    else
+        yError() << "Could not load ankle left configuration";
+
+    Bottle *ankleRC = bMotion.find("ankle_right_configuration").asList();
+    if(ankleRC)
+    {
+        string aRC = ankleRC->get(0).asString();
+        keypoints2conf[KeyPointTag::ankle_right] = make_pair(aRC, ankleRC->get(1).asDouble());
+    }
+    else
+        yError() << "Could not load ankle right configuration";
 }
 
 /********************************************************/
@@ -815,7 +836,9 @@ vector<string> Manager::listMetrics()
 
     vector<string> reply;
     for (map<string,Metric*>::iterator it=motion_repertoire.begin(); it!=motion_repertoire.end(); it++)
+    {
         reply.push_back(it->first);
+    }
 
     return reply;
 }
@@ -833,6 +856,7 @@ bool Manager::selectSkel(const string &skel_tag)
     cmd.addVocab(Vocab::encode("tag"));
     cmd.addString(this->skel_tag);
     yInfo() << cmd.toString();
+
     scalerPort.write(cmd, reply);
     dtwPort.write(cmd, reply);
 
@@ -924,20 +948,6 @@ double Manager::getQuality()
 }
 
 /********************************************************/
-void Manager::computeMetricDerivative()
-{
-    int i=result_time.size()-1;
-    result_der=0.0;
-    double win=20.0;
-
-    if(i>(int)win)
-    {
-        for(int j=i;j>i-(int)win;j--)
-            result_der+=(result_time[j]-result_time[j-1])/(time_samples[j]-time_samples[j-1]);
-        result_der/=win;
-    }
-}
-
 double Manager::findMin()
 {
     double min=result_time[0];
@@ -1070,6 +1080,7 @@ bool Manager::stop()
             time_samples.clear();
             all_keypoints.clear();
             all_planes.clear();
+            ideal_samples.clear();
         }
         else
             yError() << "Could not save to file";
@@ -1082,230 +1093,6 @@ bool Manager::stop()
         return true;
     }
     return false;
-}
-
-/********************************************************/
-void Manager::getKeyframes()
-{
-    curr_keypoints.clear();
-
-    //ask for the property id
-    Bottle cmd, reply;
-    cmd.addVocab(Vocab::encode("ask"));
-    Bottle &content = cmd.addList().addList();
-    content.addString("body");
-
-//    yInfo() << "Query opc: " << cmd.toString();
-    opcPort.write(cmd, reply);
-//    yInfo() << "Reply from opc:" << reply.toString();
-
-    if(reply.size() > 1)
-    {
-        if(reply.get(0).asVocab() == Vocab::encode("ack"))
-        {
-            if(Bottle *idField = reply.get(1).asList())
-            {
-                if(Bottle *idValues = idField->get(1).asList())
-                {
-                    //get the last id
-                    int id = idValues->get(idValues->size()-1).asInt();
-                    //                        yInfo() << id;
-
-                    //given the id, get the value of the property
-                    cmd.clear();
-                    cmd.addVocab(Vocab::encode("get"));
-                    Bottle &content = cmd.addList().addList();
-                    content.addString("id");
-                    content.addInt(id);
-                    Bottle replyProp;
-
-                    //                        yInfo() << "Command sent to the port: " << cmd.toString();
-                    opcPort.write(cmd, replyProp);
-                    //                        yInfo() << "Reply from opc:" << replyProp.toString();
-
-                    if(replyProp.get(0).asVocab() == Vocab::encode("ack"))
-                    {
-                        if(Bottle *propField = replyProp.get(1).asList())
-                        {
-                            if(Bottle *propSubField = propField->find("body").asList())
-                            {
-                                if(Bottle *elbowLeftB = propSubField->find(KeyPointTag::elbow_left).asList())
-                                {
-                                    elbowLeft[0] = elbowLeftB->get(0).asDouble();
-                                    elbowLeft[1] = elbowLeftB->get(1).asDouble();
-                                    elbowLeft[2] = elbowLeftB->get(2).asDouble();
-                                    //                                    yInfo() << elbowLeft[0] << elbowLeft[1] << elbowLeft[2];
-
-                                    curr_keypoints.push_back(make_pair(KeyPointTag::elbow_left,elbowLeft));
-                                }
-                                else
-                                    yWarning() << "Could not read elbow left from OPC.. not visible?";
-
-                                if(Bottle *elbowRightB = propSubField->find(KeyPointTag::elbow_right).asList())
-                                {
-                                    elbowRight[0] = elbowRightB->get(0).asDouble();
-                                    elbowRight[1] = elbowRightB->get(1).asDouble();
-                                    elbowRight[2] = elbowRightB->get(2).asDouble();
-                                    //                                    yInfo() << elbowRight[0] << elbowRight[1] << elbowRight[2];
-
-                                    curr_keypoints.push_back(make_pair(KeyPointTag::elbow_right,elbowRight));
-                                }
-                                else
-                                    yWarning() << "Could not read elbow right from OPC.. not visible?";
-
-                                if(Bottle *handLeftB = propSubField->find(KeyPointTag::hand_left).asList())
-                                {
-                                    handLeft[0] = handLeftB->get(0).asDouble();
-                                    handLeft[1] = handLeftB->get(1).asDouble();
-                                    handLeft[2] = handLeftB->get(2).asDouble();
-                                    //                                    yInfo() << handLeft[0] << handLeft[1] << handLeft[2];
-
-                                    curr_keypoints.push_back(make_pair(KeyPointTag::hand_left,handLeft));
-                                }
-                                else
-                                    yWarning() << "Could not read hand left from OPC.. not visible?";
-
-                                if(Bottle *handRightB = propSubField->find(KeyPointTag::hand_right).asList())
-                                {
-                                    handRight[0] = handRightB->get(0).asDouble();
-                                    handRight[1] = handRightB->get(1).asDouble();
-                                    handRight[2] = handRightB->get(2).asDouble();
-                                    //                                    yInfo() << handRight[0] << handRight[1] << handRight[2];
-
-                                    curr_keypoints.push_back(make_pair(KeyPointTag::hand_right,handRight));
-                                }
-                                else
-                                    yWarning() << "Could not read hand right from OPC.. not visible?";
-
-                                if(Bottle *headB = propSubField->find(KeyPointTag::head).asList())
-                                {
-                                    head[0] = headB->get(0).asDouble();
-                                    head[1] = headB->get(1).asDouble();
-                                    head[2] = headB->get(2).asDouble();
-                                    //                                    yInfo() << head[0] << head[1] << head[2];
-
-                                    curr_keypoints.push_back(make_pair(KeyPointTag::head,head));
-                                }
-                                else
-                                    yWarning() << "Could not read hand left from OPC.. not visible?";
-
-                                if(Bottle *shoulderCenterB = propSubField->find(KeyPointTag::shoulder_center).asList())
-                                {
-                                    shoulderCenter[0] = shoulderCenterB->get(0).asDouble();
-                                    shoulderCenter[1] = shoulderCenterB->get(1).asDouble();
-                                    shoulderCenter[2] = shoulderCenterB->get(2).asDouble();
-                                    //                                    yInfo() << shoulderCenter[0] << shoulderCenter[1] << shoulderCenter[2];
-
-                                    curr_keypoints.push_back(make_pair(KeyPointTag::shoulder_center,shoulderCenter));
-                                }
-                                else
-                                    yWarning() << "Could not read shoulder center from OPC.. not visible?";
-
-                                if(Bottle *shoulderLeftB = propSubField->find(KeyPointTag::shoulder_left).asList())
-                                {
-                                    shoulderLeft[0] = shoulderLeftB->get(0).asDouble();
-                                    shoulderLeft[1] = shoulderLeftB->get(1).asDouble();
-                                    shoulderLeft[2] = shoulderLeftB->get(2).asDouble();
-                                    //                                    yInfo() << shoulderLeft[0] << shoulderLeft[1] << shoulderLeft[2];
-
-                                    curr_keypoints.push_back(make_pair(KeyPointTag::shoulder_left,shoulderLeft));
-                                }
-                                else
-                                    yWarning() << "Could not read shoulder left from OPC.. not visible?";
-
-                                if(Bottle *shoulderRightB = propSubField->find(KeyPointTag::shoulder_right).asList())
-                                {
-                                    shoulderRight[0] = shoulderRightB->get(0).asDouble();
-                                    shoulderRight[1] = shoulderRightB->get(1).asDouble();
-                                    shoulderRight[2] = shoulderRightB->get(2).asDouble();
-                                    //                                    yInfo() << shoulderRight[0] << shoulderRight[1] << shoulderRight[2];
-
-                                    curr_keypoints.push_back(make_pair(KeyPointTag::shoulder_right,shoulderRight));
-                                }
-                                else
-                                    yWarning() << "Could not read shoulder right from OPC.. not visible?";
-
-                                if(Bottle *hipLeftB = propSubField->find(KeyPointTag::hip_left).asList())
-                                {
-                                    hipLeft[0] = hipLeftB->get(0).asDouble();
-                                    hipLeft[1] = hipLeftB->get(1).asDouble();
-                                    hipLeft[2] = hipLeftB->get(2).asDouble();
-                                    //                                    yInfo() << hipLeft[0] << hipLeft[1] << hipLeft[2];
-
-                                    curr_keypoints.push_back(make_pair(KeyPointTag::hip_left,hipLeft));
-                                }
-                                else
-                                    yWarning() << "Could not read hip left from OPC.. not visible?";
-
-                                if(Bottle *hipRightB = propSubField->find(KeyPointTag::hip_right).asList())
-                                {
-                                    hipRight[0] = hipRightB->get(0).asDouble();
-                                    hipRight[1] = hipRightB->get(1).asDouble();
-                                    hipRight[2] = hipRightB->get(2).asDouble();
-                                    //                                    yInfo() << hipRight[0] << hipRight[1] << hipRight[2];
-
-                                    curr_keypoints.push_back(make_pair(KeyPointTag::hip_right,hipRight));
-                                }
-                                else
-                                    yWarning() << "Could not read hip right from OPC.. not visible?";
-
-                                if(Bottle *kneeLeftB = propSubField->find(KeyPointTag::knee_left).asList())
-                                {
-                                    kneeLeft[0] = kneeLeftB->get(0).asDouble();
-                                    kneeLeft[1] = kneeLeftB->get(1).asDouble();
-                                    kneeLeft[2] = kneeLeftB->get(2).asDouble();
-                                    //                                    yInfo() << kneeLeft[0] << kneeLeft[1] << kneeLeft[2];
-
-                                    curr_keypoints.push_back(make_pair(KeyPointTag::knee_left,kneeLeft));
-                                }
-                                else
-                                    yWarning() << "Could not read knee left from OPC.. not visible?";
-
-                                if(Bottle *kneeRightB = propSubField->find(KeyPointTag::knee_right).asList())
-                                {
-                                    kneeRight[0] = kneeRightB->get(0).asDouble();
-                                    kneeRight[1] = kneeRightB->get(1).asDouble();
-                                    kneeRight[2] = kneeRightB->get(2).asDouble();
-                                    //                                    yInfo() << kneeRight[0] << kneeRight[1] << kneeRight[2];
-
-                                    curr_keypoints.push_back(make_pair(KeyPointTag::knee_right,kneeRight));
-                                }
-                                else
-                                    yWarning() << "Could not read knee right from OPC.. not visible?";
-
-                                if(Bottle *ankleLeftB = propSubField->find(KeyPointTag::ankle_left).asList())
-                                {
-                                    ankleLeft[0] = ankleLeftB->get(0).asDouble();
-                                    ankleLeft[1] = ankleLeftB->get(1).asDouble();
-                                    ankleLeft[2] = ankleLeftB->get(2).asDouble();
-                                    //                                    yInfo() << kneeLeft[0] << kneeLeft[1] << kneeLeft[2];
-
-                                    curr_keypoints.push_back(make_pair(KeyPointTag::ankle_left,ankleLeft));
-                                }
-                                else
-                                    yWarning() << "Could not read ankle left from OPC.. not visible?";
-
-                                if(Bottle *ankleRightB = propSubField->find(KeyPointTag::ankle_right).asList())
-                                {
-                                    ankleRight[0] = ankleRightB->get(0).asDouble();
-                                    ankleRight[1] = ankleRightB->get(1).asDouble();
-                                    ankleRight[2] = ankleRightB->get(2).asDouble();
-                                    //                                    yInfo() << kneeRight[0] << kneeRight[1] << kneeRight[2];
-
-                                    curr_keypoints.push_back(make_pair(KeyPointTag::ankle_right,ankleRight));
-                                }
-                                else
-                                    yWarning() << "Could not read ankle right from OPC.. not visible?";
-
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    all_keypoints.push_back(curr_keypoints);
 }
 
 /********************************************************/
@@ -1397,9 +1184,6 @@ bool Manager::configure(ResourceFinder &rf)
 
     string robot = rf.check("robot", Value("icub")).asString();
 
-//    string motion_repertoire_file = rf.check("repertoire_file", Value("motion-repertoire.ini")).asString();
-//    string sequencer_file = rf.check("sequencer_file", Value("sequencer.ini")).asString();
-
     opcPort.open(("/" + getName() + "/opc").c_str());
     scopePort.open(("/" + getName() + "/scope").c_str());
     scalerPort.open(("/" + getName() + "/scaler:cmd").c_str());
@@ -1449,18 +1233,7 @@ bool Manager::close()
     delete metric_repertoire;
     delete metric;
     delete processor;
-
-//    yInfo() << "Delete" << metrics.size() << "metrics and" << processors.size() << "processors";
-//    for(int j=0; j<metrics.size(); j++)
-//        delete metrics[j];
-
-//    for(int i=0; i<processors.size(); i++)
-//        delete processors[i];
-
     delete skeletonInit;
-
-//    for(int i=0; i<skeletonsInit.size(); i++)
-//        delete skeletonsInit[i];
 
     yInfo() << "Freed memory";
 
@@ -1500,17 +1273,12 @@ bool Manager::updateModule()
                 //update time array
                 time_samples.push_back(Time::now()-tstart);
 
-                processor->update(skeletonIn,templateSkeleton);
-//                vector< pair<string,vector<string>> > feedback = processor->getFeedback();
-//                for(int i=0; i<feedback.size();i++)
-//                    yWarning() << feedback[i].first << feedback[i].second[0] << feedback[i].second[1] << feedback[i].second[2];
-//                cout << "\n";
-
+                processor->update(skeletonIn);
                 processor->isDeviatingFromIntialPose();
 
-                Vector v1,plane_normal,ref_dir;
-                result = processor->computeMetric(v1,plane_normal,ref_dir,score_exercise);
-                all_planes.push_back(plane_normal);
+                result = processor->computeMetric();
+                all_planes.push_back(processor->getPlaneNormal());
+                ideal_samples.push_back(processor->getIdeal());
 
                 result_time.push_back(result);
                 if((Time::now()-tstart)-tstart_session>metric->getTempWin())
@@ -1520,9 +1288,9 @@ bool Manager::updateModule()
                 Bottle &scopebottleout = scopePort.prepare();
                 scopebottleout.clear();
                 scopebottleout.addDouble(result);
-                scopebottleout.addDouble(metric->getMin());
-                scopebottleout.addDouble(metric->getMax());
+                scopebottleout.addDouble(processor->getIdeal());
                 scopePort.write();
+
             }
         }
         else
@@ -1532,6 +1300,7 @@ bool Manager::updateModule()
     return true;
 }
 
+/********************************************************/
 bool Manager::writeStructToMat(const string& name, const vector< vector< pair<string,Vector> > >& keypoints_skel, mat_t *matfp)
 {
     const char *fields[numKeypoints];
@@ -1582,6 +1351,7 @@ bool Manager::writeStructToMat(const string& name, const vector< vector< pair<st
 
 }
 
+/********************************************************/
 bool Manager::writeStructToMat(const string& name, const Metric& metric, mat_t *matfp)
 {
     int numFields=8;
@@ -1636,10 +1406,14 @@ bool Manager::writeStructToMat(const string& name, const Metric& metric, mat_t *
 //        field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_plane,plane_met.data(),MAT_F_DONT_COPY_DATA);
 //        Mat_VarSetStructFieldByName(matvar, fields[3], 0, field);
 
-        size_t dims_field_max[2] = {1,1};
-        double max_val = metric.getMax();
-        field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_max,&max_val,MAT_F_DONT_COPY_DATA);
+        size_t dims_field_ideal[2] = {ideal_samples.size(),1};
+        field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_ideal,ideal_samples.data(),MAT_F_DONT_COPY_DATA);
         Mat_VarSetStructFieldByName(matvar, fields[4], 0, field);
+
+//        size_t dims_field_max[2] = {1,1};
+//        double max_val = metric.getMax();
+//        field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_max,&max_val,MAT_F_DONT_COPY_DATA);
+//        Mat_VarSetStructFieldByName(matvar, fields[4], 0, field);
 
         size_t dims_field_min[2] = {1,1};
         double min_val = metric.getMin();
@@ -1668,6 +1442,7 @@ bool Manager::writeStructToMat(const string& name, const Metric& metric, mat_t *
 
 }
 
+/********************************************************/
 void Manager::print(const vector< vector< pair<string,Vector> > >& keypoints_skel)
 {
     for(int i=0; i<keypoints_skel[0].size(); i++)
@@ -1681,6 +1456,7 @@ void Manager::print(const vector< vector< pair<string,Vector> > >& keypoints_ske
     cout << endl;
 }
 
+/********************************************************/
 bool Manager::writeKeypointsToFile(mat_t *matfp)
 {
     // Use MATIO to write the results in a .mat file

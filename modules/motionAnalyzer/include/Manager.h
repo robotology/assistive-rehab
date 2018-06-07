@@ -51,9 +51,9 @@ class Manager : public RFModule,
     int numKeypoints;
     vector<pair<string,Vector>> initial_keypoints;
     vector<pair<string,Vector>> new_keypoints;
-    vector<pair<string,Vector>> curr_keypoints;
     vector< vector <pair<string,Vector>> > all_keypoints;
     vector<double> time_samples;
+    vector<double> ideal_samples;
     vector<Vector > all_planes;
     SkeletonWaist* skeletonInit;
     SkeletonWaist* skel;
@@ -97,9 +97,6 @@ class Manager : public RFModule,
     Vector cameraposinit;
     Vector focalpointinit;
 
-//    vector<Metric*> metrics;
-//    vector<Processor*> processors;
-
     Metric* metric_repertoire;
     Metric* metric;
     Processor* processor;
@@ -109,9 +106,6 @@ class Manager : public RFModule,
     double tend_session;
     bool finishedSession;
 
-//    mat_t *matfp;
-//    string filename_report;
-
     bool starting;
 
     string skel_tag;
@@ -120,25 +114,18 @@ class Manager : public RFModule,
     string out_folder;
     bool updated;
     double result;
-//    vector<double> result_time;
     deque<double> result_time;
-//    Vector result_time;
-    double result_der;
 
     double score_exercise;
 
     Mutex mutex;
 
-//    Metric* metric;
-//    Processor* processor;
-
     void init();
     bool loadInitialConf();
     bool loadInitialConf(const Bottle& b, SkeletonWaist *skeletonInit);
     bool loadMotionList();
-//    bool loadSequence(const string& sequencer_file);
     double loadMetric(const string &metric_tag);
-    void computeMetricDerivative();
+    void getJointInitialConf(const Bottle &bMotion, const string &tag);
     double findMin();
     double findMax();
     vector<string> listMetrics();

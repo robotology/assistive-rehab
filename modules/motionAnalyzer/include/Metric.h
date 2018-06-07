@@ -27,14 +27,20 @@ using namespace assistive_rehab;
 
 class Metric
 {
+protected:
+    string name;
+    string motion_type;
+    string tag_joint;
+    string tag_plane;
+    double duration;
+    Vector camerapos;
+    Vector focalpoint;
+    map<string, pair<string,double>> keypoints2conf;
 
 public:
     Metric();
     virtual ~Metric();
-    virtual void print();
-    virtual string getName() const = 0;
-    virtual string getTagJoint() const = 0;
-    virtual string getMotionType() const = 0;
+    void print();
     virtual Vector getRefDir() const = 0;
     virtual string getTagPlane() const = 0;
     virtual double getRangePlane() const = 0;
@@ -45,29 +51,25 @@ public:
     virtual int getNenv() const = 0;
     virtual double getTempWin() const = 0;
     virtual double getThresh() const = 0;
-    virtual Vector getCameraPos() const = 0;
-    virtual Vector getFocalPoint() const = 0;
-    virtual map<string, pair<string,double>> getInitialConf() const = 0;
+
+    string getName() const { return name; }
+    string getTagJoint() const { return tag_joint; }
+    string getMotionType() const { return motion_type; }
+    string getTagPlane() const { return tag_plane; }
+    double getDuration() const { return duration; }
+    Vector getCameraPos() const { return camerapos; }
+    Vector getFocalPoint() const { return focalpoint; }
+    map<string, pair<string,double>> getInitialConf() const { return keypoints2conf; }
 };
 
 class Rom : public Metric
 {
-    string name;
-    string motion_type;
-    string tag_joint;
     Vector ref_dir;
-    string tag_plane;
     double range_plane;
     double min;
     double max;
-    double duration;
-    int nrep;
-    int nenv;
     double tempwin;
     double threshold;
-    Vector camerapos;
-    Vector focalpoint;
-    map<string, pair<string,double>> keypoints2conf;
 
 public:
     Rom();
@@ -77,11 +79,7 @@ public:
         const double &threshold_, const Vector &camerapos_, const Vector &focalpoint_,
         const map<string, pair<string,double>> &keypoints2conf_);
 
-    string getName() const { return name; }
-    string getTagJoint() const { return tag_joint; }
-    string getMotionType() const { return motion_type; }
     Vector getRefDir() const { return ref_dir; }
-    string getTagPlane() const { return tag_plane; }
     double getRangePlane() const { return range_plane; }
     double getMax() const { return max; }
     double getMin() const { return min; }
@@ -90,11 +88,40 @@ public:
     int getNenv() const { return nenv; }
     double getTempWin() const { return tempwin; }
     double getThresh() const { return threshold; }
-    Vector getCameraPos() const { return camerapos; }
-    Vector getFocalPoint() const { return focalpoint; }
-    map<string, pair<string,double>> getInitialConf() const { return keypoints2conf; }
-    void print();
 
+};
+
+class EndPoint : public Metric
+{
+    Vector ref_dir;
+    double range_plane;
+    double min;
+    double max;
+    double tempwin;
+    double threshold;
+    Vector target;
+
+    double vel;
+    double smoothness;
+
+public:
+    EndPoint();
+    EndPoint(const string &name_, const string& motion_type_, const string& tag_joint_, const string& tag_plane,
+             const Vector &target_, const double &duration_, const Vector &camerapos_, const Vector &focalpoint_,
+             const map<string, pair<string,double>> &keypoints2conf_);
+
+    Vector getRefDir() const { return ref_dir; }
+    double getRangePlane() const { return range_plane; }
+    double getMax() const { return max; }
+    double getMin() const { return min; }
+    double getTempWin() const { return tempwin; }
+    double getThresh() const { return threshold; }
+
+    void setVel(const double &vel_);
+    void setSmoothness(const double &smoothness_);
+    double getVel() const { return vel; }
+    double getSmoothness() const { return smoothness; }
+    Vector getTarget() const { return target; }
 };
 
 

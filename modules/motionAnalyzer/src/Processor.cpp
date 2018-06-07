@@ -10,21 +10,30 @@
  * @authors: Valentina Vasco <valentina.vasco@iit.it>
  */
 
-#include "algorithm"
 #include "Processor.h"
 
 using namespace std;
 using namespace yarp::math;
+using namespace yarp::os;
 using namespace assistive_rehab;
 
-const string Rom_Processor::motion_type = "ROM";
+const string Rom_Processor::metric_tag = "ROM";
+const string EndPoint_Processor::metric_tag = "EP";
 
+/****************************************/
+/*             PROCESSOR                */
+/****************************************/
 Processor* createProcessor(const string& motion_tag, const Metric* metric_)
 {
-    if(motion_tag.compare(Rom_Processor::motion_type) >= 0)
+    if(motion_tag.compare(Rom_Processor::metric_tag) >= 0)
     {
-        yInfo() << "Creating processor for" << Rom_Processor::motion_type << "\n";
+        yInfo() << "Creating processor for" << Rom_Processor::metric_tag << "\n";
         return new Rom_Processor(metric_);
+    }
+    else if(motion_tag.compare(EndPoint_Processor::metric_tag) >= 0)
+    {
+        yInfo() << "Creating processor for" << EndPoint_Processor::metric_tag << "\n";
+        return new EndPoint_Processor(metric_);
     }
     else
         return 0;
@@ -33,13 +42,11 @@ Processor* createProcessor(const string& motion_tag, const Metric* metric_)
 /********************************************************/
 Processor::Processor()
 {
+    plane_normal.resize(3);
     deviation = 0.0;
+    score_exercise = 0.0;
     invT.resize(4,4);
     invT.zero();
-
-//    devvector.resize(100);
-//    for(int i=0;i<100;i++)
-//        devvector[i].resize(14);
 }
 
 void print(const Matrix& m)
@@ -54,6 +61,7 @@ void print(const Matrix& m)
     }
 }
 
+/********************************************************/
 void Processor::setInitialConf(SkeletonWaist* skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_,
                                SkeletonWaist &skeleton)
 {
@@ -79,6 +87,7 @@ void Processor::setInitialConf(SkeletonWaist* skeleton_init_, const map<string, 
  //   skeleton_init.print();
 }
 
+/********************************************************/
 bool Processor::isStatic(const KeyPoint& keypoint)
 {
     if(keypoints2conf[keypoint.getTag()].first == "static")
@@ -88,113 +97,13 @@ bool Processor::isStatic(const KeyPoint& keypoint)
 }
 
 /****************************************************************/
-void Processor::update(SkeletonWaist &curr_skeleton_, SkeletonWaist &template_skeleton_)
+void Processor::update(SkeletonWaist &curr_skeleton_)
 {
     curr_skeleton.update(curr_skeleton_.toProperty());
     curr_skeleton.normalize();
-
-    template_skeleton.update(template_skeleton_.toProperty());
-    template_skeleton.normalize();
 }
 
-void Processor::checkDeviation()
-{
-    vector< pair <string,Vector> > row;
-    for(unsigned int i=0; i<curr_skeleton.getNumKeyPoints(); i++)
-    {
-        if(curr_skeleton[i]->isUpdated() && curr_skeleton[i]->getTag() != KeyPointTag::hip_center)
-        {
-            Vector k1=curr_skeleton[i]->getPoint();
-            k1.push_back(1.0);
-            Vector transformed_kp=(inv_reference_system*k1).subVector(0,2);
-
-            Vector k2=template_skeleton[i]->getPoint();
-            k2.push_back(1.0);
-            Vector transformed_kp_template=(inv_reference_system*k2).subVector(0,2);
-
-            Vector dev=transformed_kp-transformed_kp_template;
-            row.push_back(make_pair(curr_skeleton[i]->getTag(),dev));
-        }
-        else
-        {
-            Vector v(3,0.0);
-            row.push_back(make_pair(curr_skeleton[i]->getTag(),v));
-        }
-    }
-    devvector.push_back(row);
-
-//    for(int i=0; i<devvector.size(); i++)
-//    {
-//        for(int j=0; j<devvector[i].size(); j++)
-//            cout << i << " " << j << " " << devvector[i][j].first
-//                 << " " << devvector[i][j].second.toString(3,3) << "\n";
-//        cout << "\n";
-//    }
-
-    if(devvector.size()>100)
-        devvector.erase(devvector.begin());
-}
-
-vector< pair<string,vector<string>> > Processor::getFeedback()
-{
-    checkDeviation();
-
-    vector< pair<string,vector<string>> > feedback;
-    for(int j=0; j<15; j++)
-    {
-        Vector avg_dev(3,0.0);
-        for(int i=0; i<devvector.size(); i++)
-        {
-            avg_dev[0]+=devvector[i][j].second[0];
-            avg_dev[1]+=devvector[i][j].second[1];
-            avg_dev[2]+=devvector[i][j].second[2];
-        }
-        avg_dev/=devvector.size();
-        string tag=devvector[0][j].first;
-//        yInfo() << tag << norm(avg_dev);
-
-        if(norm(avg_dev) > 3.0) // keypoints2conf[tag].second)
-        {
-            vector<double> err;
-            double errx = dot(avg_dev,coronal);
-            double erry = dot(avg_dev,sagittal);
-            double errz = dot(avg_dev,transverse);
-            err.push_back(fabs(errx));
-            err.push_back(fabs(erry));
-            err.push_back(fabs(errz));
-            sort(err.begin(),err.end());
-
-            vector<string> direction(3,"");
-            if(err[0] > 2.0)
-            {
-                if(errx > 0.0)
-                    direction[0] = "forward";
-                else
-                    direction[0] = "backward";
-            }
-            if(err[1] > 2.0)
-            {
-                if(erry > 0.0)
-                    direction[1] = "right";
-                else
-                    direction[1] = "left";
-            }
-            if(err[2] > 2.0)
-            {
-                if(errz > 0.0)
-                    direction[2] = "up";
-                else
-                    direction[2] = "down";
-            }
-            yInfo() << tag << errx << erry << errz;
-
-            feedback.push_back(make_pair(tag,direction));
-        }
-    }
-
-    return feedback;
-}
-
+/********************************************************/
 bool Processor::isDeviatingFromIntialPose()
 {
     bool isDeviating = false;
@@ -217,6 +126,7 @@ bool Processor::isDeviatingFromIntialPose()
     return isDeviating;
 }
 
+/********************************************************/
 double Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyPoint& keypoint_init)
 {
     Vector k1=keypoint.getPoint();
@@ -235,12 +145,15 @@ double Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyP
         return 0.0;
 }
 
-/********************************************************/
+/****************************************/
+/*            ROM PROCESSOR             */
+/****************************************/
 Rom_Processor::Rom_Processor()
 {
 
 }
 
+/********************************************************/
 Rom_Processor::Rom_Processor(const Metric *rom_)
 {
     rom = (Rom*)rom_;
@@ -248,18 +161,12 @@ Rom_Processor::Rom_Processor(const Metric *rom_)
     prev_score = 0.0;
 }
 
-//void Rom_Processor::setInitialConf(const SkeletonWaist &skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_)
-//{
-//    skeleton_init.update(skeleton_init_.get_unordered());
-//    keypoints2conf = keypoints2conf_;
-//}
-
-double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &ref_dir, double &score_exercise)
+/********************************************************/
+double Rom_Processor::computeMetric()
 {
     double result;
-    v1.resize(3);
-    plane_normal_.resize(3);
-    ref_dir.resize(3);
+    Vector v1(3,0.0);
+    Vector ref_dir(3,0.0);
 
     //get reference keypoint from skeleton
     string tag_joint = rom->getTagJoint();
@@ -278,21 +185,21 @@ double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &r
             {
                 Vector cor(3,0.0);
                 cor[0]=1.0;
-                plane_normal_ = cor;
+                plane_normal = cor;
                 component_to_check = 0;
             }
             else if(rom->getTagPlane() == "sagittal")
             {
                 Vector sag(3,0.0);
                 sag[1]=1.0;
-                plane_normal_ = sag;
+                plane_normal = sag;
                 component_to_check = 1;
             }
             else if(rom->getTagPlane() == "transverse")
             {
                 Vector trans(3,0.0);
                 trans[2]=1.0;
-                plane_normal_ = trans;
+                plane_normal = trans;
                 component_to_check = 2;
             }
 
@@ -314,8 +221,8 @@ double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &r
             //    score_exercise = 0.4;
             //}
 
-            double dist = dot(v1,plane_normal_);
-            v1 = v1-dist*plane_normal_;
+            double dist = dot(v1,plane_normal);
+            v1 = v1-dist*plane_normal;
             double n1 = norm(v1);
             if(n1 > 0.0)
                 v1 /= n1;
@@ -333,20 +240,121 @@ double Rom_Processor::computeMetric(Vector &v1, Vector &plane_normal_, Vector &r
             yError() << "The keypoint does not have a child ";
             result = 0.0;
             score_exercise = 0.0;
-            v1.zero();
-            plane_normal_.zero();
-            ref_dir.zero();
         }
     }
     else
     { 
         result = prev_result;
         score_exercise = prev_score;
-        v1.zero();
-        plane_normal_.zero();
-        ref_dir.zero();
     }
 
     return result;
 
+}
+
+/****************************************/
+/*        END POINT PROCESSOR           */
+/****************************************/
+EndPoint_Processor::EndPoint_Processor()
+{
+
+}
+
+/********************************************************/
+EndPoint_Processor::EndPoint_Processor(const Metric *ep_)
+{
+    ep = (EndPoint*)ep_;
+    linEst = new AWLinEstimator(16,1.0);
+    polyEst = new AWThirdEstimator(16,1.0);
+    ideal_traj = 0.0;
+    prev_est_traj = 0.0;
+    prev_ideal_traj = 0.0;
+    prev_vel = 0.0;
+    prev_smoothness = 0.0;
+}
+
+/********************************************************/
+EndPoint_Processor::~EndPoint_Processor()
+{
+    delete linEst;
+    delete polyEst;
+}
+
+/********************************************************/
+double EndPoint_Processor::computeMetric()
+{
+    if(ep->getTagPlane() == "coronal")
+        plane_normal[0]=1.0;
+    else if(ep->getTagPlane() == "sagittal")
+        plane_normal[1]=1.0;
+    else if(ep->getTagPlane() == "transverse")
+        plane_normal[2]=1.0;
+
+    double est_traj;
+    string tag_joint = ep->getTagJoint();
+    if(curr_skeleton[tag_joint]->isUpdated() && curr_skeleton[KeyPointTag::shoulder_center]->isUpdated())
+    {
+        Vector v = curr_skeleton[tag_joint]->getPoint();
+        v.push_back(1.0);
+        est_traj = getTrajectory(v);
+
+        Vector t = ep->getTarget();
+        t.push_back(1.0);
+        ideal_traj = getTrajectory(t);
+
+        prev_est_traj = est_traj;
+        prev_ideal_traj = ideal_traj;
+    }
+    else
+    {
+        est_traj = prev_est_traj;
+        ideal_traj = prev_ideal_traj;
+    }
+
+    //estimate vel and smoothness
+    estimate();
+
+    return est_traj;
+}
+
+/********************************************************/
+void EndPoint_Processor::estimate()
+{
+    double vel, smoothness;
+    string tag_joint = ep->getTagJoint();
+    if(curr_skeleton[tag_joint]->isUpdated())
+    {
+        Vector kp = curr_skeleton[tag_joint]->getPoint();
+        kp.push_back(1.0);
+        Vector transformed_kp = inv_reference_system*kp;
+        AWPolyElement el(transformed_kp,Time::now());
+        vel = norm(linEst->estimate(el));
+        smoothness = norm(polyEst->estimate(el));
+        prev_vel = vel;
+        prev_smoothness = smoothness;
+    }
+    else
+    {
+        vel = prev_vel;
+        smoothness = prev_smoothness;
+    }
+
+    ep->setVel(vel);
+    ep->setSmoothness(smoothness);
+}
+
+/********************************************************/
+double EndPoint_Processor::getTrajectory(const Vector &k)
+{
+    Vector kref = curr_skeleton[KeyPointTag::shoulder_center]->getPoint();
+    kref.push_back(1.0);
+    Vector transformed_k = inv_reference_system*k;
+    Vector transformed_kref = inv_reference_system*kref;
+    Vector v = transformed_k.subVector(0,2)-transformed_kref.subVector(0,2);
+
+    double dist = dot(v,plane_normal);
+    v = v-dist;
+    double traj = norm(v);
+
+    return traj;
 }
