@@ -299,7 +299,7 @@ class Scaler : public RFModule
     {
         Bottle cmd,rep;
         cmd.addString("move");
-        cmd.addList().read(const_cast<Matrix&>(T));
+        cmd.addList().read(T);
         yInfo() << cmd.toString();
         if(cmdPort.write(cmd,rep))
         {

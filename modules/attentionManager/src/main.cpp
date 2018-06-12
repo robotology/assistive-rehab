@@ -316,7 +316,7 @@ class Attention : public RFModule, public attentionManager_IDL
     bool look(const string &type, const Vector &v) const
     {
         Bottle loc;
-        loc.addList().read(const_cast<Vector&>(v));
+        loc.addList().read(v);
 
         Property options;
         options.put("control-frame","depth_rgb");
