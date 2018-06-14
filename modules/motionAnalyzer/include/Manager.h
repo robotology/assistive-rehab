@@ -41,6 +41,7 @@ class Manager : public RFModule,
     RpcClient opcPort;
     RpcServer rpcPort;
     RpcClient scalerPort;
+    RpcClient dtwPort;
     BufferedPort<Bottle> scopePort;
 
     ofstream log_file;

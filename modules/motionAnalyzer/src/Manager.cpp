@@ -789,6 +789,12 @@ double Manager::loadMetric(const string &metric_tag)
     yInfo() << cmd2.toString();
     scalerPort.write(cmd2, reply2);
 
+    Bottle cmd3, reply3;
+    cmd3.addVocab(Vocab::encode("tagt"));
+    string tag_template = metric->getMotionType();
+    cmd3.addString(tag_template);
+    dtwPort.write(cmd3,reply3);
+
     if(metric!=NULL && reply.get(0).asVocab()==Vocab::encode("ok"))
         return metric->getDuration();
 
@@ -836,8 +842,8 @@ bool Manager::selectSkel(const string &skel_tag)
     cmd.addVocab(Vocab::encode("tag"));
     cmd.addString(this->skel_tag);
     yInfo() << cmd.toString();
-
     scalerPort.write(cmd, reply);
+    dtwPort.write(cmd, reply);
 
     return true;
 }
@@ -973,7 +979,8 @@ bool Manager::start()
     Bottle cmd, reply;
     cmd.addVocab(Vocab::encode("run"));
 //    yInfo() << cmd.toString();
-    scalerPort.write(cmd, reply);
+    scalerPort.write(cmd,reply);
+    dtwPort.write(cmd,reply);
     if(reply.get(0).asVocab()==Vocab::encode("ok"))
     {
         tstart_session = Time::now()-tstart;
@@ -991,7 +998,8 @@ bool Manager::stop()
     //stop skeletonScaler
     Bottle cmd, reply;
     cmd.addVocab(Vocab::encode("stop"));
-    scalerPort.write(cmd, reply);
+    scalerPort.write(cmd,reply);
+    dtwPort.write(cmd,reply);
     yInfo() << reply.get(0).toString();
     if(reply.get(0).asVocab()==Vocab::encode("ok"))
     {
@@ -1348,6 +1356,7 @@ bool Manager::configure(ResourceFinder &rf)
     opcPort.open(("/" + getName() + "/opc").c_str());
     scopePort.open(("/" + getName() + "/scope").c_str());
     scalerPort.open(("/" + getName() + "/scaler:cmd").c_str());
+    dtwPort.open(("/" + getName() + "/dtw:cmd").c_str());
     rpcPort.open(("/" + getName() + "/cmd").c_str());
     attach(rpcPort);
 
@@ -1388,6 +1397,7 @@ bool Manager::interruptModule()
     opcPort.interrupt();
     scopePort.interrupt();
     scalerPort.interrupt();
+    dtwPort.interrupt();
     rpcPort.interrupt();
     yInfo() << "Interrupted module";
 
@@ -1424,6 +1434,7 @@ bool Manager::close()
     opcPort.close();
     scopePort.close();
     scalerPort.close();
+    dtwPort.close();
     rpcPort.close();
 
     yInfo() << "Closed ports";

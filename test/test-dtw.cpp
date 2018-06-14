@@ -15,6 +15,7 @@
 #include <yarp/os/all.h>
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
+#include "../modules/alignmentManager/include/Dtw.h"
 #include "AssistiveRehab/skeleton.h"
 
 using namespace std;
@@ -23,154 +24,17 @@ using namespace yarp::sig;
 using namespace yarp::math;
 using namespace assistive_rehab;
 
-class Dtw
-{
-private:
-    double** distMat;
-    int ns,nt,w,k;
-    vector<Vector> s,t;
-
-public:
-
-    Dtw() : w(5),ns(500), nt(500),k(45)
-    {
-    }
-
-    void initialize(const int &w_,const int &ns_,const int &nt_,const int &k_)
-    {
-        ns = ns_;
-        nt = nt_;
-        w = w_;
-        k = k_;
-
-        distMat = new double*[ns];
-        for(int i=0;i<ns;i++)
-        {
-            distMat[i] = new double[nt];
-        }
-
-        for(int i=0;i<ns;i++)
-        {
-            for(int j=0;j<nt;j++)
-            {
-                distMat[i][j]=-1;
-            }
-        }
-        distMat[0][0]=0;
-    }
-
-    void computeDistance(const vector<Vector> &s, const vector<Vector> &t)
-    {
-        int j1,j2;
-        double cost,temp;
-
-        for(int i=0;i<s.size();i++)
-        {
-            if(w==-1)
-            {
-                j1=0;
-                j2=t.size();
-            }
-            else
-            {
-                j1= i-w>1 ? i-w : 0;
-                j2= i+w<t.size() ? i+w : t.size();
-            }
-            for(int j=j1;j<j2;j++)
-            {
-                cost=vectorDistance(s[i],t[j]);
-
-                if((i-1)>0 && (j-1)>0)
-                {
-                    temp=distMat[i-1][j];
-                    if(distMat[i][j-1]!=-1)
-                    {
-                        if(temp==-1 || distMat[i][j-1]<temp) temp=distMat[i][j-1];
-                    }
-                    if(distMat[i-1][j-1]!=-1)
-                    {
-                        if(temp==-1 || distMat[i-1][j-1]<temp) temp=distMat[i-1][j-1];
-                    }
-                }
-                else
-                    temp = 0.0;
-
-                distMat[i][j]=cost+temp;
-
-            }
-        }
-    }
-
-    double vectorDistance(const Vector &s, const Vector &t)
-    {
-        double result=0;
-        double ss,tt;
-        for(int x=0;x<k;x++)
-        {
-            ss=s[x];
-            tt=t[x];
-            result+=((ss-tt)*(ss-tt));
-        }
-        result=sqrt(result);
-        return result;
-    }
-
-    int findMin(const int &row)
-    {
-        double mind = 0.0;
-        int col = 0;
-        for(int j=0;j<t.size();j++)
-        {
-            if(distMat[row][j] < mind)
-            {
-                mind = distMat[row][j];
-                col = j;
-            }
-        }
-        return col;
-    }
-
-    void update(const vector<Vector> &s_, const vector<Vector> &t_)
-    {
-        s = s_;
-        t = t_;
-    }
-
-    vector<Vector> align()
-    {
-        vector<Vector> res;
-        computeDistance(s,t);
-
-        for(int i=0;i<s.size();i++)
-        {
-            int j=findMin(i);
-            res.push_back(s[j]);
-        }
-        return res;
-    }
-
-    ~Dtw()
-    {
-        for(int i=0;i<ns+1;i++)
-        {
-            delete distMat[i];
-        }
-        delete distMat;
-    }
-
-};
-
 class TestDtw : public RFModule
 {
 private:
-    double n;
+    double amplitude,phase;
     int win;
     bool align;
-    SkeletonWaist skeleton1;
-    SkeletonWaist skeleton2;
-    BufferedPort<Bottle> port_out;
-    double radius,phase,t0;
+    SkeletonWaist skeleton1,skeleton2,alignedSkel;
+    BufferedPort<Bottle> port_out,scopePort;
+    double radius,phi,t0;
     vector<Vector> skeleton_template,skeleton_candidate,aligned_skeleton;
+    vector<double> t1series,t2series,tAligned;
     int nsamples;
 //    ofstream file_template,file_skeleton;
     Dtw dtw;
@@ -182,15 +46,17 @@ public:
 //        file_template.open("template.txt");
 //        file_skeleton.open("skeleton.txt");
 
-        n = rf.check("n",Value(2.0)).asDouble();
+        amplitude = rf.check("amplitude",Value(1.0)).asDouble();
+        phase = rf.check("phase",Value(M_PI/2.0)).asDouble();
         win = rf.check("win",Value(5)).asDouble();
         align = rf.check("align",Value(true)).asBool();
-        nsamples = rf.check("nsamples",Value(500)).asDouble();
+        nsamples = rf.check("nsamples",Value(200)).asDouble();
 
         dtw.initialize(win,nsamples,nsamples,45);
 
         skeleton1.setTag("template");
         skeleton2.setTag("skeleton");
+        alignedSkel.setTag("aligned");
         vector<pair<string, Vector>> unordered;
         {
             Vector p(3,0.0); p[0]=0.0; p[1]=0.0; p[2]=1.0;
@@ -258,9 +124,10 @@ public:
         Vector d=skeleton1[KeyPointTag::head]->getPoint()-
                  skeleton1[KeyPointTag::shoulder_center]->getPoint();
         radius=norm(d);
-        phase=atan2(d[1],d[0]);
+        phi=atan2(d[1],d[0]);
 
         port_out.open("/test-dtw");
+        scopePort.open("/test-dtw/scope");
         t0=Time::now();
 
         return true;
@@ -337,24 +204,24 @@ public:
     void updateSkels()
     {
         double t=Time::now()-t0;
-        double theta1=2.0*M_PI*0.1*t+phase;
+        double theta1=2.0*M_PI*0.1*t+phi;
 
         Vector c(skeleton1[KeyPointTag::shoulder_right]->getPoint());
         Vector pe1=skeleton1[KeyPointTag::elbow_right]->getPoint();
         Vector ph1=skeleton1[KeyPointTag::hand_right]->getPoint();
 
-        pe1[0]=-radius*cos(theta1+phase);
+        pe1[0]=-radius*cos(theta1+phi);
         if(pe1[0] > 0.0)
             pe1[0]=-pe1[0];
         pe1[0]+=c[0];
-        pe1[1]=c[1]-radius*fabs(sin(theta1+phase));
+        pe1[1]=c[1]-radius*fabs(sin(theta1+phi));
         pe1[2]=c[2];
 
-        ph1[0]=-2*radius*cos(theta1+phase);
+        ph1[0]=-2*radius*cos(theta1+phi);
         if(ph1[0] > 0.0)
             ph1[0]=-ph1[0];
         ph1[0]+=c[0];
-        ph1[1]=c[1]-2*radius*fabs(sin(theta1+phase));
+        ph1[1]=c[1]-2*radius*fabs(sin(theta1+phi));
         ph1[2]=c[2];
 
         vector<pair<string,Vector>> unordered1=skeleton1.get_unordered();
@@ -362,23 +229,23 @@ public:
         unordered1.push_back(make_pair(KeyPointTag::hand_right,ph1));
         skeleton1.update(unordered1);
 
-        double theta2=n*2.0*M_PI*0.1*t+phase;
+        double theta2=amplitude*2.0*M_PI*0.1*t+(phi+phase);
         Vector c2(skeleton2[KeyPointTag::shoulder_right]->getPoint());
         Vector pe2=skeleton2[KeyPointTag::elbow_right]->getPoint();
         Vector ph2=skeleton2[KeyPointTag::hand_right]->getPoint();
 
-        pe2[0]=-radius*cos(theta2+phase);
+        pe2[0]=-radius*cos(theta2+phi);
         if(pe2[0] > 0.0)
             pe2[0]=-pe2[0];
         pe2[0]+=c2[0];
-        pe2[1]=c2[1]-radius*fabs(sin(theta2+phase));
+        pe2[1]=c2[1]-radius*fabs(sin(theta2+phi));
         pe2[2]=c2[2];
 
-        ph2[0]=-2*radius*cos(theta2+phase);
+        ph2[0]=-2*radius*cos(theta2+phi);
         if(ph2[0] > 0.0)
             ph2[0]=-ph2[0];
         ph2[0]+=c2[0];
-        ph2[1]=c2[1]-2*radius*fabs(sin(theta2+phase));
+        ph2[1]=c2[1]-2*radius*fabs(sin(theta2+phi));
         ph2[2]=c2[2];
 
         vector<pair<string,Vector>> unordered2=skeleton2.get_unordered();
@@ -408,29 +275,47 @@ public:
     {
         updateSkels();
 
-//        file_template << skeleton1[KeyPointTag::hand_right]->getPoint()[0] << " " << skeleton1[KeyPointTag::hand_right]->getPoint()[1]
-//                << " " << skeleton1[KeyPointTag::hand_right]->getPoint()[2] << "\n";
-//        file_skeleton << skeleton2[KeyPointTag::hand_right]->getPoint()[0] << " " << skeleton2[KeyPointTag::hand_right]->getPoint()[1]
-//                << " " << skeleton2[KeyPointTag::hand_right]->getPoint()[2] << "\n";
-
         if(align)
         {
             dtw.update(skeleton_template,skeleton_candidate);
             aligned_skeleton = dtw.align();
-            vector<pair<string,Vector>> unordered=skeleton2.get_unordered();
-            Vector p = aligned_skeleton.back();
-            updateUnordered(unordered, p);
-            skeleton2.update(unordered);
+            vector<pair<string,Vector>> unordered; //=skeleton2.get_unordered();
+            Vector p=aligned_skeleton.back();
+            updateUnordered(unordered,p);
+            alignedSkel.update(unordered);
         }
 
         Property prop1=skeleton1.toProperty();
         Property prop2=skeleton2.toProperty();
+        Property prop3=alignedSkel.toProperty();
 
         Bottle &msg=port_out.prepare();
         msg.clear();
         msg.addList().read(prop1);
         msg.addList().read(prop2);
+        msg.addList().read(prop3);
         port_out.write();
+
+        double t1=computeMetric(skeleton1);
+        double t2=computeMetric(skeleton2);
+
+        t1series.push_back(t1);
+        t2series.push_back(t2);
+        if(t1series.size()>nsamples)
+            t1series.erase(t1series.begin());
+
+        if(t2series.size()>nsamples)
+            t2series.erase(t2series.begin());
+
+        dtw.update(t1series,t2series);
+        tAligned = dtw.alignSeries();
+
+        Bottle &b=scopePort.prepare();
+        b.clear();
+        b.addDouble(t1series.back());
+        b.addDouble(t2series.back());
+        b.addDouble(tAligned.back());
+        scopePort.write();
 
         return true;
     }
@@ -454,11 +339,38 @@ public:
         unordered.push_back(make_pair(KeyPointTag::ankle_right,p.subVector(42,44)));
     }
 
+    double computeMetric(const SkeletonWaist &s)
+    {
+        Vector v1(3,0.0), plane_normal(3,0.0),ref_dir(3,0.0);
+        plane_normal[2]=1.0;
+        ref_dir[1]=-1.0;
+
+        //get reference keypoint from skeleton
+        Vector kp_ref = s[KeyPointTag::shoulder_right]->getPoint();
+        Vector kp_child = s[KeyPointTag::shoulder_right]->getChild(0)->getPoint();
+        v1 = kp_child-kp_ref;
+
+        double dist = dot(v1,plane_normal);
+        v1 = v1-dist*plane_normal;
+
+        double n1 = norm(v1);
+        if(n1 > 0.0)
+            v1 /= n1;
+        double n2 = norm(ref_dir);
+        double dot_p = dot(v1,ref_dir);
+
+        double theta = acos(dot_p/n2);
+        double result = theta * (180/M_PI);
+        return result;
+    }
+
+
     bool close() override
     {
 //        file_template.close();
 //        file_skeleton.close();
         port_out.close();
+        scopePort.close();
         return true;
     }
 };
