@@ -39,10 +39,11 @@ class Processor
 protected:
     SkeletonWaist *skeleton_init;
     map<string, pair<string,double>> keypoints2conf;
-    SkeletonWaist curr_skeleton;
+    SkeletonWaist curr_skeleton,template_skeleton;
     Matrix inv_reference_system;
     Vector plane_normal;
     Vector coronal,sagittal,transverse;
+    vector< vector< pair <string,Vector> >> devvector;
 
 public:
     Processor();
@@ -51,11 +52,12 @@ public:
     void setInitialConf(SkeletonWaist *skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_,
                         SkeletonWaist &skeleton);
     bool isStatic(const KeyPoint& keypoint);
-    void update(SkeletonWaist& curr_skeleton_);
+    void update(SkeletonWaist& curr_skeleton_,SkeletonWaist& template_skeleton_);
     bool isDeviatingFromIntialPose();
     double isDeviatingFromIntialPose(const KeyPoint &keypoint, const KeyPoint &keypoint_init);
     double getDeviation() { return deviation; }
-    bool isOutOfSphere(const KeyPoint& keypoint, const KeyPoint& keypoint_init);
+    void checkDeviation();
+    vector<pair<string, vector<string> > > getFeedback();
     virtual double computeMetric(Vector &v1, Vector &plane_normal, Vector &ref_dir, double&check) { return 0.0; }
     virtual string getProcessedMetric() = 0;
 

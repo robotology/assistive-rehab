@@ -10,6 +10,7 @@
  * @authors: Valentina Vasco <valentina.vasco@iit.it>
  */
 
+#include "algorithm"
 #include "Processor.h"
 
 using namespace std;
@@ -35,6 +36,10 @@ Processor::Processor()
     deviation = 0.0;
     invT.resize(4,4);
     invT.zero();
+
+//    devvector.resize(100);
+//    for(int i=0;i<100;i++)
+//        devvector[i].resize(14);
 }
 
 void print(const Matrix& m)
@@ -83,17 +88,111 @@ bool Processor::isStatic(const KeyPoint& keypoint)
 }
 
 /****************************************************************/
-void Processor::update(SkeletonWaist &curr_skeleton_)
+void Processor::update(SkeletonWaist &curr_skeleton_, SkeletonWaist &template_skeleton_)
 {
     curr_skeleton.update(curr_skeleton_.toProperty());
     curr_skeleton.normalize();
 
-//    curr_skeleton.print();
+    template_skeleton.update(template_skeleton_.toProperty());
+    template_skeleton.normalize();
+}
 
-    //    skeleton_init.print();
-//    cout << endl;
+void Processor::checkDeviation()
+{
+    vector< pair <string,Vector> > row;
+    for(unsigned int i=0; i<curr_skeleton.getNumKeyPoints(); i++)
+    {
+        if(curr_skeleton[i]->isUpdated() && curr_skeleton[i]->getTag() != KeyPointTag::hip_center)
+        {
+            Vector k1=curr_skeleton[i]->getPoint();
+            k1.push_back(1.0);
+            Vector transformed_kp=(inv_reference_system*k1).subVector(0,2);
 
+            Vector k2=template_skeleton[i]->getPoint();
+            k2.push_back(1.0);
+            Vector transformed_kp_template=(inv_reference_system*k2).subVector(0,2);
 
+            Vector dev=transformed_kp-transformed_kp_template;
+            row.push_back(make_pair(curr_skeleton[i]->getTag(),dev));
+        }
+        else
+        {
+            Vector v(3,0.0);
+            row.push_back(make_pair(curr_skeleton[i]->getTag(),v));
+        }
+    }
+    devvector.push_back(row);
+
+//    for(int i=0; i<devvector.size(); i++)
+//    {
+//        for(int j=0; j<devvector[i].size(); j++)
+//            cout << i << " " << j << " " << devvector[i][j].first
+//                 << " " << devvector[i][j].second.toString(3,3) << "\n";
+//        cout << "\n";
+//    }
+
+    if(devvector.size()>100)
+        devvector.erase(devvector.begin());
+}
+
+vector< pair<string,vector<string>> > Processor::getFeedback()
+{
+    checkDeviation();
+
+    vector< pair<string,vector<string>> > feedback;
+    for(int j=0; j<15; j++)
+    {
+        Vector avg_dev(3,0.0);
+        for(int i=0; i<devvector.size(); i++)
+        {
+            avg_dev[0]+=devvector[i][j].second[0];
+            avg_dev[1]+=devvector[i][j].second[1];
+            avg_dev[2]+=devvector[i][j].second[2];
+        }
+        avg_dev/=devvector.size();
+        string tag=devvector[0][j].first;
+//        yInfo() << tag << norm(avg_dev);
+
+        if(norm(avg_dev) > 3.0) // keypoints2conf[tag].second)
+        {
+            vector<double> err;
+            double errx = dot(avg_dev,coronal);
+            double erry = dot(avg_dev,sagittal);
+            double errz = dot(avg_dev,transverse);
+            err.push_back(fabs(errx));
+            err.push_back(fabs(erry));
+            err.push_back(fabs(errz));
+            sort(err.begin(),err.end());
+
+            vector<string> direction(3,"");
+            if(err[0] > 2.0)
+            {
+                if(errx > 0.0)
+                    direction[0] = "forward";
+                else
+                    direction[0] = "backward";
+            }
+            if(err[1] > 2.0)
+            {
+                if(erry > 0.0)
+                    direction[1] = "right";
+                else
+                    direction[1] = "left";
+            }
+            if(err[2] > 2.0)
+            {
+                if(errz > 0.0)
+                    direction[2] = "up";
+                else
+                    direction[2] = "down";
+            }
+            yInfo() << tag << errx << erry << errz;
+
+            feedback.push_back(make_pair(tag,direction));
+        }
+    }
+
+    return feedback;
 }
 
 bool Processor::isDeviatingFromIntialPose()
@@ -116,15 +215,6 @@ bool Processor::isDeviatingFromIntialPose()
 //    cout << "\n";
 
     return isDeviating;
-}
-
-bool Processor::isOutOfSphere(const KeyPoint& keypoint, const KeyPoint& keypoint_init)
-{
-    Vector curr_kp(keypoint.getPoint()), curr_kp_init(keypoint_init.getPoint());
-    double deviation = norm(curr_kp-curr_kp_init);
-
-    yInfo() << keypoint.getTag().c_str() << deviation;
-    return (deviation > keypoints2conf[keypoint.getTag()].second);
 }
 
 double Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyPoint& keypoint_init)

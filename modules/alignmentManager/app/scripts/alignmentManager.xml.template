@@ -121,6 +121,18 @@
     </connection>
 
     <connection>
+        <from>/skeletonPlayer/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonScaler/opc</from>
+        <to>/opc/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
         <from>/motionAnalyzer/opc</from>
         <to>/opc/rpc</to>
         <protocol>tcp</protocol>

@@ -26,9 +26,9 @@
 
 #include "matio.h"
 
-#define LOW 0.0
-#define MEDIUM 0.5
-#define HIGH 1.0
+//#define LOW 0.0
+//#define MEDIUM 0.5
+//#define HIGH 1.0
 
 using namespace std;
 using namespace yarp::os;
@@ -802,29 +802,13 @@ double Manager::loadMetric(const string &metric_tag)
 }
 
 /********************************************************/
-int getFirstUppercase(string str)
-{
-    for(int i=0; i<str.length(); i++)
-    {
-        if(isupper(str[i]))
-            return i;
-    }
-
-    return 0;
-}
-
 vector<string> Manager::listMetrics()
 {
     LockGuard lg(mutex);
 
     vector<string> reply;
     for (map<string,Metric*>::iterator it=motion_repertoire.begin(); it!=motion_repertoire.end(); it++)
-    {
-//        string jnt=it->second->getTagJoint();
-//        string part=jnt.substr(getFirstUppercase(jnt));
-//        reply.push_back(it->first+" "+it->second->getMotionType()+part);
         reply.push_back(it->first);
-    }
 
     return reply;
 }
@@ -1314,14 +1298,19 @@ void Manager::getSkeleton()
                                     string tag=prop.find("tag").asString();
                                     if(!tag.empty())
                                     {
-                                        if (prop.check("tag") && tag==skel_tag)
+                                        if(prop.check("tag") && tag==skel_tag)
                                         {
                                             Skeleton* skeleton = skeleton_factory(prop);
                                             skeletonIn.update(skeleton->toProperty());
                                             if(skeleton->update_planes())
                                                 all_keypoints.push_back(skeletonIn.get_unordered());
                                             updated=true;
-
+                                            delete skeleton;
+                                        }
+                                        if(prop.check("tag") && tag=="aligned")
+                                        {
+                                            Skeleton* skeleton = skeleton_factory(prop);
+                                            templateSkeleton.update(skeleton->toProperty());
                                             delete skeleton;
                                         }
                                     }
@@ -1366,14 +1355,8 @@ bool Manager::configure(ResourceFinder &rf)
     loadInitialConf();
     if(!loadMotionList())
         return false;
-//    loadSequence(sequencer_file);
 
-//    // Use MATIO to write the results in a .mat file
     out_folder = rf.getHomeContextPath();
-//    filename_report = rf.getHomeContextPath() + "/test_data_fdg.mat";
-//    matfp = Mat_CreateVer(filename_report.c_str(),NULL,MAT_FT_MAT73);
-//    if (matfp == NULL)
-//        yError() << "Error creating MAT file";
 
     tstart = Time::now();
 
@@ -1382,8 +1365,6 @@ bool Manager::configure(ResourceFinder &rf)
     starting = false;
 
     skel_tag="";
-
-    log_file.open("logfile.txt");
 
     for(int i=0; i<skeletonsInit.size(); i++)
         skeletonsInit[i]->print();
@@ -1407,12 +1388,6 @@ bool Manager::interruptModule()
 /********************************************************/
 bool Manager::close()
 {
-//    yInfo() << "Writing to file";
-//    if(writeKeypointsToFile())
-//        yInfo() << "Keypoints saved to file" << filename_report.c_str();
-
-    log_file.close();
-
     delete metric_repertoire;
     delete metric;
     delete processor;
@@ -1445,7 +1420,7 @@ bool Manager::close()
 /********************************************************/
 double Manager::getPeriod()
 {
-    return 0.01;
+    return 1.0; //0.01;
 }
 
 /********************************************************/
@@ -1467,30 +1442,22 @@ bool Manager::updateModule()
                 //update time array
                 time_samples.push_back(Time::now()-tstart);
 
-                //        skeletonIn.print();
-                //skeletonIn.normalize();
+                processor->update(skeletonIn,templateSkeleton);
+                vector< pair<string,vector<string>> > feedback = processor->getFeedback();
+                for(int i=0; i<feedback.size();i++)
+                    yWarning() << feedback[i].first << feedback[i].second[0] << feedback[i].second[1] << feedback[i].second[2];
 
-                processor->update(skeletonIn);
-                if(processor->isDeviatingFromIntialPose())
-                {
-                    //                    yWarning() << "Deviating from initial pose\n";
-                }
+                cout << "\n";
+
+//                processor->isDeviatingFromIntialPose();
 
                 Vector v1,plane_normal,ref_dir;
-
                 result = processor->computeMetric(v1,plane_normal,ref_dir,score_exercise);
-
                 all_planes.push_back(plane_normal);
-
-                log_file << yarp::os::Time::now()-tstart << " " << v1[0] << " " << v1[1] << " " << v1[2] << " "
-                         << plane_normal[0] << " " << plane_normal[1] << " " << plane_normal[2]
-                         << " " << ref_dir[0] << " " << ref_dir[1] << " " << ref_dir[2] << "\n";
 
                 result_time.push_back(result);
                 if((Time::now()-tstart)-tstart_session>metric->getTempWin())
                     result_time.pop_front();
-
-//                computeMetricDerivative();
 
                 //write on output port
                 Bottle &scopebottleout = scopePort.prepare();
@@ -1499,34 +1466,6 @@ bool Manager::updateModule()
                 scopebottleout.addDouble(metric->getMin());
                 scopebottleout.addDouble(metric->getMax());
                 scopePort.write();
-
-                //                tend_session = Time::now()-tstart;
-                //                if(tend_session-tstart_session > metric->getDuration())
-                //                    finishedSession = true;
-
-                //                if(finishedSession)
-                //                {
-                //                    // Use MATIO to write the results in a .mat file
-                //                    string filename_report = out_folder + "/user-" + skeletonIn.getTag() + "-" + metric->getMotionType() + "-" + to_string(nsession) + ".mat";
-                //                    mat_t *matfp = Mat_CreateVer(filename_report.c_str(),NULL,MAT_FT_MAT73);
-                //                    if (matfp == NULL)
-                //                        yError() << "Error creating MAT file";
-
-                //                    yInfo() << "Writing to file";
-                //                    if(writeKeypointsToFile(matfp))
-                //                    {
-                //                        time_samples.clear();
-                //                        all_keypoints.clear();
-                //                    }
-
-                //                    finishedSession = false;
-                //                    tstart_session = tend_session;
-
-                //                    nsession++;
-
-                //                    yInfo() << "Keypoints saved to file" << filename_report.c_str();
-                //                    Mat_Close(matfp);
-                //                }
             }
         }
         else

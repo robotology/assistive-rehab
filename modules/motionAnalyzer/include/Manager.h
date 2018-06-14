@@ -44,11 +44,7 @@ class Manager : public RFModule,
     RpcClient dtwPort;
     BufferedPort<Bottle> scopePort;
 
-    ofstream log_file;
-
     ResourceFinder *rf;
-
-    int nmovements;
 
     map<string,Metric*> motion_repertoire;
 
@@ -63,7 +59,7 @@ class Manager : public RFModule,
     SkeletonWaist* skel;
     vector<SkeletonWaist*> skeletonsInit;
 
-    SkeletonWaist skeletonIn;
+    SkeletonWaist skeletonIn,templateSkeleton;
 
     map<string, pair<string,double>> keypoints2conf;
 
