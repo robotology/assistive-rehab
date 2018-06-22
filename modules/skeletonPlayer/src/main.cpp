@@ -217,15 +217,15 @@ class Player : public RFModule, public skeletonPlayer_IDL
             MetaSkeleton sk;
             sk.t=bottle.get(1).asDouble();
 
-            Property prop;
             if (Bottle *b=bottle.get(3).asList())
             {
+                Property prop;
                 b->write(prop);
                 sk.s=shared_ptr<Skeleton>(skeleton_factory(prop));
             }
             else
             {
-                ok=false;
+                ok=(bottle.get(3).asString()=="empty");
                 break;
             }
 
