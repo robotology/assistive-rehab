@@ -165,7 +165,7 @@ protected:
 
             vtk_quadric_mapper.push_back(vtkSmartPointer<vtkPolyDataMapper>::New());
             vtk_quadric_mapper.back()->SetInputConnection(vtk_quadric_contours.back()->GetOutputPort());
-            vtk_quadric_mapper.back()->SetScalarRange(0.0,1.2);
+            vtk_quadric_mapper.back()->ScalarVisibilityOff();
 
             vtk_quadric_transform.push_back(vtkSmartPointer<vtkTransform>::New());
 
@@ -176,6 +176,7 @@ protected:
             vtk_quadric_actor.push_back(vtkSmartPointer<vtkActor>::New());
             vtk_quadric_actor.back()->SetMapper(vtk_quadric_mapper.back());
             vtk_quadric_actor.back()->SetUserTransform(vtk_quadric_transform.back());
+            vtk_quadric_actor.back()->GetProperty()->SetColor(color.data());
             vtk_quadric_actor.back()->GetProperty()->SetOpacity(opacity);
             vtk_quadric_actor.back()->SetVisibility(k->isUpdated()&&c->isUpdated());
             vtk_renderer->AddActor(vtk_quadric_actor.back());
