@@ -18,8 +18,7 @@ if(OpenCV_FOUND)
     source_group("IDL Files" FILES ${idl})
 
     include_directories(${PROJECT_SOURCE_DIR}/include
-                        ${OpenCV_INCLUDE_DIRS}
-                        ${ICUB_INCLUDE_DIRS})
+                        ${OpenCV_INCLUDE_DIRS})
 
     add_executable(${PROJECT_NAME} ${header} ${source} ${idl} ${IDL_GEN_FILES})
     target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES} ${YARP_LIBRARIES})

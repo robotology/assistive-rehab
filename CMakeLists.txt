@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # Authors: Ugo Pattacini <ugo.pattacini@iit.it>
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.5)
 project(AssistiveRehab LANGUAGES CXX C VERSION 1.0.0)
 
 include(GNUInstallDirs)
