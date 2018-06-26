@@ -7,7 +7,6 @@ find_package(HDF5 QUIET)
 if(MATIO_FOUND AND HDF5_FOUND)
     project(motionAnalyzer)
 
-    include(YarpIDL)
     yarp_add_idl(IDL_GEN_FILES src/idl.thrift)
 
     file(GLOB source src/*.cpp)

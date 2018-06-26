@@ -4,7 +4,6 @@
 
 project(skeletonPlayer)
 
-include(YarpIDL)
 yarp_add_idl(IDL_GEN_FILES src/idl.thrift)
 
 source_group("IDL Files" FILES src/idl.thrift)

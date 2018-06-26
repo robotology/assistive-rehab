@@ -6,7 +6,6 @@ find_package(OpenCV QUIET)
 if(OpenCV_FOUND)
     project(recognition-manager)
 
-    include(YarpIDL)
     yarp_add_idl(IDL_GEN_FILES ${PROJECT_NAME}.thrift)
 
     file(GLOB source *.cpp)
