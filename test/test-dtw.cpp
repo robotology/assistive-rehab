@@ -29,9 +29,10 @@ class TestDtw : public RFModule
 private:
     double amplitude,phase;
     int win;
-    bool align;
+    bool align,start;
     SkeletonWaist skeleton1,skeleton2,alignedSkel;
     BufferedPort<Bottle> port_out,scopePort;
+    RpcServer rpcPort;
     double radius,phi,t0;
     vector<Vector> skeleton_template,skeleton_candidate,aligned_skeleton;
     vector<double> t1series,t2series,tAligned;
@@ -44,8 +45,9 @@ public:
     bool configure(ResourceFinder &rf) override
     {
 //        file_template.open("template.txt");
-//        file_skeleton.open("skeleton.txt");
+//        file_skeleton.open("test.txt");
 
+        start = false;
         amplitude = rf.check("amplitude",Value(1.0)).asDouble();
         phase = rf.check("phase",Value(M_PI/2.0)).asDouble();
         win = rf.check("win",Value(5)).asDouble();
@@ -127,8 +129,10 @@ public:
         phi=atan2(d[1],d[0]);
 
         port_out.open("/test-dtw");
+        rpcPort.open("/test-dtw/rpc");
         scopePort.open("/test-dtw/scope");
-        t0=Time::now();
+
+        attach(rpcPort);
 
         return true;
     }
@@ -229,7 +233,7 @@ public:
         unordered1.push_back(make_pair(KeyPointTag::hand_right,ph1));
         skeleton1.update(unordered1);
 
-        double theta2=amplitude*2.0*M_PI*0.1*t+(phi+phase);
+        double theta2=amplitude*2.0*M_PI*0.2*t+(phi+phase);
         Vector c2(skeleton2[KeyPointTag::shoulder_right]->getPoint());
         Vector pe2=skeleton2[KeyPointTag::elbow_right]->getPoint();
         Vector ph2=skeleton2[KeyPointTag::hand_right]->getPoint();
@@ -271,29 +275,47 @@ public:
 
     }
 
+    bool respond(const Bottle &command, Bottle &reply)
+    {
+        if(command.get(0).asString() == "start")
+        {
+            t0=Time::now();
+            start = true;
+            reply.addVocab(Vocab::encode("ok"));
+        }
+        if(command.get(0).asString() == "stop")
+        {
+            start = false;
+            reply.addVocab(Vocab::encode("ok"));
+        }
+    }
+
     bool updateModule() override
     {
-        updateSkels();
-
-        if(align)
+        if(start)
         {
-            dtw.update(skeleton_template,skeleton_candidate);
-            aligned_skeleton = dtw.align();
-            vector<pair<string,Vector>> unordered; //=skeleton2.get_unordered();
-            Vector p=aligned_skeleton.back();
-            updateUnordered(unordered,p);
-            alignedSkel.update(unordered);
+            updateSkels();
+
+            if(align)
+            {
+                dtw.update(skeleton_template,skeleton_candidate);
+                aligned_skeleton = dtw.align();
+                vector<pair<string,Vector>> unordered; //=skeleton2.get_unordered();
+                Vector p=aligned_skeleton.back();
+                updateUnordered(unordered,p);
+                alignedSkel.update(unordered);
+            }
         }
 
         Property prop1=skeleton1.toProperty();
         Property prop2=skeleton2.toProperty();
-        Property prop3=alignedSkel.toProperty();
+//        Property prop3=alignedSkel.toProperty();
 
         Bottle &msg=port_out.prepare();
         msg.clear();
         msg.addList().read(prop1);
         msg.addList().read(prop2);
-        msg.addList().read(prop3);
+//        msg.addList().read(prop3);
         port_out.write();
 
         double t1=computeMetric(skeleton1);
@@ -370,6 +392,7 @@ public:
 //        file_template.close();
 //        file_skeleton.close();
         port_out.close();
+        rpcPort.close();
         scopePort.close();
         return true;
     }

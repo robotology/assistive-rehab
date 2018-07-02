@@ -32,7 +32,7 @@
 
     <module>
        <name>skeletonScaler</name>
-       <parameters></parameters>
+       <parameters>--twarp 1.0 --nsessions 1</parameters>
        <node>localhost</node>
     </module>
 
@@ -171,6 +171,12 @@
     <connection>
         <from>/alignmentManager/opc</from>
         <to>/opc/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/alignmentManager/player</from>
+        <to>/skeletonPlayer/cmd:rpc</to>
         <protocol>tcp</protocol>
     </connection>
 

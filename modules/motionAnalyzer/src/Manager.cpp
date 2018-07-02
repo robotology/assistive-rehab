@@ -540,6 +540,8 @@ bool Manager::loadMotionList()
                                 double min = bMotion.find("min").asDouble();
                                 double max = bMotion.find("max").asDouble();
                                 double duration = bMotion.find("duration").asDouble();
+                                int nrep = bMotion.find("nrep").asInt();
+                                int nenv = bMotion.find("nenv").asInt();
                                 double tempwin = bMotion.find("tempwin").asDouble();
                                 double threshold = bMotion.find("threshold").asDouble();
                                 Vector camerapos;
@@ -727,8 +729,8 @@ bool Manager::loadMotionList()
                                     yError() << "Could not load ankle right configuration";
 
                                 metric_repertoire = new Rom(curr_tag, motion_type, tag_joint, ref_dir, tag_plane,
-                                                            range_plane, min, max, duration, tempwin, threshold,
-                                                            camerapos, focalpoint, keypoints2conf);
+                                                            range_plane, min, max, duration, nrep, nenv, tempwin,
+                                                            threshold, camerapos, focalpoint, keypoints2conf);
                             }
 
                             //add the current metric to the repertoire
@@ -772,24 +774,29 @@ double Manager::loadMetric(const string &metric_tag)
     processor = createProcessor(metric_tag, metric);
 
     //send commands to skeletonScaler
-    Bottle cmd, reply;
+    Bottle cmd,reply;
     cmd.addVocab(Vocab::encode("load"));
     string f = metric->getMotionType() + ".log";
     string context = rf->getContext();
     cmd.addString(f);
     cmd.addString(context);
-    scalerPort.write(cmd, reply);
+    scalerPort.write(cmd,reply);
 
-    Bottle cmd2, reply2;
+    Bottle cmd2,reply2;
     cmd2.addVocab(Vocab::encode("rot"));
     Vector cp = metric->getCameraPos();
     Vector fp = metric->getFocalPoint();
     cmd2.addList().read(cp);
     cmd2.addList().read(fp);
     yInfo() << cmd2.toString();
-    scalerPort.write(cmd2, reply2);
+    scalerPort.write(cmd2,reply2);
 
-    Bottle cmd3, reply3;
+//    //start skeletonScaler
+//    Bottle cmd4,reply4;
+//    cmd4.addVocab(Vocab::encode("run"));
+//    scalerPort.write(cmd4,reply4);
+
+    Bottle cmd3,reply3;
     cmd3.addVocab(Vocab::encode("tagt"));
     string tag_template = metric->getMotionType();
     cmd3.addString(tag_template);
@@ -959,11 +966,13 @@ bool Manager::start()
 
     processor->setInitialConf(skel, metric->getInitialConf(),skeletonIn);
 
-    //start skeletonScaler
-    Bottle cmd, reply;
+    //start alignmentManager
+    Bottle cmd,reply;
     cmd.addVocab(Vocab::encode("run"));
-//    yInfo() << cmd.toString();
     scalerPort.write(cmd,reply);
+    cmd.addInt(metric->getNrep());
+    cmd.addInt(metric->getNenv());
+    cmd.addDouble(metric->getDuration());
     dtwPort.write(cmd,reply);
     if(reply.get(0).asVocab()==Vocab::encode("ok"))
     {
