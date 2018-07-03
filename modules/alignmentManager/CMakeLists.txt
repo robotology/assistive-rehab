@@ -14,7 +14,7 @@ source_group("Header Files" FILES ${header})
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 add_executable(${PROJECT_NAME} ${source} ${header})
-target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} AssistiveRehab)
+target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} AssistiveRehab fftw3)
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
 file(GLOB scripts app/scripts/*.template)

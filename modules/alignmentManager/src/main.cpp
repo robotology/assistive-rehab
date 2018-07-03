@@ -17,6 +17,8 @@
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
 #include "Dtw.h"
+#include <fftw3.h>
+//#include "unit-tests/test_fft.h"
 #include "AssistiveRehab/skeleton.h"
 
 using namespace std;
@@ -40,6 +42,9 @@ private:
     bool updated,start;
     double T,tstart;
     ofstream outfile,outfile2;
+    double t0;
+    vector<double> s_template,s_candidate;
+    double dtw_thresh,period;
 
 public:
 
@@ -251,7 +256,7 @@ public:
             int nrep = command.get(1).asInt();
             int nenv = command.get(2).asInt();
             double duration = command.get(3).asDouble();
-//            T = nenv*(duration/nrep);
+            T = nenv*(duration/nrep);
 
 //            stopPlayer();
 //            loadPlayer();
@@ -282,7 +287,10 @@ public:
     bool configure(ResourceFinder &rf) override
     {
         win = rf.check("win",Value(-1)).asDouble();
-        T = rf.check("T",Value(1.0)).asDouble();
+//        T = rf.check("T",Value(1.0)).asDouble();
+        dtw_thresh = rf.check("threshold",Value(0.10)).asDouble();
+        period = rf.check("period",Value(0.01)).asDouble();
+        t0 = Time::now();
 
         outfile.open("dtw-test.txt");
 //        outfile2.open("dtw-test2.txt");
@@ -326,7 +334,7 @@ public:
 
     double getPeriod() override
     {
-        return 1.0;
+        return period;
     }
 
     void createVec(const SkeletonWaist& skeleton, Vector& temp)
@@ -405,9 +413,6 @@ public:
 
         createVec(skeletonIn,temp2);
         skeleton_candidate.push_back(temp2);
-
-//        if(skeleton_candidate.size()>skeleton_template.size())
-//            skeleton_candidate.erase(skeleton_candidate.begin());
     }
 
     bool updateModule() override
@@ -426,11 +431,8 @@ public:
                 if( (Time::now()-tstart)> T )
                 {
                     Dtw *dtw;
-
                     dtw=new Dtw(win,skeleton_template.size(),skeleton_candidate.size());
 
-                    double d=0.0;
-                    vector<double> s_template,s_candidate;
                     for(int i=0;i<3*skeletonIn.getNumKeyPoints();i++)
                     {
                         for(int j=0;j<skeleton_template.size();j++)
@@ -438,7 +440,18 @@ public:
                             s_template.push_back(skeleton_template[j][i]);
                             s_candidate.push_back(skeleton_candidate[j][i]);
                         }
-                        d+=dtw->computeDistance(s_template,s_candidate);
+                        double d=dtw->computeDistance(s_template,s_candidate);
+                        if(d>dtw_thresh)
+                        {
+                            double ft = performFFT(s_template,"template",i);
+                            double fc = performFFT(s_candidate,"test",i);
+                            outfile << "\n";
+
+                            if(ft-fc > 0.0)
+                                yInfo() << i << "moving slow!" << ft << fc << d;
+                            else if(ft-fc < 0.0)
+                                yInfo() << i << "moving fast!" << ft << fc << d;
+                        }
 
 //                        for(int i=0; i<s_template.size(); i++)
 //                            outfile2 << s_template[i] << " " << s_candidate[i] << "\n";
@@ -447,9 +460,7 @@ public:
                         s_template.clear();
                         s_candidate.clear();
                     }
-                    yInfo() << T << d;
-
-
+                    cout << endl;
 
 //                    for(int i=0; i<skeleton_template.size(); i++)
 //                        outfile << skeleton_template[i][0] << " " << skeleton_candidate[i][0] << "\n";
@@ -484,8 +495,68 @@ public:
 
             }
         }
-
         return true;
+    }
+
+    double findMax(const vector<double> p)
+    {
+        int idx=2;
+        double max=p[idx];
+        //consider half of the spectrum (ignore dc component)
+        for(int i=idx;i<p.size()/2;i++)
+        {
+            if(p[i]>max)
+            {
+                max=p[i];
+                idx=i;
+            }
+        }
+        return idx;
+    }
+
+    double performFFT(const vector<double> &s, const string &name, const int &i)
+    {
+        int n = s.size();
+        fftw_complex *in,*out;
+        fftw_plan p;
+
+        in = (fftw_complex*) fftw_malloc(n*sizeof(fftw_complex));
+        out = (fftw_complex*) fftw_malloc(n*sizeof(fftw_complex));
+
+        for(int i=0; i<n; ++i)
+        {
+            in[i][0]=s[i];
+            in[i][1]=0.0;
+        }
+
+        //create plan, which is the object containing the parameters required
+        p = fftw_plan_dft_1d(n,in,out,FFTW_FORWARD,FFTW_ESTIMATE);
+
+        //perform FFT
+        fftw_execute(p);
+
+        //compute power spectrum and the frequency content
+        vector<double> psd;
+        psd.clear();
+        for(int i=0; i<n; ++i)
+            psd.push_back(pow(abs(out[i][0]),2.0) / (1.0/period)*n);
+        int m = findMax(psd);
+
+        outfile << "joint" << " " << i << " ";
+        for(int i=0; i<n; i++)
+            outfile << in[i][0] << " ";
+        outfile << "\n";
+
+        outfile << name << " ";
+        for(int i=0; i<n; i++)
+            outfile << psd[i] << " ";
+        outfile << "\n";
+
+        fftw_destroy_plan(p);
+        fftw_free(in);
+        fftw_free(out);
+
+        return m;
     }
 
     void updateUnordered(vector<pair<string,Vector>>& unordered, const Vector& p)
