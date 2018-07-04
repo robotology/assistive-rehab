@@ -10,15 +10,13 @@
  * @authors: Valentina Vasco <valentina.vasco@iit.it>
  */
 
-#include <cstdlib>
+#include <algorithm>
 #include <fstream>
-#include <deque>
 #include <yarp/os/all.h>
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
 #include "Dtw.h"
 #include <fftw3.h>
-//#include "unit-tests/test_fft.h"
 #include "AssistiveRehab/skeleton.h"
 
 using namespace std;
@@ -29,79 +27,23 @@ using namespace assistive_rehab;
 class Aligner : public RFModule
 {
 private:
+    //ports
     RpcServer rpcPort;
-    RpcClient opcPort,playerPort;
-    BufferedPort<Bottle> port_out, scopePort;
+    RpcClient opcPort;
+    BufferedPort<Bottle> port_out,scopePort;
 
-    SkeletonWaist skeletonIn,skeletonTemplate,skeletonAligned;
-    string skel_tag,template_tag;
-//    Dtw dtw;
+    //parameters
     int win;
-    bool align;
-    vector<Vector> skeleton_template,skeleton_candidate,aligned_skeleton;
+    double T,tstart,dtw_thresh,period,errpos_thresh;
+
+    SkeletonWaist skeletonIn,skeletonTemplate;
+    string skel_tag,template_tag;
+    vector<vector<Vector>> skeleton_template,skeleton_candidate;
     bool updated,start;
-    double T,tstart;
-    ofstream outfile,outfile2;
-    double t0;
-    vector<double> s_template,s_candidate;
-    double dtw_thresh,period;
+    vector<double> s_template,s_candidate,s_aligned;
+    ofstream outfile;
 
 public:
-
-//    void getTemplateSkeleton()
-//    {
-//        //ask for the property id
-//        Bottle cmd, reply;
-//        cmd.addVocab(Vocab::encode("ask"));
-//        Bottle &content = cmd.addList().addList();
-//        content.addString("skeleton");
-
-//        opcPort.write(cmd, reply);
-
-//        if(reply.size() > 1)
-//        {
-//            if(reply.get(0).asVocab() == Vocab::encode("ack"))
-//            {
-//                if(Bottle *idField = reply.get(1).asList())
-//                {
-//                    if(Bottle *idValues = idField->get(1).asList())
-//                    {
-//                        if(!skel_tag.empty())
-//                        {
-//                            for(int i=0; i<idValues->size(); i++)
-//                            {
-//                                int id = idValues->get(i).asInt();
-
-//                                //given the id, get the value of the property
-//                                cmd.clear();
-//                                cmd.addVocab(Vocab::encode("get"));
-//                                Bottle &content = cmd.addList().addList();
-//                                Bottle replyProp;
-//                                content.addString("id");
-//                                content.addInt(id);
-
-//                                opcPort.write(cmd, replyProp);
-//                                if(replyProp.get(0).asVocab() == Vocab::encode("ack"))
-//                                {
-//                                    if(Bottle *propField = replyProp.get(1).asList())
-//                                    {
-//                                        Property prop(propField->toString().c_str());
-//                                        string tag=prop.find("tag").asString();
-//                                        if(prop.check("tag") && tag==template_tag)
-//                                        {
-//                                            Skeleton* skeleton = skeleton_factory(prop);
-//                                            skeletonTemplate.update(skeleton->toProperty());
-//                                            delete skeleton;
-//                                        }
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
 
     void getSkeleton()
     {
@@ -166,84 +108,11 @@ public:
         }
     }
 
-    bool is_running()
-    {
-        Bottle cmd,reply;
-        cmd.addString("is_running");
-//        yInfo() << cmd.toString();
-        playerPort.write(cmd,reply);
-        if(reply.get(0).asVocab()==Vocab::encode("ok"))
-            return true;
-        else
-            return false;
-    }
-
-    bool loadPlayer()
-    {
-        Bottle cmd,reply;
-        cmd.addString("load");
-        cmd.addString(skeletonIn.getTag()+".log");
-        cmd.addString("motionAnalyzer");
-        playerPort.write(cmd,reply);
-        if(reply.get(0).asVocab()==Vocab::encode("ok"))
-            return true;
-        else
-            return false;
-    }
-
-    bool startPlayer()
-    {
-        Bottle cmd,reply;
-        cmd.addString("start");
-        cmd.addInt(0);
-        cmd.addDouble(1.0);
-        playerPort.write(cmd,reply);
-        if(reply.get(0).asVocab()==Vocab::encode("ok"))
-            return true;
-        else
-            return false;
-    }
-
-    bool stopPlayer()
-    {
-        Bottle cmd,reply;
-        cmd.addString("stop");
-        playerPort.write(cmd,reply);
-        if(reply.get(0).asVocab()==Vocab::encode("ok"))
-            return true;
-        else
-            return false;
-
-    }
-
     bool respond(const Bottle &command, Bottle &reply)
     {
         if(command.get(0).asString() == "tagt")
         {
             template_tag = command.get(1).asString();
-
-//            //create template
-//            double t0 = Time::now();
-//            while(is_running())
-//            {
-//                yInfo() << "Acquiring template...";
-//                getTemplateSkeleton();
-
-//                Property prop=skeletonTemplate.toProperty();
-//                Bottle &msg=port_out.prepare();
-//                msg.clear();
-//                msg.addList().read(prop);
-//                port_out.write();
-
-//                createTemplate();
-//            }
-//            T = Time::now()-t0;
-//            tstart = Time::now();
-
-//            yInfo() << "Template acquired!" << T;
-//            int k=3*skeletonIn.getNumKeyPoints();
-//            dtw.initialize(win,skeleton_template.size(),skeleton_template.size(),k);
-
             reply.addVocab(Vocab::encode("ok"));
         }
         if(command.get(0).asString() == "tag")
@@ -258,10 +127,6 @@ public:
             double duration = command.get(3).asDouble();
             T = nenv*(duration/nrep);
 
-//            stopPlayer();
-//            loadPlayer();
-//            startPlayer();
-
             tstart = Time::now();
             start = true;
             reply.addVocab(Vocab::encode("ok"));
@@ -275,28 +140,17 @@ public:
         }
     }
 
-//    void createTemplate()
-//    {
-//        Vector temp1;
-//        temp1.resize(3*skeletonTemplate.getNumKeyPoints());
-
-//        createVec(skeletonTemplate,temp1);
-//        skeleton_template.push_back(temp1);
-//    }
-
     bool configure(ResourceFinder &rf) override
     {
         win = rf.check("win",Value(-1)).asDouble();
 //        T = rf.check("T",Value(1.0)).asDouble();
-        dtw_thresh = rf.check("threshold",Value(0.10)).asDouble();
         period = rf.check("period",Value(0.01)).asDouble();
-        t0 = Time::now();
+        dtw_thresh = rf.check("threshold",Value(0.10)).asDouble();
+        errpos_thresh = rf.check("errpos_thresh",Value(0.40)).asDouble();
 
         outfile.open("dtw-test.txt");
-//        outfile2.open("dtw-test2.txt");
 
         opcPort.open("/alignmentManager/opc");
-        playerPort.open("/alignmentManager/player");
         port_out.open("/alignmentManager");
         scopePort.open("/alignmentManager/scope");
         rpcPort.open("/alignmentManager/rpc");
@@ -310,7 +164,6 @@ public:
     bool interruptModule() override
     {
         opcPort.interrupt();
-        playerPort.interrupt();
         port_out.interrupt();
         scopePort.interrupt();
         rpcPort.interrupt();
@@ -321,10 +174,8 @@ public:
     bool close() override
     {
         outfile.close();
-//        outfile2.close();
 
         opcPort.close();
-        playerPort.close();
         port_out.close();
         scopePort.close();
         rpcPort.close();
@@ -337,80 +188,95 @@ public:
         return period;
     }
 
-    void createVec(const SkeletonWaist& skeleton, Vector& temp)
-    {
-        temp[0] = skeleton[KeyPointTag::shoulder_center]->getPoint()[0];
-        temp[1] = skeleton[KeyPointTag::shoulder_center]->getPoint()[1];
-        temp[2] = 0.0; //skeleton[KeyPointTag::shoulder_center]->getPoint()[2];
+    void createVec(const SkeletonWaist& skeleton, vector<Vector>& temp)
+    {       
+        //same order as in skeletonWaist
+        temp.push_back(skeleton[KeyPointTag::shoulder_center]->getPoint());
+        temp.push_back(skeleton[KeyPointTag::head]->getPoint());
+        temp.push_back(skeleton[KeyPointTag::shoulder_left]->getPoint());
+        temp.push_back(skeleton[KeyPointTag::elbow_left]->getPoint());
+        temp.push_back(skeleton[KeyPointTag::hand_left]->getPoint());
+        temp.push_back(skeleton[KeyPointTag::shoulder_right]->getPoint());
+        temp.push_back(skeleton[KeyPointTag::elbow_right]->getPoint());
+        temp.push_back(skeleton[KeyPointTag::hand_right]->getPoint());
+        temp.push_back(skeleton[KeyPointTag::hip_center]->getPoint());
+        temp.push_back(skeleton[KeyPointTag::hip_left]->getPoint());
+        temp.push_back(skeleton[KeyPointTag::knee_left]->getPoint());
+        temp.push_back(skeleton[KeyPointTag::ankle_left]->getPoint());
+        temp.push_back(skeleton[KeyPointTag::hip_right]->getPoint());
+        temp.push_back(skeleton[KeyPointTag::knee_right]->getPoint());
+        temp.push_back(skeleton[KeyPointTag::ankle_right]->getPoint());
 
-        temp[3] = skeleton[KeyPointTag::head]->getPoint()[0];
-        temp[4] = skeleton[KeyPointTag::head]->getPoint()[1];
-        temp[5] = 0.0; //skeleton[KeyPointTag::head]->getPoint()[2];
+//        temp.push_back(skeleton[KeyPointTag::shoulder_center]->getPoint()[0]); //0
+//        temp.push_back(skeleton[KeyPointTag::shoulder_center]->getPoint()[1]); //1
+//        temp.push_back(0.0); //skeleton[KeyPointTag::shoulder_center]->getPoint()[2]; //2
 
-        temp[6] = skeleton[KeyPointTag::shoulder_left]->getPoint()[0];
-        temp[7] = skeleton[KeyPointTag::shoulder_left]->getPoint()[1];
-        temp[8] = 0.0; //skeleton[KeyPointTag::shoulder_left]->getPoint()[2];
+//        temp.push_back(skeleton[KeyPointTag::head]->getPoint()[0]); //3
+//        temp.push_back(skeleton[KeyPointTag::head]->getPoint()[1]); //4
+//        temp.push_back(0.0); //skeleton[KeyPointTag::head]->getPoint()[2]; //5
 
-        temp[9] = skeleton[KeyPointTag::elbow_left]->getPoint()[0];
-        temp[10] = skeleton[KeyPointTag::elbow_left]->getPoint()[1];
-        temp[11] = 0.0; //skeleton[KeyPointTag::elbow_left]->getPoint()[2];
+//        temp.push_back(skeleton[KeyPointTag::shoulder_left]->getPoint()[0]); //6
+//        temp.push_back(skeleton[KeyPointTag::shoulder_left]->getPoint()[1]); //7
+//        temp.push_back(0.0); //skeleton[KeyPointTag::shoulder_left]->getPoint()[2]; //8
 
-        temp[12] = skeleton[KeyPointTag::hand_left]->getPoint()[0];
-        temp[13] = skeleton[KeyPointTag::hand_left]->getPoint()[1];
-        temp[14] = 0.0; //skeleton[KeyPointTag::hand_left]->getPoint()[2];
+//        temp.push_back(skeleton[KeyPointTag::elbow_left]->getPoint()[0]); //9
+//        temp.push_back(skeleton[KeyPointTag::elbow_left]->getPoint()[1]); //10
+//        temp.push_back(0.0); //skeleton[KeyPointTag::elbow_left]->getPoint()[2]; //11
 
-        temp[15] = skeleton[KeyPointTag::shoulder_right]->getPoint()[0];
-        temp[16] = skeleton[KeyPointTag::shoulder_right]->getPoint()[1];
-        temp[17] = 0.0; //skeleton[KeyPointTag::shoulder_right]->getPoint()[2];
+//        temp.push_back(skeleton[KeyPointTag::hand_left]->getPoint()[0]); //12
+//        temp.push_back(skeleton[KeyPointTag::hand_left]->getPoint()[1]); //13
+//        temp.push_back(0.0); //skeleton[KeyPointTag::hand_left]->getPoint()[2]; //14
 
-        temp[18] = skeleton[KeyPointTag::elbow_right]->getPoint()[0];
-        temp[19] = skeleton[KeyPointTag::elbow_right]->getPoint()[1];
-        temp[20] = 0.0; //skeleton[KeyPointTag::elbow_right]->getPoint()[2];
+//        temp.push_back(skeleton[KeyPointTag::shoulder_right]->getPoint()[0]); //15
+//        temp.push_back(skeleton[KeyPointTag::shoulder_right]->getPoint()[1]); //16
+//        temp.push_back(0.0); //skeleton[KeyPointTag::shoulder_right]->getPoint()[2]; /17
 
-        temp[21] = skeleton[KeyPointTag::hand_right]->getPoint()[0];
-        temp[22] = skeleton[KeyPointTag::hand_right]->getPoint()[1];
-        temp[23] = 0.0; //skeleton[KeyPointTag::hand_right]->getPoint()[2];
+//        temp.push_back(skeleton[KeyPointTag::elbow_right]->getPoint()[0]); //18
+//        temp.push_back(skeleton[KeyPointTag::elbow_right]->getPoint()[1]); //19
+//        temp.push_back(0.0); //skeleton[KeyPointTag::elbow_right]->getPoint()[2]; //20
 
-        temp[24] = skeleton[KeyPointTag::hip_left]->getPoint()[0];
-        temp[25] = skeleton[KeyPointTag::hip_left]->getPoint()[1];
-        temp[26] = 0.0; //skeleton[KeyPointTag::hip_left]->getPoint()[2];
+//        temp.push_back(skeleton[KeyPointTag::hand_right]->getPoint()[0]); //21
+//        temp.push_back(skeleton[KeyPointTag::hand_right]->getPoint()[1]); //22
+//        temp.push_back(0.0); //skeleton[KeyPointTag::hand_right]->getPoint()[2]; //23
 
-        temp[27] = skeleton[KeyPointTag::hip_center]->getPoint()[0];
-        temp[28] = skeleton[KeyPointTag::hip_center]->getPoint()[1];
-        temp[29] = 0.0; //skeleton[KeyPointTag::hip_center]->getPoint()[2];
+//        temp.push_back(skeleton[KeyPointTag::hip_center]->getPoint()[0]); //24
+//        temp.push_back(skeleton[KeyPointTag::hip_center]->getPoint()[1]); //25
+//        temp.push_back(0.0); //skeleton[KeyPointTag::hip_center]->getPoint()[2]; //26
 
-        temp[30] = skeleton[KeyPointTag::knee_left]->getPoint()[0];
-        temp[31] = skeleton[KeyPointTag::knee_left]->getPoint()[1];
-        temp[32] = 0.0; //skeleton[KeyPointTag::knee_left]->getPoint()[2];
+//        temp.push_back(skeleton[KeyPointTag::hip_left]->getPoint()[0]); //27
+//        temp.push_back(skeleton[KeyPointTag::hip_left]->getPoint()[1]); //28
+//        temp.push_back(0.0); //skeleton[KeyPointTag::hip_left]->getPoint()[2]; //29
 
-        temp[33] = skeleton[KeyPointTag::ankle_left]->getPoint()[0];
-        temp[34] = skeleton[KeyPointTag::ankle_left]->getPoint()[1];
-        temp[35] = 0.0; //skeleton[KeyPointTag::ankle_left]->getPoint()[2];
+//        temp.push_back(skeleton[KeyPointTag::knee_left]->getPoint()[0]); //30
+//        temp.push_back(skeleton[KeyPointTag::knee_left]->getPoint()[1]);//31
+//        temp.push_back(0.0); //skeleton[KeyPointTag::knee_left]->getPoint()[2]; //32
 
-        temp[36] = skeleton[KeyPointTag::hip_right]->getPoint()[0];
-        temp[37] = skeleton[KeyPointTag::hip_right]->getPoint()[1];
-        temp[38] = 0.0; //skeleton[KeyPointTag::hip_right]->getPoint()[2];
+//        temp.push_back(skeleton[KeyPointTag::ankle_left]->getPoint()[0]); //33
+//        temp.push_back(skeleton[KeyPointTag::ankle_left]->getPoint()[1]); //34
+//        temp.push_back(0.0); //skeleton[KeyPointTag::ankle_left]->getPoint()[2]; //35
 
-        temp[39] = skeleton[KeyPointTag::knee_right]->getPoint()[0];
-        temp[40] = skeleton[KeyPointTag::knee_right]->getPoint()[1];
-        temp[41] = 0.0; //skeleton[KeyPointTag::knee_right]->getPoint()[2];
+//        temp.push_back(skeleton[KeyPointTag::hip_right]->getPoint()[0]); //36
+//        temp.push_back(skeleton[KeyPointTag::hip_right]->getPoint()[1]); //37
+//        temp.push_back(0.0); //skeleton[KeyPointTag::hip_right]->getPoint()[2]; //38
 
-        temp[42] = skeleton[KeyPointTag::ankle_right]->getPoint()[0];
-        temp[43] = skeleton[KeyPointTag::ankle_right]->getPoint()[1];
-        temp[44] = 0.0; //skeleton[KeyPointTag::ankle_right]->getPoint()[2];
+//        temp.push_back(skeleton[KeyPointTag::knee_right]->getPoint()[0]); //39
+//        temp.push_back(skeleton[KeyPointTag::knee_right]->getPoint()[1]); //40
+//        temp.push_back(0.0); //skeleton[KeyPointTag::knee_right]->getPoint()[2]; //41
+
+//        temp.push_back(skeleton[KeyPointTag::ankle_right]->getPoint()[0]); //42
+//        temp.push_back(skeleton[KeyPointTag::ankle_right]->getPoint()[1]); //43
+//        temp.push_back(0.0); //skeleton[KeyPointTag::ankle_right]->getPoint()[2]; //44
     }
 
     void updateVec()
     {
-        Vector temp1;
-        temp1.resize(3*skeletonTemplate.getNumKeyPoints());
-
+        vector<Vector> temp1;
+        temp1.clear();
         createVec(skeletonTemplate,temp1);
         skeleton_template.push_back(temp1);
 
-        Vector temp2;
-        temp2.resize(3*skeletonIn.getNumKeyPoints());
-
+        vector<Vector> temp2;
+        temp2.clear();
         createVec(skeletonIn,temp2);
         skeleton_candidate.push_back(temp2);
     }
@@ -423,6 +289,7 @@ public:
             //get skeleton
             getSkeleton();
 
+            //if the skeleton has been updated
             if(updated)
             {
                 //update vectors to align
@@ -433,32 +300,79 @@ public:
                     Dtw *dtw;
                     dtw=new Dtw(win,skeleton_template.size(),skeleton_candidate.size());
 
-                    for(int i=0;i<3*skeletonIn.getNumKeyPoints();i++)
+                    //for each keypoint
+                    for(int i=0;i<skeletonIn.getNumKeyPoints();i++)
                     {
-                        for(int j=0;j<skeleton_template.size();j++)
+                        //for each component (xyz)
+                        for(int l=0; l<3; l++)
                         {
-                            s_template.push_back(skeleton_template[j][i]);
-                            s_candidate.push_back(skeleton_candidate[j][i]);
+                            //for each sample over time
+                            for(int j=0;j<skeleton_template.size();j++)
+                            {
+                                s_template.push_back(skeleton_template[j][i][l]);
+                                s_candidate.push_back(skeleton_candidate[j][i][l]);
+                            }
+
+                            double d=dtw->computeDistance(s_template,s_candidate);
+
+                            if(d>dtw_thresh)
+                            {
+                                //check differences in speed
+                                int ft = performFFT(s_template,"template",i);
+                                int fc = performFFT(s_candidate,"test",i);
+                                outfile << "\n";
+
+                                if(ft-fc > 0)
+                                    yInfo() << "move" << skeletonIn[i]->getTag() << "faster!" << ft << fc << d;
+                                else if(ft-fc < 0)
+                                    yInfo() << "move" << skeletonIn[i]->getTag() << "slower!" << ft << fc << d;
+
+                                //check differences in position
+                                s_aligned.resize(s_template.size());
+                                s_aligned=dtw->align();
+                                double errpos = 0.0;
+                                for(int k=0; k<s_aligned.size(); k++)
+                                {
+                                    errpos += s_aligned[k]-s_template[k];
+                                    if(k%10 == 0)
+                                    {
+                                        errpos /= 10.0;
+//                                        if(abs(errpos) > errpos_thresh)
+//                                        {
+//                                            if(l%3 == 0)
+//                                            {
+//                                                if(errpos > 0.0)
+//                                                    yInfo() << "move" << skeletonIn[i]->getTag() << "left!" << errpos;
+//                                                else
+//                                                    yInfo() << "move" << skeletonIn[i]->getTag() << "right!" << errpos;
+//                                            }
+//                                            else if(l%3 == 1)
+//                                            {
+//                                                if(errpos > 0.0)
+//                                                    yInfo() << "move" << skeletonIn[i]->getTag() << "up!" << errpos;
+//                                                else
+//                                                    yInfo() << "move" << skeletonIn[i]->getTag() << "down!" << errpos;
+//                                            }
+////                                            else if(l%3 == 2)
+////                                            {
+////                                                if(errpos > 0.0)
+////                                                    yInfo() << "move" << skeletonIn[i]->getTag() << "forward!" << errpos;
+////                                                else
+////                                                    yInfo() << "move" << skeletonIn[i]->getTag() << "backward!" << errpos;
+////                                            }
+//                                        }
+
+                                        errpos = 0.0;
+                                    }
+                                }
+                            }
+
+                            s_template.clear();
+                            s_candidate.clear();
+                            s_aligned.clear();
                         }
-                        double d=dtw->computeDistance(s_template,s_candidate);
-                        if(d>dtw_thresh)
-                        {
-                            double ft = performFFT(s_template,"template",i);
-                            double fc = performFFT(s_candidate,"test",i);
-                            outfile << "\n";
 
-                            if(ft-fc > 0.0)
-                                yInfo() << i << "moving slow!" << ft << fc << d;
-                            else if(ft-fc < 0.0)
-                                yInfo() << i << "moving fast!" << ft << fc << d;
-                        }
 
-//                        for(int i=0; i<s_template.size(); i++)
-//                            outfile2 << s_template[i] << " " << s_candidate[i] << "\n";
-//                        outfile2 << "\n";
-
-                        s_template.clear();
-                        s_candidate.clear();
                     }
                     cout << endl;
 
@@ -486,35 +400,37 @@ public:
 
                     delete dtw;
                 }
-
-//                dtw.update(skeleton_template,skeleton_candidate);
-//                aligned_skeleton=dtw.align();
-//                vector<pair<string,Vector>> unordered;
-//                Vector p=aligned_skeleton.back();
-//                updateUnordered(unordered,p);
-
             }
         }
         return true;
     }
 
-    double findMax(const vector<double> p)
+    vector<pair<double,int>> findPeaks(const vector<double> p)
     {
-        int idx=2;
-        double max=p[idx];
-        //consider half of the spectrum (ignore dc component)
-        for(int i=idx;i<p.size()/2;i++)
+        vector<pair<double,int>> val;
+        double noise = 5.0;
+        //consider half of the spectrum
+        for(int i=0;i<p.size()/2;i++)
         {
-            if(p[i]>max)
+            if((i-1)>0)
             {
-                max=p[i];
-                idx=i;
+                if(p[i]>p[i-1] && p[i]>p[i+1] && p[i]>noise)
+                    val.push_back(make_pair(p[i],i));
             }
+            else
+                if(p[i]>p[i+1] && p[i]>noise)
+                    val.push_back(make_pair(p[i],i));
         }
-        return idx;
+        sort(val.rbegin(),val.rend());
+
+//        for(int j=0; j<val.size(); j++)
+//            yInfo() << val[j].first << val[j].second;
+//        cout << endl;
+
+        return val;
     }
 
-    double performFFT(const vector<double> &s, const string &name, const int &i)
+    int performFFT(const vector<double> &s, const string &name, const int &i)
     {
         int n = s.size();
         fftw_complex *in,*out;
@@ -523,10 +439,10 @@ public:
         in = (fftw_complex*) fftw_malloc(n*sizeof(fftw_complex));
         out = (fftw_complex*) fftw_malloc(n*sizeof(fftw_complex));
 
-        for(int i=0; i<n; ++i)
+        for(int j=0; j<n; j++)
         {
-            in[i][0]=s[i];
-            in[i][1]=0.0;
+            in[j][0]=s[j];
+            in[j][1]=0.0;
         }
 
         //create plan, which is the object containing the parameters required
@@ -538,73 +454,32 @@ public:
         //compute power spectrum and the frequency content
         vector<double> psd;
         psd.clear();
-        for(int i=0; i<n; ++i)
-            psd.push_back(pow(abs(out[i][0]),2.0) / (1.0/period)*n);
-        int m = findMax(psd);
+        for(int j=0; j<n; j++)
+            psd.push_back(pow(abs(out[j][0]),2.0) / (1.0/period)*n);
+        vector<pair<double,int>> m = findPeaks(psd);
 
         outfile << "joint" << " " << i << " ";
-        for(int i=0; i<n; i++)
-            outfile << in[i][0] << " ";
+        for(int j=0; j<n; j++)
+            outfile << in[j][0] << " ";
         outfile << "\n";
 
         outfile << name << " ";
-        for(int i=0; i<n; i++)
-            outfile << psd[i] << " ";
+        for(int j=0; j<n; j++)
+            outfile << psd[j] << " ";
         outfile << "\n";
+
+//        yInfo() << name << i << " ";
+//        for(int j=0; j<m.size(); j++)
+//            yInfo() << m[j];
 
         fftw_destroy_plan(p);
         fftw_free(in);
         fftw_free(out);
 
-        return m;
-    }
-
-    void updateUnordered(vector<pair<string,Vector>>& unordered, const Vector& p)
-    {
-        if(skeletonIn[KeyPointTag::shoulder_center]->isUpdated())
-            unordered.push_back(make_pair(KeyPointTag::shoulder_center,p.subVector(0,2)));
-
-        if(skeletonIn[KeyPointTag::head]->isUpdated())
-            unordered.push_back(make_pair(KeyPointTag::head,p.subVector(3,5)));
-
-        if(skeletonIn[KeyPointTag::shoulder_left]->isUpdated())
-            unordered.push_back(make_pair(KeyPointTag::shoulder_left,p.subVector(6,8)));
-
-        if(skeletonIn[KeyPointTag::elbow_left]->isUpdated())
-            unordered.push_back(make_pair(KeyPointTag::elbow_left,p.subVector(9,11)));
-
-        if(skeletonIn[KeyPointTag::hand_left]->isUpdated())
-            unordered.push_back(make_pair(KeyPointTag::hand_left,p.subVector(12,14)));
-
-        if(skeletonIn[KeyPointTag::shoulder_right]->isUpdated())
-            unordered.push_back(make_pair(KeyPointTag::shoulder_right,p.subVector(15,17)));
-
-        if(skeletonIn[KeyPointTag::elbow_right]->isUpdated())
-            unordered.push_back(make_pair(KeyPointTag::elbow_right,p.subVector(18,20)));
-
-        if(skeletonIn[KeyPointTag::hand_right]->isUpdated())
-            unordered.push_back(make_pair(KeyPointTag::hand_right,p.subVector(21,23)));
-
-        if(skeletonIn[KeyPointTag::hip_left]->isUpdated())
-            unordered.push_back(make_pair(KeyPointTag::hip_left,p.subVector(24,26)));
-
-        if(skeletonIn[KeyPointTag::hip_center]->isUpdated())
-            unordered.push_back(make_pair(KeyPointTag::hip_center,p.subVector(27,29)));
-
-        if(skeletonIn[KeyPointTag::knee_left]->isUpdated())
-            unordered.push_back(make_pair(KeyPointTag::knee_left,p.subVector(30,32)));
-
-        if(skeletonIn[KeyPointTag::ankle_left]->isUpdated())
-            unordered.push_back(make_pair(KeyPointTag::ankle_left,p.subVector(33,35)));
-
-        if(skeletonIn[KeyPointTag::hip_right]->isUpdated())
-            unordered.push_back(make_pair(KeyPointTag::hip_right,p.subVector(36,38)));
-
-        if(skeletonIn[KeyPointTag::knee_right]->isUpdated())
-            unordered.push_back(make_pair(KeyPointTag::knee_right,p.subVector(39,41)));
-
-        if(skeletonIn[KeyPointTag::ankle_right]->isUpdated())
-            unordered.push_back(make_pair(KeyPointTag::ankle_right,p.subVector(42,44)));
+        if(m[0].second==0 && m.size()>1)
+            return m[1].second;
+        else
+            return m[0].second;
     }
 };
 

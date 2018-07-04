@@ -22,8 +22,7 @@ class Dtw
 private:
     double** distMat;
     int ns,nt,w;
-    vector<Vector> s,t;
-    vector<double> s1,s2;
+    vector<double> s,t;
 
 public:
 
@@ -110,8 +109,14 @@ public:
 //        return distMat[ns-1][nt-1];
 //    }
 
-    double computeDistance(const vector<double> &s1, const vector<double> &s2)
+    double computeDistance(const vector<double> &s_, const vector<double> &t_)
     {
+        s.clear();
+        t.clear();
+        s = s_;
+        t = t_;
+
+        //initialize distance matrix
         for(int i=0;i<ns+1;i++)
         {
             for(int j=0;j<nt+1;j++)
@@ -121,6 +126,7 @@ public:
         }
         distMat[0][0]=0;
 
+        //compute distance matrix
         int j1,j2;
         double cost,temp;
         for(int i=1;i<=ns;i++)
@@ -137,7 +143,7 @@ public:
             }
             for(int j=j1;j<=j2;j++)
             {
-                cost=sqrt((s1[i-1]-s2[j-1])*(s1[i-1]-s2[j-1]));
+                cost=sqrt((s[i-1]-t[j-1])*(s[i-1]-t[j-1]));
                 temp=distMat[i-1][j];
                 if(distMat[i][j-1]!=-1)
                 {
@@ -153,27 +159,6 @@ public:
                 distMat[i][j]=cost+temp;
             }
         }
-
-//        for(int i=0; i<s1.size(); i++)
-//            cout << s1[i] << " ";
-//        cout << endl;
-//        cout << endl;
-
-//        for(int i=0; i<s2.size(); i++)
-//            cout << s2[i] << " ";
-//        cout << endl;
-//        cout << endl;
-
-//        for(int i=0; i<ns+1; i++)
-//        {
-//            for(int j=0; j<nt+1; j++)
-//            {
-//                cout << distMat[i][j] << " ";
-//            }
-//            cout << endl;
-//        }
-//        cout << endl;
-//        cout << endl;
 
         return (distMat[ns][nt])/ns;
     }
@@ -210,6 +195,19 @@ public:
         }
         return col;
     }
+
+    vector<double> align()
+    {
+        vector<double> res;
+        res.resize(s.size());
+        for(int i=0;i<s.size();i++)
+        {
+            int j=findMin(i);
+            res[i]=t[j];
+        }
+        return res;
+    }
+
 
 //    void update(const vector<Vector> &s_, const vector<Vector> &t_)
 //    {
