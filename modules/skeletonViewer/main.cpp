@@ -204,8 +204,7 @@ protected:
             cz_length=std::max(0.001,cz_length);
 
             vector<double> coeff(10,0.0);
-            coeff[0]=1.0/(c_length*c_length);
-            coeff[1]=1.0/(c_length*c_length);
+            coeff[0]=coeff[1]=1.0/(c_length*c_length);
             coeff[2]=1.0/(cz_length*cz_length);
             vtk_quadric[id_quadric]->SetCoefficients(coeff.data());
 
