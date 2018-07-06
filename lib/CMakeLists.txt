@@ -2,8 +2,8 @@
 # All Rights Reserved.
 # Authors: Ugo Pattacini <ugo.pattacini@iit.it>
 
-set(${PROJECT_NAME}_SRC src/skeleton.cpp)
-set(${PROJECT_NAME}_HDR include/AssistiveRehab/skeleton.h)
+set(${PROJECT_NAME}_SRC src/skeleton.cpp src/dtw.cpp)
+set(${PROJECT_NAME}_HDR include/AssistiveRehab/skeleton.h include/AssistiveRehab/dtw.h)
 
 add_library(${PROJECT_NAME} ${${PROJECT_NAME}_SRC} ${${PROJECT_NAME}_HDR})
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${${PROJECT_NAME}_VERSION}
