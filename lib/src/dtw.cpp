@@ -27,7 +27,7 @@ Dtw::Dtw (const int &win_) : Dtw()
     win = win_;
 }
 
-Matrix Dtw::initialize(const int ns, const int nt)
+Matrix Dtw::initialize(const int ns, const int nt) const
 {
     Matrix distMat(ns+1,nt+1);
 

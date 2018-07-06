@@ -22,7 +22,7 @@ protected:
     int win;
     double d;   //!< dtw distance
 
-    yarp::sig::Matrix initialize(const int ns, const int nt);
+    yarp::sig::Matrix initialize(const int ns, const int nt) const;
     int getMin(yarp::sig::Matrix &distMat, const int row, const int nt) const;
     double computeDistance(const std::vector<double> &s, const std::vector<double> &t,
                            yarp::sig::Matrix &distMat) const;
