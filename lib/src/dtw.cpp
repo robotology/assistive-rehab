@@ -48,8 +48,8 @@ Matrix Dtw::initialize(const int ns, const int nt)
 double Dtw::computeDistance(const vector<double> &s, const vector<double> &t, Matrix &distMat)
 {
     //compute distance matrix
-    int ns=s.size();
-    int nt=t.size();
+    int ns=(int)s.size();
+    int nt=(int)t.size();
     int j1,j2;
     double cost,temp;
     for(int i=1;i<=ns;i++)
@@ -105,8 +105,8 @@ int Dtw::getMin(Matrix &distMat, const int row, const int nt)
 /***************************/
 vector<double> Dtw::align(const vector<double> &s, const vector<double> &t)
 {
-    int ns=s.size();
-    int nt=t.size();
+    int ns=(int)s.size();
+    int nt=(int)t.size();
 
     //create and initialize distance matrix
     Matrix distMat = initialize(ns,nt);
@@ -131,9 +131,9 @@ vector<double> Dtw::align(const vector<double> &s, const vector<double> &t)
 /***************************/
 vector<vector<double>> Dtw::align(const vector<vector<double>> &s, const vector<vector<double>> &t)
 {
-    int n=s.size();
-    int ns=s[0].size();
-    int nt=t[0].size();
+    int n=(int)s.size();
+    int ns=(int)s[0].size();
+    int nt=(int)t[0].size();
     vector<vector<double>> res(n,vector<double>(nt));
 
     //compute distance matrix for each component of the vectors
