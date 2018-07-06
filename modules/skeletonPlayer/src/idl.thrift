@@ -108,4 +108,13 @@ service skeletonPlayer_IDL
     * @return true/false on success/failure.
     */
    bool set_opacity(1:double new_opacity);
+
+   /**
+    * Set color.
+    * @param new_r the red channel in [0,1].
+    * @param new_g the green channel in [0,1].
+    * @param new_b the blue channel in [0,1].
+    * @return true/false on success/failure.
+    */
+   bool set_color(1:double new_r, 2:double new_g, 3:double new_b);
 }

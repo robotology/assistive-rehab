@@ -242,7 +242,18 @@ public:
             colors_code.push_back(vector<double>{238.0/255.0,118.0/255.0, 22.0/255.0});
 
             hash<string> color_hash;
-            color=colors_code[color_hash(skeleton->getTag())%colors_code.size()];            
+            color=colors_code[color_hash(skeleton->getTag())%colors_code.size()];
+
+            // override color
+            if (Bottle *b=prop.find("color").asList())
+            {
+                if (b->size()>=3)
+                {
+                    color=vector<double>{b->get(0).asDouble(),
+                                         b->get(1).asDouble(),
+                                         b->get(2).asDouble()};
+                }
+            }
 
             double opacity=prop.check("opacity",Value(1.0)).asDouble();
             if (skeleton->getNumKeyPoints()>0)

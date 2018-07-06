@@ -51,6 +51,7 @@ class Player : public RFModule, public skeletonPlayer_IDL
     int opc_id;
 
     double opacity;
+    Bottle color;
     int n_sessions;
     double t_warp;
     double T0;
@@ -66,6 +67,7 @@ class Player : public RFModule, public skeletonPlayer_IDL
         if (viewerPort.getOutputCount()>0)
         {
             prop.put("opacity",opacity);
+            prop.put("color",color.get(0));
             Bottle &msg=viewerPort.prepare();
             msg.clear();
             msg.addList().read(prop);
@@ -468,6 +470,18 @@ class Player : public RFModule, public skeletonPlayer_IDL
     }
 
     /****************************************************************/
+    bool set_color(const double new_r, const double new_g, const double new_b) override
+    {
+        LockGuard lg(mutex);
+        color.clear();
+        Bottle &c=color.addList();
+        c.addDouble(new_r);
+        c.addDouble(new_g);
+        c.addDouble(new_b);
+        return true;
+    }
+
+    /****************************************************************/
     bool attach(RpcServer &source) override
     {
         return yarp().attachAsServer(source);
@@ -483,7 +497,13 @@ class Player : public RFModule, public skeletonPlayer_IDL
 
         state=State::idle;
         opc_id=opc_id_invalid;
+
         opacity=0.2;
+        Bottle &c=color.addList();
+        c.addDouble(1.0);
+        c.addDouble(1.0);
+        c.addDouble(1.0);
+
         return true;
     }
 
