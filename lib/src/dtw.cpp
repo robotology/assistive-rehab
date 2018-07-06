@@ -29,14 +29,9 @@ Dtw::Dtw (const int &win_)
     d = 0.0;
 }
 
-double ** Dtw::initialize(const int &ns, const int &nt)
+Matrix Dtw::initialize(const int ns, const int nt)
 {
-    double ** distMat;
-    distMat = new double*[ns+1];
-    for(int i=0;i<ns+1;i++)
-    {
-        distMat[i] = new double[nt+1];
-    }
+    Matrix distMat(ns+1,nt+1);
 
     //initialize distance matrix
     for(int i=0;i<ns+1;i++)
@@ -50,7 +45,7 @@ double ** Dtw::initialize(const int &ns, const int &nt)
     return distMat;
 }
 
-double Dtw::computeDistance(const vector<double> &s, const vector<double> &t, double **distMat)
+double Dtw::computeDistance(const vector<double> &s, const vector<double> &t, Matrix &distMat)
 {
     //compute distance matrix
     int ns=s.size();
@@ -90,7 +85,7 @@ double Dtw::computeDistance(const vector<double> &s, const vector<double> &t, do
     return(distMat[ns][nt]/nt);
 }
 
-int Dtw::getMin(double **distMat,const int &row,const int &nt) const
+int Dtw::getMin(Matrix &distMat, const int row, const int nt)
 {
     int col=1;
     double mind=distMat[row][col];
@@ -105,20 +100,6 @@ int Dtw::getMin(double **distMat,const int &row,const int &nt) const
     return col;
 }
 
-double Dtw::getDistance()
-{
-    return d;
-}
-
-void Dtw::free(double **distMat, const int &ns)
-{
-    for(int i=0;i<ns+1;i++)
-    {
-        delete distMat[i];
-    }
-    delete distMat;
-}
-
 /***************************/
 /*  Mono-dimensional DTW   */
 /***************************/
@@ -128,7 +109,7 @@ vector<double> Dtw::align(const vector<double> &s, const vector<double> &t)
     int nt=t.size();
 
     //create and initialize distance matrix
-    double **distMat = initialize(ns,nt);
+    Matrix distMat = initialize(ns,nt);
 
     //compute distance matrix
     d=computeDistance(s,t,distMat);
@@ -141,9 +122,6 @@ vector<double> Dtw::align(const vector<double> &s, const vector<double> &t)
         int j=getMin(distMat,i,nt);
         res[i-1]=t[j-1];
     }
-
-    //free memory
-    free(distMat,ns);
 
     return res;
 }
@@ -163,7 +141,7 @@ vector<vector<double>> Dtw::align(const vector<vector<double>> &s, const vector<
     for(int l=0; l<n; l++)
     {
         //create and initialize distance matrix
-        double **distMat = initialize(ns,nt);
+        Matrix distMat = initialize(ns,nt);
 
         //compute distance
         d+=computeDistance(s[l],t[l],distMat);
@@ -174,9 +152,6 @@ vector<vector<double>> Dtw::align(const vector<vector<double>> &s, const vector<
             int j=getMin(distMat,k,nt);
             res[l][k-1]=t[l][j-1];
         }
-
-        //free memory
-        free(distMat,ns);
     }
 
     return res;

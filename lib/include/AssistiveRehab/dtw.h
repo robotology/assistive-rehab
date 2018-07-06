@@ -14,6 +14,7 @@
 #define ASSISTIVE_REHAB_DTW_H
 
 #include <vector>
+#include <yarp/sig/Matrix.h>
 
 class Dtw
 {
@@ -25,10 +26,9 @@ private:
     //dtw distance
     double d;
 
-    double **initialize(const int &ns, const int &nt);
-    int getMin(double **distMat, const int &row, const int &nt) const;
-    double computeDistance(const std::vector<double> &s, const std::vector<double> &t, double **distMat);
-    void free(double **distMat, const int &ns);
+    yarp::sig::Matrix initialize(const int ns, const int nt);
+    int getMin(yarp::sig::Matrix &distMat, const int row, const int nt);
+    double computeDistance(const std::vector<double> &s, const std::vector<double> &t, yarp::sig::Matrix &distMat);
 
 public:
 
@@ -37,7 +37,7 @@ public:
     std::vector<double> align(const std::vector<double> &s, const std::vector<double> &t);
     std::vector<std::vector<double>> align(const std::vector<std::vector<double>> &s,
                                            const std::vector<std::vector<double>> &t);
-    double getDistance();
+    double getDistance() const { return d; }
     ~Dtw();
 
 };
