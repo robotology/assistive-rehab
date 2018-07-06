@@ -12,11 +12,11 @@
 
 #include <algorithm>
 #include <fstream>
+#include <fftw3.h>
 #include <yarp/os/all.h>
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
-#include "Dtw.h"
-#include <fftw3.h>
+#include "AssistiveRehab/dtw.h"
 #include "AssistiveRehab/skeleton.h"
 
 using namespace std;
@@ -33,8 +33,8 @@ private:
     BufferedPort<Bottle> port_out,scopePort;
 
     //parameters
-    int win;
-    double T,tstart,dtw_thresh,period,errpos_thresh;
+    int win,range_freq;
+    double T,tstart,dtw_thresh,period,errpos_thresh,psd_noise;
 
     SkeletonWaist skeletonIn,skeletonTemplate;
     string skel_tag,template_tag;
@@ -145,8 +145,10 @@ public:
         win = rf.check("win",Value(-1)).asDouble();
 //        T = rf.check("T",Value(1.0)).asDouble();
         period = rf.check("period",Value(0.01)).asDouble();
-        dtw_thresh = rf.check("threshold",Value(0.10)).asDouble();
-        errpos_thresh = rf.check("errpos_thresh",Value(0.40)).asDouble();
+        dtw_thresh = rf.check("dtw_thresh",Value(0.10)).asDouble();
+        errpos_thresh = rf.check("errpos_thresh",Value(0.20)).asDouble();
+        psd_noise = rf.check("psd_noise",Value(5.0)).asDouble();
+        range_freq = rf.check("range_freq",Value(2)).asInt();
 
         outfile.open("dtw-test.txt");
 
@@ -206,66 +208,6 @@ public:
         temp.push_back(skeleton[KeyPointTag::hip_right]->getPoint());
         temp.push_back(skeleton[KeyPointTag::knee_right]->getPoint());
         temp.push_back(skeleton[KeyPointTag::ankle_right]->getPoint());
-
-//        temp.push_back(skeleton[KeyPointTag::shoulder_center]->getPoint()[0]); //0
-//        temp.push_back(skeleton[KeyPointTag::shoulder_center]->getPoint()[1]); //1
-//        temp.push_back(0.0); //skeleton[KeyPointTag::shoulder_center]->getPoint()[2]; //2
-
-//        temp.push_back(skeleton[KeyPointTag::head]->getPoint()[0]); //3
-//        temp.push_back(skeleton[KeyPointTag::head]->getPoint()[1]); //4
-//        temp.push_back(0.0); //skeleton[KeyPointTag::head]->getPoint()[2]; //5
-
-//        temp.push_back(skeleton[KeyPointTag::shoulder_left]->getPoint()[0]); //6
-//        temp.push_back(skeleton[KeyPointTag::shoulder_left]->getPoint()[1]); //7
-//        temp.push_back(0.0); //skeleton[KeyPointTag::shoulder_left]->getPoint()[2]; //8
-
-//        temp.push_back(skeleton[KeyPointTag::elbow_left]->getPoint()[0]); //9
-//        temp.push_back(skeleton[KeyPointTag::elbow_left]->getPoint()[1]); //10
-//        temp.push_back(0.0); //skeleton[KeyPointTag::elbow_left]->getPoint()[2]; //11
-
-//        temp.push_back(skeleton[KeyPointTag::hand_left]->getPoint()[0]); //12
-//        temp.push_back(skeleton[KeyPointTag::hand_left]->getPoint()[1]); //13
-//        temp.push_back(0.0); //skeleton[KeyPointTag::hand_left]->getPoint()[2]; //14
-
-//        temp.push_back(skeleton[KeyPointTag::shoulder_right]->getPoint()[0]); //15
-//        temp.push_back(skeleton[KeyPointTag::shoulder_right]->getPoint()[1]); //16
-//        temp.push_back(0.0); //skeleton[KeyPointTag::shoulder_right]->getPoint()[2]; /17
-
-//        temp.push_back(skeleton[KeyPointTag::elbow_right]->getPoint()[0]); //18
-//        temp.push_back(skeleton[KeyPointTag::elbow_right]->getPoint()[1]); //19
-//        temp.push_back(0.0); //skeleton[KeyPointTag::elbow_right]->getPoint()[2]; //20
-
-//        temp.push_back(skeleton[KeyPointTag::hand_right]->getPoint()[0]); //21
-//        temp.push_back(skeleton[KeyPointTag::hand_right]->getPoint()[1]); //22
-//        temp.push_back(0.0); //skeleton[KeyPointTag::hand_right]->getPoint()[2]; //23
-
-//        temp.push_back(skeleton[KeyPointTag::hip_center]->getPoint()[0]); //24
-//        temp.push_back(skeleton[KeyPointTag::hip_center]->getPoint()[1]); //25
-//        temp.push_back(0.0); //skeleton[KeyPointTag::hip_center]->getPoint()[2]; //26
-
-//        temp.push_back(skeleton[KeyPointTag::hip_left]->getPoint()[0]); //27
-//        temp.push_back(skeleton[KeyPointTag::hip_left]->getPoint()[1]); //28
-//        temp.push_back(0.0); //skeleton[KeyPointTag::hip_left]->getPoint()[2]; //29
-
-//        temp.push_back(skeleton[KeyPointTag::knee_left]->getPoint()[0]); //30
-//        temp.push_back(skeleton[KeyPointTag::knee_left]->getPoint()[1]);//31
-//        temp.push_back(0.0); //skeleton[KeyPointTag::knee_left]->getPoint()[2]; //32
-
-//        temp.push_back(skeleton[KeyPointTag::ankle_left]->getPoint()[0]); //33
-//        temp.push_back(skeleton[KeyPointTag::ankle_left]->getPoint()[1]); //34
-//        temp.push_back(0.0); //skeleton[KeyPointTag::ankle_left]->getPoint()[2]; //35
-
-//        temp.push_back(skeleton[KeyPointTag::hip_right]->getPoint()[0]); //36
-//        temp.push_back(skeleton[KeyPointTag::hip_right]->getPoint()[1]); //37
-//        temp.push_back(0.0); //skeleton[KeyPointTag::hip_right]->getPoint()[2]; //38
-
-//        temp.push_back(skeleton[KeyPointTag::knee_right]->getPoint()[0]); //39
-//        temp.push_back(skeleton[KeyPointTag::knee_right]->getPoint()[1]); //40
-//        temp.push_back(0.0); //skeleton[KeyPointTag::knee_right]->getPoint()[2]; //41
-
-//        temp.push_back(skeleton[KeyPointTag::ankle_right]->getPoint()[0]); //42
-//        temp.push_back(skeleton[KeyPointTag::ankle_right]->getPoint()[1]); //43
-//        temp.push_back(0.0); //skeleton[KeyPointTag::ankle_right]->getPoint()[2]; //44
     }
 
     void updateVec()
@@ -298,12 +240,14 @@ public:
                 if( (Time::now()-tstart)> T )
                 {
                     Dtw *dtw;
-                    dtw=new Dtw(win,skeleton_template.size(),skeleton_candidate.size());
+                    dtw=new Dtw(win);
 
                     //for each keypoint
                     for(int i=0;i<skeletonIn.getNumKeyPoints();i++)
                     {
                         //for each component (xyz)
+                        int ftavg=0, fcavg=0,tot=0;
+                        double davg=0.0;
                         for(int l=0; l<3; l++)
                         {
                             //for each sample over time
@@ -312,58 +256,73 @@ public:
                                 s_template.push_back(skeleton_template[j][i][l]);
                                 s_candidate.push_back(skeleton_candidate[j][i][l]);
                             }
+                            s_aligned.resize(s_template.size());
+                            s_aligned=dtw->align(s_template,s_candidate);
 
-                            double d=dtw->computeDistance(s_template,s_candidate);
+//                            outfile << i << " ";
+//                            for(int k=0; k<s_template.size(); k++)
+//                                outfile << s_template[k] << " ";
+//                            outfile << "\n";
 
-                            if(d>dtw_thresh)
+//                            outfile << i << " ";
+//                            for(int k=0; k<s_candidate.size(); k++)
+//                                outfile << s_candidate[k] << " ";
+//                            outfile << "\n";
+
+//                            outfile << i << " ";
+//                            for(int k=0; k<s_aligned.size(); k++)
+//                                outfile << s_aligned[k] << " ";
+//                            outfile << "\n";
+
+                            double d=dtw->getDistance();
+                            davg+=d;
+
+                            int ft = performFFT(s_template,"template",i);
+                            int fc = performFFT(s_candidate,"test",i);
+                            if(ft != -1)
                             {
-                                //check differences in speed
-                                int ft = performFFT(s_template,"template",i);
-                                int fc = performFFT(s_candidate,"test",i);
-                                outfile << "\n";
+                                ftavg += ft;
+                                tot++;
+                            }
+                            if(fc != -1)
+                            {
+                                fcavg += fc;
+                                tot++;
+                            }
 
-                                if(ft-fc > 0)
-                                    yInfo() << "move" << skeletonIn[i]->getTag() << "faster!" << ft << fc << d;
-                                else if(ft-fc < 0)
-                                    yInfo() << "move" << skeletonIn[i]->getTag() << "slower!" << ft << fc << d;
-
+                            if(d>dtw_thresh && ft!=-1 && fc!=-1)
+                            {
                                 //check differences in position
-                                s_aligned.resize(s_template.size());
-                                s_aligned=dtw->align();
                                 double errpos = 0.0;
                                 for(int k=0; k<s_aligned.size(); k++)
                                 {
                                     errpos += s_aligned[k]-s_template[k];
-                                    if(k%10 == 0)
-                                    {
-                                        errpos /= 10.0;
-//                                        if(abs(errpos) > errpos_thresh)
-//                                        {
-//                                            if(l%3 == 0)
-//                                            {
-//                                                if(errpos > 0.0)
-//                                                    yInfo() << "move" << skeletonIn[i]->getTag() << "left!" << errpos;
-//                                                else
-//                                                    yInfo() << "move" << skeletonIn[i]->getTag() << "right!" << errpos;
-//                                            }
-//                                            else if(l%3 == 1)
-//                                            {
-//                                                if(errpos > 0.0)
-//                                                    yInfo() << "move" << skeletonIn[i]->getTag() << "up!" << errpos;
-//                                                else
-//                                                    yInfo() << "move" << skeletonIn[i]->getTag() << "down!" << errpos;
-//                                            }
-////                                            else if(l%3 == 2)
-////                                            {
-////                                                if(errpos > 0.0)
-////                                                    yInfo() << "move" << skeletonIn[i]->getTag() << "forward!" << errpos;
-////                                                else
-////                                                    yInfo() << "move" << skeletonIn[i]->getTag() << "backward!" << errpos;
-////                                            }
-//                                        }
+                                }
+                                errpos /= s_aligned.size();
 
-                                        errpos = 0.0;
+                                if(abs(errpos) > errpos_thresh)
+                                {
+                                    if(l%3 == 0) //x component
+                                    {
+                                        if(errpos > 0.0)
+                                            yInfo() << "move" << skeletonIn[i]->getTag() << "left!" << errpos;
+                                        else
+                                            yInfo() << "move" << skeletonIn[i]->getTag() << "right!" << errpos;
                                     }
+                                    else if(l%3 == 1) //y component
+                                    {
+                                        if(errpos > 0.0)
+                                            yInfo() << "move" << skeletonIn[i]->getTag() << "up!" << errpos;
+                                        else
+                                            yInfo() << "move" << skeletonIn[i]->getTag() << "down!" << errpos;
+                                    }
+                                    //                                            else if(l%3 == 2) //z component
+                                    //                                            {
+                                    //                                                if(errpos > 0.0)
+                                    //                                                    yInfo() << "move" << skeletonIn[i]->getTag() << "forward!" << errpos;
+                                    //                                                else
+                                    //                                                    yInfo() << "move" << skeletonIn[i]->getTag() << "backward!" << errpos;
+                                    //                                            }
                                 }
                             }
 
@@ -372,7 +331,28 @@ public:
                             s_aligned.clear();
                         }
 
-
+                        //check differences in speed
+                        ftavg/=tot;
+                        fcavg/=tot;
+                        davg/=3.0;
+                        if(davg > dtw_thresh)
+                        {
+                            //-1 if joint is stale
+                            if(ftavg!=-1 && fcavg!=-1)
+                            {
+                                if(ftavg-fcavg != 0)
+                                {
+                                    if(fcavg == 0)
+                                        yInfo() << "move" << skeletonIn[i]->getTag() << ftavg << fcavg << davg;
+                                    else if(ftavg == 0)
+                                        yInfo() << "stop" << skeletonIn[i]->getTag() << ftavg << fcavg << davg;
+                                    else if(ftavg-fcavg > range_freq)
+                                        yInfo() << "move" << skeletonIn[i]->getTag() << "faster!" << ftavg << fcavg << davg;
+                                    else if(ftavg-fcavg < -range_freq)
+                                        yInfo() << "move" << skeletonIn[i]->getTag() << "slower!" << ftavg << fcavg << davg;
+                                }
+                            }
+                        }
                     }
                     cout << endl;
 
@@ -408,24 +388,20 @@ public:
     vector<pair<double,int>> findPeaks(const vector<double> p)
     {
         vector<pair<double,int>> val;
-        double noise = 5.0;
         //consider half of the spectrum
         for(int i=0;i<p.size()/2;i++)
         {
             if((i-1)>0)
             {
-                if(p[i]>p[i-1] && p[i]>p[i+1] && p[i]>noise)
+                if(p[i]>p[i-1] && p[i]>p[i+1] && p[i]>psd_noise)
                     val.push_back(make_pair(p[i],i));
             }
             else
-                if(p[i]>p[i+1] && p[i]>noise)
+                if(p[i]>p[i+1] && p[i]>psd_noise)
                     val.push_back(make_pair(p[i],i));
         }
+        //sort psd by highest value
         sort(val.rbegin(),val.rend());
-
-//        for(int j=0; j<val.size(); j++)
-//            yInfo() << val[j].first << val[j].second;
-//        cout << endl;
 
         return val;
     }
@@ -458,28 +434,38 @@ public:
             psd.push_back(pow(abs(out[j][0]),2.0) / (1.0/period)*n);
         vector<pair<double,int>> m = findPeaks(psd);
 
-        outfile << "joint" << " " << i << " ";
-        for(int j=0; j<n; j++)
-            outfile << in[j][0] << " ";
-        outfile << "\n";
+//        outfile << "joint" << " " << i << " ";
+//        outfile << i << " ";
+//        for(int j=0; j<n; j++)
+//            outfile << in[j][0] << " ";
+//        outfile << "\n";
 
-        outfile << name << " ";
-        for(int j=0; j<n; j++)
-            outfile << psd[j] << " ";
-        outfile << "\n";
+//        outfile << name << " ";
+//        for(int j=0; j<n; j++)
+//            outfile << psd[j] << " ";
+//        outfile << "\n";
 
 //        yInfo() << name << i << " ";
 //        for(int j=0; j<m.size(); j++)
-//            yInfo() << m[j];
+//            yInfo() << m[j].second;
 
         fftw_destroy_plan(p);
         fftw_free(in);
         fftw_free(out);
 
-        if(m[0].second==0 && m.size()>1)
-            return m[1].second;
+        if(m.size()>0)
+        {
+            if(m.size()>1 && m[0].second==0)
+                return m[1].second;
+            else
+                return m[0].second;
+        }
         else
-            return m[0].second;
+        {
+//            yWarning() << "PSD empty.." << skeletonIn[i]->getTag() << "stale?";
+            return -1;
+        }
+
     }
 };
 
