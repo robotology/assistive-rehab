@@ -18,28 +18,23 @@
 
 class Dtw
 {
-private:
-
-    //parameters
+protected:
     int win;
-
-    //dtw distance
-    double d;
+    double d;   //!< dtw distance
 
     yarp::sig::Matrix initialize(const int ns, const int nt);
-    int getMin(yarp::sig::Matrix &distMat, const int row, const int nt);
-    double computeDistance(const std::vector<double> &s, const std::vector<double> &t, yarp::sig::Matrix &distMat);
+    int getMin(yarp::sig::Matrix &distMat, const int row, const int nt) const;
+    double computeDistance(const std::vector<double> &s, const std::vector<double> &t,
+                           yarp::sig::Matrix &distMat) const;
 
 public:
-
     Dtw();
     Dtw(const int &win_);
     std::vector<double> align(const std::vector<double> &s, const std::vector<double> &t);
     std::vector<std::vector<double>> align(const std::vector<std::vector<double>> &s,
                                            const std::vector<std::vector<double>> &t);
     double getDistance() const { return d; }
-    ~Dtw();
-
+    virtual ~Dtw() { }
 };
 
 #endif

@@ -18,15 +18,13 @@
 using namespace std;
 using namespace yarp::sig;
 
-Dtw::Dtw() : win(-1)
+Dtw::Dtw() : win(-1), d(0.0)
 {
-    d = 0.0;
 }
 
-Dtw::Dtw (const int &win_)
+Dtw::Dtw (const int &win_) : Dtw()
 {
     win = win_;
-    d = 0.0;
 }
 
 Matrix Dtw::initialize(const int ns, const int nt)
@@ -45,7 +43,7 @@ Matrix Dtw::initialize(const int ns, const int nt)
     return distMat;
 }
 
-double Dtw::computeDistance(const vector<double> &s, const vector<double> &t, Matrix &distMat)
+double Dtw::computeDistance(const vector<double> &s, const vector<double> &t, Matrix &distMat) const
 {
     //compute distance matrix
     int ns=(int)s.size();
@@ -85,7 +83,7 @@ double Dtw::computeDistance(const vector<double> &s, const vector<double> &t, Ma
     return(distMat[ns][nt]/nt);
 }
 
-int Dtw::getMin(Matrix &distMat, const int row, const int nt)
+int Dtw::getMin(Matrix &distMat, const int row, const int nt) const
 {
     int col=1;
     double mind=distMat[row][col];
@@ -157,7 +155,3 @@ vector<vector<double>> Dtw::align(const vector<vector<double>> &s, const vector<
     return res;
 }
 
-Dtw::~Dtw()
-{
-
-}
