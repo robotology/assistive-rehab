@@ -10,6 +10,7 @@
  * @authors: Valentina Vasco <valentina.vasco@iit.it>
  */
 
+#include <cstdlib>
 #include <iostream>
 #include <vector>
 #include <algorithm>
