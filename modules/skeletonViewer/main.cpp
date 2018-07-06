@@ -64,6 +64,7 @@ protected:
     double last_update;
 
     vector<double> color;
+    double opacity;
     Vector z;
 
     vector<vtkSmartPointer<vtkSphereSource>>   vtk_sphere;
@@ -79,6 +80,22 @@ protected:
 
     unordered_map<const KeyPoint*,unsigned int> k2id_sphere;
     unordered_map<const KeyPoint*,unordered_map<const KeyPoint*,unsigned int>> kk2id_quadric;
+
+    /****************************************************************/
+    bool update_color(const Property &p)
+    {
+        if (Bottle *b=p.find("color").asList())
+        {
+            if (b->size()>=3)
+            {
+                color=vector<double>{b->get(0).asDouble(),
+                                     b->get(1).asDouble(),
+                                     b->get(2).asDouble()};
+                return true;
+            }
+        }
+        return false;
+    }
 
     /****************************************************************/
     bool findCaptionPoint(Vector &p) const
@@ -123,7 +140,7 @@ protected:
     }
 
     /****************************************************************/
-    void generate_limbs(const KeyPoint *k, const double opacity)
+    void generate_limbs(const KeyPoint *k)
     {
         vtk_sphere.push_back(vtkSmartPointer<vtkSphereSource>::New());
         vtk_sphere.back()->SetCenter(Vector(k->getPoint()).data());
@@ -182,12 +199,12 @@ protected:
             vtk_renderer->AddActor(vtk_quadric_actor.back());
 
             kk2id_quadric[k][c]=(unsigned int)vtk_quadric_actor.size()-1;
-            generate_limbs(c,opacity);
+            generate_limbs(c);
         }
     }
 
     /****************************************************************/
-    void update_limbs(const KeyPoint *k, const double opacity)
+    void update_limbs(const KeyPoint *k)
     {
         auto id_sphere=k2id_sphere[k];
         vtk_sphere[id_sphere]->SetCenter(Vector(k->getPoint()).data());
@@ -217,7 +234,7 @@ protected:
             vtk_quadric_actor[id_quadric]->GetProperty()->SetOpacity(opacity);
             vtk_quadric_actor[id_quadric]->SetVisibility(k->isUpdated()&&c->isUpdated());
 
-            update_limbs(c,opacity);
+            update_limbs(c);
         }
     }
 
@@ -245,21 +262,13 @@ public:
             color=colors_code[color_hash(skeleton->getTag())%colors_code.size()];
 
             // override color
-            if (Bottle *b=prop.find("color").asList())
-            {
-                if (b->size()>=3)
-                {
-                    color=vector<double>{b->get(0).asDouble(),
-                                         b->get(1).asDouble(),
-                                         b->get(2).asDouble()};
-                }
-            }
-
-            double opacity=prop.check("opacity",Value(1.0)).asDouble();
+            update_color(prop);
+            opacity=prop.check("opacity",Value(1.0)).asDouble();
+            
             if (skeleton->getNumKeyPoints()>0)
             {
                 auto k=(*skeleton)[0];
-                generate_limbs(k,opacity);
+                generate_limbs(k);
 
                 vtk_textActor=vtkSmartPointer<vtkCaptionActor2D>::New();
                 vtk_textActor->GetTextActor()->SetTextScaleModeToNone();
@@ -299,10 +308,13 @@ public:
         if (skeleton!=nullptr)
         {
             skeleton->update(prop);
-            double opacity=prop.check("opacity",Value(1.0)).asDouble();
+
+            update_color(prop);
+            opacity=prop.check("opacity",Value(1.0)).asDouble();
+
             if (skeleton->getNumKeyPoints()>0)
             {
-                update_limbs((*skeleton)[0],opacity);
+                update_limbs((*skeleton)[0]);
 
                 Vector p;
                 if (findCaptionPoint(p))
