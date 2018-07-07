@@ -209,6 +209,7 @@ protected:
         auto id_sphere=k2id_sphere[k];
         vtk_sphere[id_sphere]->SetCenter(Vector(k->getPoint()).data());
         vtk_sphere[id_sphere]->SetRadius(2.0*c_length);
+        vtk_sphere_actor[id_sphere]->GetProperty()->SetColor(color.data());
         vtk_sphere_actor[id_sphere]->GetProperty()->SetOpacity(opacity);
         vtk_sphere_actor[id_sphere]->SetVisibility(k->isUpdated());
 
@@ -231,6 +232,7 @@ protected:
             Vector m=0.5*(c->getPoint()-k->getPoint());
             vtk_quadric_transform[id_quadric]->Translate((k->getPoint()+m).data());
             align(vtk_quadric_transform[id_quadric],z,m);
+            vtk_quadric_actor[id_quadric]->GetProperty()->SetColor(color.data());
             vtk_quadric_actor[id_quadric]->GetProperty()->SetOpacity(opacity);
             vtk_quadric_actor[id_quadric]->SetVisibility(k->isUpdated()&&c->isUpdated());
 
@@ -319,6 +321,7 @@ public:
                 Vector p;
                 if (findCaptionPoint(p))
                     vtk_textActor->SetAttachmentPoint(p.data());
+                vtk_textActor->GetCaptionTextProperty()->SetColor(color.data());
             }
         }
 

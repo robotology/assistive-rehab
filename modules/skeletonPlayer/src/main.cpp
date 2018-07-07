@@ -499,11 +499,7 @@ class Player : public RFModule, public skeletonPlayer_IDL
         opc_id=opc_id_invalid;
 
         opacity=0.2;
-        Bottle &c=color.addList();
-        c.addDouble(1.0);
-        c.addDouble(1.0);
-        c.addDouble(1.0);
-
+        color.addList().read(Vector(3,0.7));
         return true;
     }
 

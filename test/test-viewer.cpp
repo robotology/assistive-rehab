@@ -12,6 +12,7 @@
 
 #include <cstdlib>
 #include <cmath>
+#include <random>
 #include <yarp/os/Bottle.h>
 #include <yarp/os/Property.h>
 #include <yarp/os/BufferedPort.h>
@@ -34,6 +35,10 @@ class TestViewer : public RFModule
     SkeletonWaist skeleton2;
     double radius,phase,t0;
     BufferedPort<Bottle> port;
+
+    random_device rd;
+    mt19937 mt;
+    uniform_real_distribution<double> dist;
 
     bool configure(ResourceFinder &rf) override
     {
@@ -137,7 +142,12 @@ class TestViewer : public RFModule
 
         Property prop1=skeleton1.toProperty();
         Property prop2=skeleton2.toProperty();
+        
+        Bottle color;
+        color.addList().read(Vector(3,dist(mt)));
+
         prop2.put("opacity",0.25+0.75*(1.0-cos(theta))/2.0);
+        prop2.put("color",color.get(0));
 
         Bottle &msg=port.prepare();
         msg.clear();
@@ -153,6 +163,9 @@ class TestViewer : public RFModule
         port.close();
         return true;
     }
+
+public:
+    TestViewer() : mt(rd()), dist(0.0,1.0) { }
 };
 
 int main()
@@ -168,3 +181,4 @@ int main()
     ResourceFinder rf;
     return testviewer.runModule(rf);
 }
+
