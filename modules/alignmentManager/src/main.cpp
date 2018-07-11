@@ -10,6 +10,7 @@
  * @authors: Valentina Vasco <valentina.vasco@iit.it>
  */
 
+#include <cstdlib>
 #include <algorithm>
 #include <fstream>
 #include <fftw3.h>

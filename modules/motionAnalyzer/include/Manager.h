@@ -145,6 +145,7 @@ class Manager : public RFModule,
     bool selectSkel(const string &skel_tag);
     double getQuality();
     bool start();
+    bool startDebug();
     bool stop();
 
     bool writeStructToMat(const string& name, const vector< vector< pair<string,Vector> > >& keypoints_skel, mat_t *matfp);

@@ -836,7 +836,21 @@ bool Manager::selectSkel(const string &skel_tag)
     scalerPort.write(cmd, reply);
     dtwPort.write(cmd, reply);
 
+#if __OPTIMIZE__
+    yInfo() << "Not debugging";
     return true;
+#endif
+    yInfo() << "Debugging";
+    {
+        double t1 = Time::now();
+        while( (Time::now()-t1) < 5.0 )
+        {
+            //do nothing
+            yInfo() << "Waiting to start";
+        }
+        return startDebug();
+    }
+
 }
 
 /********************************************************/
@@ -954,6 +968,8 @@ bool Manager::start()
 {
     LockGuard lg(mutex);
 
+    yInfo() << "Start!";
+
     result_time.clear();
 
     bool out=false;
@@ -963,6 +979,40 @@ bool Manager::start()
         out=skeletonIn.update_planes();
         Time::yield();
     }    
+
+    processor->setInitialConf(skel, metric->getInitialConf(),skeletonIn);
+
+    //start alignmentManager
+    Bottle cmd,reply;
+    cmd.addVocab(Vocab::encode("run"));
+    scalerPort.write(cmd,reply);
+    cmd.addInt(metric->getNrep());
+    cmd.addInt(metric->getNenv());
+    cmd.addDouble(metric->getDuration());
+    dtwPort.write(cmd,reply);
+    if(reply.get(0).asVocab()==Vocab::encode("ok"))
+    {
+        tstart_session = Time::now()-tstart;
+        starting = true;
+        return true;
+    }
+    return false;
+}
+
+/********************************************************/
+bool Manager::startDebug()
+{
+    yInfo() << "Start!";
+
+    result_time.clear();
+
+    bool out=false;
+    while(out==false)
+    {
+        getSkeleton();
+        out=skeletonIn.update_planes();
+        Time::yield();
+    }
 
     processor->setInitialConf(skel, metric->getInitialConf(),skeletonIn);
 
@@ -1452,13 +1502,12 @@ bool Manager::updateModule()
                 time_samples.push_back(Time::now()-tstart);
 
                 processor->update(skeletonIn,templateSkeleton);
-                vector< pair<string,vector<string>> > feedback = processor->getFeedback();
-                for(int i=0; i<feedback.size();i++)
-                    yWarning() << feedback[i].first << feedback[i].second[0] << feedback[i].second[1] << feedback[i].second[2];
+//                vector< pair<string,vector<string>> > feedback = processor->getFeedback();
+//                for(int i=0; i<feedback.size();i++)
+//                    yWarning() << feedback[i].first << feedback[i].second[0] << feedback[i].second[1] << feedback[i].second[2];
+//                cout << "\n";
 
-                cout << "\n";
-
-//                processor->isDeviatingFromIntialPose();
+                processor->isDeviatingFromIntialPose();
 
                 Vector v1,plane_normal,ref_dir;
                 result = processor->computeMetric(v1,plane_normal,ref_dir,score_exercise);
