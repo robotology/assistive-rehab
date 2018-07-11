@@ -297,10 +297,10 @@ class Retriever : public RFModule
     /****************************************************************/
     shared_ptr<MetaSkeleton> create(Bottle *keys)
     {
-        shared_ptr<MetaSkeleton> s=shared_ptr<MetaSkeleton>(new MetaSkeleton(time_to_live,
-                                                                             filter_keypoint_order,
-                                                                             filter_limblength_order,
-                                                                             optimize_limblength));
+        shared_ptr<MetaSkeleton> s(new MetaSkeleton(time_to_live,
+                                   filter_keypoint_order,
+                                   filter_limblength_order,
+                                   optimize_limblength));
         vector<pair<string,Vector>> unordered;
         vector<Vector> hips;
 
