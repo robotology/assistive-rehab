@@ -127,7 +127,8 @@ public:
             int nenv = command.get(2).asInt();
             double duration = command.get(3).asDouble();
             T = nenv*(duration/nrep);
-
+            yInfo() << "Check every" << T << "seconds";
+              
             tstart = Time::now();
             start = true;
             reply.addVocab(Vocab::encode("ok"));
@@ -247,8 +248,8 @@ public:
                     for(int i=0;i<skeletonIn.getNumKeyPoints();i++)
                     {
                         //for each component (xyz)
-                        int ftavg=0, fcavg=0,tot=0;
-                        double davg=0.0;
+                        int tot=0;
+                        double ftavg=0.0, fcavg=0.0,davg=0.0;
                         for(int l=0; l<3; l++)
                         {
                             //for each sample over time
@@ -290,10 +291,10 @@ public:
                                 fcavg += fc;
                                 tot++;
                             }
-
+                            
                             if(d>dtw_thresh && ft!=-1 && fc!=-1)
                             {
-                                //check differences in position
+/*                                //check differences in position
                                 double errpos = 0.0;
                                 for(int k=0; k<s_aligned.size(); k++)
                                 {
@@ -324,7 +325,7 @@ public:
                                     //                                                else
                                     //                                                    yInfo() << "move" << skeletonIn[i]->getTag() << "backward!" << errpos;
                                     //                                            }
-                                }
+                                } */
                             }
 
                             s_template.clear();
@@ -344,13 +345,13 @@ public:
                                 if(ftavg-fcavg != 0)
                                 {
                                     if(fcavg == 0)
-                                        yInfo() << "move" << skeletonIn[i]->getTag() << ftavg << fcavg << davg;
+                                        yWarning() << "move" << skeletonIn[i]->getTag() << ftavg << fcavg << davg;
                                     else if(ftavg == 0)
-                                        yInfo() << "stop" << skeletonIn[i]->getTag() << ftavg << fcavg << davg;
+                                        yWarning() << "stop" << skeletonIn[i]->getTag() << ftavg << fcavg << davg;
                                     else if(ftavg-fcavg > range_freq)
-                                        yInfo() << "move" << skeletonIn[i]->getTag() << "faster!" << ftavg << fcavg << davg;
+                                        yWarning() << "move" << skeletonIn[i]->getTag() << "faster!" << ftavg << fcavg << davg;
                                     else if(ftavg-fcavg < -range_freq)
-                                        yInfo() << "move" << skeletonIn[i]->getTag() << "slower!" << ftavg << fcavg << davg;
+                                        yWarning() << "move" << skeletonIn[i]->getTag() << "slower!" << ftavg << fcavg << davg;
                                 }
                             }
                         }
@@ -463,7 +464,7 @@ public:
         }
         else
         {
-//            yWarning() << "PSD empty.." << skeletonIn[i]->getTag() << "stale?";
+  //          yWarning() << "PSD empty.." << skeletonIn[i]->getTag() << "stale?";
             return -1;
         }
 
