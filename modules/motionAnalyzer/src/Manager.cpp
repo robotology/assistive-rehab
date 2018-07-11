@@ -836,10 +836,7 @@ bool Manager::selectSkel(const string &skel_tag)
     scalerPort.write(cmd, reply);
     dtwPort.write(cmd, reply);
 
-#if __OPTIMIZE__
-    yInfo() << "Not debugging";
-    return true;
-#endif
+#if !__OPTIMIZE__
     yInfo() << "Debugging";
     {
         double t1 = Time::now();
@@ -850,7 +847,9 @@ bool Manager::selectSkel(const string &skel_tag)
         }
         return startDebug();
     }
+#endif
 
+    return true;
 }
 
 /********************************************************/
