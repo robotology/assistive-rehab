@@ -83,25 +83,64 @@ double Dtw::computeDistance(const vector<double> &s, const vector<double> &t, Ma
     return(distMat[ns][nt]/nt);
 }
 
-int Dtw::getMin(Matrix &distMat, const int row, const int nt) const
+void Dtw::getWarpingPath(const Matrix &distMat, vector<int> &ws, vector<int> &wt) const
 {
-    int col=1;
-    double mind=distMat[row][col];
-    for(int j=1;j<nt+1;j++)
+    int m=(int)distMat.rows()-1;
+    int n=(int)distMat.cols()-1;
+    double temp;
+
+    ws.push_back(m);
+    wt.push_back(n);
+    while( (n+m) != 2 )
     {
-        if(distMat[row][j]<mind)
+        if( (n-1)==0 )
         {
-            mind=distMat[row][j];
-            col=j;
+            m=m-1;
         }
+        else if ( (m-1)==0 )
+        {
+            n=n-1;
+        }
+        else
+        {
+            temp=distMat[m-1][n];
+            int c=0;
+            if(distMat[m][n-1]<temp)
+            {
+                temp=distMat[m][n-1];
+                c=1;
+            }
+            if(distMat[m-1][n-1]<temp)
+            {
+                temp=distMat[m-1][n-1];
+                c=2;
+            }
+
+            switch (c)
+            {
+            case 0:
+                m=m-1;
+                break;
+            case 1:
+                n=n-1;
+                break;
+            case 2:
+                m=m-1;
+                n=n-1;
+                break;
+            }
+        }
+
+        ws.push_back(m);
+        wt.push_back(n);
     }
-    return col;
+
 }
 
 /***************************/
 /*  Mono-dimensional DTW   */
 /***************************/
-vector<double> Dtw::align(const vector<double> &s, const vector<double> &t)
+void Dtw::align(const vector<double> &s, const vector<double> &t, vector<double> &ws, vector<double> &wt)
 {
     int ns=(int)s.size();
     int nt=(int)t.size();
@@ -113,26 +152,31 @@ vector<double> Dtw::align(const vector<double> &s, const vector<double> &t)
     d=computeDistance(s,t,distMat);
 
     //align
-    vector<double> res;
-    res.resize(ns);
-    for(int i=1;i<ns+1;i++)
+    vector<int> w1,w2;
+    getWarpingPath(distMat,w1,w2);
+    ws.clear();
+    wt.clear();
+    for(int i=w1.size()-1;i>=0;i--)
     {
-        int j=getMin(distMat,i,nt);
-        res[i-1]=t[j-1];
+        ws.push_back(s[w1[i]-1]);
     }
-
-    return res;
+    for(int i=w2.size()-1;i>=0;i--)
+    {
+        wt.push_back(t[w2[i]-1]);
+    }
 }
 
 /***************************/
 /*  Multi-dimensional DTW  */
 /***************************/
-vector<vector<double>> Dtw::align(const vector<vector<double>> &s, const vector<vector<double>> &t)
+void Dtw::align(const vector<vector<double>> &s, const vector<vector<double>> &t,
+                vector<vector<double>> &ws, vector<vector<double>> &wt)
 {
-    int n=(int)s.size();
-    int ns=(int)s[0].size();
-    int nt=(int)t[0].size();
-    vector<vector<double>> res(n,vector<double>(nt));
+    int n=(int)s.size(); //number of components
+    int ns=(int)s[0].size(); //number of samples of the first vector
+    int nt=(int)t[0].size(); //number of samples of the second vector
+    ws.resize(n);
+    wt.resize(n);
 
     //compute distance matrix for each component of the vectors
     //vectors must have the same number of components
@@ -145,13 +189,18 @@ vector<vector<double>> Dtw::align(const vector<vector<double>> &s, const vector<
         d+=computeDistance(s[l],t[l],distMat);
 
         //align
-        for(int k=1;k<ns+1;k++)
+        vector<int> w1,w2;
+        getWarpingPath(distMat,w1,w2);
+        ws[l].clear();
+        wt[l].clear();
+        for(int i=w1.size()-1;i>=0;i--)
         {
-            int j=getMin(distMat,k,nt);
-            res[l][k-1]=t[l][j-1];
+            ws[l].push_back(s[l][w1[i]-1]);
+        }
+        for(int i=w2.size()-1;i>=0;i--)
+        {
+            wt[l].push_back(t[l][w2[i]-1]);
         }
     }
-
-    return res;
 }
 
