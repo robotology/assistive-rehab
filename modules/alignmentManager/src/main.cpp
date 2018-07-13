@@ -41,7 +41,7 @@ private:
     string skel_tag,template_tag;
     vector<vector<Vector>> skeleton_template,skeleton_candidate;
     bool updated,start;
-    vector<double> s_template,s_candidate,s_aligned;
+    vector<double> s_template,s_candidate,warped_template,warped_candidate;
     ofstream outfile;
 
 public:
@@ -250,7 +250,7 @@ public:
                         //for each component (xyz)
                         int tot=0;
                         double ftavg=0.0, fcavg=0.0,davg=0.0;
-                        for(int l=0; l<3; l++)
+                        for(int l=0;l<3;l++)
                         {
                             //for each sample over time
                             for(int j=0;j<skeleton_template.size();j++)
@@ -258,23 +258,27 @@ public:
                                 s_template.push_back(skeleton_template[j][i][l]);
                                 s_candidate.push_back(skeleton_candidate[j][i][l]);
                             }
-                            s_aligned.resize(s_template.size());
-                            s_aligned=dtw->align(s_template,s_candidate);
+                            dtw->align(s_template,s_candidate,warped_template,warped_candidate);
 
-//                            outfile << i << " ";
-//                            for(int k=0; k<s_template.size(); k++)
-//                                outfile << s_template[k] << " ";
-//                            outfile << "\n";
+                            outfile << i << " ";
+                            for(int k=0; k<s_template.size(); k++)
+                                outfile << s_template[k] << " ";
+                            outfile << "\n";
 
-//                            outfile << i << " ";
-//                            for(int k=0; k<s_candidate.size(); k++)
-//                                outfile << s_candidate[k] << " ";
-//                            outfile << "\n";
+                            outfile << i << " ";
+                            for(int k=0; k<s_candidate.size(); k++)
+                                outfile << s_candidate[k] << " ";
+                            outfile << "\n";
 
-//                            outfile << i << " ";
-//                            for(int k=0; k<s_aligned.size(); k++)
-//                                outfile << s_aligned[k] << " ";
-//                            outfile << "\n";
+                            outfile << i << " " << warped_template.size();
+                            for(int k=0; k<warped_template.size(); k++)
+                                outfile << warped_template[k] << " ";
+                            outfile << "\n";
+
+                            outfile << i << " " << warped_candidate.size();
+                            for(int k=0; k<warped_candidate.size(); k++)
+                                outfile << warped_candidate[k] << " ";
+                            outfile << "\n";
 
                             double d=dtw->getDistance();
                             davg+=d;
@@ -294,13 +298,13 @@ public:
                             
                             if(d>dtw_thresh && ft!=-1 && fc!=-1)
                             {
-/*                                //check differences in position
+                                //check differences in position
                                 double errpos = 0.0;
-                                for(int k=0; k<s_aligned.size(); k++)
+                                for(int k=0; k<warped_template.size(); k++)
                                 {
-                                    errpos += s_aligned[k]-s_template[k];
+                                    errpos += warped_candidate[k]-warped_template[k];
                                 }
-                                errpos /= s_aligned.size();
+                                errpos /= warped_candidate.size();
 
                                 if(abs(errpos) > errpos_thresh)
                                 {
@@ -318,19 +322,18 @@ public:
                                         else
                                             yInfo() << "move" << skeletonIn[i]->getTag() << "down!" << errpos;
                                     }
-                                    //                                            else if(l%3 == 2) //z component
-                                    //                                            {
-                                    //                                                if(errpos > 0.0)
-                                    //                                                    yInfo() << "move" << skeletonIn[i]->getTag() << "forward!" << errpos;
-                                    //                                                else
-                                    //                                                    yInfo() << "move" << skeletonIn[i]->getTag() << "backward!" << errpos;
-                                    //                                            }
-                                } */
+                                    else if(l%3 == 2) //z component
+                                    {
+                                        if(errpos > 0.0)
+                                            yInfo() << "move" << skeletonIn[i]->getTag() << "forward!" << errpos;
+                                        else
+                                            yInfo() << "move" << skeletonIn[i]->getTag() << "backward!" << errpos;
+                                    }
+                                }
                             }
 
                             s_template.clear();
                             s_candidate.clear();
-                            s_aligned.clear();
                         }
 
                         //check differences in speed
