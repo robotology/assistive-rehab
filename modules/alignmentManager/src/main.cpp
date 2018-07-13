@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <fstream>
 #include <fftw3.h>
+#include <gsl/gsl_statistics.h>
 #include <yarp/os/all.h>
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
@@ -35,7 +36,7 @@ private:
 
     //parameters
     int win,range_freq;
-    double T,tstart,dtw_thresh,period,errpos_thresh,psd_noise;
+    double T,tstart,dtw_thresh,period,var_thresh,skew_thresh,psd_noise;
 
     SkeletonWaist skeletonIn,skeletonTemplate;
     string skel_tag,template_tag;
@@ -148,7 +149,8 @@ public:
 //        T = rf.check("T",Value(1.0)).asDouble();
         period = rf.check("period",Value(0.01)).asDouble();
         dtw_thresh = rf.check("dtw_thresh",Value(0.10)).asDouble();
-        errpos_thresh = rf.check("errpos_thresh",Value(0.20)).asDouble();
+        var_thresh = rf.check("var_thresh",Value(0.3)).asDouble();
+        skew_thresh = rf.check("skew_thresh",Value(0.8)).asDouble();
         psd_noise = rf.check("psd_noise",Value(5.0)).asDouble();
         range_freq = rf.check("range_freq",Value(2)).asInt();
 
@@ -285,12 +287,12 @@ public:
 
                             int ft = performFFT(s_template,"template",i);
                             int fc = performFFT(s_candidate,"test",i);
-                            if(ft != -1)
+                            if(ft!=-1)
                             {
                                 ftavg += ft;
                                 tot++;
                             }
-                            if(fc != -1)
+                            if(fc!=-1)
                             {
                                 fcavg += fc;
                                 tot++;
@@ -298,38 +300,37 @@ public:
                             
                             if(d>dtw_thresh && ft!=-1 && fc!=-1)
                             {
-                                //check differences in position
-                                double errpos = 0.0;
+                                //evaluate error distribution
+                                double errpos[warped_template.size()];
                                 for(int k=0; k<warped_template.size(); k++)
                                 {
-                                    errpos += warped_candidate[k]-warped_template[k];
+                                    errpos[k] = warped_candidate[k]-warped_template[k];
                                 }
-                                errpos /= warped_candidate.size();
+                                double var = gsl_stats_variance(errpos,1,warped_template.size());
+                                double skwns = gsl_stats_skew(errpos,1,warped_template.size());
 
-                                if(abs(errpos) > errpos_thresh)
+                                if(var<var_thresh && fabs(skwns)<skew_thresh)
+                                    yWarning() << "moving well" << var << skwns;
+                                else if(var<var_thresh && skwns>0.0) //there's a tail on the right of the error distribution
                                 {
-                                    if(l%3 == 0) //x component
-                                    {
-                                        if(errpos > 0.0)
-                                            yInfo() << "move" << skeletonIn[i]->getTag() << "left!" << errpos;
-                                        else
-                                            yInfo() << "move" << skeletonIn[i]->getTag() << "right!" << errpos;
-                                    }
-                                    else if(l%3 == 1) //y component
-                                    {
-                                        if(errpos > 0.0)
-                                            yInfo() << "move" << skeletonIn[i]->getTag() << "up!" << errpos;
-                                        else
-                                            yInfo() << "move" << skeletonIn[i]->getTag() << "down!" << errpos;
-                                    }
-                                    else if(l%3 == 2) //z component
-                                    {
-                                        if(errpos > 0.0)
-                                            yInfo() << "move" << skeletonIn[i]->getTag() << "forward!" << errpos;
-                                        else
-                                            yInfo() << "move" << skeletonIn[i]->getTag() << "backward!" << errpos;
-                                    }
+                                    if(l%3==0) //x component
+                                        yWarning() << "move" << skeletonIn[i]->getTag() << "left!" << var << skwns;
+                                    else if(l%3==1) //y component
+                                        yWarning() << "move" << skeletonIn[i]->getTag() << "up!" << var << skwns;
+                                    else if(l%3==2) //z component
+                                        yWarning() << "move" << skeletonIn[i]->getTag() << "forward!" << var << skwns;
                                 }
+                                else if(var<var_thresh && skwns<0.0) //there's a tail on the left of the error distribution
+                                {
+                                    if(l%3==0) //x component
+                                        yWarning() << "move" << skeletonIn[i]->getTag() << "right!" << var << skwns;
+                                    else if(l%3==1) //y component
+                                        yWarning() << "move" << skeletonIn[i]->getTag() << "down!" << var << skwns;
+                                    else if(l%3==2) //z component
+                                        yWarning() << "move" << skeletonIn[i]->getTag() << "backward!" << var << skwns;
+                                }
+                                else if(var>var_thresh)
+                                    yWarning() << "move" << skeletonIn[i]->getTag() << "better!" << var << skwns;
                             }
 
                             s_template.clear();
@@ -360,24 +361,6 @@ public:
                         }
                     }
                     cout << endl;
-
-//                    for(int i=0; i<skeleton_template.size(); i++)
-//                        outfile << skeleton_template[i][0] << " " << skeleton_candidate[i][0] << "\n";
-
-//                    for(int i=0; i<skeleton_template.size(); i++)
-//                    {
-//                        for(int j=0; j<3*skeletonTemplate.getNumKeyPoints(); j++)
-//                        {
-//                            outfile << skeleton_template[i][j] << " ";
-//                        }
-
-//                        for(int j=0; j<3*skeletonIn.getNumKeyPoints(); j++)
-//                        {
-//                            outfile << skeleton_candidate[i][j] << " ";
-//                        }
-//                        outfile << "\n";
-//                    }
-//                    outfile << "\n";
 
                     tstart=Time::now();
                     skeleton_template.clear();
