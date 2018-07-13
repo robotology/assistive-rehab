@@ -16,6 +16,9 @@
 #include <vector>
 #include <yarp/sig/Matrix.h>
 
+namespace assistive_rehab
+{
+
 class Dtw
 {
 protected:
@@ -37,5 +40,7 @@ public:
     double getDistance() const { return d; }
     virtual ~Dtw() { }
 };
+
+}
 
 #endif

@@ -18,6 +18,7 @@
 #include "AssistiveRehab/dtw.h"
 
 using namespace std;
+using namespace assistive_rehab;
 
 int main()
 {

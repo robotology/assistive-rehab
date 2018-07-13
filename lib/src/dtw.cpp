@@ -17,6 +17,7 @@
 
 using namespace std;
 using namespace yarp::sig;
+using namespace assistive_rehab;
 
 Dtw::Dtw() : win(-1), d(0.0)
 {
