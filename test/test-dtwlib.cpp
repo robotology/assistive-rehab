@@ -56,7 +56,8 @@ int main()
 
     cout << "### Aligning vectors ###" << endl;
     Dtw dtw1(-1);
-    vector<double> v3_1 = dtw1.align(v1_1,v2_1);
+    vector<double> w_v1_1,w_v2_1;
+    dtw1.align(v1_1,v2_1,w_v1_1,w_v2_1);
 
     double d1 = dtw1.getDistance();
     cout << "DTW distance = " << d1 << endl;
@@ -93,8 +94,8 @@ int main()
 
     cout << "### Aligning vectors ###" << endl;
     Dtw dtw2(-1);
-    vector<double> v3_2;
-    v3_2 = dtw2.align(v1_2,v2_2);
+    vector<double> w_v1_2,w_v2_2;
+    dtw2.align(v1_2,v2_2,w_v1_2,w_v2_2);
 
     double d2 = dtw2.getDistance();
     cout << "DTW distance = " << d2 << endl;
@@ -135,7 +136,8 @@ int main()
 
     cout << "### Aligning vectors ###" << endl;
     Dtw dtw_3d(-1);
-    vector<vector<double>> v3_3d = dtw_3d.align(v1_3d,v2_3d);
+    vector<vector<double>> w_v1_3d,w_v2_3d;
+    dtw_3d.align(v1_3d,v2_3d,w_v1_3d,w_v2_3d);
     double d_3d = dtw_3d.getDistance();
     cout << "DTW distance = " << d_3d << endl;
     cout << endl;
