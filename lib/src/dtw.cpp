@@ -156,11 +156,11 @@ void Dtw::align(const vector<double> &s, const vector<double> &t, vector<double>
     getWarpingPath(distMat,w1,w2);
     ws.clear();
     wt.clear();
-    for(int i=w1.size()-1;i>=0;i--)
+    for(int i=(int)w1.size()-1;i>=0;i--)
     {
         ws.push_back(s[w1[i]-1]);
     }
-    for(int i=w2.size()-1;i>=0;i--)
+    for(int i=(int)w2.size()-1;i>=0;i--)
     {
         wt.push_back(t[w2[i]-1]);
     }
@@ -193,11 +193,11 @@ void Dtw::align(const vector<vector<double>> &s, const vector<vector<double>> &t
         getWarpingPath(distMat,w1,w2);
         ws[l].clear();
         wt[l].clear();
-        for(int i=w1.size()-1;i>=0;i--)
+        for(int i=(int)w1.size()-1;i>=0;i--)
         {
             ws[l].push_back(s[l][w1[i]-1]);
         }
-        for(int i=w2.size()-1;i>=0;i--)
+        for(int i=(int)w2.size()-1;i>=0;i--)
         {
             wt[l].push_back(t[l][w2[i]-1]);
         }
