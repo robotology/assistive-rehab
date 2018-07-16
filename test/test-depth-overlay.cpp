@@ -32,23 +32,23 @@ class Overlayer : public RFModule
     ImageOf<PixelRgb> depth;
     ImageOf<PixelRgb> rgb;
 
-    double min_d;
-    double max_d;
+    double min_d,max_d;
+    double alpha,beta;
 
-    void process(const ImageOf<PixelFloat> &dist)
+    void greenify(const ImageOf<PixelFloat> &dist)
     {
         depth.resize(dist);
         for (size_t y=0; y<depth.height(); y++)
         {
             for (size_t x=0; x<depth.width(); x++)
             {
-                unsigned char l=0;
+                unsigned char green=0;
                 float d=dist.pixel(x,y);
                 if ((d>=min_d) && (d<=max_d))
                 {
-                    l=(unsigned char)(255*(1.0-(d-min_d)/(max_d-min_d)));
+                    green=(unsigned char)(255.0*(1.0-(d-min_d)/(max_d-min_d)));
                 }
-                depth.pixel(x,y)=PixelRgb(l,l,0);
+                depth.pixel(x,y)=PixelRgb(0,green,0);
             }
         }
     }
@@ -57,6 +57,9 @@ class Overlayer : public RFModule
     {
         min_d=rf.check("min-d",Value(1.5)).asDouble();
         max_d=rf.check("max-d",Value(3.0)).asDouble();
+
+        alpha=rf.check("alpha",Value(0.5)).asDouble();
+        beta=rf.check("beta",Value(0.5)).asDouble();
 
         depthPort.open("/test-depth-overlay/depth:i");
         rgbPort.open("/test-depth-overlay/rgb:i");
@@ -74,7 +77,7 @@ class Overlayer : public RFModule
     {
         if (ImageOf<PixelFloat> *depth=depthPort.read(false))
         {
-            process(*depth);
+            greenify(*depth);
         }
 
         if (ImageOf<PixelRgb> *rgb=rgbPort.read(false))
@@ -91,9 +94,7 @@ class Overlayer : public RFModule
             Mat src1=cvarrToMat(rgb.getIplImage());
             Mat src2=cvarrToMat(depth.getIplImage());
             Mat dst=cvarrToMat(ovl.getIplImage());
-
-            double alpha=0.5;
-            addWeighted(src1,alpha,src2,1.0-alpha,0.0,dst);
+            addWeighted(src1,alpha,src2,beta,0.0,dst);
 
             ovlPort.writeStrict();
         }
