@@ -283,8 +283,8 @@ public:
 
         if (skeletons.size() > 0)
         {
-            int skeletonSize = skeletons.get(0).asList()->size();
-            int internalElements = 0;
+            size_t skeletonSize = skeletons.get(0).asList()->size();
+            size_t internalElements = 0;
 
             std::vector<cv::Point> relbow;
             std::vector<cv::Point> rwrist;
@@ -297,8 +297,7 @@ public:
             if (skeletonSize>0)
                 internalElements = skeletons.get(0).asList()->get(0).asList()->size();
 
-
-            for (int i = 0; i < skeletonSize; i++)
+            for (size_t i = 0; i < skeletonSize; i++)
             {
                 if (yarp::os::Bottle *propField = skeletons.get(0).asList()->get(i).asList())
                 {
@@ -442,12 +441,12 @@ public:
             double confidence = 0.0;
             int largest = 0;
 
-            int classSize = 0;
+            size_t classSize = 0;
 
             if (labels.size() > 0)
                 classSize = labels.get(j).asList()->size();
 
-            int elementSize = 0;
+            size_t elementSize = 0;
 
             if (classSize>0)
                 elementSize = labels.get(j).asList()->get(0).asList()->size();
@@ -508,8 +507,8 @@ public:
             toSend.clear();
             yarp::os::Bottle &addStructure = toSend.addList();
 
-            int skeletonSize = target.get(0).asList()->size();
-            int internalElements = 0;
+            size_t skeletonSize = target.get(0).asList()->size();
+            size_t internalElements = 0;
 
             std::vector<cv::Point> neck;
             std::vector<cv::Point> lear;
@@ -760,8 +759,8 @@ public:
                     yarp::os::Bottle &labelblobs = labels.addList();
                     if (scores.get(i).asList()->size() > 0 && scores.get(i).asList()->get(1).asList()->size() > 0)
                     {
-                        int elements = scores.get(i).asList()->get(1).asList()->size();
-                        for (int x=0; x<elements; x++)
+                        size_t elements = scores.get(i).asList()->get(1).asList()->size();
+                        for (size_t x=0; x<elements; x++)
                         {
                             std::string tmp = scores.get(i).asList()->get(1).asList()->get(x).asList()->get(0).asString();
                             double conf = scores.get(i).asList()->get(1).asList()->get(x).asList()->get(1).asDouble();

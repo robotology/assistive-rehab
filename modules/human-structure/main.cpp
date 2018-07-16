@@ -95,8 +95,8 @@ public:
 
         yarp::os::Bottle &target  = targetPort.prepare();
 
-        int skeletonSize = data.get(0).asList()->size();
-        int internalElements = 0;
+        size_t skeletonSize = data.get(0).asList()->size();
+        size_t internalElements = 0;
 
         if (skeletonSize>0)
         {
