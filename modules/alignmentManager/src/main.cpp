@@ -250,8 +250,8 @@ public:
                     for(int i=0;i<skeletonIn.getNumKeyPoints();i++)
                     {
                         //for each component (xyz)
-                        int tot=0;
-                        double ftavg=0.0, fcavg=0.0,davg=0.0;
+                        vector<int> ftv,fcv;
+                        vector<double> dv;
                         for(int l=0;l<3;l++)
                         {
                             //for each sample over time
@@ -283,21 +283,23 @@ public:
                             outfile << "\n";
 
                             double d=dtw->getDistance();
-                            davg+=d;
 
                             int ft = performFFT(s_template,"template",i);
                             int fc = performFFT(s_candidate,"test",i);
-                            if(ft!=-1)
+                            ftv.clear();
+                            fcv.clear();
+                            dv.clear();
+                            //if joints are not stale
+                            if(ft!=-1 && fc!=-1)
                             {
-                                ftavg += ft;
-                                tot++;
+                                ftv.push_back(ft);
+                                fcv.push_back(fc);
+                                dv.push_back(d);
                             }
-                            if(fc!=-1)
-                            {
-                                fcavg += fc;
-                                tot++;
-                            }
-                            
+
+                            /********************************/
+                            /*    Difference in position    */
+                            /********************************/
                             if(d>dtw_thresh && ft!=-1 && fc!=-1)
                             {
                                 //evaluate error distribution
@@ -337,26 +339,36 @@ public:
                             s_candidate.clear();
                         }
 
-                        //check differences in speed
-                        ftavg/=tot;
-                        fcavg/=tot;
-                        davg/=3.0;
-                        if(davg > dtw_thresh)
+                        /********************************/
+                        /*     Difference in speed      */
+                        /********************************/
+                        //check the maximum difference in frequency
+                        //at least two different components of the same joints should have consistent frequencies
+                        //(one component might be steady,therefore it seems reasonable to use the maximum difference
+                        //in frequency as measurement of frequency for a single joint)
+                        int imax=0;
+                        int max=abs(fcv[imax]-ftv[imax]);
+                        for(int k=1; k<ftv.size(); k++)
                         {
-                            //-1 if joint is stale
-                            if(ftavg!=-1 && fcavg!=-1)
+                            if(abs(fcv[k]-ftv[k])>max)
                             {
-                                if(ftavg-fcavg != 0)
-                                {
-                                    if(fcavg == 0)
-                                        yWarning() << "move" << skeletonIn[i]->getTag() << ftavg << fcavg << davg;
-                                    else if(ftavg == 0)
-                                        yWarning() << "stop" << skeletonIn[i]->getTag() << ftavg << fcavg << davg;
-                                    else if(ftavg-fcavg > range_freq)
-                                        yWarning() << "move" << skeletonIn[i]->getTag() << "faster!" << ftavg << fcavg << davg;
-                                    else if(ftavg-fcavg < -range_freq)
-                                        yWarning() << "move" << skeletonIn[i]->getTag() << "slower!" << ftavg << fcavg << davg;
-                                }
+                                max=abs(fcv[k]-ftv[k]);
+                                imax=k;
+                            }
+                        }
+                        int relf=fcv[imax]-ftv[imax];
+                        if(dv[imax] > dtw_thresh)
+                        {
+                            if(relf!=0)
+                            {
+                                if(fcv[imax] == 0)
+                                    yWarning() << "move" << skeletonIn[i]->getTag() << ftv[imax] << fcv[imax] << dv[imax];
+                                else if(ftv[imax] == 0)
+                                    yWarning() << "stop" << skeletonIn[i]->getTag() << ftv[imax] << fcv[imax] << dv[imax];
+                                else if(relf > range_freq)
+                                    yWarning() << "move" << skeletonIn[i]->getTag() << "faster!" << ftv[imax] << fcv[imax] << dv[imax];
+                                else if(relf < -range_freq)
+                                    yWarning() << "move" << skeletonIn[i]->getTag() << "slower!" << ftv[imax] << fcv[imax] << dv[imax];
                             }
                         }
                     }
