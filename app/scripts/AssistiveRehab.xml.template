@@ -113,19 +113,19 @@
     <connection>
         <from>/faceExpressionImage/image:o</from> 
         <to>/robot/faceDisplay/image:i</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/iSpeak/speech-dev/rpc</from>
         <to>/r1/speech:rpc</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/iSpeak/r1:rpc</from>
         <to>/faceExpressionImage/rpc</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
@@ -136,6 +136,12 @@
 
     <connection>
         <from>/depthCamera/depthImage:o</from>
+        <to>/yarpOpenPose/float:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/float:o</from>
         <to>/skeletonRetriever/depth:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
@@ -143,19 +149,19 @@
     <connection>
         <from>/skeletonRetriever/cam:rpc</from>
         <to>/depthCamera/rpc:i</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/yarpOpenPose/target:o</from>
         <to>/skeletonRetriever/skeletons:i</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/skeletonRetriever/opc:rpc</from>
         <to>/opc/rpc</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
@@ -167,7 +173,7 @@
     <connection>
         <from>/attentionManager/gaze/cmd:rpc</from>
         <to>/cer_gaze-controller/rpc</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
@@ -179,25 +185,25 @@
     <connection>
         <from>/motionAnalyzer/opc</from>
         <to>/opc/rpc</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/motionAnalyzer/scaler:cmd</from>
         <to>/skeletonScaler/rpc</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/skeletonPlayer/opc:rpc</from>
         <to>/opc/rpc</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/skeletonScaler/opc</from>
         <to>/opc/rpc</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
@@ -215,48 +221,48 @@
     <connection>
         <from>/skeletonRetriever/viewer:o</from>
         <to>/skeletonViewer:i</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/skeletonPlayer/viewer:o</from>
         <to>/skeletonViewer:i</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/skeletonScaler/player:rpc</from>
         <to>/skeletonPlayer/cmd:rpc</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/skeletonScaler/viewer:rpc</from>
         <to>/skeletonViewer:rpc</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/interactionManager/attention:rpc</from>
         <to>/attentionManager/cmd:rpc</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/interactionManager/analyzer:rpc</from>
         <to>/motionAnalyzer/cmd</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/interactionManager/speech:o</from>
         <to>/iSpeak</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/interactionManager/speech:rpc</from>
         <to>/iSpeak/rpc</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 </application>

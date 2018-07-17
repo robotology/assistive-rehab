@@ -30,11 +30,11 @@
     <connection>
         <from>/recognition-manager/target:o</from>
         <to>/skeletonDumper/skeletons-data</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
-        <from>/depthCamera/depthImage:o</from>
+        <from>/yarpOpenPose/float:o</from>
         <to>/skeletonDumper/depth</to>
         <protocol>fast_tcp</protocol>
     </connection>
