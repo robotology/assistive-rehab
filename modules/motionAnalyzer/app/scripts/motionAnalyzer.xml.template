@@ -62,6 +62,12 @@
 
     <connection>
         <from>/depthCamera/depthImage:o</from>
+        <to>/yarpOpenPose/float:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/float:o</from>
         <to>/skeletonRetriever/depth:i</to>
         <protocol>fast_tcp</protocol>
     </connection>

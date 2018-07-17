@@ -22,12 +22,12 @@
     <connection>
         <from>/skeletonPlayer/opc:rpc</from>
         <to>/opc/rpc</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/skeletonPlayer/viewer:o</from>
         <to>/skeletonViewer:i</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 </application>
