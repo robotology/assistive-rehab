@@ -32,18 +32,17 @@ private:
     //ports
     RpcServer rpcPort;
     RpcClient opcPort;
-    BufferedPort<Bottle> port_out,scopePort;
+    BufferedPort<Bottle> outPort,scopePort;
 
     //parameters
-    int win,range_freq;
-    double T,tstart,dtw_thresh,period,var_thresh,skew_thresh,psd_noise;
+    int win;
+    double T,tstart,dtw_thresh,period,psd_noise;
 
     SkeletonWaist skeletonIn,skeletonTemplate;
     string skel_tag,template_tag;
     vector<vector<Vector>> skeleton_template,skeleton_candidate;
     bool updated,start;
-    vector<double> s_template,s_candidate,warped_template,warped_candidate;
-    ofstream outfile;
+    vector<double> joint_template,joint_candidate,warped_template,warped_candidate;
 
 public:
 
@@ -91,6 +90,7 @@ public:
                                         {
                                             Skeleton* skeleton = skeleton_factory(prop);
                                             skeletonIn.update(skeleton->toProperty());
+                                            skeletonIn.normalize(); //we normalize to avoid differences due to different physiques
                                             updated = true;
                                             delete skeleton;
                                         }
@@ -98,6 +98,7 @@ public:
                                         {
                                             Skeleton* skeleton = skeleton_factory(prop);
                                             skeletonTemplate.update(skeleton->toProperty());
+                                            skeletonTemplate.normalize();
                                             delete skeleton;
                                         }
                                     }
@@ -129,7 +130,7 @@ public:
             double duration = command.get(3).asDouble();
             T = nenv*(duration/nrep);
             yInfo() << "Check every" << T << "seconds";
-              
+
             tstart = Time::now();
             start = true;
             reply.addVocab(Vocab::encode("ok"));
@@ -146,18 +147,12 @@ public:
     bool configure(ResourceFinder &rf) override
     {
         win = rf.check("win",Value(-1)).asDouble();
-//        T = rf.check("T",Value(1.0)).asDouble();
         period = rf.check("period",Value(0.01)).asDouble();
         dtw_thresh = rf.check("dtw_thresh",Value(0.10)).asDouble();
-        var_thresh = rf.check("var_thresh",Value(0.3)).asDouble();
-        skew_thresh = rf.check("skew_thresh",Value(0.8)).asDouble();
         psd_noise = rf.check("psd_noise",Value(5.0)).asDouble();
-        range_freq = rf.check("range_freq",Value(2)).asInt();
-
-        outfile.open("dtw-test.txt");
 
         opcPort.open("/alignmentManager/opc");
-        port_out.open("/alignmentManager");
+        outPort.open("/alignmentManager:o");
         scopePort.open("/alignmentManager/scope");
         rpcPort.open("/alignmentManager/rpc");
         attach(rpcPort);
@@ -170,7 +165,7 @@ public:
     bool interruptModule() override
     {
         opcPort.interrupt();
-        port_out.interrupt();
+        outPort.interrupt();
         scopePort.interrupt();
         rpcPort.interrupt();
         yInfo() << "Interrupted module";
@@ -179,10 +174,8 @@ public:
 
     bool close() override
     {
-        outfile.close();
-
         opcPort.close();
-        port_out.close();
+        outPort.close();
         scopePort.close();
         rpcPort.close();
         yInfo() << "Closed ports";
@@ -194,8 +187,8 @@ public:
         return period;
     }
 
-    void createVec(const SkeletonWaist& skeleton, vector<Vector>& temp)
-    {       
+    void fillOrdered(const SkeletonWaist& skeleton, vector<Vector>& temp)
+    {
         //same order as in skeletonWaist
         temp.push_back(skeleton[KeyPointTag::shoulder_center]->getPoint());
         temp.push_back(skeleton[KeyPointTag::head]->getPoint());
@@ -218,12 +211,12 @@ public:
     {
         vector<Vector> temp1;
         temp1.clear();
-        createVec(skeletonTemplate,temp1);
+        fillOrdered(skeletonTemplate,temp1);
         skeleton_template.push_back(temp1);
 
         vector<Vector> temp2;
         temp2.clear();
-        createVec(skeletonIn,temp2);
+        fillOrdered(skeletonIn,temp2);
         skeleton_candidate.push_back(temp2);
     }
 
@@ -243,12 +236,18 @@ public:
 
                 if( (Time::now()-tstart)> T )
                 {
+                    Bottle &outList=outPort.prepare();
+                    outList.clear();
+
                     Dtw *dtw;
                     dtw=new Dtw(win);
 
                     //for each keypoint
                     for(int i=0;i<skeletonIn.getNumKeyPoints();i++)
                     {
+                        Bottle &feedback=outList.addList();
+                        feedback.addString(skeletonIn[i]->getTag());
+
                         //for each component (xyz)
                         vector<int> ftv,fcv;
                         vector<double> dv;
@@ -257,35 +256,14 @@ public:
                             //for each sample over time
                             for(int j=0;j<skeleton_template.size();j++)
                             {
-                                s_template.push_back(skeleton_template[j][i][l]);
-                                s_candidate.push_back(skeleton_candidate[j][i][l]);
+                                joint_template.push_back(skeleton_template[j][i][l]);
+                                joint_candidate.push_back(skeleton_candidate[j][i][l]);
                             }
-                            dtw->align(s_template,s_candidate,warped_template,warped_candidate);
-
-                            outfile << i << " ";
-                            for(int k=0; k<s_template.size(); k++)
-                                outfile << s_template[k] << " ";
-                            outfile << "\n";
-
-                            outfile << i << " ";
-                            for(int k=0; k<s_candidate.size(); k++)
-                                outfile << s_candidate[k] << " ";
-                            outfile << "\n";
-
-                            outfile << i << " " << warped_template.size();
-                            for(int k=0; k<warped_template.size(); k++)
-                                outfile << warped_template[k] << " ";
-                            outfile << "\n";
-
-                            outfile << i << " " << warped_candidate.size();
-                            for(int k=0; k<warped_candidate.size(); k++)
-                                outfile << warped_candidate[k] << " ";
-                            outfile << "\n";
-
+                            dtw->align(joint_template,joint_candidate,warped_template,warped_candidate);
                             double d=dtw->getDistance();
 
-                            int ft = performFFT(s_template,"template",i);
-                            int fc = performFFT(s_candidate,"test",i);
+                            int ft = performFFT(joint_template);
+                            int fc = performFFT(joint_candidate);
                             ftv.clear();
                             fcv.clear();
                             dv.clear();
@@ -311,32 +289,38 @@ public:
                                 double var = gsl_stats_variance(errpos,1,warped_template.size());
                                 double skwns = gsl_stats_skew(errpos,1,warped_template.size());
 
-                                if(var<var_thresh && fabs(skwns)<skew_thresh)
-                                    yWarning() << "moving well" << var << skwns;
-                                else if(var<var_thresh && skwns>0.0) //there's a tail on the right of the error distribution
-                                {
-                                    if(l%3==0) //x component
-                                        yWarning() << "move" << skeletonIn[i]->getTag() << "left!" << var << skwns;
-                                    else if(l%3==1) //y component
-                                        yWarning() << "move" << skeletonIn[i]->getTag() << "up!" << var << skwns;
-                                    else if(l%3==2) //z component
-                                        yWarning() << "move" << skeletonIn[i]->getTag() << "forward!" << var << skwns;
-                                }
-                                else if(var<var_thresh && skwns<0.0) //there's a tail on the left of the error distribution
-                                {
-                                    if(l%3==0) //x component
-                                        yWarning() << "move" << skeletonIn[i]->getTag() << "right!" << var << skwns;
-                                    else if(l%3==1) //y component
-                                        yWarning() << "move" << skeletonIn[i]->getTag() << "down!" << var << skwns;
-                                    else if(l%3==2) //z component
-                                        yWarning() << "move" << skeletonIn[i]->getTag() << "backward!" << var << skwns;
-                                }
-                                else if(var>var_thresh)
-                                    yWarning() << "move" << skeletonIn[i]->getTag() << "better!" << var << skwns;
+//                                if(var<var_thresh && fabs(skwns)<skew_thresh)
+//                                    yWarning() << skeletonIn[i]->getTag() << "moving well" << var << skwns;
+//                                else if(var<var_thresh && skwns>0.0) //there's a tail on the right of the error distribution
+//                                {
+//                                    if(l%3==0) //x component
+//                                        yWarning() << "move" << skeletonIn[i]->getTag() << "left!" << var << skwns;
+//                                    else if(l%3==1) //y component
+//                                        yWarning() << "move" << skeletonIn[i]->getTag() << "up!" << var << skwns;
+//                                    else if(l%3==2) //z component
+//                                        yWarning() << "move" << skeletonIn[i]->getTag() << "forward!" << var << skwns;
+//                                }
+//                                else if(var<var_thresh && skwns<0.0) //there's a tail on the left of the error distribution
+//                                {
+//                                    if(l%3==0) //x component
+//                                        yWarning() << "move" << skeletonIn[i]->getTag() << "right!" << var << skwns;
+//                                    else if(l%3==1) //y component
+//                                        yWarning() << "move" << skeletonIn[i]->getTag() << "down!" << var << skwns;
+//                                    else if(l%3==2) //z component
+//                                        yWarning() << "move" << skeletonIn[i]->getTag() << "backward!" << var << skwns;
+//                                }
+//                                else if(var>var_thresh)
+//                                    yWarning() << "move" << skeletonIn[i]->getTag() << "better!" << var << skwns;
+
+                                Bottle &fpos=feedback.addList();
+                                fpos.addString("feed_pos");
+                                fpos.addDouble(l);
+                                fpos.addDouble(var);
+                                fpos.addDouble(skwns);
                             }
 
-                            s_template.clear();
-                            s_candidate.clear();
+                            joint_template.clear();
+                            joint_candidate.clear();
                         }
 
                         /********************************/
@@ -346,39 +330,47 @@ public:
                         //at least two different components of the same joints should have consistent frequencies
                         //(one component might be steady,therefore it seems reasonable to use the maximum difference
                         //in frequency as measurement of frequency for a single joint)
-                        int imax=0;
-                        int max=abs(fcv[imax]-ftv[imax]);
-                        for(int k=1; k<ftv.size(); k++)
+                        if(ftv.data())
                         {
-                            if(abs(fcv[k]-ftv[k])>max)
+                            int imax=0;
+                            int max=abs(fcv[imax]-ftv[imax]);
+                            for(int k=1; k<ftv.size(); k++)
                             {
-                                max=abs(fcv[k]-ftv[k]);
-                                imax=k;
+                                if(abs(fcv[k]-ftv[k])>max)
+                                {
+                                    max=abs(fcv[k]-ftv[k]);
+                                    imax=k;
+                                }
                             }
-                        }
-                        int relf=fcv[imax]-ftv[imax];
-                        if(dv[imax] > dtw_thresh)
-                        {
-                            if(relf!=0)
+                            int relf=fcv[imax]-ftv[imax];
+                            if(dv[imax] > dtw_thresh)
                             {
-                                if(fcv[imax] == 0)
-                                    yWarning() << "move" << skeletonIn[i]->getTag() << ftv[imax] << fcv[imax] << dv[imax];
-                                else if(ftv[imax] == 0)
-                                    yWarning() << "stop" << skeletonIn[i]->getTag() << ftv[imax] << fcv[imax] << dv[imax];
-                                else if(relf > range_freq)
-                                    yWarning() << "move" << skeletonIn[i]->getTag() << "faster!" << ftv[imax] << fcv[imax] << dv[imax];
-                                else if(relf < -range_freq)
-                                    yWarning() << "move" << skeletonIn[i]->getTag() << "slower!" << ftv[imax] << fcv[imax] << dv[imax];
+                                if(relf!=0)
+                                {
+//                                    if(fcv[imax] == 0)
+//                                        yWarning() << "move" << skeletonIn[i]->getTag() << ftv[imax] << fcv[imax] << dv[imax];
+//                                    else if(ftv[imax] == 0)
+//                                        yWarning() << "stop" << skeletonIn[i]->getTag() << ftv[imax] << fcv[imax] << dv[imax];
+//                                    else if(relf > range_freq)
+//                                        yWarning() << "move" << skeletonIn[i]->getTag() << "faster!" << ftv[imax] << fcv[imax] << dv[imax];
+//                                    else if(relf < -range_freq)
+//                                        yWarning() << "move" << skeletonIn[i]->getTag() << "slower!" << ftv[imax] << fcv[imax] << dv[imax];
+
+                                    Bottle &fspeed=feedback.addList();
+                                    fspeed.addString("feed_speed");
+                                    fspeed.addDouble(ftv[imax]);
+                                    fspeed.addDouble(fcv[imax]);
+                                }
                             }
                         }
                     }
-                    cout << endl;
 
                     tstart=Time::now();
                     skeleton_template.clear();
                     skeleton_candidate.clear();
 
                     delete dtw;
+                    outPort.write();
                 }
             }
         }
@@ -406,7 +398,7 @@ public:
         return val;
     }
 
-    int performFFT(const vector<double> &s, const string &name, const int &i)
+    int performFFT(const vector<double> &s)
     {
         int n = s.size();
         fftw_complex *in,*out;
@@ -434,21 +426,6 @@ public:
             psd.push_back(pow(abs(out[j][0]),2.0) / (1.0/period)*n);
         vector<pair<double,int>> m = findPeaks(psd);
 
-//        outfile << "joint" << " " << i << " ";
-//        outfile << i << " ";
-//        for(int j=0; j<n; j++)
-//            outfile << in[j][0] << " ";
-//        outfile << "\n";
-
-//        outfile << name << " ";
-//        for(int j=0; j<n; j++)
-//            outfile << psd[j] << " ";
-//        outfile << "\n";
-
-//        yInfo() << name << i << " ";
-//        for(int j=0; j<m.size(); j++)
-//            yInfo() << m[j].second;
-
         fftw_destroy_plan(p);
         fftw_free(in);
         fftw_free(out);
@@ -462,7 +439,7 @@ public:
         }
         else
         {
-  //          yWarning() << "PSD empty.." << skeletonIn[i]->getTag() << "stale?";
+            //          yWarning() << "PSD empty.." << skeletonIn[i]->getTag() << "stale?";
             return -1;
         }
 
