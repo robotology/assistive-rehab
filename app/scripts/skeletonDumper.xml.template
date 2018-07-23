@@ -19,7 +19,7 @@
     <connection>
         <from>/yarpOpenPose/image:o</from>
         <to>/skeletonDumper/skeletons-img</to>
-        <protocol>fast_tcp</protocol>
+        <protocol>mjpeg</protocol>
     </connection>
 
     <connection>

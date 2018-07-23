@@ -27,19 +27,17 @@
     <connection>
         <from>/yarpOpenPose/propag:o</from>
         <to>/human-structure/image:i</to>
-        <protocol>fast_tcp</protocol>
+        <protocol>mjpeg</protocol>
     </connection>
-
     <connection>
         <from>/human-structure/image:o</from>
         <to>/output</to>
-        <protocol>fast_tcp</protocol>
+        <protocol>mjpeg</protocol>
     </connection>
-
     <connection>
         <from>/yarpOpenPose/image:o</from>
         <to>/poses</to>
-        <protocol>fast_tcp</protocol>
+        <protocol>mjpeg</protocol>
     </connection>
 
 </application>

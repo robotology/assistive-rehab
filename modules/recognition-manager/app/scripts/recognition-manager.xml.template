@@ -44,7 +44,7 @@
     <connection>
         <from>/icub/camcalib/left/out</from>
         <to>/yarpOpenPose/image:i</to>
-        <protocol>fast_tcp</protocol>
+        <protocol>mjpeg</protocol>
     </connection>
     <connection>
         <from>/yarpOpenPose/target:o</from>
@@ -54,19 +54,19 @@
     <connection>
         <from>/yarpOpenPose/propag:o</from>
         <to>/human-structure/image:i</to>
-        <protocol>fast_tcp</protocol>
+        <protocol>mjpeg</protocol>
     </connection>
 
     <connection>
         <from>/human-structure/image:o</from>
         <to>/output</to>
-        <protocol>fast_tcp</protocol>
+        <protocol>mjpeg</protocol>
     </connection>
 
     <connection>
         <from>/yarpOpenPose/image:o</from>
         <to>/poses</to>
-        <protocol>fast_tcp</protocol>
+        <protocol>mjpeg</protocol>
     </connection>
 
     <connection>
@@ -117,12 +117,12 @@
     <connection>
         <from>/yarpOpenPose/propag:o</from>
         <to>/recognition-manager/image:i</to>
-        <protocol>fast_tcp</protocol>
+        <protocol>mjpeg</protocol>
     </connection>
     <connection>
         <from>/recognition-manager/image:o</from>
         <to>/imageOut</to>
-        <protocol>fast_tcp</protocol>
+        <protocol>mjpeg</protocol>
     </connection>
     <connection>
         <from>/recognition-manager/imgClassifier:o</from>

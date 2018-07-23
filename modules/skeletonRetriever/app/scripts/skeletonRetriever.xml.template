@@ -45,7 +45,7 @@
     <connection>
         <from>/depthCamera/rgbImage:o</from>
         <to>/yarpOpenPose/image:i</to>
-        <protocol>fast_tcp</protocol>
+        <protocol>mjpeg</protocol>
     </connection>
 
     <connection>
@@ -88,7 +88,7 @@
     <connection>
         <from>/yarpOpenPose/image:o</from>
         <to>/viewer/skeleton</to>
-        <protocol>fast_tcp</protocol>
+        <protocol>mjpeg</protocol>
     </connection>
 
     <connection>

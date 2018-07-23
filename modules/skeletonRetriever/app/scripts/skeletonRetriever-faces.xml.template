@@ -78,7 +78,7 @@
     <connection>
         <from>/depthCamera/rgbImage:o</from>
         <to>/yarpOpenPose/image:i</to>
-        <protocol>fast_tcp</protocol>
+        <protocol>mjpeg</protocol>
     </connection>
 
     <connection>
@@ -144,13 +144,13 @@
     <connection>
         <from>/yarpOpenPose/propag:o</from>
         <to>/human-structure/image:i</to>
-        <protocol>fast_tcp</protocol>
+        <protocol>mjpeg</protocol>
     </connection>
 
     <connection>
         <from>/yarpOpenPose/propag:o</from>
         <to>/recognition-manager/image:i</to>
-        <protocol>fast_tcp</protocol>
+        <protocol>mjpeg</protocol>
     </connection>
 
     <connection>
@@ -198,13 +198,13 @@
     <connection>
         <from>/yarpOpenPose/image:o</from>
         <to>/viewer/skeleton</to>
-        <protocol>fast_tcp</protocol>
+        <protocol>mjpeg</protocol>
     </connection>
 
     <connection>
         <from>/recognition-manager/image:o</from>
         <to>/viewer/faces</to>
-        <protocol>fast_tcp</protocol>
+        <protocol>mjpeg</protocol>
     </connection>
 
     <connection>
