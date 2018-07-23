@@ -41,6 +41,8 @@ public:
     virtual double getMax() const = 0;
     virtual double getMin() const = 0;
     virtual double getDuration() const = 0;
+    virtual int getNrep() const = 0;
+    virtual int getNenv() const = 0;
     virtual double getTempWin() const = 0;
     virtual double getThresh() const = 0;
     virtual Vector getCameraPos() const = 0;
@@ -59,6 +61,8 @@ class Rom : public Metric
     double min;
     double max;
     double duration;
+    int nrep;
+    int nenv;
     double tempwin;
     double threshold;
     Vector camerapos;
@@ -69,8 +73,8 @@ public:
     Rom();
     Rom(const string &name_, const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
         const string &tag_plane_, const double &range_plane_, const double &min_, const double &max_,
-        const double &duration_, const double &tempwin_, const double &threshold_,
-        const Vector &camerapos_, const Vector &focalpoint_,
+        const double &duration_, const int &nrep_, const int & nenv_, const double &tempwin_,
+        const double &threshold_, const Vector &camerapos_, const Vector &focalpoint_,
         const map<string, pair<string,double>> &keypoints2conf_);
 
     string getName() const { return name; }
@@ -82,6 +86,8 @@ public:
     double getMax() const { return max; }
     double getMin() const { return min; }
     double getDuration() const { return duration; }
+    int getNrep() const { return nrep; }
+    int getNenv() const { return nenv; }
     double getTempWin() const { return tempwin; }
     double getThresh() const { return threshold; }
     Vector getCameraPos() const { return camerapos; }

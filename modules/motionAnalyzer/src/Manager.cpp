@@ -26,9 +26,9 @@
 
 #include "matio.h"
 
-#define LOW 0.0
-#define MEDIUM 0.5
-#define HIGH 1.0
+//#define LOW 0.0
+//#define MEDIUM 0.5
+//#define HIGH 1.0
 
 using namespace std;
 using namespace yarp::os;
@@ -540,6 +540,8 @@ bool Manager::loadMotionList()
                                 double min = bMotion.find("min").asDouble();
                                 double max = bMotion.find("max").asDouble();
                                 double duration = bMotion.find("duration").asDouble();
+                                int nrep = bMotion.find("nrep").asInt();
+                                int nenv = bMotion.find("nenv").asInt();
                                 double tempwin = bMotion.find("tempwin").asDouble();
                                 double threshold = bMotion.find("threshold").asDouble();
                                 Vector camerapos;
@@ -727,8 +729,8 @@ bool Manager::loadMotionList()
                                     yError() << "Could not load ankle right configuration";
 
                                 metric_repertoire = new Rom(curr_tag, motion_type, tag_joint, ref_dir, tag_plane,
-                                                            range_plane, min, max, duration, tempwin, threshold,
-                                                            camerapos, focalpoint, keypoints2conf);
+                                                            range_plane, min, max, duration, nrep, nenv, tempwin,
+                                                            threshold, camerapos, focalpoint, keypoints2conf);
                             }
 
                             //add the current metric to the repertoire
@@ -772,22 +774,33 @@ double Manager::loadMetric(const string &metric_tag)
     processor = createProcessor(metric_tag, metric);
 
     //send commands to skeletonScaler
-    Bottle cmd, reply;
+    Bottle cmd,reply;
     cmd.addVocab(Vocab::encode("load"));
     string f = metric->getMotionType() + ".log";
     string context = rf->getContext();
     cmd.addString(f);
     cmd.addString(context);
-    scalerPort.write(cmd, reply);
+    scalerPort.write(cmd,reply);
 
-    Bottle cmd2, reply2;
+    Bottle cmd2,reply2;
     cmd2.addVocab(Vocab::encode("rot"));
     Vector cp = metric->getCameraPos();
     Vector fp = metric->getFocalPoint();
     cmd2.addList().read(cp);
     cmd2.addList().read(fp);
     yInfo() << cmd2.toString();
-    scalerPort.write(cmd2, reply2);
+    scalerPort.write(cmd2,reply2);
+
+//    //start skeletonScaler
+//    Bottle cmd4,reply4;
+//    cmd4.addVocab(Vocab::encode("run"));
+//    scalerPort.write(cmd4,reply4);
+
+    Bottle cmd3,reply3;
+    cmd3.addVocab(Vocab::encode("tagt"));
+    string tag_template = metric->getMotionType();
+    cmd3.addString(tag_template);
+    dtwPort.write(cmd3,reply3);
 
     if(metric!=NULL && reply.get(0).asVocab()==Vocab::encode("ok"))
         return metric->getDuration();
@@ -796,29 +809,13 @@ double Manager::loadMetric(const string &metric_tag)
 }
 
 /********************************************************/
-int getFirstUppercase(string str)
-{
-    for(int i=0; i<str.length(); i++)
-    {
-        if(isupper(str[i]))
-            return i;
-    }
-
-    return 0;
-}
-
 vector<string> Manager::listMetrics()
 {
     LockGuard lg(mutex);
 
     vector<string> reply;
     for (map<string,Metric*>::iterator it=motion_repertoire.begin(); it!=motion_repertoire.end(); it++)
-    {
-//        string jnt=it->second->getTagJoint();
-//        string part=jnt.substr(getFirstUppercase(jnt));
-//        reply.push_back(it->first+" "+it->second->getMotionType()+part);
         reply.push_back(it->first);
-    }
 
     return reply;
 }
@@ -836,8 +833,21 @@ bool Manager::selectSkel(const string &skel_tag)
     cmd.addVocab(Vocab::encode("tag"));
     cmd.addString(this->skel_tag);
     yInfo() << cmd.toString();
-
     scalerPort.write(cmd, reply);
+    dtwPort.write(cmd, reply);
+
+#if !__OPTIMIZE__
+    yInfo() << "Debugging";
+    {
+        double t1 = Time::now();
+        while( (Time::now()-t1) < 5.0 )
+        {
+            //do nothing
+            yInfo() << "Waiting to start";
+        }
+        return startDebug();
+    }
+#endif
 
     return true;
 }
@@ -957,6 +967,8 @@ bool Manager::start()
 {
     LockGuard lg(mutex);
 
+    yInfo() << "Start!";
+
     result_time.clear();
 
     bool out=false;
@@ -969,11 +981,48 @@ bool Manager::start()
 
     processor->setInitialConf(skel, metric->getInitialConf(),skeletonIn);
 
-    //start skeletonScaler
-    Bottle cmd, reply;
+    //start alignmentManager
+    Bottle cmd,reply;
     cmd.addVocab(Vocab::encode("run"));
-//    yInfo() << cmd.toString();
-    scalerPort.write(cmd, reply);
+    scalerPort.write(cmd,reply);
+    cmd.addInt(metric->getNrep());
+    cmd.addInt(metric->getNenv());
+    cmd.addDouble(metric->getDuration());
+    dtwPort.write(cmd,reply);
+    if(reply.get(0).asVocab()==Vocab::encode("ok"))
+    {
+        tstart_session = Time::now()-tstart;
+        starting = true;
+        return true;
+    }
+    return false;
+}
+
+/********************************************************/
+bool Manager::startDebug()
+{
+    yInfo() << "Start!";
+
+    result_time.clear();
+
+    bool out=false;
+    while(out==false)
+    {
+        getSkeleton();
+        out=skeletonIn.update_planes();
+        Time::yield();
+    }
+
+    processor->setInitialConf(skel, metric->getInitialConf(),skeletonIn);
+
+    //start alignmentManager
+    Bottle cmd,reply;
+    cmd.addVocab(Vocab::encode("run"));
+    scalerPort.write(cmd,reply);
+    cmd.addInt(metric->getNrep());
+    cmd.addInt(metric->getNenv());
+    cmd.addDouble(metric->getDuration());
+    dtwPort.write(cmd,reply);
     if(reply.get(0).asVocab()==Vocab::encode("ok"))
     {
         tstart_session = Time::now()-tstart;
@@ -991,7 +1040,8 @@ bool Manager::stop()
     //stop skeletonScaler
     Bottle cmd, reply;
     cmd.addVocab(Vocab::encode("stop"));
-    scalerPort.write(cmd, reply);
+    scalerPort.write(cmd,reply);
+    dtwPort.write(cmd,reply);
     yInfo() << reply.get(0).toString();
     if(reply.get(0).asVocab()==Vocab::encode("ok"))
     {
@@ -1306,14 +1356,19 @@ void Manager::getSkeleton()
                                     string tag=prop.find("tag").asString();
                                     if(!tag.empty())
                                     {
-                                        if (prop.check("tag") && tag==skel_tag)
+                                        if(prop.check("tag") && tag==skel_tag)
                                         {
                                             Skeleton* skeleton = skeleton_factory(prop);
                                             skeletonIn.update(skeleton->toProperty());
                                             if(skeleton->update_planes())
                                                 all_keypoints.push_back(skeletonIn.get_unordered());
                                             updated=true;
-
+                                            delete skeleton;
+                                        }
+                                        if(prop.check("tag") && tag=="aligned")
+                                        {
+                                            Skeleton* skeleton = skeleton_factory(prop);
+                                            templateSkeleton.update(skeleton->toProperty());
                                             delete skeleton;
                                         }
                                     }
@@ -1348,6 +1403,7 @@ bool Manager::configure(ResourceFinder &rf)
     opcPort.open(("/" + getName() + "/opc").c_str());
     scopePort.open(("/" + getName() + "/scope").c_str());
     scalerPort.open(("/" + getName() + "/scaler:cmd").c_str());
+    dtwPort.open(("/" + getName() + "/dtw:cmd").c_str());
     rpcPort.open(("/" + getName() + "/cmd").c_str());
     attach(rpcPort);
 
@@ -1357,14 +1413,8 @@ bool Manager::configure(ResourceFinder &rf)
     loadInitialConf();
     if(!loadMotionList())
         return false;
-//    loadSequence(sequencer_file);
 
-//    // Use MATIO to write the results in a .mat file
     out_folder = rf.getHomeContextPath();
-//    filename_report = rf.getHomeContextPath() + "/test_data_fdg.mat";
-//    matfp = Mat_CreateVer(filename_report.c_str(),NULL,MAT_FT_MAT73);
-//    if (matfp == NULL)
-//        yError() << "Error creating MAT file";
 
     tstart = Time::now();
 
@@ -1373,8 +1423,6 @@ bool Manager::configure(ResourceFinder &rf)
     starting = false;
 
     skel_tag="";
-
-    log_file.open("logfile.txt");
 
     for(int i=0; i<skeletonsInit.size(); i++)
         skeletonsInit[i]->print();
@@ -1388,6 +1436,7 @@ bool Manager::interruptModule()
     opcPort.interrupt();
     scopePort.interrupt();
     scalerPort.interrupt();
+    dtwPort.interrupt();
     rpcPort.interrupt();
     yInfo() << "Interrupted module";
 
@@ -1397,12 +1446,6 @@ bool Manager::interruptModule()
 /********************************************************/
 bool Manager::close()
 {
-//    yInfo() << "Writing to file";
-//    if(writeKeypointsToFile())
-//        yInfo() << "Keypoints saved to file" << filename_report.c_str();
-
-    log_file.close();
-
     delete metric_repertoire;
     delete metric;
     delete processor;
@@ -1424,6 +1467,7 @@ bool Manager::close()
     opcPort.close();
     scopePort.close();
     scalerPort.close();
+    dtwPort.close();
     rpcPort.close();
 
     yInfo() << "Closed ports";
@@ -1456,30 +1500,21 @@ bool Manager::updateModule()
                 //update time array
                 time_samples.push_back(Time::now()-tstart);
 
-                //        skeletonIn.print();
-                //skeletonIn.normalize();
+                processor->update(skeletonIn,templateSkeleton);
+//                vector< pair<string,vector<string>> > feedback = processor->getFeedback();
+//                for(int i=0; i<feedback.size();i++)
+//                    yWarning() << feedback[i].first << feedback[i].second[0] << feedback[i].second[1] << feedback[i].second[2];
+//                cout << "\n";
 
-                processor->update(skeletonIn);
-                if(processor->isDeviatingFromIntialPose())
-                {
-                    //                    yWarning() << "Deviating from initial pose\n";
-                }
+                processor->isDeviatingFromIntialPose();
 
                 Vector v1,plane_normal,ref_dir;
-
                 result = processor->computeMetric(v1,plane_normal,ref_dir,score_exercise);
-
                 all_planes.push_back(plane_normal);
-
-                log_file << yarp::os::Time::now()-tstart << " " << v1[0] << " " << v1[1] << " " << v1[2] << " "
-                         << plane_normal[0] << " " << plane_normal[1] << " " << plane_normal[2]
-                         << " " << ref_dir[0] << " " << ref_dir[1] << " " << ref_dir[2] << "\n";
 
                 result_time.push_back(result);
                 if((Time::now()-tstart)-tstart_session>metric->getTempWin())
                     result_time.pop_front();
-
-//                computeMetricDerivative();
 
                 //write on output port
                 Bottle &scopebottleout = scopePort.prepare();
@@ -1488,34 +1523,6 @@ bool Manager::updateModule()
                 scopebottleout.addDouble(metric->getMin());
                 scopebottleout.addDouble(metric->getMax());
                 scopePort.write();
-
-                //                tend_session = Time::now()-tstart;
-                //                if(tend_session-tstart_session > metric->getDuration())
-                //                    finishedSession = true;
-
-                //                if(finishedSession)
-                //                {
-                //                    // Use MATIO to write the results in a .mat file
-                //                    string filename_report = out_folder + "/user-" + skeletonIn.getTag() + "-" + metric->getMotionType() + "-" + to_string(nsession) + ".mat";
-                //                    mat_t *matfp = Mat_CreateVer(filename_report.c_str(),NULL,MAT_FT_MAT73);
-                //                    if (matfp == NULL)
-                //                        yError() << "Error creating MAT file";
-
-                //                    yInfo() << "Writing to file";
-                //                    if(writeKeypointsToFile(matfp))
-                //                    {
-                //                        time_samples.clear();
-                //                        all_keypoints.clear();
-                //                    }
-
-                //                    finishedSession = false;
-                //                    tstart_session = tend_session;
-
-                //                    nsession++;
-
-                //                    yInfo() << "Keypoints saved to file" << filename_report.c_str();
-                //                    Mat_Close(matfp);
-                //                }
             }
         }
         else

@@ -1,0 +1,182 @@
+<application>
+<name>Assistive Rehabilitation alignmentManager App</name>
+
+    <module>
+        <name>yarpdev</name>
+        <parameters>--context AssistiveRehab --from realsense2.ini</parameters>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpOpenPose</name>
+        <node>cuda-machine</node>
+    </module>
+
+    <module>
+       <name>objectsPropertiesCollector</name>
+       <parameters>--name opc --no-load-db --no-save-db --async-bc</parameters>
+       <node>localhost</node>
+    </module>
+
+   <module>
+       <name>skeletonRetriever</name>
+       <parameters></parameters>
+       <node>localhost</node>
+    </module>
+
+    <module>
+       <name>motionAnalyzer</name>
+       <parameters>--from motion-repertoire-rom12.ini</parameters>
+       <node>localhost</node>
+    </module>
+
+    <module>
+       <name>skeletonScaler</name>
+       <parameters>--twarp 1.0 --nsessions 1</parameters>
+       <node>localhost</node>
+    </module>
+
+    <module>
+       <name>skeletonPlayer</name>
+       <parameters></parameters>
+       <node>localhost</node>
+    </module>
+
+    <module>
+       <name>alignmentManager</name>
+       <parameters></parameters>
+       <node>localhost</node>
+    </module>
+
+   <module>
+       <name>yarpscope</name>
+       <parameters>--x 100 --y 400 --dx 1000 --dy 600 --context AssistiveRehab --xml motionAnalyzer-scope.xml</parameters>
+       <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpview</name>
+        <parameters>--name /viewer/depth --x 10 --y 40 --p 50 --compact</parameters>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpview</name>
+        <parameters>--name /viewer/skeleton --x 380 --y 40 --p 50 --compact</parameters>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>skeletonViewer</name>
+        <parameters>--x 1120 --y 10</parameters>
+        <node>localhost</node>
+    </module>
+
+    <connection>
+        <from>/depthCamera/rgbImage:o</from>
+        <to>/yarpOpenPose/image:i</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/depthCamera/depthImage:o</from>
+        <to>/yarpOpenPose/float:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/float:o</from>
+        <to>/skeletonRetriever/depth:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonRetriever/cam:rpc</from>
+        <to>/depthCamera/rpc:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/target:o</from>
+        <to>/skeletonRetriever/skeletons:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonRetriever/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/depthCamera/depthImage:o</from>
+        <to>/viewer/depth</to>
+        <protocol>fast_tcp+recv.portmonitor+type.dll+file.depthimage</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/image:o</from>
+        <to>/viewer/skeleton</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonRetriever/viewer:o</from>
+        <to>/skeletonViewer:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonPlayer/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonScaler/opc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/motionAnalyzer/opc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/motionAnalyzer/scaler:cmd</from>
+        <to>/skeletonScaler/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/motionAnalyzer/dtw:cmd</from>
+        <to>/alignmentManager/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonPlayer/viewer:o</from>
+        <to>/skeletonViewer:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonScaler/player:rpc</from>
+        <to>/skeletonPlayer/cmd:rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonScaler/viewer:rpc</from>
+        <to>/skeletonViewer:rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/alignmentManager/opc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+</application>
