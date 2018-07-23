@@ -75,11 +75,17 @@
     <connection>
         <from>/depthCamera/rgbImage:o</from>
         <to>/yarpOpenPose/image:i</to>
-        <protocol>fast_tcp</protocol>
+        <protocol>mjpeg</protocol>
     </connection>
 
     <connection>
         <from>/depthCamera/depthImage:o</from>
+        <to>/yarpOpenPose/float:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/float:o</from>
         <to>/skeletonRetriever/depth:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
@@ -87,19 +93,19 @@
     <connection>
         <from>/skeletonRetriever/cam:rpc</from>
         <to>/depthCamera/rpc:i</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/yarpOpenPose/target:o</from>
         <to>/skeletonRetriever/skeletons:i</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/skeletonRetriever/opc:rpc</from>
         <to>/opc/rpc</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
@@ -111,78 +117,66 @@
     <connection>
         <from>/yarpOpenPose/image:o</from>
         <to>/viewer/skeleton</to>
-        <protocol>fast_tcp</protocol>
+        <protocol>mjpeg</protocol>
     </connection>
 
     <connection>
         <from>/skeletonRetriever/viewer:o</from>
         <to>/skeletonViewer:i</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/skeletonPlayer/opc:rpc</from>
         <to>/opc/rpc</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/skeletonScaler/opc</from>
         <to>/opc/rpc</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/motionAnalyzer/opc</from>
         <to>/opc/rpc</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/motionAnalyzer/scaler:cmd</from>
         <to>/skeletonScaler/rpc</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/motionAnalyzer/dtw:cmd</from>
         <to>/alignmentManager/rpc</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/skeletonPlayer/viewer:o</from>
         <to>/skeletonViewer:i</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/skeletonScaler/player:rpc</from>
         <to>/skeletonPlayer/cmd:rpc</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/skeletonScaler/viewer:rpc</from>
         <to>/skeletonViewer:rpc</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/alignmentManager/opc</from>
         <to>/opc/rpc</to>
-        <protocol>tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/alignmentManager/player</from>
-        <to>/skeletonPlayer/cmd:rpc</to>
-        <protocol>tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/alignmentManager</from>
-        <to>/skeletonViewer:i</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 </application>

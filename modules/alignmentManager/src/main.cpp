@@ -32,7 +32,7 @@ private:
     //ports
     RpcServer rpcPort;
     RpcClient opcPort;
-    BufferedPort<Bottle> outPort,scopePort;
+    BufferedPort<Bottle> outPort;
 
     //parameters
     int win;
@@ -153,7 +153,6 @@ public:
 
         opcPort.open("/alignmentManager/opc");
         outPort.open("/alignmentManager:o");
-        scopePort.open("/alignmentManager/scope");
         rpcPort.open("/alignmentManager/rpc");
         attach(rpcPort);
 
@@ -166,7 +165,6 @@ public:
     {
         opcPort.interrupt();
         outPort.interrupt();
-        scopePort.interrupt();
         rpcPort.interrupt();
         yInfo() << "Interrupted module";
         return true;
@@ -176,7 +174,6 @@ public:
     {
         opcPort.close();
         outPort.close();
-        scopePort.close();
         rpcPort.close();
         yInfo() << "Closed ports";
         return true;
