@@ -4,12 +4,12 @@
     <module>
         <name>yarpdev</name>
         <parameters>--context AssistiveRehab --from realsense2.ini</parameters>
-        <node>r1-torso</node>
+        <node>r1-torso1</node>
     </module>
 
     <module>
         <name>yarpOpenPose</name>
-        <node>r1-torso</node>
+        <node>r1-torso1</node>
     </module>
 
     <module>
@@ -25,13 +25,13 @@
     <module>
         <name>linearClassifierModule</name>
         <parameters>--BufferSize 1 --CSVM 1.0 --databaseFolder faceDatabase --WeightedSVM 1</parameters>
-        <node>r1-torso</node>
+        <node>r1-torso1</node>
     </module>
 
     <module>
         <name>caffeCoder</name>
         <parameters>--from caffeCoder_resnet.ini</parameters>
-        <node>r1-torso</node>
+        <node>r1-torso1</node>
     </module>
 
     <module>

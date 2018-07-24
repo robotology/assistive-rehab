@@ -4,12 +4,12 @@
     <module>
         <name>yarpdev</name>
         <parameters>--context AssistiveRehab --from realsense2.ini</parameters>
-        <node>r1-torso</node>
+        <node>r1-torso1</node>
     </module>
 
     <module>
         <name>yarpOpenPose</name>
-        <node>r1-torso</node>
+        <node>r1-torso1</node>
     </module>
 
     <module>
