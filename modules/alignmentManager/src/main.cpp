@@ -240,9 +240,10 @@ public:
                     dtw=new Dtw(win);
 
                     //for each keypoint
+                    Bottle &out=outList.addList();
                     for(int i=0;i<skeletonIn.getNumKeyPoints();i++)
                     {
-                        Bottle &feedback=outList.addList();
+                        Bottle &feedback=out.addList();
                         feedback.addString(skeletonIn[i]->getTag());
 
                         //for each component (xyz)
@@ -275,6 +276,14 @@ public:
                             /********************************/
                             /*    Difference in position    */
                             /********************************/
+
+                            Bottle &fpos=feedback.addList();
+                            if(l%3==0) //x component
+                                fpos.addString("feed_pos_x");
+                            else if(l%3==1) //y component
+                                fpos.addString("feed_pos_y");
+                            else if(l%3==2) //z component
+                                fpos.addString("feed_pos_z");
                             if(d>dtw_thresh && ft!=-1 && fc!=-1)
                             {
                                 //evaluate error distribution
@@ -309,11 +318,13 @@ public:
 //                                else if(var>var_thresh)
 //                                    yWarning() << "move" << skeletonIn[i]->getTag() << "better!" << var << skwns;
 
-                                Bottle &fpos=feedback.addList();
-                                fpos.addString("feed_pos");
-                                fpos.addDouble(l);
                                 fpos.addDouble(var);
                                 fpos.addDouble(skwns);
+                            }
+                            else
+                            {
+                                fpos.addDouble(0.0);
+                                fpos.addDouble(0.0);
                             }
 
                             joint_template.clear();
@@ -355,19 +366,28 @@ public:
 
                                     Bottle &fspeed=feedback.addList();
                                     fspeed.addString("feed_speed");
-                                    fspeed.addDouble(ftv[imax]);
-                                    fspeed.addDouble(fcv[imax]);
+                                    fspeed.addInt(ftv[imax]);
+                                    fspeed.addInt(fcv[imax]);
                                 }
+                            }
+                            else
+                            {
+                                Bottle &fspeed=feedback.addList();
+                                fspeed.addString("feed_speed");
+                                fspeed.addInt(0);
+                                fspeed.addInt(0);
                             }
                         }
                     }
+
+                    yInfo() << "Sending feedback";
+                    outPort.write();
 
                     tstart=Time::now();
                     skeleton_template.clear();
                     skeleton_candidate.clear();
 
                     delete dtw;
-                    outPort.write();
                 }
             }
         }
