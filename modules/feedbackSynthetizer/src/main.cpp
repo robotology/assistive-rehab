@@ -37,7 +37,7 @@ class Feedback : public BufferedPort<Bottle>
     BufferedPort<Bottle> speechPort;
 
     double var_thresh,skwns_thresh;
-    int range_freq;
+    int range_static,range_freq;
     map<string,string> joint2bodypart;
     map<string,string> bodypart2verbal;
     map<string,pair<string,vector<string>>> speak_map;
@@ -46,11 +46,13 @@ public:
 
     /********************************************************/
     Feedback(const string &moduleName_, const string &context, const string &speak_file,
-             const double &var_thresh_, const double &skwns_thresh_, const int range_freq_)
+             const double &var_thresh_, const double &skwns_thresh_, const int range_static_,
+             const int range_freq_)
     {
         moduleName = moduleName_;
         var_thresh = var_thresh_;
         skwns_thresh = skwns_thresh_;
+        range_static = range_static_;
         range_freq = range_freq_;
 
         vector<string> body;
@@ -272,6 +274,7 @@ public:
 
             //we use this structure for providing a feedback
             assess(bodypart2feed);
+            cout << endl;
         }
 
     }
@@ -313,10 +316,10 @@ public:
             string bodypart = it.first;
             int ftemplate = it.second[6];
             int fcandidate = it.second[7];
-            if(ftemplate == 0)
+            if(ftemplate <= range_static)
             {
                 //error static joints
-                if(fcandidate != 0)
+                if(fcandidate > range_static)
                 {
                     err_static.push_back(bodypart2verbal[bodypart]);
                 }
@@ -452,7 +455,6 @@ public:
         }
 
         yWarning() << value;
-        cout << endl;
 
         Bottle &out = speechPort.prepare();
         out.clear();
@@ -481,9 +483,7 @@ public:
 class Module : public RFModule
 {
     Feedback *feedback;
-
-    double period,var_thresh,skwns_thresh;
-    int range_freq;
+    double period;
 
 public:
 
@@ -495,11 +495,12 @@ public:
 
         string speak_file=rf.check("speak-file",Value("speak-it")).asString();
         period = rf.check("period",Value(0.1)).asDouble();
-        var_thresh = rf.check("var_thresh",Value(0.5)).asDouble();
-        skwns_thresh = rf.check("skwns_thresh",Value(1.0)).asDouble();
-        range_freq = rf.check("range_freq",Value(2)).asInt();
+        double var_thresh = rf.check("var_thresh",Value(0.5)).asDouble();
+        double skwns_thresh = rf.check("skwns_thresh",Value(1.0)).asDouble();
+        int range_static = rf.check("range_static",Value(2)).asInt();
+        int range_freq = rf.check("range_freq",Value(2)).asInt();
 
-        feedback = new Feedback(moduleName,rf.getContext(),speak_file,var_thresh,skwns_thresh,range_freq);
+        feedback = new Feedback(moduleName,rf.getContext(),speak_file,var_thresh,skwns_thresh,range_static,range_freq);
         feedback->open();
 
         return true;
