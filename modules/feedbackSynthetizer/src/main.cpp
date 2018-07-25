@@ -39,7 +39,8 @@ class Feedback : public BufferedPort<Bottle>
     double var_thresh,skwns_thresh;
     int range_freq;
     map<string,string> joint2bodypart;
-    map<string,string> speak_map;
+    map<string,string> bodypart2verbal;
+    map<string,pair<string,vector<string>>> speak_map;
 
 public:
 
@@ -52,7 +53,9 @@ public:
         skwns_thresh = skwns_thresh_;
         range_freq = range_freq_;
 
-        if(!load_speak(context,speak_file))
+        vector<string> body;
+        body.clear();
+        if(!load_speak(context,speak_file,body))
         {
             string msg="Unable to locate file";
             msg+="\""+speak_file+"\"";
@@ -85,6 +88,14 @@ public:
 
         //head
         joint2bodypart[KeyPointTag::head]="head";
+
+        //translate body part to verbal string
+        bodypart2verbal["armLeft"]=body[0];
+        bodypart2verbal["armRight"]=body[1];
+        bodypart2verbal["legLeft"]=body[2];
+        bodypart2verbal["legRight"]=body[3];
+        bodypart2verbal["torso"]=body[4];
+        bodypart2verbal["head"]=body[5];
     }
 
     /********************************************************/
@@ -103,7 +114,7 @@ public:
     }
 
     /****************************************************************/
-    bool load_speak(const string &context, const string &speak_file)
+    bool load_speak(const string &context, const string &speak_file, vector<string> &body)
     {
         ResourceFinder rf_speak;
         rf_speak.setDefaultContext(context);
@@ -116,12 +127,19 @@ public:
             yError()<<"Unable to find group \"general\"";
             return false;
         }
-        if (!bGroup.check("num-sections"))
+        if (!bGroup.check("num-sections") || !bGroup.check("body"))
         {
-            yError()<<"Unable to find key \"num-sections\"";
+            yError()<<"Unable to find key \"num-sections\" and/or \"body\"";
             return false;
         }
-        int num_sections=bGroup.find("num-sections").asInt();
+
+        int num_sections = bGroup.find("num-sections").asInt();
+        Bottle *bBody = bGroup.find("body").asList();
+        for(int i=0; i<bBody->size(); i++)
+        {
+            body.push_back(bBody->get(i).asString());
+        }
+
         for (int i=0; i<num_sections; i++)
         {
             ostringstream section;
@@ -134,14 +152,22 @@ public:
                 yError()<<msg;
                 return false;
             }
-            if (!bSection.check("key") || !bSection.check("value"))
+            if (!bSection.check("key") || !bSection.check("value") || !bSection.check("feedback"))
             {
                 yError()<<"Unable to find key \"key\" and/or \"value\"";
                 return false;
             }
-            string key=bSection.find("key").asString();
-            string value=bSection.find("value").asString();
-            speak_map[key]=value;
+            string key = bSection.find("key").asString();
+            string value = bSection.find("value").asString();
+            Bottle *bFeedback = bSection.find("feedback").asList();
+            vector<string> feedb;
+            feedb.clear();
+            for(int i=0; i<bFeedback->size(); i++)
+            {
+                feedb.push_back(bFeedback->get(i).asString());
+            }
+
+            speak_map[key] = make_pair(value,feedb);
         }
 
         return true;
@@ -161,7 +187,6 @@ public:
                 if(Bottle *joint_list = feedb->get(i).asList())
                 {
                     string bp = joint2bodypart.at(joint_list->get(0).asString());
-//                    bodypart2feed[bp].resize(8);
                     if(Bottle *feed_pos_x = joint_list->get(1).asList())
                     {
                         if(bodypart2feed[bp].size() > 0)
@@ -273,7 +298,6 @@ public:
                  << " ( freq: " << ftemplate << " " << fcandidate << " )"
                  << endl;
         }
-        cout << endl;
     }
 
     /********************************************************/
@@ -294,7 +318,7 @@ public:
                 //error static joints
                 if(fcandidate != 0)
                 {
-                    err_static.push_back(bodypart);
+                    err_static.push_back(bodypart2verbal[bodypart]);
                 }
             }
             else
@@ -302,58 +326,58 @@ public:
                 //error position
                 double var_x = it.second[0];
                 double skwns_x = it.second[1];
-                if(var_x < var_thresh && skwns_x > 0.0)
+                if(var_x < var_thresh && skwns_x > skwns_thresh)
                 {
-                    err_pos.push_back(make_pair(bodypart,"a sinistra"));
+                    err_pos.push_back(make_pair(bodypart2verbal[bodypart],speak_map["position"].second[0]));
                 }
-                else if(var_x < var_thresh && skwns_x < 0.0)
+                else if(var_x < var_thresh && skwns_x < -skwns_thresh)
                 {
-                    err_pos.push_back(make_pair(bodypart,"a destra"));
+                    err_pos.push_back(make_pair(bodypart2verbal[bodypart],speak_map["position"].second[1]));
                 }
                 else if(var_x > var_thresh && fabs(skwns_x) < skwns_thresh)
                 {
-                    err_pos.push_back(make_pair(bodypart,"a sinistra e destra"));
+                    err_pos.push_back(make_pair(bodypart2verbal[bodypart],speak_map["position"].second[2]));
                 }
 
                 double var_y = it.second[2];
                 double skwns_y = it.second[3];
-                if(var_y < var_thresh && skwns_y > 0.0)
+                if(var_y < var_thresh && skwns_y > skwns_thresh)
                 {
-                    err_pos.push_back(make_pair(bodypart,"su"));
+                    err_pos.push_back(make_pair(bodypart2verbal[bodypart],speak_map["position"].second[3]));
                 }
-                else if(var_y < var_thresh && skwns_y < 0.0)
+                else if(var_y < var_thresh && skwns_y < -skwns_thresh)
                 {
-                    err_pos.push_back(make_pair(bodypart,"giu'"));
+                    err_pos.push_back(make_pair(bodypart2verbal[bodypart],speak_map["position"].second[4]));
                 }
                 else if(var_y > var_thresh && fabs(skwns_y) < skwns_thresh)
                 {
-                    err_pos.push_back(make_pair(bodypart,"su e giu'"));
+                    err_pos.push_back(make_pair(bodypart2verbal[bodypart],speak_map["position"].second[5]));
                 }
 
                 double var_z = it.second[4];
                 double skwns_z = it.second[5];
-                if(var_z < var_thresh && skwns_z > 0.0)
+                if(var_z < var_thresh && skwns_z > skwns_thresh)
                 {
-                    err_pos.push_back(make_pair(bodypart,"avanti"));
+                    err_pos.push_back(make_pair(bodypart2verbal[bodypart],speak_map["position"].second[6]));
                 }
-                else if(var_z < var_thresh && skwns_z < 0.0)
+                else if(var_z < var_thresh && skwns_z < -skwns_thresh)
                 {
-                    err_pos.push_back(make_pair(bodypart,"dietro"));
+                    err_pos.push_back(make_pair(bodypart2verbal[bodypart],speak_map["position"].second[7]));
                 }
                 else if(var_z > var_thresh && fabs(skwns_z) < skwns_thresh)
                 {
-                    err_pos.push_back(make_pair(bodypart,"avanti e dietro"));
+                    err_pos.push_back(make_pair(bodypart2verbal[bodypart],speak_map["position"].second[8]));
                 }
 
                 //error speed
                 int df = fcandidate-ftemplate;
                 if(df > range_freq)
                 {
-                    err_speed.push_back(make_pair(bodypart,"velocemente"));
+                    err_speed.push_back(make_pair(bodypart2verbal[bodypart],speak_map["speed"].second[0]));
                 }
                 else if(df < -range_freq)
                 {
-                    err_speed.push_back(make_pair(bodypart,"lentamente"));
+                    err_speed.push_back(make_pair(bodypart2verbal[bodypart],speak_map["speed"].second[1]));
                 }
             }
         }
@@ -406,7 +430,7 @@ public:
     /********************************************************/
     void speak(const string &key, const vector<SpeechParam> &p=vector<SpeechParam>())
     {
-        string value = speak_map.at(key);
+        string value = speak_map.at(key).first;
         if(p.size() > 0)
         {
             size_t pos1 = value.find("%");
@@ -427,7 +451,8 @@ public:
             }
         }
 
-        yInfo() << value;
+        yWarning() << value;
+        cout << endl;
 
         Bottle &out = speechPort.prepare();
         out.clear();
@@ -471,7 +496,7 @@ public:
         string speak_file=rf.check("speak-file",Value("speak-it")).asString();
         period = rf.check("period",Value(0.1)).asDouble();
         var_thresh = rf.check("var_thresh",Value(0.5)).asDouble();
-        skwns_thresh = rf.check("skwns_thresh",Value(0.5)).asDouble();
+        skwns_thresh = rf.check("skwns_thresh",Value(1.0)).asDouble();
         range_freq = rf.check("range_freq",Value(2)).asInt();
 
         feedback = new Feedback(moduleName,rf.getContext(),speak_file,var_thresh,skwns_thresh,range_freq);
