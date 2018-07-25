@@ -305,7 +305,7 @@ class Retriever : public RFModule
         vector<Vector> hips;
 
         Vector p;
-        for (int i=0; i<keys->size(); i++)
+        for (size_t i=0; i<keys->size(); i++)
         {
             if (Bottle *k=keys->get(i).asList())
             {
@@ -721,7 +721,7 @@ class Retriever : public RFModule
             {
                 // acquire skeletons with sufficient number of key-points
                 vector<shared_ptr<MetaSkeleton>> new_accepted_skeletons;
-                for (int i=0; i<b2->size(); i++)
+                for (size_t i=0; i<b2->size(); i++)
                 {
                     Bottle *b3=b2->get(i).asList();
                     if ((depth.width()>0) && (depth.height()>0) && (b3!=nullptr))
