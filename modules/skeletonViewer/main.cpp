@@ -504,6 +504,17 @@ class Viewer : public RFModule
         int h=rf.check("h",Value(600)).asInt();
         double gc_period=rf.check("gc-period",Value(1.0)).asDouble();
 
+        vector<double> bg_color={0.1,0.2,0.2};
+        if (rf.check("bg-color"))
+        {
+            if (const Bottle *ptr=rf.find("bg-color").asList())
+            {
+                size_t len=std::min(bg_color.size(),ptr->size());
+                for (size_t i=0; i<len; i++)
+                    bg_color[i]=ptr->get(i).asDouble();
+            }
+        }
+
         inputPort.open("/skeletonViewer:i");
         rpcPort.open("/skeletonViewer:rpc");
         attach(rpcPort);
@@ -518,7 +529,7 @@ class Viewer : public RFModule
         vtk_renderWindow->AddRenderer(vtk_renderer);
         vtk_renderWindowInteractor=vtkSmartPointer<vtkRenderWindowInteractor>::New();
         vtk_renderWindowInteractor->SetRenderWindow(vtk_renderWindow);
-        vtk_renderer->SetBackground(0.1,0.2,0.2);
+        vtk_renderer->SetBackground(bg_color.data());
 
         vtk_axes=vtkSmartPointer<vtkAxesActor>::New();
         vtk_axes->GetXAxisCaptionActor2D()->GetTextActor()->SetTextScaleModeToNone();
