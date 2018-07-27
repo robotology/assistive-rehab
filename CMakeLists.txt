@@ -61,7 +61,7 @@ include(AddUninstallTarget)
 add_subdirectory(modules)
 
 if(BUILD_TESTING)
-    add_subdirectory(test)
+    add_subdirectory(tests)
 endif()
 
 file(GLOB ini app/conf/*.ini)
