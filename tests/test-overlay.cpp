@@ -6,7 +6,7 @@
  ******************************************************************************/
 
 /**
- * @file test-depth-overlay.cpp
+ * @file test-overlay.cpp
  * @authors: Ugo Pattacini <ugo.pattacini@iit.it>
  */
 
@@ -27,7 +27,8 @@ using namespace assistive_rehab;
 
 class Overlayer : public RFModule
 {
-    BufferedPort<ImageOf<PixelFloat>> depthPort;
+    BufferedPort<ImageOf<PixelFloat>> depthPortIn;
+    BufferedPort<ImageOf<PixelFloat>> depthPortOut;
     BufferedPort<ImageOf<PixelRgb>>   rgbPort;
     BufferedPort<Bottle>              keysPort;
     BufferedPort<ImageOf<PixelRgb>>   ovlPort;
@@ -100,10 +101,11 @@ class Overlayer : public RFModule
         alpha=rf.check("alpha",Value(0.5)).asDouble();
         beta=rf.check("beta",Value(0.5)).asDouble();
 
-        depthPort.open("/test-depth-overlay/depth:i");
-        rgbPort.open("/test-depth-overlay/rgb:i");
-        keysPort.open("/test-depth-overlay/keys:i");
-        ovlPort.open("/test-depth-overlay/rgb:o");
+        depthPortIn.open("/test-overlay/depth:i");
+        depthPortOut.open("/test-overlay/depth:o");
+        rgbPort.open("/test-overlay/rgb:i");
+        keysPort.open("/test-overlay/keys:i");
+        ovlPort.open("/test-overlay/rgb:o");
 
         return true;
     }
@@ -115,11 +117,13 @@ class Overlayer : public RFModule
 
     bool updateModule() override
     {
-        if (ImageOf<PixelFloat> *depth=depthPort.read(false))
+        if (ImageOf<PixelFloat> *depthIn=depthPortIn.read(false))
         {
-            filterDepth(*depth,*depth,filter_depth_kernel_size,filter_depth_iterations,
+            ImageOf<PixelFloat> &depthOut=depthPortOut.prepare();
+            filterDepth(*depthIn,depthOut,filter_depth_kernel_size,filter_depth_iterations,
                         filter_depth_min_dist,filter_depth_max_dist);
-            greenify(*depth);
+            greenify(depthOut);
+            depthPortOut.writeStrict();
         }
 
         if (ImageOf<PixelRgb> *rgb=rgbPort.read(false))
@@ -152,7 +156,8 @@ class Overlayer : public RFModule
 
     bool close() override
     {
-        depthPort.close();
+        depthPortIn.close();
+        depthPortOut.close();
         rgbPort.close();
         keysPort.close();
         ovlPort.close();
