@@ -132,8 +132,7 @@ public:
             int nrep = command.get(1).asInt();
             int nenv = command.get(2).asInt();
             double duration = command.get(3).asDouble();
-//            T = nenv*(duration/nrep);
-            T = 12.0;
+            T = nenv*(duration/nrep);
             yInfo() << "Check every" << T << "seconds";
 
             tstart = Time::now();
@@ -154,7 +153,7 @@ public:
         win = rf.check("win",Value(-1)).asDouble();
         period = rf.check("period",Value(0.01)).asDouble();
         dtw_thresh = rf.check("dtw_thresh",Value(0.10)).asDouble();
-        psd_noise = rf.check("psd_noise",Value(500.0)).asDouble();
+        psd_noise = rf.check("psd_noise",Value(1000.0)).asDouble();
         filter_order = rf.check("filter_order",Value(3)).asInt();
 
         opcPort.open("/alignmentManager/opc");
@@ -321,10 +320,11 @@ public:
                                 {
                                     errpos[k] = warped_candidate[k]-warped_template[k];
                                 }
-                                double var = gsl_stats_variance(errpos,1,warped_template.size());
+//                                double std = gsl_stats_sd(errpos,1,warped_template.size());
+                                double kurt = gsl_stats_kurtosis(errpos,1,warped_template.size());
                                 double skwns = gsl_stats_skew(errpos,1,warped_template.size());
 
-                                fout.addDouble(var);
+                                fout.addDouble(kurt);
                                 fout.addDouble(skwns);
 
                                 fout.addString("feed_speed");
@@ -493,6 +493,15 @@ public:
         outfile << name << " ";
         for(int j=0; j<n; j++)
             outfile << filtered_psd[j][0] << " ";
+        outfile << "\n";
+
+        double errpos[warped_template.size()];
+        outfile << name << " ";
+        for(int k=0; k<warped_template.size(); k++)
+        {
+            errpos[k] = warped_candidate[k]-warped_template[k];
+            outfile << errpos[k] << " ";
+        }
         outfile << "\n";
 
         fftw_destroy_plan(p);
