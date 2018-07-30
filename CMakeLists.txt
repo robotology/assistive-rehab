@@ -18,6 +18,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 find_package(YARP REQUIRED)
 find_package(ICUB REQUIRED)
 find_package(ICUBcontrib REQUIRED)
+find_package(OpenCV REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})
 list(APPEND CMAKE_MODULE_PATH ${ICUBCONTRIB_MODULE_PATH})
 
@@ -29,7 +30,7 @@ option(BUILD_TESTING "Create tests using CMake" OFF)
 option(ENABLE_RPATH "Enable RPATH for this library" ON)
 
 if(BUILD_TESTING)
-    enable_testing()
+  enable_testing()
 endif()
 
 mark_as_advanced(ENABLE_RPATH)
@@ -41,8 +42,8 @@ add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BIND
 
 if(NOT CMAKE_CONFIGURATION_TYPES)
   if(NOT CMAKE_BUILD_TYPE)
-      message(STATUS "Setting build type to 'Release' as none was specified.")
-      set_property(CACHE CMAKE_BUILD_TYPE PROPERTY VALUE "Release")
+    message(STATUS "Setting build type to 'Release' as none was specified.")
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY VALUE "Release")
   endif()
 endif()
 
@@ -61,7 +62,7 @@ include(AddUninstallTarget)
 add_subdirectory(modules)
 
 if(BUILD_TESTING)
-    add_subdirectory(tests)
+  add_subdirectory(tests)
 endif()
 
 file(GLOB ini app/conf/*.ini)
@@ -79,4 +80,3 @@ add_custom_command(TARGET copy_sh_in_build POST_BUILD
                    COMMAND ${CMAKE_COMMAND} -E copy ${sh} ${CMAKE_BINARY_DIR}/bin/${CMAKE_CFG_INTDIR}
                    COMMENT "Copying ${sh} to ${CMAKE_BINARY_DIR}/bin/${CMAKE_CFG_INTDIR}/")
 install(PROGRAMS ${sh} DESTINATION bin)
-

@@ -26,6 +26,7 @@
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
 #include <iCub/ctrl/filters.h>
+#include "AssistiveRehab/helpers.h"
 #include "AssistiveRehab/skeleton.h"
 #include "nlp.h"
 
@@ -233,6 +234,13 @@ class Retriever : public RFModule
     int keys_acceptable_misses;
     int tracking_threshold;
     double time_to_live;
+
+    bool depth_enable;
+    int depth_kernel_size;
+    int depth_iterations;
+    float depth_min_distance;
+    float depth_max_distance;
+
     int filter_keypoint_order;
     int filter_limblength_order;
     bool optimize_limblength;
@@ -630,6 +638,11 @@ class Retriever : public RFModule
         keys_acceptable_misses=5;
         tracking_threshold=50;
         time_to_live=1.0;
+        depth_enable=true;
+        depth_kernel_size=4;
+        depth_iterations=3;
+        depth_min_distance=1.0;
+        depth_max_distance=4.0;
         filter_keypoint_order=3;
         filter_limblength_order=40;
         optimize_limblength=false;
@@ -649,6 +662,16 @@ class Retriever : public RFModule
             keys_acceptable_misses=gSkeleton.check("keys-acceptable-misses",Value(keys_acceptable_misses)).asInt();
             tracking_threshold=gSkeleton.check("tracking-threshold",Value(tracking_threshold)).asInt();
             time_to_live=gSkeleton.check("time-to-live",Value(time_to_live)).asDouble();
+        }
+
+        Bottle &gDepth=rf.findGroup("depth");
+        if (!gDepth.isNull())
+        {
+            depth_enable=gDepth.check("enable",Value(depth_enable)).asBool();
+            depth_kernel_size=gDepth.check("kernel-size",Value(depth_kernel_size)).asInt();
+            depth_iterations=gDepth.check("iterations",Value(depth_iterations)).asInt();
+            depth_min_distance=(float)gDepth.check("min-distance",Value(depth_min_distance)).asDouble();
+            depth_max_distance=(float)gDepth.check("max-distance",Value(depth_max_distance)).asDouble();
         }
 
         Bottle &gFiltering=rf.findGroup("filtering");
@@ -703,7 +726,15 @@ class Retriever : public RFModule
 
         if (ImageOf<PixelFloat> *depth=depthPort.read(false))
         {
-            this->depth=*depth;
+            if (depth_enable)
+            {
+                filterDepth(*depth,this->depth,depth_kernel_size,depth_iterations,
+                            depth_min_distance,depth_max_distance);
+            }
+            else
+            {
+                this->depth=*depth;
+            }
         }
 
         if (!camera_configured)
