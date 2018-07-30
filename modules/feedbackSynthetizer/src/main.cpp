@@ -23,6 +23,16 @@ using namespace yarp::os;
 using namespace yarp::sig;
 using namespace assistive_rehab;
 
+namespace BodyPartTag
+{
+const string arm_left = "armLeft";
+const string arm_right = "armRight";
+const string leg_left = "legLeft";
+const string leg_right = "leftRight";
+const string head = "head";
+const string torso = "torso";
+}
+
 /****************************************************************/
 class FeedbackParam
 {
@@ -94,6 +104,7 @@ class Feedback : public BufferedPort<Bottle>
     map<string,string> bodypart2verbal;
     map<string,pair<string,vector<string>>> speak_map;
     int idtw,ivar,iskwns,ift,ifc;
+    int maxlevel;
     map<string,pair<int,string>> xyz2hierarchy; //from xyz component to the level of the hierarchy
 
 public:
@@ -119,31 +130,31 @@ public:
         }
 
         //left arm
-        joint2bodypart[KeyPointTag::shoulder_left]="armLeft";
-        joint2bodypart[KeyPointTag::elbow_left]="armLeft";
-        joint2bodypart[KeyPointTag::hand_left]="armLeft";
+        joint2bodypart[KeyPointTag::shoulder_left]=BodyPartTag::arm_left;
+        joint2bodypart[KeyPointTag::elbow_left]=BodyPartTag::arm_left;
+        joint2bodypart[KeyPointTag::hand_left]=BodyPartTag::arm_left;
 
         //right arm
-        joint2bodypart[KeyPointTag::shoulder_right]="armRight";
-        joint2bodypart[KeyPointTag::elbow_right]="armRight";
-        joint2bodypart[KeyPointTag::hand_right]="armRight";
+        joint2bodypart[KeyPointTag::shoulder_right]=BodyPartTag::arm_right;
+        joint2bodypart[KeyPointTag::elbow_right]=BodyPartTag::arm_right;
+        joint2bodypart[KeyPointTag::hand_right]=BodyPartTag::arm_right;
 
         //left leg
-        joint2bodypart[KeyPointTag::hip_left]="legLeft";
-        joint2bodypart[KeyPointTag::knee_left]="legLeft";
-        joint2bodypart[KeyPointTag::ankle_left]="legLeft";
+        joint2bodypart[KeyPointTag::hip_left]=BodyPartTag::leg_left;
+        joint2bodypart[KeyPointTag::knee_left]=BodyPartTag::leg_left;
+        joint2bodypart[KeyPointTag::ankle_left]=BodyPartTag::leg_left;
 
         //right leg
-        joint2bodypart[KeyPointTag::hip_right]="legRight";
-        joint2bodypart[KeyPointTag::knee_right]="legRight";
-        joint2bodypart[KeyPointTag::ankle_right]="legRight";
+        joint2bodypart[KeyPointTag::hip_right]=BodyPartTag::leg_right;
+        joint2bodypart[KeyPointTag::knee_right]=BodyPartTag::leg_right;
+        joint2bodypart[KeyPointTag::ankle_right]=BodyPartTag::leg_right;
 
         //torso
-        joint2bodypart[KeyPointTag::shoulder_center]="torso";
-        joint2bodypart[KeyPointTag::hip_center]="torso";
+        joint2bodypart[KeyPointTag::shoulder_center]=BodyPartTag::torso;
+        joint2bodypart[KeyPointTag::hip_center]=BodyPartTag::torso;
 
         //head
-        joint2bodypart[KeyPointTag::head]="head";
+        joint2bodypart[KeyPointTag::head]=BodyPartTag::head;
 
         //translate body part to verbal string
         bodypart2verbal["armLeft"]=body[0];
@@ -158,6 +169,8 @@ public:
         iskwns = 3;
         ift = 5;
         ifc = 6;
+
+        maxlevel = 4;
     }
 
     /********************************************************/
@@ -286,7 +299,6 @@ public:
             bodypart2feedback.clear();
 
             //initialize structure
-            int maxlevel = 4;
             Vector init;
             init.clear();
             init.push_back(maxlevel);
@@ -298,6 +310,7 @@ public:
             bodypart2feedback["torso"] = make_pair(init,"");
             bodypart2feedback["head"] = make_pair(init,"");
 
+            //we find the minimum level associated to each body part
             for(auto &it: xyz2hierarchy)
             {
                 string bp = joint2bodypart[it.first];
@@ -332,7 +345,7 @@ public:
                     yInfo() << it.first << it.second.first[0] << it.second.first[1] << it.second.second;
             }
 
-            int fin_level = 3;
+            int fin_level = maxlevel;
             for(auto &it: bodypart2feedback)
             {
                 int level = it.second.first[0];
@@ -342,6 +355,7 @@ public:
                 }
             }
 
+            //we finally have the list of body parts that have to be adjusted and the relative feedback
             vector<string> bp,finalf;
             bp.clear();
             finalf.clear();
@@ -383,7 +397,7 @@ public:
             vector<SpeechParam> params;
             switch (fin_level)
             {
-            case 0:
+            case 0: //static joints moving or dynamic joints not moving
                 for(size_t i=0; i<bp.size(); i++)
                 {
                     params.clear();
@@ -395,7 +409,7 @@ public:
                 }
                 break;
 
-            case 1:
+            case 1: //error in position
                 for(size_t i=0; i<bp.size(); i++)
                 {
                     params.clear();
@@ -405,7 +419,7 @@ public:
                 }
                 break;
 
-            case 2:
+            case 2: //error in speed
                 for(size_t i=0; i<bp.size(); i++)
                 {
                     params.clear();
@@ -415,11 +429,11 @@ public:
                 }
                 break;
 
-            case 3:
+            case 3: //no error
                 speak("perfect");
                 break;
 
-            case 4:
+            case 4: //wrong movement
                 speak("wrong");
                 break;
             }
