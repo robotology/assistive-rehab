@@ -28,7 +28,7 @@ namespace BodyPartTag
 const string arm_left = "armLeft";
 const string arm_right = "armRight";
 const string leg_left = "legLeft";
-const string leg_right = "leftRight";
+const string leg_right = "legRight";
 const string head = "head";
 const string torso = "torso";
 }
