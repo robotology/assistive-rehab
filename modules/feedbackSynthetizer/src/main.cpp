@@ -110,7 +110,6 @@ class Feedback : public BufferedPort<Bottle>
     map<string,pair<string,vector<string>>> speak_map;
     int idtw,ivar,iskwns,ift,ifc;
     int maxlevel;
-    map<string,pair<int,string>> xyz2hierarchy; //from xyz component to the level of the hierarchy
 
 public:
 
@@ -258,6 +257,9 @@ public:
     {
         if(Bottle *feedb = data.get(0).asList())
         {
+
+            map<string,pair<int,string>> xyz2hierarchy;
+            xyz2hierarchy.clear(); 
             for(size_t i=0; i<feedb->size(); i++)
             {
                 //we read feedback from the input port and create the object fj
@@ -300,49 +302,50 @@ public:
             //this structure associates to each body part a pair that contains:
             //a vector: the level of priority and the number of joints with the minimum level of priority
             //a string: the verbal feedback for that level of priority
-            map<string,pair<Vector,string>> bodypart2feedback;
+            map<string,pair<vector<int>,string>> bodypart2feedback;
             bodypart2feedback.clear();
 
             //initialize structure
-            Vector init;
+            vector<int> init;
             init.clear();
             init.push_back(maxlevel);
             init.push_back(0);
-            bodypart2feedback["armLeft"] = make_pair(init,"");
-            bodypart2feedback["armRight"] = make_pair(init,"");
-            bodypart2feedback["legLeft"] = make_pair(init,"");
-            bodypart2feedback["legRight"] = make_pair(init,"");
-            bodypart2feedback["torso"] = make_pair(init,"");
-            bodypart2feedback["head"] = make_pair(init,"");
+            bodypart2feedback[BodyPartTag::arm_left] = make_pair(init,"");
+            bodypart2feedback[BodyPartTag::arm_right] = make_pair(init,"");
+            bodypart2feedback[BodyPartTag::leg_left] = make_pair(init,"");
+            bodypart2feedback[BodyPartTag::leg_right] = make_pair(init,"");
+            bodypart2feedback[BodyPartTag::torso] = make_pair(init,"");
+            bodypart2feedback[BodyPartTag::head] = make_pair(init,"");
 
             //we find the minimum level associated to each body part
-            //and we count how many joints of that body part are at that level
             for(auto &it: xyz2hierarchy)
             {
                 string bp = joint2bodypart[it.first];
                 string ftot = it.second.second;
                 int h = it.second.first;
-                if(bodypart2feedback[bp].first[0] == maxlevel)
+                if(h <= bodypart2feedback[bp].first[0])
                 {
-                    Vector t;
+                    vector<int> t;
                     t.clear();
                     t.push_back(h);
-                    t.push_back(1);
+                    t.push_back(0);
                     bodypart2feedback[bp] = make_pair(t,ftot);
                 }
-                else
-                {
-                    if(h <= bodypart2feedback[bp].first[0])
-                    {
-                        int count = bodypart2feedback[bp].first[1]+1;
-                        Vector t;
-                        t.clear();
-                        t.push_back(h);
-                        t.push_back(count);
-                        bodypart2feedback[bp] = make_pair(t,ftot);
-                    }
-                }
             }
+
+            //and we count how many joints of that body part are at that level
+            for(auto &it: xyz2hierarchy)
+            {
+                string jnt = it.first;
+                int jnt_level = it.second.first;
+                string bp = joint2bodypart[jnt];
+                int min_level = bodypart2feedback[bp].first[0];
+                if(jnt_level == min_level)
+                {
+                     int count = bodypart2feedback[bp].first[1]+1;
+                     bodypart2feedback[bp].first[1] = count;               
+                }                                             
+            }              
 
             int fin_level = maxlevel;
             for(auto &it: bodypart2feedback)
@@ -373,8 +376,8 @@ public:
                     if(level == 0)
                     {
                         //if static joints are moving, at least two of them have two move to provide the feedback "static"
-                        if(it.second.second == "static")
-                        {
+                        //if(it.second.second == "static")
+                        //{
                             if(njnts >= 2)
                             {
                                 bp.push_back(bodypart2verbal[it.first]);
@@ -382,12 +385,12 @@ public:
                             }
                             else
                                 fin_level = maxlevel;
-                        }
-                        else
-                        {
-                            bp.push_back(bodypart2verbal[it.first]);
-                            finalf.push_back(it.second.second);
-                        }
+                        //}
+                        //else
+                        //{
+                        //    bp.push_back(bodypart2verbal[it.first]);
+                        //    finalf.push_back(it.second.second);
+                        //}
                     }
                     //otherwise it's likely that the exercise is being performed wrongly ==> feedback = "wrong"
                     else

@@ -840,7 +840,7 @@ bool Manager::selectSkel(const string &skel_tag)
     yInfo() << "Debugging";
     {
         double t1 = Time::now();
-        while( (Time::now()-t1) < 5.0 )
+        while( (Time::now()-t1) < 15.0 )
         {
             //do nothing
             yInfo() << "Waiting to start";
