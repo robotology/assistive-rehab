@@ -383,8 +383,8 @@ public:
                                 bp.push_back(bodypart2verbal[it.first]);
                                 finalf.push_back(it.second.second);
                             }
-                            else
-                                fin_level = maxlevel;
+                        //    else
+                        //        fin_level = maxlevel;
                         //}
                         //else
                         //{
