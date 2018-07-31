@@ -334,6 +334,7 @@ public:
             }
 
             //and we count how many joints of that body part are at that level
+            int fin_level = maxlevel;
             for(auto &it: xyz2hierarchy)
             {
                 string jnt = it.first;
@@ -344,18 +345,20 @@ public:
                 {
                      int count = bodypart2feedback[bp].first[1]+1;
                      bodypart2feedback[bp].first[1] = count;               
-                }                                             
+                }
+                if(min_level < fin_level)
+                    fin_level = min_level;
             }              
 
-            int fin_level = maxlevel;
-            for(auto &it: bodypart2feedback)
-            {
-                int level = it.second.first[0];
-                if(level < fin_level)
-                {
-                    fin_level = level;
-                }
-            }
+//            int fin_level = maxlevel;
+//            for(auto &it: bodypart2feedback)
+//            {
+//                int level = it.second.first[0];
+//                if(level < fin_level)
+//                {
+//                    fin_level = level;
+//                }
+//            }
 
             for(auto &it: bodypart2feedback)
             {
@@ -370,19 +373,19 @@ public:
             for(auto &it: bodypart2feedback)
             {
                 int level = it.second.first[0];
-                int njnts = it.second.first[1];
+                //int njnts = it.second.first[1];
                 if(level == fin_level)
                 {
-                    if(level == 0)
-                    {
+                    //if(level == 0)
+                    //{
                         //if static joints are moving, at least two of them have two move to provide the feedback "static"
                         //if(it.second.second == "static")
                         //{
-                            if(njnts >= 2)
-                            {
-                                bp.push_back(bodypart2verbal[it.first]);
-                                finalf.push_back(it.second.second);
-                            }
+                        //    if(njnts >= 2)
+                        //    {
+                        //        bp.push_back(bodypart2verbal[it.first]);
+                        //        finalf.push_back(it.second.second);
+                        //    }
                         //    else
                         //        fin_level = maxlevel;
                         //}
@@ -391,13 +394,13 @@ public:
                         //    bp.push_back(bodypart2verbal[it.first]);
                         //    finalf.push_back(it.second.second);
                         //}
-                    }
+                    //}
                     //otherwise it's likely that the exercise is being performed wrongly ==> feedback = "wrong"
-                    else
-                    {
+                    //else
+                    //{
                         bp.push_back(bodypart2verbal[it.first]);
                         finalf.push_back(it.second.second);
-                    }
+                    //}
                 }
             }
 
