@@ -103,24 +103,22 @@ class Feedback : public BufferedPort<Bottle>
     string moduleName;
     BufferedPort<Bottle> speechPort;
 
-    double var_thresh,skwns_thresh;
+    double kurt_thresh,skwns_thresh;
     int range_static,range_freq;
     map<string,string> joint2bodypart;
     map<string,string> bodypart2verbal;
     map<string,pair<string,vector<string>>> speak_map;
-    int idtw,ivar,iskwns,ift,ifc;
+    int idtw,ikurt,iskwns,ift,ifc;
     int maxlevel;
 
 public:
 
     /********************************************************/
     Feedback(const string &moduleName_, const string &context, const string &speak_file,
-             const double &var_thresh_, const double &skwns_thresh_, const int range_static_,
-             const int range_freq_)
+             const double &kurt_thresh_, const int range_static_, const int range_freq_)
     {
         moduleName = moduleName_;
-        var_thresh = var_thresh_;
-        skwns_thresh = skwns_thresh_;
+        kurt_thresh = kurt_thresh_;
         range_static = range_static_;
         range_freq = range_freq_;
 
@@ -169,7 +167,7 @@ public:
         bodypart2verbal[BodyPartTag::head]=body[5];
 
         idtw = 1;
-        ivar = 2;
+        ikurt = 2;
         iskwns = 3;
         ift = 5;
         ifc = 6;
@@ -257,7 +255,6 @@ public:
     {
         if(Bottle *feedb = data.get(0).asList())
         {
-
             map<string,pair<int,string>> xyz2hierarchy;
             xyz2hierarchy.clear(); 
             for(size_t i=0; i<feedb->size(); i++)
@@ -271,28 +268,28 @@ public:
                     fj.setName(joint);
                     if(Bottle *feed_x = joint_list->get(1).asList())
                     {
-                        fj.update(0,feed_x->get(ivar).asDouble(),feed_x->get(iskwns).asDouble(),
+                        fj.update(0,feed_x->get(ikurt).asDouble(),feed_x->get(iskwns).asDouble(),
                                   feed_x->get(ift).asInt(),feed_x->get(ifc).asInt());
                     }
                     if(Bottle *feed_y = joint_list->get(2).asList())
                     {
-                        fj.update(1,feed_y->get(ivar).asDouble(),feed_y->get(iskwns).asDouble(),
+                        fj.update(1,feed_y->get(ikurt).asDouble(),feed_y->get(iskwns).asDouble(),
                                   feed_y->get(ift).asInt(),feed_y->get(ifc).asInt());
                     }
                     if(Bottle *feed_z = joint_list->get(3).asList())
                     {
-                        fj.update(2,feed_z->get(ivar).asDouble(),feed_z->get(iskwns).asDouble(),
+                        fj.update(2,feed_z->get(ikurt).asDouble(),feed_z->get(iskwns).asDouble(),
                                   feed_z->get(ift).asInt(),feed_z->get(ifc).asInt());
                     }
 
                     //FIRST LEVEL OF INTEGRATION
                     //from xyz to a level of priority for the single joint
                     pair<int,string> feed_jnt = assess(fj);
-                    if(feed_jnt.first != 3)
-                    {
+//                    if(feed_jnt.first != 3)
+//                    {
                         yInfo() << fj.getName() << feed_jnt.first << feed_jnt.second;
                         fj.print();
-                    }
+//                    }
                     xyz2hierarchy[fj.getName()] = feed_jnt;
                 }
             }
@@ -350,16 +347,6 @@ public:
                     fin_level = min_level;
             }              
 
-//            int fin_level = maxlevel;
-//            for(auto &it: bodypart2feedback)
-//            {
-//                int level = it.second.first[0];
-//                if(level < fin_level)
-//                {
-//                    fin_level = level;
-//                }
-//            }
-
             for(auto &it: bodypart2feedback)
             {
                 if(it.second.first[0] != 3)
@@ -373,34 +360,10 @@ public:
             for(auto &it: bodypart2feedback)
             {
                 int level = it.second.first[0];
-                //int njnts = it.second.first[1];
                 if(level == fin_level)
                 {
-                    //if(level == 0)
-                    //{
-                        //if static joints are moving, at least two of them have two move to provide the feedback "static"
-                        //if(it.second.second == "static")
-                        //{
-                        //    if(njnts >= 2)
-                        //    {
-                        //        bp.push_back(bodypart2verbal[it.first]);
-                        //        finalf.push_back(it.second.second);
-                        //    }
-                        //    else
-                        //        fin_level = maxlevel;
-                        //}
-                        //else
-                        //{
-                        //    bp.push_back(bodypart2verbal[it.first]);
-                        //    finalf.push_back(it.second.second);
-                        //}
-                    //}
-                    //otherwise it's likely that the exercise is being performed wrongly ==> feedback = "wrong"
-                    //else
-                    //{
-                        bp.push_back(bodypart2verbal[it.first]);
-                        finalf.push_back(it.second.second);
-                    //}
+                    bp.push_back(bodypart2verbal[it.first]);
+                    finalf.push_back(it.second.second);
                 }
             }
 
@@ -449,9 +412,6 @@ public:
                 break;
             }
             cout << endl;
-
-            //we use this structure for providing a feedback
-            //            assess(bodypart2feed);
         }
 
     }
@@ -548,9 +508,9 @@ public:
         /********************/
         //we check the error in position
         {
-            bool errx = kx > var_thresh;
-            bool erry = ky > var_thresh;
-            bool errz = kz > var_thresh;
+            bool errx = fabs(kx) > kurt_thresh;
+            bool erry = fabs(ky) > kurt_thresh;
+            bool errz = fabs(kz) > kurt_thresh;
             if(errx || erry || errz)
             {
                 if(errx)
@@ -886,12 +846,11 @@ public:
 
         string speak_file=rf.check("speak-file",Value("speak-it")).asString();
         period = rf.check("period",Value(0.1)).asDouble();
-        double var_thresh = rf.check("var_thresh",Value(5.0)).asDouble();
-        double skwns_thresh = rf.check("skwns_thresh",Value(1.5)).asDouble();
+        double kurt_thresh = rf.check("kurt_thresh",Value(5.0)).asDouble();
         int range_static = rf.check("range_static",Value(2)).asInt();
         int range_freq = rf.check("range_freq",Value(2)).asInt();
 
-        feedback = new Feedback(moduleName,rf.getContext(),speak_file,var_thresh,skwns_thresh,range_static,range_freq);
+        feedback = new Feedback(moduleName,rf.getContext(),speak_file,kurt_thresh,range_static,range_freq);
         feedback->open();
 
         return true;

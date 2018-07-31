@@ -28,6 +28,7 @@ using namespace yarp::sig;
 using namespace iCub::ctrl;
 using namespace assistive_rehab;
 
+/********************************************************/
 class Aligner : public RFModule
 {
 private:
@@ -50,6 +51,7 @@ private:
 
 public:
 
+    /********************************************************/
     void getSkeleton()
     {
         //ask for the property id
@@ -115,6 +117,7 @@ public:
         }
     }
 
+    /********************************************************/
     bool respond(const Bottle &command, Bottle &reply)
     {
         if(command.get(0).asString() == "tagt")
@@ -148,12 +151,13 @@ public:
         }
     }
 
+    /********************************************************/
     bool configure(ResourceFinder &rf) override
     {
         win = rf.check("win",Value(-1)).asDouble();
         period = rf.check("period",Value(0.01)).asDouble();
         dtw_thresh = rf.check("dtw_thresh",Value(0.10)).asDouble();
-        psd_noise = rf.check("psd_noise",Value(1000.0)).asDouble();
+        psd_noise = rf.check("psd_noise",Value(500.0)).asDouble();
         filter_order = rf.check("filter_order",Value(3)).asInt();
 
         opcPort.open("/alignmentManager/opc");
@@ -168,6 +172,7 @@ public:
         return true;
     }
 
+    /********************************************************/
     bool interruptModule() override
     {
         opcPort.interrupt();
@@ -177,6 +182,7 @@ public:
         return true;
     }
 
+    /********************************************************/
     bool close() override
     {
         outfile.close();
@@ -188,11 +194,13 @@ public:
         return true;
     }
 
+    /********************************************************/
     double getPeriod() override
     {
         return period;
     }
 
+    /********************************************************/
     void fillOrdered(const SkeletonWaist& skeleton, vector<Vector>& temp)
     {
         //same order as in skeletonWaist
@@ -213,6 +221,7 @@ public:
         temp.push_back(skeleton[KeyPointTag::ankle_right]->getPoint());
     }
 
+    /********************************************************/
     void updateVec()
     {
         vector<Vector> temp1;
@@ -226,6 +235,7 @@ public:
         skeleton_candidate.push_back(temp2);
     }
 
+    /********************************************************/
     bool updateModule() override
     {
         //if we query the database
@@ -290,16 +300,6 @@ public:
 
                             int ft = performFFT(joint_template,"template",i);
                             int fc = performFFT(joint_candidate,"candidate",i);
-//                            ftv.clear();
-//                            fcv.clear();
-//                            dv.clear();
-//                            //if joints are not stale
-//                            if(ft!=-1 && fc!=-1)
-//                            {
-//                                ftv.push_back(ft);
-//                                fcv.push_back(fc);
-//                                dv.push_back(d);
-//                            }
 
                             /********************************/
                             /*    Difference in position    */
@@ -320,7 +320,6 @@ public:
                                 {
                                     errpos[k] = warped_candidate[k]-warped_template[k];
                                 }
-//                                double std = gsl_stats_sd(errpos,1,warped_template.size());
                                 double kurt = gsl_stats_kurtosis(errpos,1,warped_template.size());
                                 double skwns = gsl_stats_skew(errpos,1,warped_template.size());
 
@@ -344,47 +343,6 @@ public:
                             joint_template.clear();
                             joint_candidate.clear();
                         }
-
-//                        /********************************/
-//                        /*     Difference in speed      */
-//                        /********************************/
-//                        //check the maximum difference in frequency
-//                        //at least two different components of the same joints should have consistent frequencies
-//                        //(one component might be steady,therefore it seems reasonable to use the maximum difference
-//                        //in frequency as measurement of frequency for a single joint)
-//                        if(ftv.data())
-//                        {
-//                            int imax=0;
-//                            int max=abs(fcv[imax]-ftv[imax]);
-//                            for(int k=1; k<ftv.size(); k++)
-//                            {
-//                                if(abs(fcv[k]-ftv[k])>max)
-//                                {
-//                                    max=abs(fcv[k]-ftv[k]);
-//                                    imax=k;
-//                                }
-//                            }
-//                            int relf=fcv[imax]-ftv[imax];
-//                            if(dv[imax] > dtw_thresh)
-//                            {
-//                                if(relf!=0)
-//                                {
-//                                    Bottle &fspeed=feedback.addList();
-//                                    fspeed.addString("feed_speed");
-//                                    fspeed.addInt(ftv[imax]);
-//                                    fspeed.addInt(fcv[imax]);
-//                                    fspeed.addInt(imax);
-//                                }
-//                            }
-//                            else
-//                            {
-//                                Bottle &fspeed=feedback.addList();
-//                                fspeed.addString("feed_speed");
-//                                fspeed.addInt(0);
-//                                fspeed.addInt(0);
-//                                fspeed.addInt(-1);
-//                            }
-//                        }
                     }
 
                     yInfo() << "Sending feedback";
@@ -401,33 +359,13 @@ public:
         return true;
     }
 
-//    vector<pair<double,int>> findPeaks(const vector<Vector> &p)
-//    {
-//        vector<pair<double,int>> val;
-//        //consider half of the spectrum
-//        for(int i=0;i<p.size()/2;i++)
-//        {
-//            if((i-1)>0)
-//            {
-//                if(p[i][0]>p[i-1][0] && p[i][0]>p[i+1][0] && p[i][0]>psd_noise)
-//                    val.push_back(make_pair(p[i][0],i));
-//            }
-//            else
-//                if(p[i][0]>p[i+1][0] && p[i][0]>psd_noise)
-//                    val.push_back(make_pair(p[i][0],i));
-//        }
-//        //sort psd by highest value
-//        sort(val.rbegin(),val.rend());
-
-//        return val;
-//    }
-
+    /********************************************************/
     int findMax(const vector<Vector> &p)
     {
-        int imax = 0;
+        int imax = 1;
         double max = p[imax][0];
         //consider half of the spectrum
-        for(int i=1;i<p.size()/2;i++)
+        for(size_t i=2;i<p.size()/2;i++)
         {
             if(p[i][0] > max)
             {
@@ -444,6 +382,7 @@ public:
             return 0;
     }
 
+    /********************************************************/
     int performFFT(const vector<double> &s, const string &name, const int i)
     {
         int n = s.size();
@@ -466,7 +405,8 @@ public:
         fftw_execute(p);
 
         //compute power spectrum and the frequency content       
-        vector<Vector> psd,filtered_psd;
+        vector<Vector> psd;
+        vector<Vector> filtered_psd;
         psd.clear();
         psd.resize(n);
         filtered_psd.clear();
@@ -477,8 +417,7 @@ public:
             psd[j].push_back(pow(abs(out[j][0]),2.0) / (1.0/period)*n);
             filtered_psd[j] = filter.filt(psd[j]);
         }
-//        vector<pair<double,int>> m = findPeaks(filtered_psd);
-        int f = findMax(filtered_psd);
+        int f = findMax(psd);
 
         outfile << "joint" << " " << i << " ";
         for(int j=0; j<n; j++)
@@ -526,6 +465,7 @@ public:
     }
 };
 
+/********************************************************/
 int main(int argc,char *argv[])
 {
     Network yarp;
