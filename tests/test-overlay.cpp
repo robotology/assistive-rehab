@@ -66,7 +66,7 @@ class Overlayer : public RFModule
         }
     }
 
-    void addKeys(const cv::Mat &img)
+    void addKeys(cv::Mat &img)
     {
         if (Bottle *b1=keys.get(0).asList())
         {
