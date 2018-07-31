@@ -6,12 +6,23 @@ cmake_minimum_required(VERSION 3.5)
 project(AssistiveRehab LANGUAGES CXX C VERSION 1.0.0)
 
 include(GNUInstallDirs)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
+
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
+if(MSVC)
+  set(CMAKE_DEBUG_POSTFIX "d")
+endif()
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED 11)
+
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -27,17 +38,15 @@ include(ICUBcontribHelpers)
 
 option(BUILD_SHARED_LIBS "Build libraries as shared as opposed to static" OFF)
 option(BUILD_TESTING "Create tests using CMake" OFF)
-option(ENABLE_RPATH "Enable RPATH for this library" ON)
 
 if(BUILD_TESTING)
   enable_testing()
 endif()
 
-mark_as_advanced(ENABLE_RPATH)
 include(AddInstallRPATHSupport)
-add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}"
-                          LIB_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
-                          DEPENDS ENABLE_RPATH
+add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_FULL_LIBDIR}"
+                          LIB_DIRS "${CMAKE_INSTALL_FULL_BINDIR}"
+                          INSTALL_NAME_DIR "${CMAKE_INSTALL_FULL_LIBDIR}"
                           USE_LINK_PATH)
 
 if(NOT CMAKE_CONFIGURATION_TYPES)
@@ -52,10 +61,10 @@ icubcontrib_set_default_prefix()
 add_subdirectory(lib)
 
 include(InstallBasicPackageFiles)
-install_basic_package_files(${PROJECT_NAME} VARS_PREFIX ${PROJECT_NAME}
-                                            VERSION ${${PROJECT_NAME}_VERSION}
+install_basic_package_files(${PROJECT_NAME} VERSION ${${PROJECT_NAME}_VERSION}
                                             COMPATIBILITY AnyNewerVersion
-                                            TARGETS_PROPERTY ${PROJECT_NAME}_TARGETS
+                                            EXPORT ${PROJECT_NAME}
+                                            VARS_PREFIX ${PROJECT_NAME}
                                             NO_CHECK_REQUIRED_COMPONENTS_MACRO)
 include(AddUninstallTarget)
 
