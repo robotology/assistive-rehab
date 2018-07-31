@@ -40,16 +40,20 @@ class FeedbackParam
     Matrix f;
 
 public:
+
+    /****************************************************************/
     FeedbackParam()
     {
         f.resize(3,4);
     }
 
+    /****************************************************************/
     void setName(const string &joint_name)
     {
         j = joint_name;
     }
 
+    /****************************************************************/
     void update(const int component, const double k, const double s, const double ft, const double fc)
     {
         f[component][0] = k;
@@ -58,6 +62,7 @@ public:
         f[component][3] = fc;
     }
 
+    /****************************************************************/
     void print()
     {
         cout << j << endl;
@@ -157,12 +162,12 @@ public:
         joint2bodypart[KeyPointTag::head]=BodyPartTag::head;
 
         //translate body part to verbal string
-        bodypart2verbal["armLeft"]=body[0];
-        bodypart2verbal["armRight"]=body[1];
-        bodypart2verbal["legLeft"]=body[2];
-        bodypart2verbal["legRight"]=body[3];
-        bodypart2verbal["torso"]=body[4];
-        bodypart2verbal["head"]=body[5];
+        bodypart2verbal[BodyPartTag::arm_left]=body[0];
+        bodypart2verbal[BodyPartTag::arm_right]=body[1];
+        bodypart2verbal[BodyPartTag::leg_left]=body[2];
+        bodypart2verbal[BodyPartTag::leg_right]=body[3];
+        bodypart2verbal[BodyPartTag::torso]=body[4];
+        bodypart2verbal[BodyPartTag::head]=body[5];
 
         idtw = 1;
         ivar = 2;
@@ -292,7 +297,7 @@ public:
             cout << endl;
 
             //SECOND LEVEL OF INTEGRATION: from single joint to bodypart
-            //this structure associate to each body part a pair that contains:
+            //this structure associates to each body part a pair that contains:
             //a vector: the level of priority and the number of joints with the minimum level of priority
             //a string: the verbal feedback for that level of priority
             map<string,pair<Vector,string>> bodypart2feedback;
@@ -311,12 +316,12 @@ public:
             bodypart2feedback["head"] = make_pair(init,"");
 
             //we find the minimum level associated to each body part
+            //and we count how many joints of that body part are at that level
             for(auto &it: xyz2hierarchy)
             {
                 string bp = joint2bodypart[it.first];
                 string ftot = it.second.second;
                 int h = it.second.first;
-
                 if(bodypart2feedback[bp].first[0] == maxlevel)
                 {
                     Vector t;
@@ -339,12 +344,6 @@ public:
                 }
             }
 
-            for(auto &it: bodypart2feedback)
-            {
-                if(it.second.first[0] != 3)
-                    yInfo() << it.first << it.second.first[0] << it.second.first[1] << it.second.second;
-            }
-
             int fin_level = maxlevel;
             for(auto &it: bodypart2feedback)
             {
@@ -355,7 +354,13 @@ public:
                 }
             }
 
-            //we finally have the list of body parts that have to be adjusted and the relative feedback
+            for(auto &it: bodypart2feedback)
+            {
+                if(it.second.first[0] != 3)
+                    yInfo() << it.first << it.second.first[0] << it.second.first[1] << it.second.second;
+            }
+
+            //we finally have the list of body parts that have to be adjusted and the related feedback
             vector<string> bp,finalf;
             bp.clear();
             finalf.clear();
