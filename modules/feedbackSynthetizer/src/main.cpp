@@ -255,7 +255,7 @@ public:
     {
         if(Bottle *feedb = data.get(0).asList())
         {
-            map<string,pair<int,string>> xyz2hierarchy;
+            map<string,pair<int,vector<string>>> xyz2hierarchy;
             xyz2hierarchy.clear(); 
             for(size_t i=0; i<feedb->size(); i++)
             {
@@ -284,10 +284,13 @@ public:
 
                     //FIRST LEVEL OF INTEGRATION
                     //from xyz to a level of priority for the single joint
-                    pair<int,string> feed_jnt = assess(fj);
+                    pair<int,vector<string>> feed_jnt = assess(fj);
 //                    if(feed_jnt.first != 3)
 //                    {
-                        yInfo() << fj.getName() << feed_jnt.first << feed_jnt.second;
+                        yInfo() << fj.getName() << feed_jnt.first;
+                        for(size_t i=0; i<feed_jnt.second.size(); i++)
+                            cout << feed_jnt.second[i] << " ";
+                        cout << endl;
                         fj.print();
 //                    }
                     xyz2hierarchy[fj.getName()] = feed_jnt;
@@ -297,28 +300,31 @@ public:
 
             //SECOND LEVEL OF INTEGRATION: from single joint to bodypart
             //this structure associates to each body part a pair that contains:
-            //a vector: the level of priority and the number of joints with the minimum level of priority
-            //a string: the verbal feedback for that level of priority
-            map<string,pair<vector<int>,string>> bodypart2feedback;
+            //a vector of int: the level of priority and the number of joints with the minimum level of priority
+            //a vector of string: the verbal feedback for that level of priority
+            map<string,pair<vector<int>,vector<string>>> bodypart2feedback;
             bodypart2feedback.clear();
 
             //initialize structure
             vector<int> init;
+            vector<string> init_feed;
             init.clear();
             init.push_back(maxlevel);
             init.push_back(0);
-            bodypart2feedback[BodyPartTag::arm_left] = make_pair(init,"");
-            bodypart2feedback[BodyPartTag::arm_right] = make_pair(init,"");
-            bodypart2feedback[BodyPartTag::leg_left] = make_pair(init,"");
-            bodypart2feedback[BodyPartTag::leg_right] = make_pair(init,"");
-            bodypart2feedback[BodyPartTag::torso] = make_pair(init,"");
-            bodypart2feedback[BodyPartTag::head] = make_pair(init,"");
+            init_feed.clear();
+            init_feed.push_back("");
+            bodypart2feedback[BodyPartTag::arm_left] = make_pair(init,init_feed);
+            bodypart2feedback[BodyPartTag::arm_right] = make_pair(init,init_feed);
+            bodypart2feedback[BodyPartTag::leg_left] = make_pair(init,init_feed);
+            bodypart2feedback[BodyPartTag::leg_right] = make_pair(init,init_feed);
+            bodypart2feedback[BodyPartTag::torso] = make_pair(init,init_feed);
+            bodypart2feedback[BodyPartTag::head] = make_pair(init,init_feed);
 
             //we find the minimum level associated to each body part
             for(auto &it: xyz2hierarchy)
             {
                 string bp = joint2bodypart[it.first];
-                string ftot = it.second.second;
+                vector<string> ftot = it.second.second;
                 int h = it.second.first;
                 if(h <= bodypart2feedback[bp].first[0])
                 {
@@ -341,20 +347,25 @@ public:
                 if(jnt_level == min_level)
                 {
                      int count = bodypart2feedback[bp].first[1]+1;
-                     bodypart2feedback[bp].first[1] = count;               
+                     bodypart2feedback[bp].first[1] = count;
                 }
                 if(min_level < fin_level)
                     fin_level = min_level;
-            }              
+            }
 
             for(auto &it: bodypart2feedback)
             {
                 if(it.second.first[0] != 3)
-                    yInfo() << it.first << it.second.first[0] << it.second.first[1] << it.second.second;
+                    yInfo() << it.first << it.second.first[0] << it.second.first[1];
+                cout << "feedback: ";
+                for(size_t i=0; i<it.second.second.size(); i++)
+                    cout << it.second.second[i] << " ";
+                cout << endl;
             }
 
             //we finally have the list of body parts that have to be adjusted and the related feedback
-            vector<string> bp,finalf;
+            vector<string> bp;
+            vector<vector<string>> finalf;
             bp.clear();
             finalf.clear();
             for(auto &it: bodypart2feedback)
@@ -376,7 +387,7 @@ public:
                 {
                     params.clear();
                     params.push_back(bp[i]);
-                    if(finalf[i] == "static")
+                    if(finalf[i][0] == "static")
                         speak("static",params);
                     else
                         speak("dynamic",params);
@@ -388,7 +399,8 @@ public:
                 {
                     params.clear();
                     params.push_back(bp[i]);
-                    params.push_back(finalf[i]);
+                    for(size_t j=0; j<finalf.size(); j++)
+                        params.push_back(finalf[i][j]);
                     speak("position",params);
                 }
                 break;
@@ -398,7 +410,8 @@ public:
                 {
                     params.clear();
                     params.push_back(bp[i]);
-                    params.push_back(finalf[i]);
+                    for(size_t j=0; j<finalf.size(); j++)
+                        params.push_back(finalf[i][j]);
                     speak("speed",params);
                 }
                 break;
@@ -450,7 +463,7 @@ public:
 //    }
 
     /********************************************************/
-    pair<int,string> assess(FeedbackParam f)
+    pair<int,vector<string>> assess(FeedbackParam f)
     {
         Matrix feedb = f.getFeedback();
         double kx = feedb[0][0];
@@ -484,7 +497,9 @@ public:
 
             if( (ftxy && fcxy) || (ftxz && fcxz) || (ftyz && fcyz) )
             {
-                return make_pair(0,"static");
+                vector<string> out;
+                out.push_back("static");
+                return make_pair(0,out);
             }
         }
 
@@ -499,7 +514,9 @@ public:
 
             if( (ftxy && fcxy) || (ftxz && fcxz) || (ftyz && fcyz) )
             {
-                return make_pair(0,"dynamic");
+                vector<string> out;
+                out.push_back("dynamic");
+                return make_pair(0,out);
             }
         }
 
@@ -508,32 +525,34 @@ public:
         /********************/
         //we check the error in position
         {
-            bool errx = fabs(kx) > kurt_thresh;
-            bool erry = fabs(ky) > kurt_thresh;
-            bool errz = fabs(kz) > kurt_thresh;
+            bool errx = kx > kurt_thresh;
+            bool erry = ky > kurt_thresh;
+            bool errz = kz > kurt_thresh;
             if(errx || erry || errz)
             {
+                vector<string> out;
                 if(errx)
                 {
                     if(sx > 0.0)
-                        return make_pair(1,speak_map["position"].second[0]);
+                        out.push_back(speak_map["position"].second[0]);
                     else
-                        return make_pair(1,speak_map["position"].second[1]);
+                        out.push_back(speak_map["position"].second[1]);
                 }
                 if(erry)
                 {
                     if(sy > 0.0)
-                        return make_pair(1,speak_map["position"].second[3]);
+                        out.push_back(speak_map["position"].second[3]);
                     else
-                        return make_pair(1,speak_map["position"].second[4]);
+                        out.push_back(speak_map["position"].second[4]);
                 }
                 if(errz)
                 {
                     if(sz > 0.0)
-                        return make_pair(1,speak_map["position"].second[6]);
+                        out.push_back(speak_map["position"].second[6]);
                     else
-                        return make_pair(1,speak_map["position"].second[7]);
+                        out.push_back(speak_map["position"].second[0]);
                 }
+                return make_pair(1,out);
             }
         }
 
@@ -551,18 +570,23 @@ public:
             bool fxy_neg = dfx < -range_freq && dfy < -range_freq;
             bool fxz_neg = dfx < -range_freq && dfz < -range_freq;
             bool fyz_neg = dfy < -range_freq && dfz < -range_freq;
+
+            vector<string> out;
             if(fxy_pos || fxz_pos || fyz_pos)
             {
-                return make_pair(2,speak_map["speed"].second[0]);
+                out.push_back(speak_map["speed"].second[0]);
             }
             else if(fxy_neg || fxz_neg || fyz_neg)
             {
-                return make_pair(2,speak_map["speed"].second[1]);
+                out.push_back(speak_map["speed"].second[1]);
             }
+            return make_pair(2,out);
         }
 
         //the joint passed all checks, so it is moving well
-        return make_pair(3,"");
+        vector<string> out;
+        out.push_back("");
+        return make_pair(3,out);
     }
 
     /********************************************************/
@@ -803,6 +827,15 @@ public:
                 value.replace(pos2,f2.length(),f2);
                 value += value_extra;
             }
+
+            if(p.size() > 2)
+            {
+                for(size_t i=2; i<p.size(); i++)
+                {
+                    string fi = p[i].get();
+                    value.replace(value.length(),fi.length(),fi);
+                }
+            }
         }
 
         yWarning() << value;
@@ -846,8 +879,8 @@ public:
 
         string speak_file=rf.check("speak-file",Value("speak-it")).asString();
         period = rf.check("period",Value(0.1)).asDouble();
-        double kurt_thresh = rf.check("kurt_thresh",Value(5.0)).asDouble();
-        int range_static = rf.check("range_static",Value(2)).asInt();
+        double kurt_thresh = rf.check("kurt_thresh",Value(3.0)).asDouble();
+        int range_static = rf.check("range_static",Value(1)).asInt();
         int range_freq = rf.check("range_freq",Value(2)).asInt();
 
         feedback = new Feedback(moduleName,rf.getContext(),speak_file,kurt_thresh,range_static,range_freq);
