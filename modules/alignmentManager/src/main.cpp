@@ -440,7 +440,14 @@ public:
         for(int k=0; k<warped_template.size(); k++)
         {
             errpos[k] = warped_candidate[k]-warped_template[k];
-            outfile << errpos[k] << " ";
+            outfile << warped_template[k] << " ";
+        }
+        outfile << "\n";
+
+        outfile << name << " ";
+        for(int k=0; k<warped_template.size(); k++)
+        {
+            outfile << warped_candidate[k] << " ";
         }
         outfile << "\n";
 
