@@ -46,7 +46,7 @@ private:
     vector<vector<Vector>> skeleton_template,skeleton_candidate;
     bool updated,start;
     vector<double> joint_template,joint_candidate,warped_template,warped_candidate;
-    ofstream outfile;
+//    ofstream outfile;
 
 
 public:
@@ -165,7 +165,7 @@ public:
         rpcPort.open("/alignmentManager/rpc");
         attach(rpcPort);
 
-        outfile.open("dtw-test.txt");
+//        outfile.open("dtw-test.txt");
 
         start = false;
 
@@ -185,7 +185,7 @@ public:
     /********************************************************/
     bool close() override
     {
-        outfile.close();
+//        outfile.close();
 
         opcPort.close();
         outPort.close();
@@ -421,36 +421,36 @@ public:
         }
         int f = findMax(psd);
 
-        outfile << "joint" << " " << i << " ";
-        for(int j=0; j<n; j++)
-            outfile << in[j][0] << " ";
-        outfile << "\n";
+//        outfile << "joint" << " " << i << " ";
+//        for(int j=0; j<n; j++)
+//            outfile << in[j][0] << " ";
+//        outfile << "\n";
 
-        outfile << name << " ";
-        for(int j=0; j<n; j++)
-            outfile << psd[j][0] << " ";
-        outfile << "\n";
+//        outfile << name << " ";
+//        for(int j=0; j<n; j++)
+//            outfile << psd[j][0] << " ";
+//        outfile << "\n";
 
-        outfile << name << " ";
-        for(int j=0; j<n; j++)
-            outfile << filtered_psd[j][0] << " ";
-        outfile << "\n";
+//        outfile << name << " ";
+//        for(int j=0; j<n; j++)
+//            outfile << filtered_psd[j][0] << " ";
+//        outfile << "\n";
 
-        double errpos[warped_template.size()];
-        outfile << name << " ";
-        for(int k=0; k<warped_template.size(); k++)
-        {
-            errpos[k] = warped_candidate[k]-warped_template[k];
-            outfile << warped_template[k] << " ";
-        }
-        outfile << "\n";
+//        double errpos[warped_template.size()];
+//        outfile << name << " ";
+//        for(int k=0; k<warped_template.size(); k++)
+//        {
+//            errpos[k] = warped_candidate[k]-warped_template[k];
+//            outfile << warped_template[k] << " ";
+//        }
+//        outfile << "\n";
 
-        outfile << name << " ";
-        for(int k=0; k<warped_template.size(); k++)
-        {
-            outfile << warped_candidate[k] << " ";
-        }
-        outfile << "\n";
+//        outfile << name << " ";
+//        for(int k=0; k<warped_template.size(); k++)
+//        {
+//            outfile << warped_candidate[k] << " ";
+//        }
+//        outfile << "\n";
 
         fftw_destroy_plan(p);
         fftw_free(in);
