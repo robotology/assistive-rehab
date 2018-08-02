@@ -641,34 +641,31 @@ public:
             bool errx = kx > sdev_thresh;
             bool erry = ky > sdev_thresh;
             bool errz = kz > sdev_thresh;
-            if(dtwx || dtwy || dtwz)
+            if( errx || erry || erry )
             {
-                if(errx || erry || errz)
+                vector<string> out;
+                if(errx)
                 {
-                    vector<string> out;
-                    if(errx)
-                    {
-                        if(sx > 0.0)
-                            out.push_back(speak_map["position"].second[0]);
-                        else
-                            out.push_back(speak_map["position"].second[1]);
-                    }
-                    if(erry)
-                    {
-                        if(sy > 0.0)
-                            out.push_back(speak_map["position"].second[2]);
-                        else
-                            out.push_back(speak_map["position"].second[3]);
-                    }
-                    if(errz)
-                    {
-                        if(sz > 0.0)
-                            out.push_back(speak_map["position"].second[4]);
-                        else
-                            out.push_back(speak_map["position"].second[5]);
-                    }
-                    return make_pair(2,out);
+                    if(sx > 0.0)
+                        out.push_back(speak_map["position"].second[0]);
+                    else
+                        out.push_back(speak_map["position"].second[1]);
                 }
+                if(erry)
+                {
+                    if(sy > 0.0)
+                        out.push_back(speak_map["position"].second[2]);
+                    else
+                        out.push_back(speak_map["position"].second[3]);
+                }
+                if(errz)
+                {
+                    if(sz > 0.0)
+                        out.push_back(speak_map["position"].second[4]);
+                    else
+                        out.push_back(speak_map["position"].second[5]);
+                }
+                return make_pair(2,out);
             }
         }
 
@@ -786,7 +783,7 @@ public:
         string speak_file=rf.check("speak-file",Value("speak-it")).asString();
         period = rf.check("period",Value(0.1)).asDouble();
         double dtw_thresh = rf.check("dtw_thresh",Value(0.3)).asDouble();
-        double sdev_thresh = rf.check("sdev_thresh",Value(0.5)).asDouble();
+        double sdev_thresh = rf.check("sdev_thresh",Value(0.6)).asDouble();
         int f_static = rf.check("f_static",Value(1)).asInt();
         int range_freq = rf.check("range_freq",Value(2)).asInt();
 
