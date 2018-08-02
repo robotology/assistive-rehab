@@ -37,11 +37,10 @@ const string torso = "torso";
 class BodyFeedback
 {
     //levels of the hierarchy:
-    //0: static joints moving
-    //1: dynamic joints not moving
-    //2: error in position
-    //3: error in speed
-    //4: no error (if no previous level is reached from any of the body parts)
+    //0: static joints moving or dynamic joints not moving
+    //1: error in position
+    //2: error in speed
+    //3: no error (if no previous level is reached from any of the body parts)
 
     //FIRST LEVEL OF INTEGRATION
     //from xyz to a level of priority for the single joint
@@ -287,10 +286,15 @@ public:
         f_static = f_static_;
         range_freq = range_freq_;
 
-        vector<string> body,joint;
-        body.clear();
+        vector<string> joint;
         joint.clear();
-        if(!load_speak(context,speak_file,body,joint))
+
+        string armLeft,armRight,legLeft,legRight,torso,head;
+        string shoulderLeft,elbowLeft,handLeft,shoulderRight,elbowRight,handRight,hipLeft,kneeLeft,ankleLeft,
+                hipRight,kneeRight,ankleRight,torso_j,head_j;
+        if(!load_speak(context,speak_file,armLeft,armRight,legLeft,legRight,torso,head,shoulderLeft,elbowLeft,
+                       handLeft,shoulderRight,elbowRight,handRight,hipLeft,kneeLeft,ankleLeft,hipRight,kneeRight,
+                       ankleRight,torso_j,head_j))
         {
             string msg="Unable to locate file";
             msg+="\""+speak_file+"\"";
@@ -298,28 +302,28 @@ public:
         }
 
         //translate body part to verbal string
-        bodypart2verbal[BodyPartTag::arm_left]=body[0];
-        bodypart2verbal[BodyPartTag::arm_right]=body[1];
-        bodypart2verbal[BodyPartTag::leg_left]=body[2];
-        bodypart2verbal[BodyPartTag::leg_right]=body[3];
-        bodypart2verbal[BodyPartTag::torso]=body[4];
-        bodypart2verbal[BodyPartTag::head]=body[5];
+        bodypart2verbal[BodyPartTag::arm_left]=armLeft;
+        bodypart2verbal[BodyPartTag::arm_right]=armRight;
+        bodypart2verbal[BodyPartTag::leg_left]=legLeft;
+        bodypart2verbal[BodyPartTag::leg_right]=legRight;
+        bodypart2verbal[BodyPartTag::torso]=torso;
+        bodypart2verbal[BodyPartTag::head]=head;
 
-        bodypart2verbal[KeyPointTag::head]=joint[0];
-        bodypart2verbal[KeyPointTag::shoulder_left]=joint[1];
-        bodypart2verbal[KeyPointTag::elbow_left]=joint[2];
-        bodypart2verbal[KeyPointTag::hand_left]=joint[3];
-        bodypart2verbal[KeyPointTag::shoulder_right]=joint[4];
-        bodypart2verbal[KeyPointTag::elbow_right]=joint[5];
-        bodypart2verbal[KeyPointTag::hand_right]=joint[6];
-        bodypart2verbal[KeyPointTag::hip_left]=joint[7];
-        bodypart2verbal[KeyPointTag::knee_left]=joint[8];
-        bodypart2verbal[KeyPointTag::ankle_left]=joint[9];
-        bodypart2verbal[KeyPointTag::hip_right]=joint[10];
-        bodypart2verbal[KeyPointTag::knee_right]=joint[11];
-        bodypart2verbal[KeyPointTag::ankle_right]=joint[12];
-        bodypart2verbal[KeyPointTag::hip_center]=joint[13];
-        bodypart2verbal[KeyPointTag::shoulder_center]=joint[13];
+        bodypart2verbal[KeyPointTag::head]=head_j;
+        bodypart2verbal[KeyPointTag::shoulder_left]=shoulderLeft;
+        bodypart2verbal[KeyPointTag::elbow_left]=elbowLeft;
+        bodypart2verbal[KeyPointTag::hand_left]=handLeft;
+        bodypart2verbal[KeyPointTag::shoulder_right]=shoulderRight;
+        bodypart2verbal[KeyPointTag::elbow_right]=elbowRight;
+        bodypart2verbal[KeyPointTag::hand_right]=handRight;
+        bodypart2verbal[KeyPointTag::hip_left]=hipLeft;
+        bodypart2verbal[KeyPointTag::knee_left]=kneeLeft;
+        bodypart2verbal[KeyPointTag::ankle_left]=ankleLeft;
+        bodypart2verbal[KeyPointTag::hip_right]=hipRight;
+        bodypart2verbal[KeyPointTag::knee_right]=kneeRight;
+        bodypart2verbal[KeyPointTag::ankle_right]=ankleRight;
+        bodypart2verbal[KeyPointTag::hip_center]=torso_j;
+        bodypart2verbal[KeyPointTag::shoulder_center]=torso_j;
 
         idtw = 1;
         ikurt = 2;
@@ -327,7 +331,7 @@ public:
         ift = 5;
         ifc = 6;
 
-        maxlevel = 4;
+        maxlevel = 3;
     }
 
     /********************************************************/
@@ -346,7 +350,11 @@ public:
     }
 
     /****************************************************************/
-    bool load_speak(const string &context, const string &speak_file, vector<string> &body, vector<string> &joint)
+    bool load_speak(const string &context, const string &speak_file,
+                    string &armLeft, string &armRight, string &legLeft, string &legRight, string &torso, string &head,
+                    string &shoulderLeft, string &elbowLeft, string &handLeft, string &shoulderRight, string &elbowRight,
+                    string &handRight, string &hipLeft, string &kneeLeft, string &ankleLeft, string &hipRight,
+                    string &kneeRight, string &ankleRight, string &torso_j, string &head_j)
     {
         ResourceFinder rf_speak;
         rf_speak.setDefaultContext(context);
@@ -359,24 +367,46 @@ public:
             yError()<<"Unable to find group \"general\"";
             return false;
         }
-        if (!bGroup.check("num-sections") || !bGroup.check("body") || !bGroup.check("joint"))
+        if (!bGroup.check("num-sections"))
         {
-            yError()<<"Unable to find key \"num-sections\" and/or \"body\" and/or \"joint\"";
+            yError()<<"Unable to find key \"num-sections\"";
             return false;
         }
 
         int num_sections = bGroup.find("num-sections").asInt();
-        Bottle *bBody = bGroup.find("body").asList();
-        Bottle *bJoint = bGroup.find("joint").asList();
-        for(int i=0; i<bBody->size(); i++)
+        Bottle &bBody=rf_speak.findGroup("body");
+        if (bBody.isNull())
         {
-            body.push_back(bBody->get(i).asString());
+            yError()<<"Unable to find group \"body\"";
+            return false;
         }
+        armLeft = bBody.find("armLeft").asString();
+        armRight = bBody.find("armRight").asString();
+        legLeft = bBody.find("legLeft").asString();
+        legRight = bBody.find("legRight").asString();
+        torso = bBody.find("torso").asString();
+        head = bBody.find("head").asString();
 
-        for(int i=0; i<bJoint->size(); i++)
+        Bottle &bJoint=rf_speak.findGroup("joint");
+        if (bJoint.isNull())
         {
-            joint.push_back(bJoint->get(i).asString());
+            yError()<<"Unable to find group \"joint\"";
+            return false;
         }
+        shoulderLeft = bJoint.find("shoulderLeft").asString();
+        elbowLeft = bJoint.find("elbowLeft").asString();
+        handLeft = bJoint.find("handLeft").asString();
+        shoulderRight = bJoint.find("shoulderRight").asString();
+        elbowRight = bJoint.find("elbowRight").asString();
+        handRight = bJoint.find("handRight").asString();
+        hipLeft = bJoint.find("hipLeft").asString();
+        kneeLeft = bJoint.find("kneeLeft").asString();
+        ankleLeft = bJoint.find("ankleLeft").asString();
+        hipRight = bJoint.find("hipRight").asString();
+        kneeRight = bJoint.find("kneeRight").asString();
+        ankleRight = bJoint.find("ankleRight").asString();
+        torso_j = bJoint.find("torso").asString();
+        head_j = bJoint.find("head").asString();
 
         for (int i=0; i<num_sections; i++)
         {
@@ -472,20 +502,19 @@ public:
             vector<SpeechParam> params;
             switch (fin_level)
             {
-            case 0: //static joints moving
-            case 1: //dynamic joints not moving
+            case 0: //static joints moving or dynamic joints not moving
                 for(size_t i=0; i<bp.size(); i++)
                 {
                     params.clear();
                     params.push_back(bodypart2verbal[bp[i]]);
-                    if(fin_level == 0)
+                    if(finalf[i][0] == "static")
                         speak("static",params);
                     else
                         speak("dynamic",params);
                 }
                 break;
 
-            case 2: //error in position
+            case 1: //error in position
                 for(size_t i=0; i<bp.size(); i++)
                 {
                     params.clear();
@@ -496,7 +525,7 @@ public:
                 }
                 break;
 
-            case 3: //error in speed
+            case 2: //error in speed
                 for(size_t i=0; i<bp.size(); i++)
                 {
                     params.clear();
@@ -507,7 +536,7 @@ public:
                 }
                 break;
 
-            case 4: //no error
+            case 3: //no error
                 speak("perfect");
                 break;
             }
@@ -606,7 +635,7 @@ public:
                 {
                     vector<string> out;
                     out.push_back("dynamic");
-                    return make_pair(1,out);
+                    return make_pair(0,out);
                 }
             }
             if(ftxz && fcxz)
@@ -615,7 +644,7 @@ public:
                 {
                     vector<string> out;
                     out.push_back("dynamic");
-                    return make_pair(1,out);
+                    return make_pair(0,out);
                 }
             }
             if(ftyz && fcyz)
@@ -624,7 +653,7 @@ public:
                 {
                     vector<string> out;
                     out.push_back("dynamic");
-                    return make_pair(1,out);
+                    return make_pair(0,out);
                 }
             }
         }
@@ -665,7 +694,7 @@ public:
                     else
                         out.push_back(speak_map["position"].second[5]);
                 }
-                return make_pair(2,out);
+                return make_pair(1,out);
             }
         }
 
@@ -688,19 +717,19 @@ public:
             if(fxy_pos || fxz_pos || fyz_pos)
             {
                 out.push_back(speak_map["speed"].second[0]);
-                return make_pair(3,out);
+                return make_pair(2,out);
             }
             else if(fxy_neg || fxz_neg || fyz_neg)
             {
                 out.push_back(speak_map["speed"].second[1]);
-                return make_pair(3,out);
+                return make_pair(2,out);
             }
         }
 
         //the joint passed all checks, so it is moving well
         vector<string> out;
         out.push_back("");
-        return make_pair(4,out);
+        return make_pair(3,out);
     }
 
     /********************************************************/
