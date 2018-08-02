@@ -641,7 +641,7 @@ public:
             bool errx = kx > sdev_thresh;
             bool erry = ky > sdev_thresh;
             bool errz = kz > sdev_thresh;
-            if( errx || erry || erry )
+            if( errx || erry || errz )
             {
                 vector<string> out;
                 if(errx)
