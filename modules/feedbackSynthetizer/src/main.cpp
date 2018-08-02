@@ -37,10 +37,11 @@ const string torso = "torso";
 class BodyFeedback
 {
     //levels of the hierarchy:
-    //0: static joints moving and/or dynamic joints not moving
-    //1: error in position
-    //2: error in speed
-    //3: no error (if no previous level is reached from any of the body parts)
+    //0: static joints moving
+    //1: dynamic joints not moving
+    //2: error in position
+    //3: error in speed
+    //4: no error (if no previous level is reached from any of the body parts)
 
     //FIRST LEVEL OF INTEGRATION
     //from xyz to a level of priority for the single joint
@@ -206,7 +207,7 @@ public:
     /****************************************************************/
     JointFeedback()
     {
-        f.resize(3,4);
+        f.resize(3,5);
     }
 
     /****************************************************************/
@@ -216,12 +217,14 @@ public:
     }
 
     /****************************************************************/
-    void update(const int component, const double k, const double s, const double ft, const double fc)
+    void update(const int component, const double dtw, const double std, const double skwn,
+                const double ft, const double fc)
     {
-        f[component][0] = k;
-        f[component][1] = s;
-        f[component][2] = ft;
-        f[component][3] = fc;
+        f[component][0] = dtw;
+        f[component][1] = std;
+        f[component][2] = skwn;
+        f[component][3] = ft;
+        f[component][4] = fc;
     }
 
     /****************************************************************/
@@ -265,8 +268,8 @@ class Synthetizer : public BufferedPort<Bottle>
     string moduleName;
     BufferedPort<Bottle> speechPort;
 
-    double kurt_thresh,skwns_thresh;
-    int range_static,range_freq;
+    double dtw_thresh,sdev_thresh,skwns_thresh;
+    int f_static,range_freq;
     map<string,string> bodypart2verbal;
     map<string,pair<string,vector<string>>> speak_map;
     int idtw,ikurt,iskwns,ift,ifc;
@@ -276,11 +279,12 @@ public:
 
     /********************************************************/
     Synthetizer(const string &moduleName_, const string &context, const string &speak_file,
-             const double &kurt_thresh_, const int range_static_, const int range_freq_)
+                const double &dtw_thresh_, const double &sdev_thresh_, const int f_static_, const int range_freq_)
     {
         moduleName = moduleName_;
-        kurt_thresh = kurt_thresh_;
-        range_static = range_static_;
+        dtw_thresh = dtw_thresh_;
+        sdev_thresh = sdev_thresh_;
+        f_static = f_static_;
         range_freq = range_freq_;
 
         vector<string> body,joint;
@@ -424,17 +428,17 @@ public:
                     fj.setName(joint);
                     if(Bottle *feed_x = joint_list->get(1).asList())
                     {
-                        fj.update(0,feed_x->get(ikurt).asDouble(),feed_x->get(iskwns).asDouble(),
+                        fj.update(0,feed_x->get(idtw).asDouble(),feed_x->get(ikurt).asDouble(),feed_x->get(iskwns).asDouble(),
                                   feed_x->get(ift).asInt(),feed_x->get(ifc).asInt());
                     }
                     if(Bottle *feed_y = joint_list->get(2).asList())
                     {
-                        fj.update(1,feed_y->get(ikurt).asDouble(),feed_y->get(iskwns).asDouble(),
+                        fj.update(1,feed_y->get(idtw).asDouble(),feed_y->get(ikurt).asDouble(),feed_y->get(iskwns).asDouble(),
                                   feed_y->get(ift).asInt(),feed_y->get(ifc).asInt());
                     }
                     if(Bottle *feed_z = joint_list->get(3).asList())
                     {
-                        fj.update(2,feed_z->get(ikurt).asDouble(),feed_z->get(iskwns).asDouble(),
+                        fj.update(2,feed_z->get(idtw).asDouble(),feed_z->get(ikurt).asDouble(),feed_z->get(iskwns).asDouble(),
                                   feed_z->get(ift).asInt(),feed_z->get(ifc).asInt());
                     }
 
@@ -444,6 +448,7 @@ public:
                     pair<int,vector<string>> feed_jnt = assess(fj);
 //                    if(feed_jnt.first != 3)
 //                    {
+                        cout << endl;
                         yInfo() << fj.getName() << feed_jnt.first;
                         for(size_t i=0; i<feed_jnt.second.size(); i++)
                             cout << feed_jnt.second[i] << " ";
@@ -467,7 +472,8 @@ public:
             vector<SpeechParam> params;
             switch (fin_level)
             {
-            case (0 || 1): //static joints moving or dynamic joints not moving
+            case 0: //static joints moving
+            case 1: //dynamic joints not moving
                 for(size_t i=0; i<bp.size(); i++)
                 {
                     params.clear();
@@ -514,20 +520,23 @@ public:
     pair<int,vector<string>> assess(JointFeedback f)
     {
         Matrix feedb = f.getFeedbackMatrix();
-        double kx = feedb[0][0];
-        double sx = feedb[0][1];
-        int ftx = feedb[0][2];
-        int fcx = feedb[0][3];
+        double dx = feedb[0][0];
+        double kx = feedb[0][1];
+        double sx = feedb[0][2];
+        int ftx = feedb[0][3];
+        int fcx = feedb[0][4];
 
-        double ky = feedb[1][0];
-        double sy = feedb[1][1];
-        int fty = feedb[1][2];
-        int fcy = feedb[1][3];
+        double dy = feedb[1][0];
+        double ky = feedb[1][1];
+        double sy = feedb[1][2];
+        int fty = feedb[1][3];
+        int fcy = feedb[1][4];
 
-        double kz = feedb[2][0];
-        double sz = feedb[2][1];
-        int ftz = feedb[2][2];
-        int fcz = feedb[2][3];
+        double dz = feedb[2][0];
+        double kz = feedb[2][1];
+        double sz = feedb[2][2];
+        int ftz = feedb[2][3];
+        int fcz = feedb[2][4];
 
         /*******************/
         /*   FIRST CHECK   */
@@ -535,36 +544,88 @@ public:
         //static joints in the template must not move
         //dynamic joints in the template must move
         {
-            bool ftxy = ftx < range_static && fty < range_static;
-            bool ftxz = ftx < range_static && ftz < range_static;
-            bool ftyz = fty < range_static && ftz < range_static;
+            bool ftxy = ftx <= f_static && fty <= f_static;
+            bool ftxz = ftx <= f_static && ftz <= f_static;
+            bool ftyz = fty <= f_static && ftz <= f_static;
 
-            bool fcxy = fcx >= range_static && fcy >= range_static;
-            bool fcxz = fcx >= range_static && fcz >= range_static;
-            bool fcyz = fcy >= range_static && fcz >= range_static;
+            bool fcxy = fcx > f_static && fcy > f_static;
+            bool fcxz = fcx > f_static && fcz > f_static;
+            bool fcyz = fcy > f_static && fcz > f_static;
 
-            if( (ftxy && fcxy) || (ftxz && fcxz) || (ftyz && fcyz) )
+            //we check if the difference is significant
+            bool dfx = fabs(ftx-fcx) > range_freq;
+            bool dfy = fabs(fty-fcy) > range_freq;
+            bool dfz = fabs(ftz-fcz) > range_freq;
+
+            if(ftxy && fcxy)
             {
-                vector<string> out;
-                out.push_back("static");
-                return make_pair(0,out);
+                if(dfx && dfy)
+                {
+                    vector<string> out;
+                    out.push_back("static");
+                    return make_pair(0,out);
+                }
+            }
+            if(ftxz && fcxz)
+            {
+                if(dfx && dfz)
+                {
+                    vector<string> out;
+                    out.push_back("static");
+                    return make_pair(0,out);
+                }
+            }
+            if(ftyz && fcyz)
+            {
+                if(dfy && dfz)
+                {
+                    vector<string> out;
+                    out.push_back("static");
+                    return make_pair(0,out);
+                }
             }
         }
 
         {
-            bool ftxy = ftx >= range_static && fty >= range_static;
-            bool ftxz = ftx >= range_static && ftz >= range_static;
-            bool ftyz = fty >= range_static && ftz >= range_static;
+            bool ftxy = ftx > f_static && fty > f_static;
+            bool ftxz = ftx > f_static && ftz > f_static;
+            bool ftyz = fty > f_static && ftz > f_static;
 
-            bool fcxy = fcx < range_static && fcy < range_static;
-            bool fcxz = fcx < range_static && fcz < range_static;
-            bool fcyz = fcy < range_static && fcz < range_static;
+            bool fcxy = fcx <= f_static && fcy <= f_static;
+            bool fcxz = fcx <= f_static && fcz <= f_static;
+            bool fcyz = fcy <= f_static && fcz <= f_static;
 
-            if( (ftxy && fcxy) || (ftxz && fcxz) || (ftyz && fcyz) )
+            //we check if the difference is significant
+            bool dfx = fabs(ftx-fcx) >= range_freq;
+            bool dfy = fabs(fty-fcy) >= range_freq;
+            bool dfz = fabs(ftz-fcz) >= range_freq;
+
+            if(ftxy && fcxy)
             {
-                vector<string> out;
-                out.push_back("dynamic");
-                return make_pair(1,out);
+                if(dfx && dfy)
+                {
+                    vector<string> out;
+                    out.push_back("dynamic");
+                    return make_pair(1,out);
+                }
+            }
+            if(ftxz && fcxz)
+            {
+                if(dfx && dfz)
+                {
+                    vector<string> out;
+                    out.push_back("dynamic");
+                    return make_pair(1,out);
+                }
+            }
+            if(ftyz && fcyz)
+            {
+                if(dfy && dfz)
+                {
+                    vector<string> out;
+                    out.push_back("dynamic");
+                    return make_pair(1,out);
+                }
             }
         }
 
@@ -573,34 +634,41 @@ public:
         /********************/
         //we check the error in position
         {
-            bool errx = kx > kurt_thresh;
-            bool erry = ky > kurt_thresh;
-            bool errz = kz > kurt_thresh;
-            if(errx || erry || errz)
+            bool dtwx = dx < dtw_thresh;
+            bool dtwy = dy < dtw_thresh;
+            bool dtwz = dz < dtw_thresh;
+
+            bool errx = kx > sdev_thresh;
+            bool erry = ky > sdev_thresh;
+            bool errz = kz > sdev_thresh;
+            if(dtwx || dtwy || dtwz)
             {
-                vector<string> out;
-                if(errx)
+                if(errx || erry || errz)
                 {
-                    if(sx > 0.0)
-                        out.push_back(speak_map["position"].second[0]);
-                    else
-                        out.push_back(speak_map["position"].second[1]);
+                    vector<string> out;
+                    if(errx)
+                    {
+                        if(sx > 0.0)
+                            out.push_back(speak_map["position"].second[0]);
+                        else
+                            out.push_back(speak_map["position"].second[1]);
+                    }
+                    if(erry)
+                    {
+                        if(sy > 0.0)
+                            out.push_back(speak_map["position"].second[2]);
+                        else
+                            out.push_back(speak_map["position"].second[3]);
+                    }
+                    if(errz)
+                    {
+                        if(sz > 0.0)
+                            out.push_back(speak_map["position"].second[4]);
+                        else
+                            out.push_back(speak_map["position"].second[5]);
+                    }
+                    return make_pair(2,out);
                 }
-                if(erry)
-                {
-                    if(sy > 0.0)
-                        out.push_back(speak_map["position"].second[2]);
-                    else
-                        out.push_back(speak_map["position"].second[3]);
-                }
-                if(errz)
-                {
-                    if(sz > 0.0)
-                        out.push_back(speak_map["position"].second[4]);
-                    else
-                        out.push_back(speak_map["position"].second[5]);
-                }
-                return make_pair(2,out);
             }
         }
 
@@ -623,12 +691,13 @@ public:
             if(fxy_pos || fxz_pos || fyz_pos)
             {
                 out.push_back(speak_map["speed"].second[0]);
+                return make_pair(3,out);
             }
             else if(fxy_neg || fxz_neg || fyz_neg)
             {
                 out.push_back(speak_map["speed"].second[1]);
+                return make_pair(3,out);
             }
-            return make_pair(3,out);
         }
 
         //the joint passed all checks, so it is moving well
@@ -644,18 +713,17 @@ public:
         if(p.size() > 0)
         {
             size_t pos1 = value.find("%");
-            string value_extra = value.substr(pos1+1,value.length());
+            string value_ex = value.substr(pos1+1,value.length());
             string f1 = p[0].get();
             value.replace(pos1,f1.length(),f1);
             value.erase(pos1+f1.length(),value.length());
-            value += value_extra;
+            value += value_ex;
 
             if(p.size() > 1)
             {
                 size_t pos2 = value.find("#");
                 string f2 = p[1].get();
-                value_extra.clear();
-                value_extra = value.substr(pos2+1,value.length());
+                string value_extra = value.substr(pos2+1,value.length());
                 value.replace(pos2,f2.length(),f2);
                 value += value_extra;
             }
@@ -664,10 +732,12 @@ public:
             {
                 for(size_t i=2; i<p.size(); i++)
                 {
-                    value_extra.clear();
+                    if(i==2)
+                        value_ex.erase(value_ex.length()-2,value_ex.length()-1);
+                    string value_extra;
                     value_extra = value.back();
                     value.pop_back();
-                    string fi = "," + p[i].get();
+                    string fi = "," + value_ex + p[i].get();
                     value.replace(value.length(),fi.length(),fi);
                     value += value_extra;
                 }
@@ -715,11 +785,12 @@ public:
 
         string speak_file=rf.check("speak-file",Value("speak-it")).asString();
         period = rf.check("period",Value(0.1)).asDouble();
-        double kurt_thresh = rf.check("kurt_thresh",Value(4.0)).asDouble();
-        int range_static = rf.check("range_static",Value(2)).asInt();
+        double dtw_thresh = rf.check("dtw_thresh",Value(0.3)).asDouble();
+        double sdev_thresh = rf.check("sdev_thresh",Value(0.5)).asDouble();
+        int f_static = rf.check("f_static",Value(1)).asInt();
         int range_freq = rf.check("range_freq",Value(2)).asInt();
 
-        synthetizer = new Synthetizer(moduleName,rf.getContext(),speak_file,kurt_thresh,range_static,range_freq);
+        synthetizer = new Synthetizer(moduleName,rf.getContext(),speak_file,dtw_thresh,sdev_thresh,f_static,range_freq);
         synthetizer->open();
 
         return true;

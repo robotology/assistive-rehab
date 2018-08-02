@@ -321,10 +321,11 @@ public:
                                     errpos[k] = warped_candidate[k]-warped_template[k];
                                 }
                                 //the kurtosis for standard normal distribution is 3
-                                double kurt = 3.0 + gsl_stats_kurtosis(errpos,1,warped_template.size());
+//                                double kurt = 3.0 + gsl_stats_kurtosis(errpos,1,warped_template.size());
+                                double sdev = gsl_stats_sd(errpos,1,warped_template.size());
                                 double skwns = gsl_stats_skew(errpos,1,warped_template.size());
 
-                                fout.addDouble(kurt);
+                                fout.addDouble(sdev);
                                 fout.addDouble(skwns);
 
                                 fout.addString("feed_speed");
