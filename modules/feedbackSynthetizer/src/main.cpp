@@ -552,20 +552,20 @@ public:
         double dx = feedb[0][0];
         double kx = feedb[0][1];
         double sx = feedb[0][2];
-        int ftx = feedb[0][3];
-        int fcx = feedb[0][4];
+        int ftx = (int)feedb[0][3];
+        int fcx = (int)feedb[0][4];
 
         double dy = feedb[1][0];
         double ky = feedb[1][1];
         double sy = feedb[1][2];
-        int fty = feedb[1][3];
-        int fcy = feedb[1][4];
+        int fty = (int)feedb[1][3];
+        int fcy = (int)feedb[1][4];
 
         double dz = feedb[2][0];
         double kz = feedb[2][1];
         double sz = feedb[2][2];
-        int ftz = feedb[2][3];
-        int fcz = feedb[2][4];
+        int ftz = (int)feedb[2][3];
+        int fcz = (int)feedb[2][4];
 
         /*******************/
         /*   FIRST CHECK   */
