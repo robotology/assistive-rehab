@@ -11,7 +11,7 @@
  */
 
 #include <cstdlib>
-#include <math.h>
+#include <cmath>
 #include <map>
 
 #include <yarp/os/all.h>
