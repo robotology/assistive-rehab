@@ -74,8 +74,6 @@ void Manager::init()
     ankleLeft.resize(3);
     ankleRight.resize(3);
 
-    curr_keypoints.resize(numKeypoints-1);
-
     cameraposinit.resize(3);
     focalpointinit.resize(3);
 
@@ -517,89 +515,63 @@ bool Manager::loadMotionList()
                         Bottle &bMotion = rf.findGroup(curr_tag+"_"+to_string(j));
                         if(!bMotion.isNull())
                         {
+                            string motion_type = bMotion.find("motion_type").asString();
+                            string tag_joint = bMotion.find("tag_joint").asString();
+                            double min = bMotion.find("min").asDouble();
+                            double max = bMotion.find("max").asDouble();
+                            double duration = bMotion.find("duration").asDouble();
+                            int nrep = bMotion.find("nrep").asInt();
+                            int nenv = bMotion.find("nenv").asInt();
+                            double tempwin = bMotion.find("tempwin").asDouble();
+                            double threshold = bMotion.find("threshold").asDouble();
+                            Vector camerapos;
+                            camerapos.resize(3);
+                            if(Bottle *bCamerapos = bMotion.find("camerapos").asList())
+                            {
+                                camerapos[0] = bCamerapos->get(0).asDouble();
+                                camerapos[1] = bCamerapos->get(1).asDouble();
+                                camerapos[2] = bCamerapos->get(2).asDouble();
+                            }
+                            else
+                                yError() << "Could not find camera position";
+
+                            Vector focalpoint;
+                            focalpoint.resize(3);
+                            if(Bottle *bFocalpoint = bMotion.find("focalpoint").asList())
+                            {
+                                focalpoint[0] = bFocalpoint->get(0).asDouble();
+                                focalpoint[1] = bFocalpoint->get(1).asDouble();
+                                focalpoint[2] = bFocalpoint->get(2).asDouble();
+                            }
+                            else
+                                yError() << "Could not find focal point";
+
+                            Vector ref_dir;
+                            ref_dir.resize(3);
+                            if(Bottle *bRefdir = bMotion.find("ref_dir").asList())
+                            {
+                                ref_dir[0] = bRefdir->get(0).asDouble();
+                                ref_dir[1] = bRefdir->get(1).asDouble();
+                                ref_dir[2] = bRefdir->get(2).asDouble();
+                            }
+                            else
+                                yError() << "Could not find reference direction";
+
+                            string tag_plane = bMotion.find("tag_plane").asString();
+                            double range_plane = bMotion.find("range_plane").asDouble();
+
+                            string s = curr_tag+"_"+to_string(j);
+                            getJointInitialConf(bMotion,s);
+
                             if(curr_tag == Rom_Processor::metric_tag)
                             {
-                                string motion_type = bMotion.find("motion_type").asString();
-                                string tag_joint = bMotion.find("tag_joint").asString();
-                                double min = bMotion.find("min").asDouble();
-                                double max = bMotion.find("max").asDouble();
-                                double duration = bMotion.find("duration").asDouble();
-                                int nrep = bMotion.find("nrep").asInt();
-                                int nenv = bMotion.find("nenv").asInt();
-                                double tempwin = bMotion.find("tempwin").asDouble();
-                                double threshold = bMotion.find("threshold").asDouble();
-                                Vector camerapos;
-                                camerapos.resize(3);
-                                if(Bottle *bCamerapos = bMotion.find("camerapos").asList())
-                                {
-                                    camerapos[0] = bCamerapos->get(0).asDouble();
-                                    camerapos[1] = bCamerapos->get(1).asDouble();
-                                    camerapos[2] = bCamerapos->get(2).asDouble();
-                                }
-                                else
-                                    yError() << "Could not find camera position";
-
-                                Vector focalpoint;
-                                focalpoint.resize(3);
-                                if(Bottle *bFocalpoint = bMotion.find("focalpoint").asList())
-                                {
-                                    focalpoint[0] = bFocalpoint->get(0).asDouble();
-                                    focalpoint[1] = bFocalpoint->get(1).asDouble();
-                                    focalpoint[2] = bFocalpoint->get(2).asDouble();
-                                }
-                                else
-                                    yError() << "Could not find focal point";
-
-                                Vector ref_dir;
-                                ref_dir.resize(3);
-                                if(Bottle *bRefdir = bMotion.find("ref_dir").asList())
-                                {
-                                    ref_dir[0] = bRefdir->get(0).asDouble();
-                                    ref_dir[1] = bRefdir->get(1).asDouble();
-                                    ref_dir[2] = bRefdir->get(2).asDouble();
-                                }
-                                else
-                                    yError() << "Could not find reference direction";
-
-                                string tag_plane = bMotion.find("tag_plane").asString();
-                                double range_plane = bMotion.find("range_plane").asDouble();
-
-                                string s = curr_tag+"_"+to_string(j);
-                                getJointInitialConf(bMotion,s);
-
                                 metric_repertoire = new Rom(curr_tag, motion_type, tag_joint, ref_dir, tag_plane,
-                                                            range_plane, min, max, duration, tempwin, threshold,
-                                                            camerapos, focalpoint, keypoints2conf);
+                                                            range_plane, min, max, duration, nrep, nenv, tempwin,
+                                                            threshold, camerapos, focalpoint, keypoints2conf);
                             }
 
                             if(curr_tag == EndPoint_Processor::metric_tag)
                             {
-                                string motion_type = bMotion.find("motion_type").asString();
-                                string tag_joint = bMotion.find("tag_joint").asString();
-                                string tag_plane = bMotion.find("tag_plane").asString();
-                                double duration = bMotion.find("duration").asDouble();
-                                Vector camerapos;
-                                camerapos.resize(3);
-                                if(Bottle *bCamerapos = bMotion.find("camerapos").asList())
-                                {
-                                    camerapos[0] = bCamerapos->get(0).asDouble();
-                                    camerapos[1] = bCamerapos->get(1).asDouble();
-                                    camerapos[2] = bCamerapos->get(2).asDouble();
-                                }
-                                else
-                                    yError() << "Could not find camera position";
-
-                                Vector focalpoint;
-                                focalpoint.resize(3);
-                                if(Bottle *bFocalpoint = bMotion.find("focalpoint").asList())
-                                {
-                                    focalpoint[0] = bFocalpoint->get(0).asDouble();
-                                    focalpoint[1] = bFocalpoint->get(1).asDouble();
-                                    focalpoint[2] = bFocalpoint->get(2).asDouble();
-                                }
-                                else
-                                    yError() << "Could not find focal point";
-
                                 Vector target;
                                 target.resize(3);
                                 if(Bottle *bTarget = bMotion.find("target").asList())
@@ -611,11 +583,9 @@ bool Manager::loadMotionList()
                                 else
                                     yError() << "Could not find target";
 
-                                string s = curr_tag+"_"+to_string(j);
-                                getJointInitialConf(bMotion,s);
-
-                                metric_repertoire = new EndPoint(curr_tag, motion_type, tag_joint, tag_plane, target,
-                                                                 duration, camerapos, focalpoint, keypoints2conf);
+                                metric_repertoire = new EndPoint(curr_tag, motion_type, tag_joint, ref_dir, tag_plane,
+                                                                 range_plane, min, max, duration, nrep, nenv, tempwin,
+                                                                 threshold, camerapos, focalpoint, keypoints2conf, target);
 
                             }
 
