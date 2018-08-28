@@ -112,7 +112,7 @@ public:
     string getProcessedMetric() { return ep->getName(); }
     double getVel() { return ep->getVel(); }
     double getSmoothness() { return ep->getSmoothness(); }
-    double getTrajectory(const Vector &k);
+    double getTrajectory(const Vector &k, const Vector &kref);
 
     static const string metric_tag;
 

@@ -295,12 +295,14 @@ double EndPoint_Processor::computeMetric()
     if(curr_skeleton[tag_joint]->isUpdated() && curr_skeleton[KeyPointTag::shoulder_center]->isUpdated())
     {
         Vector v = curr_skeleton[tag_joint]->getPoint();
+        Vector ref = curr_skeleton[tag_joint]->getParent(0)->getParent(0)->getPoint();
         v.push_back(1.0);
-        est_traj = getTrajectory(v);
+        ref.push_back(1.0);
+        est_traj = getTrajectory(v,ref);
 
         Vector t = ep->getTarget();
         t.push_back(1.0);
-        ideal_traj = getTrajectory(t);
+        ideal_traj = getTrajectory(t,ref);
 
         prev_est_traj = est_traj;
         prev_ideal_traj = ideal_traj;
@@ -344,10 +346,10 @@ void EndPoint_Processor::estimate()
 }
 
 /********************************************************/
-double EndPoint_Processor::getTrajectory(const Vector &k)
+double EndPoint_Processor::getTrajectory(const Vector &k,const Vector &kref)
 {
-    Vector kref = curr_skeleton[KeyPointTag::shoulder_center]->getPoint();
-    kref.push_back(1.0);
+//    Vector kref = curr_skeleton[KeyPointTag::shoulder_center]->getPoint();
+//    kref.push_back(1.0);
     Vector transformed_k = inv_reference_system*k;
     Vector transformed_kref = inv_reference_system*kref;
     Vector v = transformed_k.subVector(0,2)-transformed_kref.subVector(0,2);
