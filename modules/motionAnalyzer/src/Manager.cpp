@@ -565,12 +565,9 @@ bool Manager::loadMotionList()
 
                             if(curr_tag == Rom_Processor::metric_tag)
                             {
-                                metric_repertoire = new Rom(curr_tag, motion_type, tag_joint, ref_dir, tag_plane,
-                                                            range_plane, min, max, duration, nrep, nenv, tempwin,
-                                                            threshold, camerapos, focalpoint, keypoints2conf);
+                                metric_repertoire = new Rom();
                             }
-
-                            if(curr_tag == EndPoint_Processor::metric_tag)
+                            else if(curr_tag == EndPoint_Processor::metric_tag)
                             {
                                 Vector target;
                                 target.resize(3);
@@ -583,11 +580,13 @@ bool Manager::loadMotionList()
                                 else
                                     yError() << "Could not find target";
 
-                                metric_repertoire = new EndPoint(curr_tag, motion_type, tag_joint, ref_dir, tag_plane,
-                                                                 range_plane, min, max, duration, nrep, nenv, tempwin,
-                                                                 threshold, camerapos, focalpoint, keypoints2conf, target);
-
+                                metric_repertoire = new EndPoint();
+                                metric_repertoire->setTarget(target);
                             }
+
+                            metric_repertoire->initialize(curr_tag, motion_type, tag_joint, ref_dir, tag_plane,
+                                                          range_plane, min, max, duration, nrep, nenv, tempwin,
+                                                          threshold, camerapos, focalpoint, keypoints2conf);
 
                             //add the current metric to the repertoire
                             motion_repertoire.insert(pair<string, Metric*>(curr_tag+"_"+to_string(j), metric_repertoire));
@@ -749,54 +748,73 @@ double Manager::loadMetric(const string &metric_tag)
 {
     LockGuard lg(mutex);
 
-    metric = motion_repertoire.at(metric_tag);
-    yInfo() << "Metric to analyze";
-    metric->print();
-    for(int j=0; j<skeletonsInit.size(); j++)
+    if(motion_repertoire.count(metric_tag))
     {
-        if(skeletonsInit[j]->getTag() == metric_tag)
+        metric = motion_repertoire.at(metric_tag);
+        yInfo() << "Metric to analyze";
+        metric->print();
+        for(int j=0; j<skeletonsInit.size(); j++)
         {
-            skel = skeletonsInit[j];
-            skel->print();
-            break;               
+            if(skeletonsInit[j]->getTag() == metric_tag)
+            {
+                skel = skeletonsInit[j];
+                skel->print();
+                break;
+            }
         }
+
+        yDebug() << __LINE__ << metric_tag;
+        processor = createProcessor(metric_tag, metric);
+
+        //send commands to skeletonScaler
+        Bottle cmd,reply;
+        cmd.addVocab(Vocab::encode("load"));
+        string f = metric->getMotionType() + ".log";
+        string context = rf->getContext();
+        cmd.addString(f);
+        cmd.addString(context);
+        scalerPort.write(cmd,reply);
+        if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+        {
+            yError() << "skeletonScaler could not load the log file";
+            return -1.0;
+        }
+
+        cmd.clear();
+        reply.clear();
+        cmd.addVocab(Vocab::encode("rot"));
+        Vector cp = metric->getCameraPos();
+        Vector fp = metric->getFocalPoint();
+        cmd.addList().read(cp);
+        cmd.addList().read(fp);
+        scalerPort.write(cmd,reply);
+        if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+        {
+            yWarning() << "skeletonScaler could not rotate properly the camera";
+        }
+
+        cmd.clear();
+        reply.clear();
+        cmd.addVocab(Vocab::encode("tagt"));
+        string tag_template = metric->getMotionType();
+        cmd.addString(tag_template);
+        dtwPort.write(cmd,reply);
+        if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+        {
+            yError() << "alignmentManager could not load the skeleton tag";
+            return -1.0;
+        }
+
+        if(metric!=NULL)
+            return metric->getDuration();
+
+        return -1.0;
     }
-
-    processor = createProcessor(metric_tag, metric);
-
-    //send commands to skeletonScaler
-    Bottle cmd,reply;
-    cmd.addVocab(Vocab::encode("load"));
-    string f = metric->getMotionType() + ".log";
-    string context = rf->getContext();
-    cmd.addString(f);
-    cmd.addString(context);
-    scalerPort.write(cmd,reply);
-
-    Bottle cmd2,reply2;
-    cmd2.addVocab(Vocab::encode("rot"));
-    Vector cp = metric->getCameraPos();
-    Vector fp = metric->getFocalPoint();
-    cmd2.addList().read(cp);
-    cmd2.addList().read(fp);
-    yInfo() << cmd2.toString();
-    scalerPort.write(cmd2,reply2);
-
-//    //start skeletonScaler
-//    Bottle cmd4,reply4;
-//    cmd4.addVocab(Vocab::encode("run"));
-//    scalerPort.write(cmd4,reply4);
-
-    Bottle cmd3,reply3;
-    cmd3.addVocab(Vocab::encode("tagt"));
-    string tag_template = metric->getMotionType();
-    cmd3.addString(tag_template);
-    dtwPort.write(cmd3,reply3);
-
-    if(metric!=NULL && reply.get(0).asVocab()==Vocab::encode("ok"))
-        return metric->getDuration();
-
-    return -1.0;
+    else
+    {
+        yWarning() << "The metric does not exist in the repertoire";
+        return -1.0;
+    }
 }
 
 /********************************************************/
@@ -955,6 +973,14 @@ bool Manager::start()
     while(out==false)
     {    
         getSkeleton();
+
+        //we do not start if we haven't selected a skeleton tag
+        if(skel_tag.empty() || !updated)
+        {
+            yWarning() << "Please select a proper skeleton tag";
+            return false;
+        }
+
         out=skeletonIn.update_planes();
         Time::yield();
     }    
@@ -1022,15 +1048,15 @@ bool Manager::stop()
     cmd.addVocab(Vocab::encode("stop"));
     scalerPort.write(cmd,reply);
     dtwPort.write(cmd,reply);
-    yInfo() << reply.get(0).toString();
-    if(reply.get(0).asVocab()==Vocab::encode("ok"))
+    if(reply.get(0).asVocab()==Vocab::encode("ok") && starting)
     {
-        Bottle cmd2, reply2;
-        cmd2.addVocab(Vocab::encode("rot"));
-        cmd2.addList().read(cameraposinit);
-        cmd2.addList().read(focalpointinit);
-        yInfo() << cmd2.toString();
-        scalerPort.write(cmd2, reply2);
+        cmd.clear();
+        reply.clear();
+        cmd.addVocab(Vocab::encode("rot"));
+        cmd.addList().read(cameraposinit);
+        cmd.addList().read(focalpointinit);
+        yInfo() << cmd.toString();
+        scalerPort.write(cmd, reply);
 
 //        yInfo() << "stopping";
         starting = false;
@@ -1062,6 +1088,7 @@ bool Manager::stop()
 
         return true;
     }
+    yError() << "Could not stop... maybe not started?";
     return false;
 }
 
@@ -1120,12 +1147,6 @@ void Manager::getSkeleton()
                                             if(skeleton->update_planes())
                                                 all_keypoints.push_back(skeletonIn.get_unordered());
                                             updated=true;
-                                            delete skeleton;
-                                        }
-                                        if(prop.check("tag") && tag=="aligned")
-                                        {
-                                            Skeleton* skeleton = skeleton_factory(prop);
-                                            templateSkeleton.update(skeleton->toProperty());
                                             delete skeleton;
                                         }
                                     }

@@ -25,12 +25,12 @@ const string EndPoint_Processor::metric_tag = "EP";
 /****************************************/
 Processor* createProcessor(const string& motion_tag, const Metric* metric_)
 {
-    if(motion_tag.compare(Rom_Processor::metric_tag) >= 0)
+    if(motion_tag.find(Rom_Processor::metric_tag) != std::string::npos)
     {
         yInfo() << "Creating processor for" << Rom_Processor::metric_tag << "\n";
         return new Rom_Processor(metric_);
     }
-    else if(motion_tag.compare(EndPoint_Processor::metric_tag) >= 0)
+    else if(motion_tag.find(EndPoint_Processor::metric_tag) != std::string::npos)
     {
         yInfo() << "Creating processor for" << EndPoint_Processor::metric_tag << "\n";
         return new EndPoint_Processor(metric_);

@@ -59,7 +59,7 @@ class Manager : public RFModule,
     SkeletonWaist* skel;
     vector<SkeletonWaist*> skeletonsInit;
 
-    SkeletonWaist skeletonIn,templateSkeleton;
+    SkeletonWaist skeletonIn;
 
     map<string, pair<string,double>> keypoints2conf;
 

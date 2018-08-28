@@ -22,6 +22,30 @@ Metric::~Metric()
 
 }
 
+void Metric::initialize(const string &name_, const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
+                        const string &tag_plane_, const double &range_plane_, const double &min_, const double &max_,
+                        const double &duration_, const int &nrep_, const int &nenv_, const double &tempwin_,
+                        const double &threshold_, const Vector &camerapos_, const Vector &focalpoint_,
+                        const map<string, pair<string, double> > &keypoints2conf_)
+{
+    name = name_;
+    motion_type = motion_type_;
+    tag_joint = tag_joint_;
+    ref_dir = ref_dir_;
+    tag_plane = tag_plane_;
+    range_plane = range_plane_;
+    min = min_;
+    max = max_;
+    duration = duration_;
+    nrep = nrep_;
+    nenv = nenv_;
+    tempwin = tempwin_;
+    threshold = threshold_;
+    camerapos = camerapos_;
+    focalpoint = focalpoint_;
+    keypoints2conf = keypoints2conf_;
+}
+
 void Metric::print()
 {   
     yInfo() << "Metric = " << name;
@@ -53,28 +77,10 @@ Rom::Rom()
 
 }
 
-Rom::Rom(const string &name_, const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
-         const string &tag_plane_, const double &range_plane_, const double &min_, const double &max_,
-         const double &duration_, const int &nrep_, const int & nenv_, const double &tempwin_, const double &threshold_,
-         const Vector &camerapos_, const Vector &focalpoint_, const map<string, pair<string,double>> &keypoints2conf_)
-{
-    name = name_;
-    motion_type = motion_type_;
-    tag_joint = tag_joint_;
-    ref_dir = ref_dir_;
-    tag_plane = tag_plane_;
-    range_plane = range_plane_;
-    min = min_;
-    max = max_;
-    duration = duration_;
-    nrep = nrep_;
-    nenv = nenv_;
-    tempwin = tempwin_;
-    threshold = threshold_;
-    camerapos = camerapos_;
-    focalpoint = focalpoint_;
-    keypoints2conf = keypoints2conf_;
-}
+//void Rom::process()
+//{
+
+//}
 
 /************************/
 /*      END POINT       */
@@ -82,31 +88,6 @@ Rom::Rom(const string &name_, const string &motion_type_, const string &tag_join
 EndPoint::EndPoint()
 {
 
-}
-
-EndPoint::EndPoint(const string &name_, const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
-                   const string &tag_plane_, const double &range_plane_, const double &min_, const double &max_,
-                   const double &duration_, const int &nrep_, const int & nenv_, const double &tempwin_,
-                   const double &threshold_, const Vector &camerapos_, const Vector &focalpoint_,
-                   const map<string, pair<string,double>> &keypoints2conf_, const Vector &target_)
-{
-    name = name_;
-    motion_type = motion_type_;
-    tag_joint = tag_joint_;
-    ref_dir = ref_dir_;
-    tag_plane = tag_plane_;
-    range_plane = range_plane_;
-    min = min_;
-    max = max_;
-    duration = duration_;
-    nrep = nrep_;
-    nenv = nenv_;
-    tempwin = tempwin_;
-    threshold = threshold_;
-    camerapos = camerapos_;
-    focalpoint = focalpoint_;
-    keypoints2conf = keypoints2conf_;
-    target = target_;
 }
 
 void EndPoint::setVel(const double &vel_)
@@ -117,4 +98,9 @@ void EndPoint::setVel(const double &vel_)
 void EndPoint::setSmoothness(const double &smoothness_)
 {
     smoothness = smoothness_;
+}
+
+void EndPoint::setTarget(const Vector &target_)
+{
+    target = target_;
 }

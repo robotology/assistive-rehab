@@ -88,20 +88,11 @@ class Scaler : public RFModule
 
                 opacity=0.3;
                 setOpacity(opacity);
-
-//                if(file.find("abduction")!=string::npos)
-//                {
-//                    Vector camerapos(3,0.0),focalpoint(3,0.0);
-//                    camerapos[2]=-2.0;
-//                    rotateCam(camerapos,focalpoint);
-//                }
-//                if(file.find("flexion")!=string::npos)
-//                {
-//                    Vector camerapos(3,0.0),focalpoint(3,0.0);
-//                    camerapos[0]=4.0;
-//                    focalpoint[2]=1.0;
-//                    rotateCam(camerapos,focalpoint);
-//                }
+            }
+            else
+            {
+                yError() << "Unable to find" << file;
+                return false;
             }
         }
         if(command.get(0).asString() == "rot")
@@ -121,6 +112,8 @@ class Scaler : public RFModule
             {
                 reply.addVocab(Vocab::encode("ok"));
             }
+            else
+                yWarning() << "Unable to rotate camera";
         }
         if(command.get(0).asString() == "run")
         {
@@ -128,6 +121,11 @@ class Scaler : public RFModule
             {
                 reply.addVocab(Vocab::encode("ok"));
                 hasStarted=true;
+            }
+            else
+            {
+                yError() << "Unable to start";
+                return false;
             }
         }
         if(command.get(0).asString() == "tag")
@@ -142,6 +140,11 @@ class Scaler : public RFModule
                 hide();
                 hasStarted=false;
                 reply.addVocab(Vocab::encode("ok"));
+            }
+            else
+            {
+                yError() << "Unable to stop";
+                return false;
             }
         }
 
@@ -166,21 +169,6 @@ class Scaler : public RFModule
             cout << "\n";
         }
     }
-
-    /****************************************************************/
-    Matrix multiply(const Matrix& m1, const Matrix& m2)
-    {
-        Matrix res(m1.rows(),m1.cols());
-        for(int i=0;i<m1.rows();i++)
-        {
-            for(int j=0;j<m1.cols();j++)
-            {
-                res[i][j]=m1[i][j]*m2[i][j];
-            }
-        }
-        return res;
-    }
-
 
     /****************************************************************/
     bool isZero(const Matrix& m)
