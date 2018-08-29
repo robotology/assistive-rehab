@@ -63,25 +63,26 @@ void print(const Matrix& m)
 
 /********************************************************/
 void Processor::setInitialConf(SkeletonWaist* skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_,
-                               SkeletonWaist &skeleton)
+                               SkeletonWaist &skeleton_)
 {
     skeleton_init = skeleton_init_;
     keypoints2conf = keypoints2conf_;
+    first_skeleton.update(skeleton_.toProperty());
+    first_skeleton.normalize();
 
-    if(!skeleton.update_planes())
+    if(!first_skeleton.update_planes())
         yError() << "Not all planes are updated";
 
-    coronal = skeleton.getCoronal();
-    sagittal = skeleton.getSagittal();
-    transverse = skeleton.getTransverse();
-    Vector p = skeleton[KeyPointTag::shoulder_center]->getPoint();
+    coronal = first_skeleton.getCoronal();
+    sagittal = first_skeleton.getSagittal();
+    transverse = first_skeleton.getTransverse();
+    Vector p = first_skeleton[KeyPointTag::shoulder_center]->getPoint();
     Matrix T1(4,4);
     T1.setSubcol(coronal,0,0);
     T1.setSubcol(sagittal,0,1);
     T1.setSubcol(transverse,0,2);
     T1.setSubcol(p,0,3);
     T1(3,3)=1.0;
-
     inv_reference_system = SE3inv(T1);
 
  //   skeleton_init.print();
@@ -292,12 +293,12 @@ double EndPoint_Processor::computeMetric()
 
     double est_traj;
     string tag_joint = ep->getTagJoint();
-    if(curr_skeleton[tag_joint]->isUpdated() && curr_skeleton[KeyPointTag::shoulder_center]->isUpdated())
+    if(curr_skeleton[tag_joint]->isUpdated())
     {
-        Vector v = curr_skeleton[tag_joint]->getPoint();
-        Vector ref = curr_skeleton[tag_joint]->getParent(0)->getParent(0)->getPoint();
-        v.push_back(1.0);
+        Vector ref = first_skeleton[tag_joint]->getParent(0)->getParent(0)->getPoint();
         ref.push_back(1.0);
+        Vector v = curr_skeleton[tag_joint]->getPoint();
+        v.push_back(1.0);
         est_traj = getTrajectory(v,ref);
 
         Vector t = ep->getTarget();
@@ -346,10 +347,8 @@ void EndPoint_Processor::estimate()
 }
 
 /********************************************************/
-double EndPoint_Processor::getTrajectory(const Vector &k,const Vector &kref)
+double EndPoint_Processor::getTrajectory(const Vector &k, const Vector &kref)
 {
-//    Vector kref = curr_skeleton[KeyPointTag::shoulder_center]->getPoint();
-//    kref.push_back(1.0);
     Vector transformed_k = inv_reference_system*k;
     Vector transformed_kref = inv_reference_system*kref;
     Vector v = transformed_k.subVector(0,2)-transformed_kref.subVector(0,2);

@@ -41,7 +41,7 @@ class Processor
 protected:
     SkeletonWaist *skeleton_init;
     map<string, pair<string,double>> keypoints2conf;
-    SkeletonWaist curr_skeleton;
+    SkeletonWaist curr_skeleton,first_skeleton;
     Matrix inv_reference_system;
     Vector plane_normal,coronal,sagittal,transverse;
     double score_exercise;
@@ -51,7 +51,7 @@ public:
     virtual ~Processor() {;}
 //    virtual string getMotionType();
     void setInitialConf(SkeletonWaist *skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_,
-                        SkeletonWaist &skeleton);
+                        SkeletonWaist &skeleton_);
     bool isStatic(const KeyPoint& keypoint);
     void update(SkeletonWaist& curr_skeleton_);
     bool isDeviatingFromIntialPose();

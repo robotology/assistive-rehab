@@ -763,7 +763,6 @@ double Manager::loadMetric(const string &metric_tag)
             }
         }
 
-        yDebug() << __LINE__ << metric_tag;
         processor = createProcessor(metric_tag, metric);
 
         //send commands to skeletonScaler
@@ -985,7 +984,7 @@ bool Manager::start()
         Time::yield();
     }    
 
-    processor->setInitialConf(skel, metric->getInitialConf(),skeletonIn);
+    processor->setInitialConf(skel,metric->getInitialConf(),skeletonIn);
 
     //start alignmentManager
     Bottle cmd,reply;
@@ -1019,7 +1018,7 @@ bool Manager::startDebug()
         Time::yield();
     }
 
-    processor->setInitialConf(skel, metric->getInitialConf(),skeletonIn);
+    processor->setInitialConf(skel,metric->getInitialConf(),skeletonIn);
 
     //start alignmentManager
     Bottle cmd,reply;
