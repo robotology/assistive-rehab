@@ -86,7 +86,7 @@ public:
 class AWThirdEstimator : public AWPolyEstimator
 {
 protected:
-    virtual double getEsteeme() { return 3.0*coeff[3]; }
+    virtual double getEsteeme() { return 6.0*coeff[3]; }
 
 public:
     AWThirdEstimator(unsigned int _N, const double _D) : AWPolyEstimator(3,_N,_D) { }
