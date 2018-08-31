@@ -291,71 +291,57 @@ double EndPoint_Processor::computeMetric()
     else if(ep->getTagPlane() == "transverse")
         plane_normal[2]=1.0;
 
-    double est_traj;
+    double est_traj,vel,smoothness;
     string tag_joint = ep->getTagJoint();
     if(curr_skeleton[tag_joint]->isUpdated())
     {
+        //we compute ideal and current trajectory wrt left/right shoulder
         Vector ref = first_skeleton[tag_joint]->getParent(0)->getParent(0)->getPoint();
         ref.push_back(1.0);
         Vector v = curr_skeleton[tag_joint]->getPoint();
         v.push_back(1.0);
-        est_traj = getTrajectory(v,ref);
+        Vector transformed_v = inv_reference_system*v;
+        Vector transformed_ref = inv_reference_system*ref;
+        Vector dv = transformed_v.subVector(0,2)-transformed_ref.subVector(0,2);
+        est_traj = getTrajectory(dv);
 
         Vector t = ep->getTarget();
         t.push_back(1.0);
-        ideal_traj = getTrajectory(t,ref);
+        Vector transformed_t = inv_reference_system*t;
+        Vector dt = transformed_t.subVector(0,2)-transformed_ref.subVector(0,2);
+        ideal_traj = getTrajectory(dt);
+
+        //we compute velocity and smoothness of the end-point
+        AWPolyElement el(transformed_v,Time::now());
+        vel = norm(linEst->estimate(el));
+        smoothness = norm(polyEst->estimate(el));
 
         prev_est_traj = est_traj;
         prev_ideal_traj = ideal_traj;
-    }
-    else
-    {
-        est_traj = prev_est_traj;
-        ideal_traj = prev_ideal_traj;
-    }
-
-    //estimate vel and smoothness
-    estimate();
-
-    return est_traj;
-}
-
-/********************************************************/
-void EndPoint_Processor::estimate()
-{
-    double vel, smoothness;
-    string tag_joint = ep->getTagJoint();
-    if(curr_skeleton[tag_joint]->isUpdated())
-    {
-        Vector kp = curr_skeleton[tag_joint]->getPoint();
-        kp.push_back(1.0);
-        Vector transformed_kp = inv_reference_system*kp;
-        AWPolyElement el(transformed_kp,Time::now());
-        vel = norm(linEst->estimate(el));
-        smoothness = norm(polyEst->estimate(el));
         prev_vel = vel;
         prev_smoothness = smoothness;
     }
     else
     {
+        est_traj = prev_est_traj;
+        ideal_traj = prev_ideal_traj;
         vel = prev_vel;
         smoothness = prev_smoothness;
     }
 
+    //estimate vel and smoothness
     ep->setVel(vel);
     ep->setSmoothness(smoothness);
+
+    return est_traj;
 }
 
 /********************************************************/
-double EndPoint_Processor::getTrajectory(const Vector &k, const Vector &kref)
+double EndPoint_Processor::getTrajectory(const Vector &v)
 {
-    Vector transformed_k = inv_reference_system*k;
-    Vector transformed_kref = inv_reference_system*kref;
-    Vector v = transformed_k.subVector(0,2)-transformed_kref.subVector(0,2);
-
     double dist = dot(v,plane_normal);
-    v = v-dist;
-    double traj = norm(v);
+    Vector proj = v-dist;
+    double traj = norm(proj);
 
     return traj;
 }
