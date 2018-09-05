@@ -47,8 +47,8 @@ class Module : public yarp::os::RFModule, public recognition_IDL
     yarp::os::BufferedPort<yarp::os::Bottle>        blobsPort;
     yarp::os::BufferedPort<yarp::os::Bottle >       targetInPort;
     yarp::os::BufferedPort<yarp::os::Bottle >       targetOutPort;
-    yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelBgr> > imageInPort;
-    yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelBgr> > imageOutPort;
+    yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > imageInPort;
+    yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > imageOutPort;
 
     yarp::os::Mutex     mutex;
 
@@ -56,7 +56,7 @@ class Module : public yarp::os::RFModule, public recognition_IDL
     double              blobs_detection_timeout;
     yarp::os::Bottle    receivedBlobs;
 
-    yarp::sig::ImageOf<yarp::sig::PixelBgr> img;
+    yarp::sig::ImageOf<yarp::sig::PixelRgb> img;
 
     bool                closing;
     bool                interrupting;
@@ -221,7 +221,7 @@ public:
     void getImage()
     {
         yarp::os::LockGuard lg(mutex);
-        if (yarp::sig::ImageOf<yarp::sig::PixelBgr> *tmp=imageInPort.read())
+        if (yarp::sig::ImageOf<yarp::sig::PixelRgb> *tmp=imageInPort.read())
         {
             img=*tmp;
         }
@@ -410,7 +410,7 @@ public:
                                      const int i, const yarp::os::Bottle &labels)
     {
         yarp::os::Bottle winners;
-        yarp::sig::ImageOf<yarp::sig::PixelBgr> imgOut = img;
+        yarp::sig::ImageOf<yarp::sig::PixelRgb> imgOut = img;
         cv::Mat imgMat=cv::cvarrToMat(img.getIplImage());
 
         cv::Scalar highlight(14,198,8);
