@@ -312,8 +312,8 @@ public:
                             else if(l%3==2) //z component
                                 fout.addString("feed_pos_z");
                             fout.addDouble(d);
-                            if(d>dtw_thresh && (ft!=-1 && fc!=-1))
-                            {
+//                            if(d>dtw_thresh && (ft!=-1 && fc!=-1))
+//                            {
                                 //evaluate error distribution
                                 double errpos[warped_template.size()];
                                 for(int k=0; k<warped_template.size(); k++)
@@ -322,25 +322,28 @@ public:
                                 }
                                 //the kurtosis for standard normal distribution is 3
 //                                double kurt = 3.0 + gsl_stats_kurtosis(errpos,1,warped_template.size());
+                                double mu = gsl_stats_mean(errpos,1,warped_template.size());
                                 double sdev = gsl_stats_sd(errpos,1,warped_template.size());
                                 double skwns = gsl_stats_skew(errpos,1,warped_template.size());
 
+                                fout.addDouble(mu);
                                 fout.addDouble(sdev);
                                 fout.addDouble(skwns);
 
                                 fout.addString("feed_speed");
                                 fout.addInt(ft);
                                 fout.addInt(fc);
-                            }
-                            else
-                            {
-                                fout.addDouble(0.0);
-                                fout.addDouble(0.0);
+//                            }
+//                            else
+//                            {
+//                                fout.addDouble(0.0);
+//                                fout.addDouble(0.0);
+//                                fout.addDouble(0.0);
 
-                                fout.addString("feed_speed");
-                                fout.addInt(0);
-                                fout.addInt(0);
-                            }
+//                                fout.addString("feed_speed");
+//                                fout.addInt(0);
+//                                fout.addInt(0);
+//                            }
 
                             joint_template.clear();
                             joint_candidate.clear();

@@ -206,7 +206,7 @@ public:
     /****************************************************************/
     JointFeedback()
     {
-        f.resize(3,5);
+        f.resize(3,6);
     }
 
     /****************************************************************/
@@ -216,14 +216,15 @@ public:
     }
 
     /****************************************************************/
-    void update(const int component, const double dtw, const double std, const double skwn,
-                const double ft, const double fc)
+    void update(const int component, const double dtw, const double mu, const double std, 
+                const double skwn, const double ft, const double fc)
     {
         f[component][0] = dtw;
-        f[component][1] = std;
-        f[component][2] = skwn;
-        f[component][3] = ft;
-        f[component][4] = fc;
+        f[component][1] = mu;
+        f[component][2] = std;
+        f[component][3] = skwn;
+        f[component][4] = ft;
+        f[component][5] = fc;
     }
 
     /****************************************************************/
@@ -267,21 +268,22 @@ class Synthetizer : public BufferedPort<Bottle>
     string moduleName;
     BufferedPort<Bottle> speechPort;
 
-    double dtw_thresh,sdev_thresh,skwns_thresh;
+    double dtw_thresh,mean_thresh,sdev_thresh,skwns_thresh;
     int f_static,range_freq;
     map<string,string> bodypart2verbal;
     map<string,pair<string,vector<string>>> speak_map;
-    int idtw,ikurt,iskwns,ift,ifc;
+    int idtw,imean,isdev,iskwns,ift,ifc;
     int maxlevel;
 
 public:
 
     /********************************************************/
-    Synthetizer(const string &moduleName_, const string &context, const string &speak_file,
-                const double &dtw_thresh_, const double &sdev_thresh_, const int f_static_, const int range_freq_)
+    Synthetizer(const string &moduleName_, const string &context, const string &speak_file, const double &dtw_thresh_, 
+                const double &mean_thresh_, const double &sdev_thresh_, const int f_static_, const int range_freq_)
     {
         moduleName = moduleName_;
         dtw_thresh = dtw_thresh_;
+        mean_thresh = mean_thresh_;
         sdev_thresh = sdev_thresh_;
         f_static = f_static_;
         range_freq = range_freq_;
@@ -326,10 +328,11 @@ public:
         bodypart2verbal[KeyPointTag::shoulder_center]=torso_j;
 
         idtw = 1;
-        ikurt = 2;
-        iskwns = 3;
-        ift = 5;
-        ifc = 6;
+        imean = 2;
+        isdev = 3;
+        iskwns = 4;
+        ift = 6;
+        ifc = 7;
 
         maxlevel = 3;
     }
@@ -458,18 +461,18 @@ public:
                     fj.setName(joint);
                     if(Bottle *feed_x = joint_list->get(1).asList())
                     {
-                        fj.update(0,feed_x->get(idtw).asDouble(),feed_x->get(ikurt).asDouble(),feed_x->get(iskwns).asDouble(),
-                                  feed_x->get(ift).asInt(),feed_x->get(ifc).asInt());
+                        fj.update(0,feed_x->get(idtw).asDouble(),feed_x->get(imean).asDouble(),feed_x->get(isdev).asDouble(),
+                                  feed_x->get(iskwns).asDouble(),feed_x->get(ift).asInt(),feed_x->get(ifc).asInt());
                     }
                     if(Bottle *feed_y = joint_list->get(2).asList())
                     {
-                        fj.update(1,feed_y->get(idtw).asDouble(),feed_y->get(ikurt).asDouble(),feed_y->get(iskwns).asDouble(),
-                                  feed_y->get(ift).asInt(),feed_y->get(ifc).asInt());
+                        fj.update(1,feed_y->get(idtw).asDouble(),feed_y->get(imean).asDouble(),feed_y->get(isdev).asDouble(),
+                                  feed_y->get(iskwns).asDouble(),feed_y->get(ift).asInt(),feed_y->get(ifc).asInt());
                     }
                     if(Bottle *feed_z = joint_list->get(3).asList())
                     {
-                        fj.update(2,feed_z->get(idtw).asDouble(),feed_z->get(ikurt).asDouble(),feed_z->get(iskwns).asDouble(),
-                                  feed_z->get(ift).asInt(),feed_z->get(ifc).asInt());
+                        fj.update(2,feed_z->get(idtw).asDouble(),feed_z->get(imean).asDouble(),feed_z->get(isdev).asDouble(),
+                                  feed_z->get(iskwns).asDouble(),feed_z->get(ift).asInt(),feed_z->get(ifc).asInt());
                     }
 
                     //assess how the single joint is moving from its components
@@ -502,6 +505,9 @@ public:
             vector<SpeechParam> params;
             switch (fin_level)
             {
+            case -1: //moved from initial position
+                speak("position-center");
+                break;
             case 0: //static joints moving or dynamic joints not moving
                 for(size_t i=0; i<bp.size(); i++)
                 {
@@ -550,23 +556,42 @@ public:
     {
         Matrix feedb = f.getFeedbackMatrix();
         double dx = feedb[0][0];
-        double kx = feedb[0][1];
-        double sx = feedb[0][2];
-        int ftx = (int)feedb[0][3];
-        int fcx = (int)feedb[0][4];
+        double mx = feedb[0][1];
+        double kx = feedb[0][2];
+        double sx = feedb[0][3];
+        int ftx = (int)feedb[0][4];
+        int fcx = (int)feedb[0][5];
 
         double dy = feedb[1][0];
-        double ky = feedb[1][1];
-        double sy = feedb[1][2];
-        int fty = (int)feedb[1][3];
-        int fcy = (int)feedb[1][4];
+        double my = feedb[1][1];
+        double ky = feedb[1][2];
+        double sy = feedb[1][3];
+        int fty = (int)feedb[1][4];
+        int fcy = (int)feedb[1][5];
 
         double dz = feedb[2][0];
-        double kz = feedb[2][1];
-        double sz = feedb[2][2];
-        int ftz = (int)feedb[2][3];
-        int fcz = (int)feedb[2][4];
+        double mz = feedb[2][1];
+        double kz = feedb[2][2];
+        double sz = feedb[2][3];
+        int ftz = (int)feedb[2][4];
+        int fcz = (int)feedb[2][5];
 
+        /*******************/
+        /*   ZERO CHECK    */
+        /*******************/
+        {
+            string joint = f.getName();
+            bool errcenterx = fabs(mx) > mean_thresh;
+            bool errcentery = fabs(my) > mean_thresh;
+            bool errcenterz = fabs(mz) > mean_thresh;
+            if(joint == KeyPointTag::shoulder_center && (errcenterx || errcentery || errcenterz))
+            {
+                vector<string> out;
+                out.push_back("");
+                return make_pair(-1,out);
+            }
+        }        
+         
         /*******************/
         /*   FIRST CHECK   */
         /*******************/
@@ -812,11 +837,12 @@ public:
         string speak_file=rf.check("speak-file",Value("speak-it")).asString();
         period = rf.check("period",Value(0.1)).asDouble();
         double dtw_thresh = rf.check("dtw_thresh",Value(0.3)).asDouble();
+        double mean_thresh = rf.check("mean_thresh",Value(0.5)).asDouble();
         double sdev_thresh = rf.check("sdev_thresh",Value(0.6)).asDouble();
         int f_static = rf.check("f_static",Value(1)).asInt();
         int range_freq = rf.check("range_freq",Value(2)).asInt();
 
-        synthetizer = new Synthetizer(moduleName,rf.getContext(),speak_file,dtw_thresh,sdev_thresh,f_static,range_freq);
+        synthetizer = new Synthetizer(moduleName,rf.getContext(),speak_file,dtw_thresh,mean_thresh,sdev_thresh,f_static,range_freq);
         synthetizer->open();
 
         return true;
