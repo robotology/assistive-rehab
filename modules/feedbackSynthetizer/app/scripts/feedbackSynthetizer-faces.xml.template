@@ -1,5 +1,5 @@
 <application>
-<name>Assistive Rehabilitation feedbackSynthetizer App</name>
+<name>Assistive Rehabilitation feedbackSynthetizer with Faces App</name>
 
     <module>
         <name>yarpdev</name>
@@ -22,6 +22,33 @@
     <module>
         <name>yarpOpenPose</name>
         <node>r1-cuda-linux</node>
+    </module>
+
+    <module>
+        <name>human-structure</name>
+        <node>r1-console-linux</node>
+    </module>
+
+    <module>
+        <name>recognition-manager</name>
+        <node>r1-console-linux</node>
+    </module>
+
+    <module>
+        <name>linearClassifierModule</name>
+        <parameters>--BufferSize 1 --CSVM 1.0 --databaseFolder faceDatabase --WeightedSVM 1</parameters>
+        <node>r1-torso1</node>
+    </module>
+
+    <module>
+        <name>caffeCoder</name>
+        <parameters>--from caffeCoder_caffenet.ini</parameters>
+        <node>r1-torso1</node>
+    </module>
+
+    <module>
+        <name>himrepClassifier</name>
+        <node>r1-torso1</node>
     </module>
 
     <module>
@@ -85,15 +112,33 @@
     </module>
 
     <module>
+        <name>yarpview</name>
+        <parameters>--name /viewer/faces --x 750 --y 40 --p 50 --compact</parameters>
+        <node>r1-display-linux</node>
+    </module>
+
+    <module>
         <name>skeletonViewer</name>
         <parameters>--x 1120 --y 10</parameters>
         <node>r1-display-linux</node>
     </module>
 
     <connection>
+        <from>/faceExpressionImage/image:o</from>
+        <to>/robot/faceDisplay/image:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
         <from>/iSpeak/speech-dev/rpc</from>
         <to>/r1/speech:rpc</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/iSpeak/r1:rpc</from>
+        <to>/faceExpressionImage/rpc</to>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
@@ -121,43 +166,91 @@
     </connection>
 
     <connection>
+        <from>/himrepClassifier/img:o</from>
+        <to>/caffeCoder/img:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/caffeCoder/code:o</from>
+        <to>/himrepClassifier/features:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/himrepClassifier/features:o</from>
+        <to>/linearClassifier/features:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/linearClassifier/scores:o</from>
+        <to>/himrepClassifier/scores:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/himrepClassifier/classify:rpc</from>
+        <to>/linearClassifier/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/caffeCoder/img:o</from>
+        <to>/himrepClassifier/SIFTimg:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
         <from>/yarpOpenPose/target:o</from>
+        <to>/human-structure/skeleton:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/propag:o</from>
+        <to>/human-structure/image:i</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/propag:o</from>
+        <to>/recognition-manager/image:i</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/human-structure/target:o</from>
+        <to>/recognition-manager/target:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/human-structure/blobs:o</from>
+        <to>/recognition-manager/blobs:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/recognition-manager/classify:rpc</from>
+        <to>/himrepClassifier/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/recognition-manager/imgClassifier:o</from>
+        <to>/himrepClassifier/img:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/recognition-manager/target:o</from>
         <to>/skeletonRetriever/skeletons:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/skeletonRetriever/opc:rpc</from>
-        <to>/opc/rpc</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/depthCamera/depthImage:o</from>
-        <to>/viewer/depth</to>
-        <protocol>fast_tcp+recv.portmonitor+type.dll+file.depthimage</protocol>
-    </connection>
-
-    <connection>
-        <from>/yarpOpenPose/image:o</from>
-        <to>/viewer/skeleton</to>
-        <protocol>mjpeg</protocol>
-    </connection>
-
-    <connection>
-        <from>/skeletonRetriever/viewer:o</from>
-        <to>/skeletonViewer:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/skeletonPlayer/opc:rpc</from>
-        <to>/opc/rpc</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/skeletonScaler/opc</from>
         <to>/opc/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
@@ -175,8 +268,38 @@
     </connection>
 
     <connection>
-        <from>/motionAnalyzer/dtw:cmd</from>
-        <to>/alignmentManager/rpc</to>
+        <from>/skeletonPlayer/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonScaler/opc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/depthCamera/depthImage:o</from>
+        <to>/viewer/depth</to>
+        <protocol>fast_tcp+recv.portmonitor+type.dll+file.depthimage</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/image:o</from>
+        <to>/viewer/skeleton</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/recognition-manager/image:o</from>
+        <to>/viewer/faces</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonRetriever/viewer:o</from>
+        <to>/skeletonViewer:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
@@ -195,6 +318,12 @@
     <connection>
         <from>/skeletonScaler/viewer:rpc</from>
         <to>/skeletonViewer:rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/motionAnalyzer/dtw:cmd</from>
+        <to>/alignmentManager/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
