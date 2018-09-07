@@ -304,6 +304,15 @@ double EndPoint_Processor::computeMetric()
         Vector transformed_ref = inv_reference_system*ref;
         Vector dv = transformed_v.subVector(0,2)-transformed_ref.subVector(0,2);
         est_traj = getTrajectory(dv);
+        
+        Vector test = first_skeleton[tag_joint]->getParent(0)->getPoint();
+        test.push_back(1.0);
+        Vector transformed_test = inv_reference_system*test;
+        
+        yDebug() << first_skeleton[tag_joint]->getParent(0)->getParent(0)->getTag() << ref.toString();
+        yDebug() << first_skeleton[tag_joint]->getParent(0)->getTag() << test.toString();
+        yDebug() << tag_joint << v.toString();
+        cout << endl; 
 
         Vector t = ep->getTarget();
         t.push_back(1.0);
