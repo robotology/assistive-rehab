@@ -775,7 +775,7 @@ double Manager::loadMetric(const string &metric_tag)
         scalerPort.write(cmd,reply);
         if(reply.get(0).asVocab()!=Vocab::encode("ok"))
         {
-            yError() << "skeletonScaler could not load the log file";
+            yError() << "skeletonScaler could not load" << f << "file";
             return -1.0;
         }
 
