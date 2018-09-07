@@ -266,7 +266,7 @@ EndPoint_Processor::EndPoint_Processor(const Metric *ep_)
 {
     ep = (EndPoint*)ep_;
     linEst = new AWLinEstimator(16,1.0);
-    polyEst = new AWThirdEstimator(16,1.0);
+    jerkEst = new JerkEstimator(16,1.0);
     ideal_traj = 0.0;
     prev_est_traj = 0.0;
     prev_ideal_traj = 0.0;
@@ -278,7 +278,7 @@ EndPoint_Processor::EndPoint_Processor(const Metric *ep_)
 EndPoint_Processor::~EndPoint_Processor()
 {
     delete linEst;
-    delete polyEst;
+    delete jerkEst;
 }
 
 /********************************************************/
@@ -318,7 +318,7 @@ double EndPoint_Processor::computeMetric()
         //we compute velocity and smoothness of the end-point
         AWPolyElement el(transformed_v,Time::now());
         vel = norm(linEst->estimate(el));
-        smoothness = norm(polyEst->estimate(el));
+        smoothness = norm(jerkEst->estimate(el));
 
         prev_est_traj = est_traj;
         prev_ideal_traj = ideal_traj;

@@ -83,20 +83,20 @@ public:
 
 };
 
-class AWThirdEstimator : public AWPolyEstimator
+class JerkEstimator : public AWPolyEstimator
 {
 protected:
     virtual double getEsteeme() { return 6.0*coeff[3]; }
 
 public:
-    AWThirdEstimator(unsigned int _N, const double _D) : AWPolyEstimator(3,_N,_D) { }
+    JerkEstimator(unsigned int _N, const double _D) : AWPolyEstimator(3,_N,_D) { }
 };
 
 class EndPoint_Processor : public Processor
 {
     EndPoint* ep;
     AWLinEstimator *linEst;
-    AWThirdEstimator *polyEst;
+    JerkEstimator *jerkEst;
     double ideal_traj;
     double prev_est_traj,prev_ideal_traj;
     double prev_vel,prev_smoothness;
