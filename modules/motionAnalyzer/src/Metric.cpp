@@ -22,22 +22,13 @@ Metric::~Metric()
 
 }
 
-void Metric::print()
+void Metric::initialize(const string &name_, const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
+                        const string &tag_plane_, const double &range_plane_, const double &min_, const double &max_,
+                        const double &duration_, const int &nrep_, const int &nenv_, const double &tempwin_,
+                        const double &threshold_, const Vector &camerapos_, const Vector &focalpoint_,
+                        const map<string, pair<string, double> > &keypoints2conf_)
 {
-
-}
-
-Rom::Rom()
-{
-
-}
-
-Rom::Rom(const string &name_, const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
-         const string &tag_plane_, const double &range_plane_, const double &min_, const double &max_,
-         const double &duration_, const int &nrep_, const int & nenv_, const double &tempwin_, const double &threshold_,
-         const Vector &camerapos_, const Vector &focalpoint_, const map<string, pair<string,double>> &keypoints2conf_)
-{
-    name = name_; //"ROM";
+    name = name_;
     motion_type = motion_type_;
     tag_joint = tag_joint_;
     ref_dir = ref_dir_;
@@ -55,16 +46,11 @@ Rom::Rom(const string &name_, const string &motion_type_, const string &tag_join
     keypoints2conf = keypoints2conf_;
 }
 
-void Rom::print()
-{
+void Metric::print()
+{   
     yInfo() << "Metric = " << name;
     yInfo() << "Motion type = " << motion_type;
     yInfo() << "Tag joint = " << tag_joint;
-    yInfo() << "Min = " << min;
-    yInfo() << "Max = " << max;
-    yInfo() << "Duration = " << duration;
-    yInfo() << "Temp win = " << tempwin;
-    yInfo() << "Threshold = " << threshold;
 
     yInfo() << KeyPointTag::elbow_left << keypoints2conf[KeyPointTag::elbow_left].first;
     yInfo() << KeyPointTag::elbow_right << keypoints2conf[KeyPointTag::elbow_right].first;
@@ -80,4 +66,41 @@ void Rom::print()
     yInfo() << KeyPointTag::knee_right << keypoints2conf[KeyPointTag::knee_right].first;
     yInfo() << KeyPointTag::ankle_left << keypoints2conf[KeyPointTag::ankle_left].first;
     yInfo() << KeyPointTag::ankle_right << keypoints2conf[KeyPointTag::ankle_right].first;
+
+}
+
+/************************/
+/*        ROM           */
+/************************/
+Rom::Rom()
+{
+
+}
+
+//void Rom::process()
+//{
+
+//}
+
+/************************/
+/*      END POINT       */
+/************************/
+EndPoint::EndPoint()
+{
+
+}
+
+void EndPoint::setVel(const double &vel_)
+{
+    vel = vel_;
+}
+
+void EndPoint::setSmoothness(const double &smoothness_)
+{
+    smoothness = smoothness_;
+}
+
+void EndPoint::setTarget(const Vector &target_)
+{
+    target = target_;
 }
