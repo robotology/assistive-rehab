@@ -12,6 +12,10 @@
 
 #include "Metric.h"
 
+using namespace std;
+using namespace yarp::sig;
+using namespace assistive_rehab;
+
 Metric::Metric()
 {
 

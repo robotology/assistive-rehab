@@ -13,8 +13,10 @@
 #include "Processor.h"
 
 using namespace std;
+using namespace yarp::sig;
 using namespace yarp::math;
 using namespace yarp::os;
+using namespace iCub::ctrl;
 using namespace assistive_rehab;
 
 const string Rom_Processor::metric_tag = "ROM";
