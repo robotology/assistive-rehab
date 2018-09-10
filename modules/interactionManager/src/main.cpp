@@ -88,8 +88,6 @@ class Interaction : public RFModule, public interactionManager_IDL
         {
             if (rep.get(0).asVocab()==ok)
             {
-//                if (state==State::assess)
-//                {
                 if (state==State::wait)
                 {
                     Bottle cmd,rep;
@@ -354,8 +352,6 @@ class Interaction : public RFModule, public interactionManager_IDL
         {
             if (follow_tag!=tag)
             {
-//                if (state==State::assess)
-//                {
                 if (state==State::wait)
                 {
                     Bottle cmd,rep;
@@ -482,8 +478,6 @@ class Interaction : public RFModule, public interactionManager_IDL
                                             history[tag].insert(metric);
 
                                             state=State::wait;
-//                                            state=State::assess;
-//                                            assess_values.clear();
                                             t0=Time::now();
                                             t1=t0;
                                         }
@@ -494,11 +488,6 @@ class Interaction : public RFModule, public interactionManager_IDL
                     }
                 }
             }
-//            if (state!=State::assess)
-//            {
-//                speak("ouch",true);
-//                disengage();
-//            }
             if (state!=State::wait)
             {
                 speak("ouch",true);
