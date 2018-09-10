@@ -50,7 +50,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     const int ok=Vocab::encode("ok");
     const int fail=Vocab::encode("fail");
 
-    enum class State { stopped, idle, seek, follow, engaged, assess } state;
+    enum class State { stopped, idle, seek, follow, engaged, assess, wait } state;
     double period;
     string tag;
     int reinforce_engage_cnt;
@@ -88,7 +88,9 @@ class Interaction : public RFModule, public interactionManager_IDL
         {
             if (rep.get(0).asVocab()==ok)
             {
-                if (state==State::assess)
+//                if (state==State::assess)
+//                {
+                if (state==State::wait)
                 {
                     Bottle cmd,rep;
                     cmd.addString("stop");
@@ -352,7 +354,9 @@ class Interaction : public RFModule, public interactionManager_IDL
         {
             if (follow_tag!=tag)
             {
-                if (state==State::assess)
+//                if (state==State::assess)
+//                {
+                if (state==State::wait)
                 {
                     Bottle cmd,rep;
                     cmd.addString("stop");
@@ -381,6 +385,7 @@ class Interaction : public RFModule, public interactionManager_IDL
                 cmd.addString("look");
                 cmd.addString(tag);
                 cmd.addString(KeyPointTag::shoulder_center);
+
                 if (attentionPort.write(cmd,rep))
                 {
                     vector<SpeechParam> p;
@@ -391,7 +396,7 @@ class Interaction : public RFModule, public interactionManager_IDL
                     state=State::follow;
                     reinforce_engage_cnt=0;
                     t0=Time::now();
-                }                
+                }
             }
         }
 
@@ -400,6 +405,7 @@ class Interaction : public RFModule, public interactionManager_IDL
             Bottle cmd,rep;
             cmd.addString("is_with_raised_hand");
             cmd.addString(tag);
+
             if (attentionPort.write(cmd,rep))
             {
                 if (rep.get(0).asVocab()==ok)
@@ -475,8 +481,9 @@ class Interaction : public RFModule, public interactionManager_IDL
                                             speak("start",true);
                                             history[tag].insert(metric);
 
-                                            state=State::assess;
-                                            assess_values.clear();
+                                            state=State::wait;
+//                                            state=State::assess;
+//                                            assess_values.clear();
                                             t0=Time::now();
                                             t1=t0;
                                         }
@@ -487,7 +494,12 @@ class Interaction : public RFModule, public interactionManager_IDL
                     }
                 }
             }
-            if (state!=State::assess)
+//            if (state!=State::assess)
+//            {
+//                speak("ouch",true);
+//                disengage();
+//            }
+            if (state!=State::wait)
             {
                 speak("ouch",true);
                 disengage();
@@ -520,6 +532,21 @@ class Interaction : public RFModule, public interactionManager_IDL
 
                 speak("end",true);
                 assess("final");
+                speak("greetings",true);
+                disengage();
+            }
+        }
+
+        if(state==State::wait)
+        {
+            double t_0=(Time::now()-t0)/T;
+            if(t_0>1.0)
+            {
+                Bottle cmd,rep;
+                cmd.addString("stop");
+                analyzerPort.write(cmd,rep);
+
+                speak("end",true);
                 speak("greetings",true);
                 disengage();
             }
