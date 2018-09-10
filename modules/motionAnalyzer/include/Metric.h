@@ -21,41 +21,37 @@
 
 #include <AssistiveRehab/skeleton.h>
 
-using namespace std;
-using namespace yarp::sig;
-using namespace assistive_rehab;
-
 class Metric
 {
 protected:
-    string name;
-    string motion_type;
-    string tag_joint;
-    string tag_plane;
+    std::string name;
+    std::string motion_type;
+    std::string tag_joint;
+    std::string tag_plane;
     double duration;
     int nrep;
     int nenv;
-    Vector ref_dir;
+    yarp::sig::Vector ref_dir;
     double range_plane;
     double min;
     double max;
     double tempwin;
     double threshold;
-    Vector camerapos;
-    Vector focalpoint;
-    map<string, pair<string,double>> keypoints2conf;
+    yarp::sig::Vector camerapos;
+    yarp::sig::Vector focalpoint;
+    std::map<std::string, std::pair<std::string,double>> keypoints2conf;
 
 public:
     Metric();
     virtual ~Metric();
 
     void print();
-    void initialize(const string &name_, const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
-                    const string &tag_plane_, const double &range_plane_, const double &min_, const double &max_,
+    void initialize(const std::string &name_, const std::string &motion_type_, const std::string &tag_joint_, const yarp::sig::Vector &ref_dir_,
+                    const std::string &tag_plane_, const double &range_plane_, const double &min_, const double &max_,
                     const double &duration_, const int &nrep_, const int & nenv_, const double &tempwin_,
-                    const double &threshold_, const Vector &camerapos_, const Vector &focalpoint_,
-                    const map<string, pair<string,double>> &keypoints2conf_);
-    Vector getRefDir() const { return ref_dir; }
+                    const double &threshold_, const yarp::sig::Vector &camerapos_, const yarp::sig::Vector &focalpoint_,
+                    const std::map<std::string, std::pair<std::string,double>> &keypoints2conf_);
+    yarp::sig::Vector getRefDir() const { return ref_dir; }
     double getRangePlane() const { return range_plane; }
     double getMax() const { return max; }
     double getMin() const { return min; }
@@ -64,15 +60,15 @@ public:
     int getNenv() const { return nenv; }
     double getTempWin() const { return tempwin; }
     double getThresh() const { return threshold; }
-    string getName() const { return name; }
-    string getTagPlane() const { return tag_plane; }
-    string getTagJoint() const { return tag_joint; }
-    string getMotionType() const { return motion_type; }
-    Vector getCameraPos() const { return camerapos; }
-    Vector getFocalPoint() const { return focalpoint; }
-    map<string, pair<string,double>> getInitialConf() const { return keypoints2conf; }
+    std::string getName() const { return name; }
+    std::string getTagPlane() const { return tag_plane; }
+    std::string getTagJoint() const { return tag_joint; }
+    std::string getMotionType() const { return motion_type; }
+    yarp::sig::Vector getCameraPos() const { return camerapos; }
+    yarp::sig::Vector getFocalPoint() const { return focalpoint; }
+    std::map<std::string, std::pair<std::string,double>> getInitialConf() const { return keypoints2conf; }
 
-    virtual void setTarget(const Vector &target_) = 0;
+    virtual void setTarget(const yarp::sig::Vector &target_) = 0;
 };
 
 class Rom : public Metric
@@ -80,25 +76,25 @@ class Rom : public Metric
 
 public:
     Rom();
-    void setTarget(const Vector &target_) {;}
+    void setTarget(const yarp::sig::Vector &target_) {;}
 
 };
 
 class EndPoint : public Metric
 {
-    Vector target;
+    yarp::sig::Vector target;
     double vel;
     double smoothness;
 
 public:
     EndPoint();
 
-    void setTarget(const Vector &target_);
+    void setTarget(const yarp::sig::Vector &target_);
     void setVel(const double &vel_);
     void setSmoothness(const double &smoothness_);
     double getVel() const { return vel; }
     double getSmoothness() const { return smoothness; }
-    Vector getTarget() const { return target; }
+    yarp::sig::Vector getTarget() const { return target; }
 
 };
 
