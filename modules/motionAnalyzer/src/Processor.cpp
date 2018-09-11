@@ -267,8 +267,8 @@ EndPoint_Processor::EndPoint_Processor()
 EndPoint_Processor::EndPoint_Processor(const Metric *ep_)
 {
     ep = (EndPoint*)ep_;
-    linEst = new AWLinEstimator(16,1.0);
-    jerkEst = new JerkEstimator(16,1.0);
+    linEst = new AWLinEstimator(16,0.5);
+    jerkEst = new JerkEstimator(16,0.1);
     ideal_traj = 0.0;
     prev_est_traj = 0.0;
     prev_ideal_traj = 0.0;
@@ -309,7 +309,7 @@ double EndPoint_Processor::computeMetric()
         
         yDebug() << first_skeleton[tag_joint]->getParent(0)->getParent(0)->getTag() << ref.toString();
         yDebug() << tag_joint << v.toString();
-        cout << endl; 
+        cout << endl;
 
         Vector t = ep->getTarget();
         t.push_back(1.0);
