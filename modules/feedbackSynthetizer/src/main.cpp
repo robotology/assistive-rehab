@@ -258,6 +258,8 @@ class SpeechParam
 {
     ostringstream ss;
 public:
+    SpeechParam();
+    SpeechParam(const SpeechParam &sp) { ss<<sp.get();}
     SpeechParam(const string &s) { ss<<s; }
     string get() const { return ss.str(); }
 };
@@ -274,12 +276,15 @@ class Synthetizer : public BufferedPort<Bottle>
     map<string,pair<string,vector<string>>> speak_map;
     int idtw,imean,isdev,iskwns,ift,ifc;
     int maxlevel;
+    int speak_length;
+    string conj;
 
 public:
 
     /********************************************************/
     Synthetizer(const string &moduleName_, const string &context, const string &speak_file, const double &dtw_thresh_, 
-                const double &mean_thresh_, const double &sdev_thresh_, const int f_static_, const int range_freq_)
+                const double &mean_thresh_, const double &sdev_thresh_, const int f_static_, const int range_freq_,
+                const int speak_length_)
     {
         moduleName = moduleName_;
         dtw_thresh = dtw_thresh_;
@@ -287,6 +292,7 @@ public:
         sdev_thresh = sdev_thresh_;
         f_static = f_static_;
         range_freq = range_freq_;
+        speak_length = speak_length_;
 
         vector<string> joint;
         joint.clear();
@@ -370,13 +376,14 @@ public:
             yError()<<"Unable to find group \"general\"";
             return false;
         }
-        if (!bGroup.check("num-sections"))
+        if (!bGroup.check("num-sections") || !bGroup.check("conjunction"))
         {
-            yError()<<"Unable to find key \"num-sections\"";
+            yError()<<"Unable to find key \"num-sections\" or \"conjunction\"";
             return false;
         }
 
         int num_sections = bGroup.find("num-sections").asInt();
+        conj = bGroup.find("conjunction").asString();
         Bottle &bBody=rf_speak.findGroup("body");
         if (bBody.isNull())
         {
@@ -503,49 +510,64 @@ public:
 
             //speak
             vector<SpeechParam> params;
+            vector<pair<string,vector<SpeechParam>>> speak_buffer;
             switch (fin_level)
             {
             case -1: //moved from initial position
-                speak("position-center");
+                params.clear();
+                speak_buffer.clear();
+                speak_buffer.push_back(make_pair("position-center",params));
                 break;
             case 0: //static joints moving or dynamic joints not moving
+                speak_buffer.clear();
                 for(size_t i=0; i<bp.size(); i++)
                 {
                     params.clear();
                     params.push_back(bodypart2verbal[bp[i]]);
                     if(finalf[i][0] == "static")
-                        speak("static",params);
+                    {
+                        speak_buffer.push_back(make_pair("static",params));
+                    }
                     else
-                        speak("dynamic",params);
+                    {
+                        speak_buffer.push_back(make_pair("dynamic",params));
+                    }
                 }
                 break;
 
             case 1: //error in position
+                speak_buffer.clear();
                 for(size_t i=0; i<bp.size(); i++)
                 {
                     params.clear();
                     params.push_back(bodypart2verbal[bp[i]]);
                     for(size_t j=0; j<finalf[i].size(); j++)
                         params.push_back(finalf[i][j]);
-                    speak("position",params);
+                    speak_buffer.push_back(make_pair("position",params));
                 }
                 break;
 
             case 2: //error in speed
+                speak_buffer.clear();
                 for(size_t i=0; i<bp.size(); i++)
                 {
                     params.clear();
                     params.push_back(bodypart2verbal[bp[i]]);
                     for(size_t j=0; j<finalf[i].size(); j++)
                         params.push_back(finalf[i][j]);
-                    speak("speed",params);
+                    speak_buffer.push_back(make_pair("speed",params));
                 }
                 break;
 
             case 3: //no error
-                speak("perfect");
+                params.clear();
+                speak_buffer.clear();
+                speak_buffer.push_back(make_pair("perfect",params));
                 break;
             }
+
+            speak(speak_buffer);
+
             cout << endl;
         }
 
@@ -597,49 +619,55 @@ public:
         /*******************/
         //static joints in the template must not move
         //dynamic joints in the template must move
+        bool joint_templ_stale = ftx < 0 && fty < 0 && ftz < 0;
+        bool joint_skel_stale = fcx < 0 && fcy < 0 && fcz < 0;
+        if(!joint_templ_stale && !joint_skel_stale)
         {
-            bool ftxy = ftx <= f_static && fty <= f_static;
-            bool ftxz = ftx <= f_static && ftz <= f_static;
-            bool ftyz = fty <= f_static && ftz <= f_static;
-
-            bool fcxy = fcx > f_static && fcy > f_static;
-            bool fcxz = fcx > f_static && fcz > f_static;
-            bool fcyz = fcy > f_static && fcz > f_static;
-
-            //we check if the difference is significant
-            bool dfx = fabs(ftx-fcx) > range_freq;
-            bool dfy = fabs(fty-fcy) > range_freq;
-            bool dfz = fabs(ftz-fcz) > range_freq;
-
-            if(ftxy && fcxy)
             {
-                if(dfx && dfy)
+                bool ftxy = ftx <= f_static && fty <= f_static;
+                bool ftxz = ftx <= f_static && ftz <= f_static;
+                bool ftyz = fty <= f_static && ftz <= f_static;
+
+                bool fcxy = fcx > f_static && fcy > f_static;
+                bool fcxz = fcx > f_static && fcz > f_static;
+                bool fcyz = fcy > f_static && fcz > f_static;
+
+                //we check if the difference is significant
+                bool dfx = fabs(ftx-fcx) > range_freq;
+                bool dfy = fabs(fty-fcy) > range_freq;
+                bool dfz = fabs(ftz-fcz) > range_freq;
+
+                if(ftxy && fcxy)
                 {
-                    vector<string> out;
-                    out.push_back("static");
-                    return make_pair(0,out);
+                    if(dfx && dfy)
+                    {
+                        vector<string> out;
+                        out.push_back("static");
+                        return make_pair(0,out);
+                    }
                 }
-            }
-            if(ftxz && fcxz)
-            {
-                if(dfx && dfz)
+                if(ftxz && fcxz)
                 {
-                    vector<string> out;
-                    out.push_back("static");
-                    return make_pair(0,out);
+                    if(dfx && dfz)
+                    {
+                        vector<string> out;
+                        out.push_back("static");
+                        return make_pair(0,out);
+                    }
                 }
-            }
-            if(ftyz && fcyz)
-            {
-                if(dfy && dfz)
+                if(ftyz && fcyz)
                 {
-                    vector<string> out;
-                    out.push_back("static");
-                    return make_pair(0,out);
+                    if(dfy && dfz)
+                    {
+                        vector<string> out;
+                        out.push_back("static");
+                        return make_pair(0,out);
+                    }
                 }
             }
         }
 
+        if(!joint_templ_stale && !joint_skel_stale)
         {
             bool ftxy = ftx > f_static && fty > f_static;
             bool ftxz = ftx > f_static && ftz > f_static;
@@ -687,6 +715,7 @@ public:
         /*   SECOND CHECK   */
         /********************/
         //we check the error in position
+        if(!joint_templ_stale && !joint_skel_stale)
         {
             bool dtwx = dx < dtw_thresh;
             bool dtwy = dy < dtw_thresh;
@@ -727,6 +756,7 @@ public:
         /*   THIRD CHECK   */
         /*******************/
         //we check the error in speed
+        if(!joint_templ_stale && !joint_skel_stale)
         {
             int dfx = fcx-ftx;
             int dfy = fcy-fty;
@@ -758,49 +788,55 @@ public:
     }
 
     /********************************************************/
-    void speak(const string &key, const vector<SpeechParam> &p=vector<SpeechParam>())
+    void speak(const vector<pair<string,vector<SpeechParam>>> &buffer)
     {
-        string value = speak_map.at(key).first;
-        if(p.size() > 0)
+        for(size_t i=0; i<buffer.size(); i++)
         {
-            size_t pos1 = value.find("%");
-            string value_ex = value.substr(pos1+1,value.length());
-            string f1 = p[0].get();
-            value.replace(pos1,f1.length(),f1);
-            value.erase(pos1+f1.length(),value.length());
-            value += value_ex;
-
-            if(p.size() > 1)
+            if(i>=speak_length)
+                break;
+            string key = buffer[i].first;
+            string value = speak_map.at(key).first;
+            vector<SpeechParam> p = buffer[i].second;
+            if(p.size() > 0)
             {
-                size_t pos2 = value.find("#");
-                string f2 = p[1].get();
-                string value_extra = value.substr(pos2+1,value.length());
-                value.replace(pos2,f2.length(),f2);
-                value += value_extra;
-            }
+                size_t pos1 = value.find("%");
+                string value_ex = value.substr(pos1+1,value.length());
+                string f1 = p[0].get();
+                value.replace(pos1,f1.length(),f1);
+                value.erase(pos1+f1.length(),value.length());
+                value += value_ex;
 
-            if(p.size() > 2)
-            {
-                for(size_t i=2; i<p.size(); i++)
+                if(p.size() > 1)
                 {
-                    if(i==2)
-                        value_ex.erase(value_ex.length()-2,value_ex.length()-1);
-                    string value_extra;
-                    value_extra = value.back();
-                    value.pop_back();
-                    string fi = "," + value_ex + p[i].get();
-                    value.replace(value.length(),fi.length(),fi);
+                    size_t pos2 = value.find("#");
+                    string f2 = p[1].get();
+                    string value_extra = value.substr(pos2+1,value.length());
+                    value.replace(pos2,f2.length(),f2);
                     value += value_extra;
                 }
+
+                if(p.size() > 2)
+                {
+                    for(size_t i=2; i<p.size(); i++)
+                    {
+                        if(i==2)
+                            value_ex.erase(value_ex.length()-2,value_ex.length()-1);
+                        string value_extra;
+                        value_extra = value.back();
+                        value.pop_back();
+                        string fi = conj + value_ex + p[i].get();
+                        value.replace(value.length(),fi.length(),fi);
+                        value += value_extra;
+                    }
+                }
             }
+            yWarning() << value;
+            Bottle &out = speechPort.prepare();
+            out.clear();
+            out.addString(value);
+            speechPort.writeStrict();
+
         }
-
-        yWarning() << value;
-
-        Bottle &out = speechPort.prepare();
-        out.clear();
-        out.addString(value);
-        speechPort.writeStrict();
 
     }
 
@@ -841,8 +877,10 @@ public:
         double sdev_thresh = rf.check("sdev_thresh",Value(0.6)).asDouble();
         int f_static = rf.check("f_static",Value(1)).asInt();
         int range_freq = rf.check("range_freq",Value(2)).asInt();
+        int speak_length = rf.check("speak-length",Value(2)).asInt();
 
-        synthetizer = new Synthetizer(moduleName,rf.getContext(),speak_file,dtw_thresh,mean_thresh,sdev_thresh,f_static,range_freq);
+        synthetizer = new Synthetizer(moduleName,rf.getContext(),speak_file,dtw_thresh,mean_thresh,
+                                      sdev_thresh,f_static,range_freq,speak_length);
         synthetizer->open();
 
         return true;
