@@ -1065,7 +1065,7 @@ bool Manager::stop()
 
         // Use MATIO to write the results in a .mat file
         string filename_report = out_folder + "/user-" + skeletonIn.getTag() + "-" + metric->getMotionType() + "-" + to_string(nsession) + ".mat";
-        mat_t *matfp = Mat_CreateVer(filename_report.c_str(),NULL,MAT_FT_MAT73);
+        mat_t *matfp = Mat_CreateVer(filename_report.c_str(),NULL,MAT_FT_MAT5);
         if (matfp == NULL)
             yError() << "Error creating MAT file";
 
