@@ -129,26 +129,26 @@ public:
         if(command.get(0).asString() == "tagt")
         {
             template_tag = command.get(1).asString();
+            yInfo() << "Template skeleton" << template_tag;
             reply.addVocab(Vocab::encode("ok"));
+            yInfo() << reply.toString();
         }
         if(command.get(0).asString() == "tag")
         {
             skel_tag = command.get(1).asString();
+		    yInfo() << "Current skeleton" << skel_tag;
             reply.addVocab(Vocab::encode("ok"));
         }
         if(command.get(0).asString() == "run")
         {
-            int nrep = command.get(1).asInt();
-            int nenv = command.get(2).asInt();
-            double duration = command.get(3).asDouble();
-            T = nenv*(duration/nrep);
+            T = command.get(1).asDouble();
             yInfo() << "Check every" << T << "seconds";
 
-            Bottle *bDtw = command.get(4).asList();
-            Bottle *bMean = command.get(5).asList();
-            Bottle *bSdev = command.get(6).asList();
-            Bottle *bFstatic = command.get(7).asList();
-            Bottle *bRangeFreq = command.get(8).asList();
+            Bottle *bDtw = command.get(2).asList();
+            Bottle *bMean = command.get(3).asList();
+            Bottle *bSdev = command.get(4).asList();
+            Bottle *bFstatic = command.get(5).asList();
+            Bottle *bRangeFreq = command.get(6).asList();
 
             relaxed_joints.clear();
 

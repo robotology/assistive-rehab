@@ -43,6 +43,53 @@ public:
     string get() const { return ss.str(); }
 };
 
+/****************************************************************/
+class MoveThread : public Thread
+{
+    string file;
+    bool startmoving;
+
+public:
+    MoveThread() : startmoving(false) { }
+
+    void run() override
+    {
+        while(!isStopping())
+        {
+            if(startmoving)
+            {
+                yInfo()<<"Loading"<<file;
+                if(system(file.c_str()))
+                    yError()<<"Processor not available";
+                stopMoving();
+            }
+        }
+    }
+
+    void stopMoving()
+    {
+        yInfo()<<"Stop moving";
+        startmoving=false;
+    }
+
+    bool isMoving() const
+    {
+        return startmoving;
+    }
+
+    void setFile(const string & file_)
+    {
+        file=file_;
+    }
+
+    void startMoving()
+    {
+        yInfo()<<"Start moving";
+        startmoving=true;
+    }
+    
+};
+
 
 /****************************************************************/
 class Interaction : public RFModule, public interactionManager_IDL
@@ -50,11 +97,14 @@ class Interaction : public RFModule, public interactionManager_IDL
     const int ok=Vocab::encode("ok");
     const int fail=Vocab::encode("fail");
 
-    enum class State { stopped, idle, seek, follow, engaged, assess, wait } state;
+    enum class State { stopped, idle, seek, follow, engaged, move } state;
     double period;
     string tag;
+    double t0;
     int reinforce_engage_cnt;
-    double T,t0,t1;
+
+    MoveThread *movethr;
+    string move_file,motion_type;
 
     unordered_map<string,unordered_set<string>> history;
     unordered_map<string,string> speak_map;
@@ -64,6 +114,7 @@ class Interaction : public RFModule, public interactionManager_IDL
 
     RpcClient attentionPort;
     RpcClient analyzerPort;
+    BufferedPort<Bottle> synthetizerPort;
     BufferedPort<Bottle> speechStreamPort;
     RpcClient speechRpcPort;
     RpcServer cmdPort;
@@ -88,7 +139,7 @@ class Interaction : public RFModule, public interactionManager_IDL
         {
             if (rep.get(0).asVocab()==ok)
             {
-                if (state==State::wait)
+                if (state==State::move)
                 {
                     Bottle cmd,rep;
                     cmd.addString("stop");
@@ -289,7 +340,8 @@ class Interaction : public RFModule, public interactionManager_IDL
         {
             grade="high";
         }
-        speak("assess-"+phase+"-"+grade,false);
+        yInfo()<<"Score"<<mean<<grade;
+        speak("assess-"+phase+"-"+grade,true);
         return true;
     }
 
@@ -298,6 +350,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     {
         period=rf.check("period",Value(0.1)).asDouble();
         string speak_file=rf.check("speak-file",Value("speak-it")).asString();
+        move_file=rf.check("move-file",Value("run-movements.sh")).asString();
 
         if (!load_speak(rf.getContext(),speak_file))
         {
@@ -309,6 +362,7 @@ class Interaction : public RFModule, public interactionManager_IDL
 
         attentionPort.open("/interactionManager/attention:rpc");
         analyzerPort.open("/interactionManager/analyzer:rpc");
+        synthetizerPort.open("/interactionManager/synthetizer:i");
         speechStreamPort.open("/interactionManager/speech:o");
         speechRpcPort.open("/interactionManager/speech:rpc");
         cmdPort.open("/interactionManager/cmd:rpc");
@@ -318,6 +372,15 @@ class Interaction : public RFModule, public interactionManager_IDL
         state=State::idle;
         interrupting=false;
         t0=Time::now();
+
+        movethr=new MoveThread();
+        if(!movethr->start())
+        {
+            yError()<<"Move thread not started!";
+            delete movethr;
+            return false;
+        }
+
         return true;
     }
 
@@ -331,8 +394,9 @@ class Interaction : public RFModule, public interactionManager_IDL
     bool updateModule() override
     {
         LockGuard lg(mutex);
-        if ((attentionPort.getOutputCount()==0) || (analyzerPort.getOutputCount()==0) ||
-            (speechStreamPort.getOutputCount()==0) || (speechRpcPort.getOutputCount()==0))
+        if ((attentionPort.getOutputCount()==0) || (analyzerPort.getOutputCount()==0))
+        // || 
+        //    (speechStreamPort.getOutputCount()==0) || (speechRpcPort.getOutputCount()==0))
         {
             yInfo()<<"not connected";
             return true;
@@ -352,7 +416,7 @@ class Interaction : public RFModule, public interactionManager_IDL
         {
             if (follow_tag!=tag)
             {
-                if (state==State::wait)
+                if (state==State::move)
                 {
                     Bottle cmd,rep;
                     cmd.addString("stop");
@@ -442,45 +506,64 @@ class Interaction : public RFModule, public interactionManager_IDL
                     cmd.addString(metric);
                     if (analyzerPort.write(cmd,rep))
                     {
-                        T=rep.get(0).asDouble();
-                        if (T>0.0)
+                        bool ack=rep.get(0).asBool();
+                        if (ack)
                         {
                             cmd.clear();
-                            cmd.addString("selectSkel");
-                            cmd.addString(tag);
-                            if (analyzerPort.write(cmd,rep))
+                            cmd.addString("getMotionType");
+                            if(analyzerPort.write(cmd,rep))
                             {
-                                if (rep.get(0).asVocab()==ok)
+                                motion_type=rep.get(0).asString();
+                                string script_show=move_file+" "+"show_"+motion_type;
+                                string script_perform=move_file+" "+"perform_"+motion_type;
+
+                                cmd.clear();
+                                cmd.addString("selectSkel");
+                                cmd.addString(tag);
+                                yInfo()<<"Selecting skeleton"<<tag;
+                                if (analyzerPort.write(cmd,rep))
                                 {
-                                    if (history.find(tag)==end(history))
+                                    if (rep.get(0).asVocab()==ok)
                                     {
-                                        speak("explain",true);
-                                        vector<SpeechParam> p;
-                                        p.push_back(SpeechParam(T));
-                                        speak("duration",true,p);
-                                    }
-                                    else
-                                    {
-                                        vector<SpeechParam> p;
-                                        p.push_back(SpeechParam(tag[0]!='#'?(tag+","):string("")));
-                                        speak("in-the-know",true,p);
-                                    }
-
-                                    speak("ready",true);                                    
-
-                                    cmd.clear();
-                                    cmd.addString("start");
-                                    if (analyzerPort.write(cmd,rep))
-                                    {
-										if (rep.get(0).asVocab()==ok)
+                                        if (history.find(tag)==end(history))
                                         {
-										    speak("start",true);
-                                            history[tag].insert(metric);
+                                            speak("explain",true);
+                                        }
+                                        else
+                                        {
+                                            vector<SpeechParam> p;
+                                            p.push_back(SpeechParam(tag[0]!='#'?(tag+","):string("")));
+                                            speak("in-the-know",true,p);
+                                        }
 
-                                            state=State::wait;
-                                            t0=Time::now();
-                                            t1=t0;
-										}
+                                        speak("show",true);
+                                        movethr->setFile(script_show);
+                                        movethr->startMoving();
+
+                                        while(movethr->isMoving())
+                                        {									
+                                            //wait until it finishes
+                                            Time::yield();
+                                        }
+                                        
+                                        Time::delay(2.0);
+                                        speak("start",true);
+                                        history[tag].insert(metric);
+                                        movethr->setFile(script_perform);
+                                        
+                                        cmd.clear();
+                                        cmd.addString("start");
+                                        if (analyzerPort.write(cmd,rep))
+                                        {
+											if (rep.get(0).asVocab()==ok)
+                                            {
+												movethr->startMoving();
+                                                state=State::move;
+                                                                                                                                            
+                                                assess_values.clear();
+                                                t0=Time::now();
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -488,54 +571,29 @@ class Interaction : public RFModule, public interactionManager_IDL
                     }
                 }
             }
-            if (state!=State::wait)
+            if (state!=State::move)
             {
                 speak("ouch",true);
                 disengage();
             }
         }
 
-        if (state==State::assess)
+        if(state==State::move)
         {
-            double t_0=(Time::now()-t0)/T;
-            double t_1=(Time::now()-t1)/T;
-            if (t_0<=1.0)
+            if(movethr->isMoving())
             {
-                Bottle cmd,rep;
-                cmd.addString("getQuality");
-                if (analyzerPort.write(cmd,rep))
-                {
-                    assess_values.push_back(rep.get(0).asDouble());
-                }
-                if (t_1>0.55)
-                {
-                    assess("intermediate");
-                    t1=Time::now();
-                }
+                if(Bottle *score = synthetizerPort.read(false))
+                    assess_values.push_back(score->get(0).asDouble());
             }
             else
             {
+                yInfo()<<"Stopping";
                 Bottle cmd,rep;
                 cmd.addString("stop");
                 analyzerPort.write(cmd,rep);
 
                 speak("end",true);
                 assess("final");
-                speak("greetings",true);
-                disengage();
-            }
-        }
-
-        if(state==State::wait)
-        {
-            double t_0=(Time::now()-t0)/T;
-            if(t_0>1.0)
-            {
-                Bottle cmd,rep;
-                cmd.addString("stop");
-                analyzerPort.write(cmd,rep);
-
-                speak("end",true);
                 speak("greetings",true);
                 disengage();
             }
@@ -554,8 +612,11 @@ class Interaction : public RFModule, public interactionManager_IDL
     /****************************************************************/
     bool close() override
     {
+        movethr->stop();
+        delete movethr;
         attentionPort.close();
         analyzerPort.close();
+        synthetizerPort.close();
         speechStreamPort.close();
         speechRpcPort.close();
         cmdPort.close();

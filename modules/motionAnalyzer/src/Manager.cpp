@@ -127,8 +127,6 @@ bool Manager::loadMotionList()
                             double min = bMotion.find("min").asDouble();
                             double max = bMotion.find("max").asDouble();
                             double duration = bMotion.find("duration").asDouble();
-                            int nrep = bMotion.find("nrep").asInt();
-                            int nenv = bMotion.find("nenv").asInt();
                             Vector camerapos;
                             camerapos.resize(3);
                             if(Bottle *bCamerapos = bMotion.find("camerapos").asList())
@@ -235,7 +233,7 @@ bool Manager::loadMotionList()
                             }
 
                             metric_repertoire->initialize(curr_tag, motion_type, tag_joint, ref_dir, tag_plane,
-                                                          min, max, duration, nrep, nenv, camerapos, focalpoint,
+                                                          min, max, duration, camerapos, focalpoint,
                                                           relaxed_joints,relaxed_dtw_thresh,relaxed_mean_thresh,
                                                           relaxed_sdev_thresh,relaxed_f_static,relaxed_range_freq);
 
@@ -258,7 +256,7 @@ bool Manager::loadMotionList()
 }
 
 /********************************************************/
-double Manager::loadMetric(const string &metric_tag)
+bool Manager::loadMetric(const string &metric_tag)
 {
     LockGuard lg(mutex);
 
@@ -281,7 +279,7 @@ double Manager::loadMetric(const string &metric_tag)
         if(reply.get(0).asVocab()!=Vocab::encode("ok"))
         {
             yError() << "skeletonScaler could not load" << f << "file";
-            return -1.0;
+            return false;
         }
 
         cmd.clear();
@@ -306,19 +304,30 @@ double Manager::loadMetric(const string &metric_tag)
         if(reply.get(0).asVocab()!=Vocab::encode("ok"))
         {
             yError() << "alignmentManager could not load the skeleton tag";
-            return -1.0;
+            return false;
         }
 
         if(metric!=NULL)
-            return metric->getDuration();
+            return true;
 
-        return -1.0;
+        return false;
     }
     else
     {
         yWarning() << "The metric does not exist in the repertoire";
-        return -1.0;
+        return false;
     }
+}
+/********************************************************/
+string Manager::getMotionType()
+{
+    LockGuard lg(mutex);
+
+    if(metric!=NULL)
+        return metric->getMotionType();
+    else
+        return "";
+
 }
 
 /********************************************************/
@@ -393,7 +402,7 @@ bool Manager::start()
 		return false;		
 	}
 	
-	Time::delay(3.0);
+	Time::delay(1.0);
 	
     bool out=false;
     while(out==false)
@@ -415,15 +424,12 @@ bool Manager::start()
 
     //start alignmentManager
     reply.clear();
-    cmd.addInt(metric->getNrep());
-    cmd.addInt(metric->getNenv());
     cmd.addDouble(metric->getDuration());
     cmd.addList().read(metric->getDtwThresh());
     cmd.addList().read(metric->getMeanThresh());
     cmd.addList().read(metric->getSdevThresh());
     cmd.addList().read(metric->getFstatic());
     cmd.addList().read(metric->getRangeFreq());
-
     dtwPort.write(cmd,reply);
     if(reply.get(0).asVocab()==Vocab::encode("ok"))
     {

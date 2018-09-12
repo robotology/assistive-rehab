@@ -289,6 +289,7 @@ class Synthetizer : public BufferedPort<Bottle>
 {
     string moduleName;
     BufferedPort<Bottle> speechPort;
+    BufferedPort<Bottle> scorePort;
 
     map<string,string> bodypart2verbal;
     map<string,pair<string,vector<string>>> speak_map;
@@ -367,6 +368,7 @@ public:
         this->useCallback();
         BufferedPort<Bottle>::open("/" + moduleName + "/feedback:i");
         speechPort.open("/" + moduleName + "/speech:o");
+        scorePort.open("/" + moduleName + "/score:o");
 
         return true;
     }
@@ -498,13 +500,14 @@ public:
                                   feed_z->get(imaxpsdt).asDouble(),feed_z->get(imaxpsdc).asDouble());
                     }
                     if(Bottle *b_thresholds = joint_list->get(4).asList())
-                    {
-                        Vector thresholds(5,0.0);
-                        thresholds[0]=b_thresholds->get(0).asDouble();
-                        thresholds[1]=b_thresholds->get(1).asDouble();
-                        thresholds[2]=b_thresholds->get(2).asDouble();
-                        thresholds[3]=b_thresholds->get(3).asInt();
-                        thresholds[4]=b_thresholds->get(4).asInt();
+                    {												
+                        Vector thresholds;
+                        thresholds.resize(5);
+	                    thresholds[0]=b_thresholds->get(1).asDouble();
+                        thresholds[1]=b_thresholds->get(2).asDouble();
+                        thresholds[2]=b_thresholds->get(3).asDouble();
+                        thresholds[3]=b_thresholds->get(4).asInt();
+                        thresholds[4]=b_thresholds->get(5).asInt();
                         fj.setThresholds(thresholds);
                     }
 
@@ -537,14 +540,17 @@ public:
             //speak
             vector<SpeechParam> params;
             vector<pair<string,vector<SpeechParam>>> speak_buffer;
+            double score;
             switch (fin_level)
             {
             case -1: //moved from initial position
+                score = 0.0;
                 params.clear();
                 speak_buffer.clear();
                 speak_buffer.push_back(make_pair("position-center",params));
                 break;
             case 0: //static joints moving or dynamic joints not moving
+                score = 0.0;
                 speak_buffer.clear();
                 for(size_t i=0; i<bp.size(); i++)
                 {
@@ -562,6 +568,7 @@ public:
                 break;
 
             case 1: //error in position
+                score = 0.5;
                 speak_buffer.clear();
                 for(size_t i=0; i<bp.size(); i++)
                 {
@@ -574,6 +581,7 @@ public:
                 break;
 
             case 2: //error in speed
+                score = 0.5;
                 speak_buffer.clear();
                 for(size_t i=0; i<bp.size(); i++)
                 {
@@ -586,6 +594,7 @@ public:
                 break;
 
             case 3: //no error
+                score = 1.0;
                 params.clear();
                 speak_buffer.clear();
                 speak_buffer.push_back(make_pair("perfect",params));
@@ -593,8 +602,13 @@ public:
             }
 
             speak(speak_buffer);
-
             cout << endl;
+
+            Bottle &outscore = scorePort.prepare();
+            outscore.clear();
+            outscore.addDouble(score);
+            scorePort.write();
+
         }
 
     }
@@ -746,7 +760,7 @@ public:
             bool dtwx = dx < f.getDtwThresh();
             bool dtwy = dy < f.getDtwThresh();
             bool dtwz = dz < f.getDtwThresh();
-
+            
             bool errx = kx > f.getSdevThresh();
             bool erry = ky > f.getSdevThresh();
             bool errz = kz > f.getSdevThresh();
@@ -877,6 +891,7 @@ public:
     {
         BufferedPort<Bottle >::close();
         speechPort.close();
+        scorePort.close();
     }
 
 

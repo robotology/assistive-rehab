@@ -29,8 +29,6 @@ protected:
     std::string tag_joint;
     std::string tag_plane;
     double duration;
-    int nrep;
-    int nenv;
     yarp::sig::Vector ref_dir;
     double min;
     double max;
@@ -50,7 +48,7 @@ public:
     void print();
     void initialize(const std::string &name_, const std::string &motion_type_, const std::string &tag_joint_,
                     const yarp::sig::Vector &ref_dir_, const std::string &tag_plane_, const double &min_, const double &max_,
-                    const double &duration_, const int &nrep_, const int & nenv_, const yarp::sig::Vector &camerapos_,
+                    const double &duration_, const yarp::sig::Vector &camerapos_,
                     const yarp::sig::Vector &focalpoint_, const std::vector<std::string> &relaxed_joints_,
                     const yarp::sig::Vector &dtw_thresh_, const yarp::sig::Vector &mean_thresh_,
                     const yarp::sig::Vector &sdev_thresh_, const yarp::sig::Vector &f_static_,
@@ -60,8 +58,6 @@ public:
     double getMax() const { return max; }
     double getMin() const { return min; }
     double getDuration() const { return duration; }
-    int getNrep() const { return nrep; }
-    int getNenv() const { return nenv; }
     std::string getName() const { return name; }
     std::string getTagPlane() const { return tag_plane; }
     std::string getTagJoint() const { return tag_joint; }
