@@ -157,7 +157,7 @@ public:
         win = rf.check("win",Value(-1)).asDouble();
         period = rf.check("period",Value(0.01)).asDouble();
         dtw_thresh = rf.check("dtw_thresh",Value(0.10)).asDouble();
-        psd_noise = rf.check("psd_noise",Value(1000.0)).asDouble();
+        psd_noise = rf.check("psd_noise",Value(2000.0)).asDouble();
         filter_order = rf.check("filter_order",Value(3)).asInt();
 
         opcPort.open("/alignmentManager/opc");
@@ -165,7 +165,7 @@ public:
         rpcPort.open("/alignmentManager/rpc");
         attach(rpcPort);
 
-//        outfile.open("dtw-test.txt");
+        outfile.open("dtw-test.txt");
 
         start = false;
 
@@ -297,9 +297,9 @@ public:
 //                                outfile << warped_candidate[k] << " ";
 //                            outfile << "\n";
 
-
-                            int ft = performFFT(joint_template,"template",i);
-                            int fc = performFFT(joint_candidate,"candidate",i);
+                            double maxpsdt,maxpsdc;
+                            int ft = performFFT(joint_template,"template",i,maxpsdt);
+                            int fc = performFFT(joint_candidate,"candidate",i,maxpsdc);
 
                             /********************************/
                             /*    Difference in position    */
@@ -312,38 +312,28 @@ public:
                             else if(l%3==2) //z component
                                 fout.addString("feed_pos_z");
                             fout.addDouble(d);
-//                            if(d>dtw_thresh && (ft!=-1 && fc!=-1))
-//                            {
-                                //evaluate error distribution
-                                double errpos[warped_template.size()];
-                                for(int k=0; k<warped_template.size(); k++)
-                                {
-                                    errpos[k] = warped_candidate[k]-warped_template[k];
-                                }
-                                //the kurtosis for standard normal distribution is 3
-//                                double kurt = 3.0 + gsl_stats_kurtosis(errpos,1,warped_template.size());
-                                double mu = gsl_stats_mean(errpos,1,warped_template.size());
-                                double sdev = gsl_stats_sd(errpos,1,warped_template.size());
-                                double skwns = gsl_stats_skew(errpos,1,warped_template.size());
 
-                                fout.addDouble(mu);
-                                fout.addDouble(sdev);
-                                fout.addDouble(skwns);
+                            //evaluate error distribution
+                            double errpos[warped_template.size()];
+                            for(int k=0; k<warped_template.size(); k++)
+                            {
+                                errpos[k] = warped_candidate[k]-warped_template[k];
+                            }
+                            //the kurtosis for standard normal distribution is 3
+                            //                                double kurt = 3.0 + gsl_stats_kurtosis(errpos,1,warped_template.size());
+                            double mu = gsl_stats_mean(errpos,1,warped_template.size());
+                            double sdev = gsl_stats_sd(errpos,1,warped_template.size());
+                            double skwns = gsl_stats_skew(errpos,1,warped_template.size());
 
-                                fout.addString("feed_speed");
-                                fout.addInt(ft);
-                                fout.addInt(fc);
-//                            }
-//                            else
-//                            {
-//                                fout.addDouble(0.0);
-//                                fout.addDouble(0.0);
-//                                fout.addDouble(0.0);
+                            fout.addDouble(mu);
+                            fout.addDouble(sdev);
+                            fout.addDouble(skwns);
 
-//                                fout.addString("feed_speed");
-//                                fout.addInt(0);
-//                                fout.addInt(0);
-//                            }
+                            fout.addString("feed_speed");
+                            fout.addInt(ft);
+                            fout.addInt(fc);
+                            fout.addDouble(maxpsdt);
+                            fout.addDouble(maxpsdc);
 
                             joint_template.clear();
                             joint_candidate.clear();
@@ -365,10 +355,10 @@ public:
     }
 
     /********************************************************/
-    int findMax(const vector<Vector> &p)
+    int findMax(const vector<Vector> &p, double &max)
     {
         int imax = 1;
-        double max = p[imax][0];
+        max = p[imax][0];
         //consider half of the spectrum
         for(size_t i=2;i<p.size()/2;i++)
         {
@@ -388,7 +378,7 @@ public:
     }
 
     /********************************************************/
-    int performFFT(const vector<double> &s, const string &name, const int i)
+    int performFFT(const vector<double> &s, const string &name, const int i, double &max)
     {
         int n = s.size();
         fftw_complex *in,*out;
@@ -422,7 +412,7 @@ public:
             psd[j].push_back(pow(abs(out[j][0]),2.0) / (1.0/period)*n);
             filtered_psd[j] = filter.filt(psd[j]);
         }
-        int f = findMax(psd);
+        int f = findMax(psd,max);
 
 //        outfile << "joint" << " " << i << " ";
 //        for(int j=0; j<n; j++)

@@ -206,7 +206,7 @@ public:
     /****************************************************************/
     JointFeedback()
     {
-        f.resize(3,6);
+        f.resize(3,8);
     }
 
     /****************************************************************/
@@ -217,7 +217,8 @@ public:
 
     /****************************************************************/
     void update(const int component, const double dtw, const double mu, const double std, 
-                const double skwn, const double ft, const double fc)
+                const double skwn, const double ft, const double fc, const double maxpsdt,
+                const double maxpsdc)
     {
         f[component][0] = dtw;
         f[component][1] = mu;
@@ -225,6 +226,8 @@ public:
         f[component][3] = skwn;
         f[component][4] = ft;
         f[component][5] = fc;
+        f[component][6] = maxpsdt;
+        f[component][7] = maxpsdc;
     }
 
     /****************************************************************/
@@ -274,7 +277,7 @@ class Synthetizer : public BufferedPort<Bottle>
     int f_static,range_freq;
     map<string,string> bodypart2verbal;
     map<string,pair<string,vector<string>>> speak_map;
-    int idtw,imean,isdev,iskwns,ift,ifc;
+    int idtw,imean,isdev,iskwns,ift,ifc,imaxpsdt,imaxpsdc;
     int maxlevel;
     int speak_length;
     string conj;
@@ -339,6 +342,8 @@ public:
         iskwns = 4;
         ift = 6;
         ifc = 7;
+        imaxpsdt = 8;
+        imaxpsdc = 9;
 
         maxlevel = 3;
     }
@@ -469,17 +474,20 @@ public:
                     if(Bottle *feed_x = joint_list->get(1).asList())
                     {
                         fj.update(0,feed_x->get(idtw).asDouble(),feed_x->get(imean).asDouble(),feed_x->get(isdev).asDouble(),
-                                  feed_x->get(iskwns).asDouble(),feed_x->get(ift).asInt(),feed_x->get(ifc).asInt());
+                                  feed_x->get(iskwns).asDouble(),feed_x->get(ift).asInt(),feed_x->get(ifc).asInt(),
+                                  feed_x->get(imaxpsdt).asDouble(),feed_x->get(imaxpsdc).asDouble());
                     }
                     if(Bottle *feed_y = joint_list->get(2).asList())
                     {
                         fj.update(1,feed_y->get(idtw).asDouble(),feed_y->get(imean).asDouble(),feed_y->get(isdev).asDouble(),
-                                  feed_y->get(iskwns).asDouble(),feed_y->get(ift).asInt(),feed_y->get(ifc).asInt());
+                                  feed_y->get(iskwns).asDouble(),feed_y->get(ift).asInt(),feed_y->get(ifc).asInt(),
+                                  feed_y->get(imaxpsdt).asDouble(),feed_y->get(imaxpsdc).asDouble());
                     }
                     if(Bottle *feed_z = joint_list->get(3).asList())
                     {
                         fj.update(2,feed_z->get(idtw).asDouble(),feed_z->get(imean).asDouble(),feed_z->get(isdev).asDouble(),
-                                  feed_z->get(iskwns).asDouble(),feed_z->get(ift).asInt(),feed_z->get(ifc).asInt());
+                                  feed_z->get(iskwns).asDouble(),feed_z->get(ift).asInt(),feed_z->get(ifc).asInt(),
+                                  feed_z->get(imaxpsdt).asDouble(),feed_z->get(imaxpsdc).asDouble());
                     }
 
                     //assess how the single joint is moving from its components
