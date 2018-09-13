@@ -165,7 +165,7 @@ public:
         rpcPort.open("/alignmentManager/rpc");
         attach(rpcPort);
 
-        outfile.open("dtw-test.txt");
+//        outfile.open("dtw-test.txt");
 
         start = false;
 
