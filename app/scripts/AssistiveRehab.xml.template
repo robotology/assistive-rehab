@@ -64,6 +64,7 @@
 
     <module>
        <name>motionAnalyzer</name>
+       <parameters>--from motion-repertoire-rom12.ini</parameters>
        <node>r1-console-linux</node>
     </module>
 
@@ -81,12 +82,13 @@
 
     <module>
        <name>alignmentManager</name>
+       <parameters>--psd_noise 2000.0</parameters>
        <node>r1-console-linux</node>
     </module>
 
     <module>
        <name>feedbackSynthetizer</name>
-       <parameters>--range_freq 1 --sdev_thresh 0.4</parameters>
+       <parameters>--range_freq 1 --sdev_thresh 0.6</parameters>
        <node>r1-console-linux</node>
     </module>
 
