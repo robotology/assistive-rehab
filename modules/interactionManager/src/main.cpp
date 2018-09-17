@@ -466,22 +466,21 @@ class Interaction : public RFModule, public interactionManager_IDL
                                         speak("in-the-know",true,p);
                                     }
 
-                                    speak("ready",true);
-                                    Time::delay(3.0);
+                                    speak("ready",true);                                    
 
                                     cmd.clear();
                                     cmd.addString("start");
                                     if (analyzerPort.write(cmd,rep))
                                     {
-                                        if (rep.get(0).asVocab()==ok)
+										if (rep.get(0).asVocab()==ok)
                                         {
-                                            speak("start",true);
+										    speak("start",true);
                                             history[tag].insert(metric);
 
                                             state=State::wait;
                                             t0=Time::now();
                                             t1=t0;
-                                        }
+										}
                                     }
                                 }
                             }

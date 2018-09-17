@@ -963,11 +963,22 @@ double Manager::findMax()
 bool Manager::start()
 {
     LockGuard lg(mutex);
-
+                
     yInfo() << "Start!";
 
     result_time.clear();
 
+    Bottle cmd,reply;
+    cmd.addVocab(Vocab::encode("run"));
+    scalerPort.write(cmd,reply);
+    if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+    {
+		yError() << "Could not run skeletonScaler";
+		return false;		
+	}
+	
+	Time::delay(3.0);
+	
     bool out=false;
     while(out==false)
     {    
@@ -987,9 +998,7 @@ bool Manager::start()
     processor->setInitialConf(skel,metric->getInitialConf(),skeletonIn);
 
     //start alignmentManager
-    Bottle cmd,reply;
-    cmd.addVocab(Vocab::encode("run"));
-    scalerPort.write(cmd,reply);
+    reply.clear();
     cmd.addInt(metric->getNrep());
     cmd.addInt(metric->getNenv());
     cmd.addDouble(metric->getDuration());
