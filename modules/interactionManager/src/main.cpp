@@ -466,14 +466,15 @@ class Interaction : public RFModule, public interactionManager_IDL
                                         speak("in-the-know",true,p);
                                     }
 
+                                    speak("ready",true);
+                                    Time::delay(3.0);
+
                                     cmd.clear();
                                     cmd.addString("start");
                                     if (analyzerPort.write(cmd,rep))
                                     {
                                         if (rep.get(0).asVocab()==ok)
                                         {
-                                            speak("ready",true);
-                                            Time::delay(3.0);
                                             speak("start",true);
                                             history[tag].insert(metric);
 
