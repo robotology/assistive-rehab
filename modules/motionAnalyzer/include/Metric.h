@@ -32,7 +32,6 @@ protected:
     int nrep;
     int nenv;
     yarp::sig::Vector ref_dir;
-    double range_plane;
     double min;
     double max;
     yarp::sig::Vector camerapos;
@@ -44,10 +43,9 @@ public:
 
     void print();
     void initialize(const std::string &name_, const std::string &motion_type_, const std::string &tag_joint_, const yarp::sig::Vector &ref_dir_,
-                    const std::string &tag_plane_, const double &range_plane_, const double &min_, const double &max_, const double &duration_,
+                    const std::string &tag_plane_, const double &min_, const double &max_, const double &duration_,
                     const int &nrep_, const int & nenv_, const yarp::sig::Vector &camerapos_, const yarp::sig::Vector &focalpoint_);
     yarp::sig::Vector getRefDir() const { return ref_dir; }
-    double getRangePlane() const { return range_plane; }
     double getMax() const { return max; }
     double getMin() const { return min; }
     double getDuration() const { return duration; }

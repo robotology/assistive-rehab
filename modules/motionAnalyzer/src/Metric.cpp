@@ -27,16 +27,14 @@ Metric::~Metric()
 }
 
 void Metric::initialize(const string &name_, const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
-                        const string &tag_plane_, const double &range_plane_, const double &min_, const double &max_,
-                        const double &duration_, const int &nrep_, const int &nenv_, const Vector &camerapos_,
-                        const Vector &focalpoint_)
+                        const string &tag_plane_, const double &min_, const double &max_, const double &duration_,
+                        const int &nrep_, const int &nenv_, const Vector &camerapos_, const Vector &focalpoint_)
 {
     name = name_;
     motion_type = motion_type_;
     tag_joint = tag_joint_;
     ref_dir = ref_dir_;
     tag_plane = tag_plane_;
-    range_plane = range_plane_;
     min = min_;
     max = max_;
     duration = duration_;

@@ -157,7 +157,6 @@ bool Manager::loadMotionList()
                                 yError() << "Could not find reference direction";
 
                             string tag_plane = bMotion.find("tag_plane").asString();
-                            double range_plane = bMotion.find("range_plane").asDouble();
 
                             if(curr_tag == Rom_Processor::metric_tag)
                             {
@@ -180,7 +179,7 @@ bool Manager::loadMotionList()
                                 metric_repertoire->setTarget(target);
                             }
 
-                            metric_repertoire->initialize(curr_tag, motion_type, tag_joint, ref_dir, tag_plane, range_plane,
+                            metric_repertoire->initialize(curr_tag, motion_type, tag_joint, ref_dir, tag_plane,
                                                           min, max, duration, nrep, nenv, camerapos, focalpoint);
 
                             //add the current metric to the repertoire
