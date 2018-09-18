@@ -35,11 +35,8 @@ protected:
     double range_plane;
     double min;
     double max;
-    double tempwin;
-    double threshold;
     yarp::sig::Vector camerapos;
     yarp::sig::Vector focalpoint;
-    std::map<std::string, std::pair<std::string,double>> keypoints2conf;
 
 public:
     Metric();
@@ -47,10 +44,8 @@ public:
 
     void print();
     void initialize(const std::string &name_, const std::string &motion_type_, const std::string &tag_joint_, const yarp::sig::Vector &ref_dir_,
-                    const std::string &tag_plane_, const double &range_plane_, const double &min_, const double &max_,
-                    const double &duration_, const int &nrep_, const int & nenv_, const double &tempwin_,
-                    const double &threshold_, const yarp::sig::Vector &camerapos_, const yarp::sig::Vector &focalpoint_,
-                    const std::map<std::string, std::pair<std::string,double>> &keypoints2conf_);
+                    const std::string &tag_plane_, const double &range_plane_, const double &min_, const double &max_, const double &duration_,
+                    const int &nrep_, const int & nenv_, const yarp::sig::Vector &camerapos_, const yarp::sig::Vector &focalpoint_);
     yarp::sig::Vector getRefDir() const { return ref_dir; }
     double getRangePlane() const { return range_plane; }
     double getMax() const { return max; }
@@ -58,15 +53,12 @@ public:
     double getDuration() const { return duration; }
     int getNrep() const { return nrep; }
     int getNenv() const { return nenv; }
-    double getTempWin() const { return tempwin; }
-    double getThresh() const { return threshold; }
     std::string getName() const { return name; }
     std::string getTagPlane() const { return tag_plane; }
     std::string getTagJoint() const { return tag_joint; }
     std::string getMotionType() const { return motion_type; }
     yarp::sig::Vector getCameraPos() const { return camerapos; }
     yarp::sig::Vector getFocalPoint() const { return focalpoint; }
-    std::map<std::string, std::pair<std::string,double>> getInitialConf() const { return keypoints2conf; }
 
     virtual void setTarget(const yarp::sig::Vector &target_) = 0;
 };

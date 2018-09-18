@@ -30,29 +30,18 @@ Processor* createProcessor(const std::string& motion_tag, const Metric* metric_)
 
 class Processor
 {
-    double deviation;
     yarp::sig::Matrix invT;
 
 protected:
-    assistive_rehab::SkeletonWaist *skeleton_init;
-    std::map<std::string, std::pair<std::string,double>> keypoints2conf;
     assistive_rehab::SkeletonWaist curr_skeleton,first_skeleton;
     yarp::sig::Matrix inv_reference_system;
     yarp::sig::Vector plane_normal,coronal,sagittal,transverse;
-    double score_exercise;
 
 public:
     Processor();
     virtual ~Processor() {;}
-//    virtual string getMotionType();
-    void setInitialConf(assistive_rehab::SkeletonWaist *skeleton_init_, const std::map<std::string, std::pair<std::string, double> > &keypoints2conf_,
-                        assistive_rehab::SkeletonWaist &skeleton_);
-    bool isStatic(const assistive_rehab::KeyPoint& keypoint);
+    void setInitialConf(assistive_rehab::SkeletonWaist &skeleton_);
     void update(assistive_rehab::SkeletonWaist& curr_skeleton_);
-    bool isDeviatingFromIntialPose();
-    double isDeviatingFromIntialPose(const assistive_rehab::KeyPoint &keypoint, const assistive_rehab::KeyPoint &keypoint_init);
-    double getDeviation() { return deviation; }
-    double getScoreExercise() const { return score_exercise; }
     yarp::sig::Vector getPlaneNormal() const { return plane_normal; }
     virtual double computeMetric() = 0;
     virtual double getIdeal() = 0;
@@ -63,7 +52,7 @@ public:
 class Rom_Processor : public Processor
 {
     const Rom* rom;
-    double prev_result, prev_score;
+    double prev_result;
 
 public:
 

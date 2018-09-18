@@ -45,8 +45,6 @@ Processor* createProcessor(const string& motion_tag, const Metric* metric_)
 Processor::Processor()
 {
     plane_normal.resize(3);
-    deviation = 0.0;
-    score_exercise = 0.0;
     invT.resize(4,4);
     invT.zero();
 }
@@ -64,11 +62,8 @@ void print(const Matrix& m)
 }
 
 /********************************************************/
-void Processor::setInitialConf(SkeletonWaist* skeleton_init_, const map<string, pair<string, double> > &keypoints2conf_,
-                               SkeletonWaist &skeleton_)
+void Processor::setInitialConf(SkeletonWaist &skeleton_)
 {
-    skeleton_init = skeleton_init_;
-    keypoints2conf = keypoints2conf_;
     first_skeleton.update(skeleton_.toProperty());
     first_skeleton.normalize();
 
@@ -87,16 +82,6 @@ void Processor::setInitialConf(SkeletonWaist* skeleton_init_, const map<string, 
     T1(3,3)=1.0;
     inv_reference_system = SE3inv(T1);
 
- //   skeleton_init.print();
-}
-
-/********************************************************/
-bool Processor::isStatic(const KeyPoint& keypoint)
-{
-    if(keypoints2conf[keypoint.getTag()].first == "static")
-        return true;
-    else
-        return false;
 }
 
 /****************************************************************/
@@ -104,48 +89,6 @@ void Processor::update(SkeletonWaist &curr_skeleton_)
 {
     curr_skeleton.update(curr_skeleton_.toProperty());
     curr_skeleton.normalize();
-}
-
-/********************************************************/
-bool Processor::isDeviatingFromIntialPose()
-{
-    bool isDeviating = false;
-    deviation = 0.0;
-
-    for(unsigned int i=0; i<curr_skeleton.getNumKeyPoints(); i++)
-    {
-        if(curr_skeleton[i]->isUpdated() && curr_skeleton[i]->getTag() != KeyPointTag::hip_center)
-        {
-            if(isStatic(*curr_skeleton[i]))
-            {
-                deviation+= isDeviatingFromIntialPose(*curr_skeleton[i], *(*skeleton_init)[i]);
-                isDeviating = true;
-//                yWarning() << curr_skeleton[i]->getTag() << "deviating from initial pose";
-            }
-        }
-    }
-//    cout << "\n";
-
-    return isDeviating;
-}
-
-/********************************************************/
-double Processor::isDeviatingFromIntialPose(const KeyPoint& keypoint, const KeyPoint& keypoint_init)
-{
-    Vector k1=keypoint.getPoint();
-    k1.push_back(1.0);
-    Vector transformed_kp = (inv_reference_system*k1).subVector(0,2);
-    double dev = norm(transformed_kp-keypoint_init.getPoint());
-
-/*    yInfo() << keypoint.getTag()
-            << dev
-            << transformed_kp.toString(3,3)
-            << keypoint_init.getPoint().toString(3,3); */
-
-    if(dev > keypoints2conf[keypoint.getTag()].second)
-        return dev;
-    else
-        return 0.0;
 }
 
 /****************************************/
@@ -161,7 +104,6 @@ Rom_Processor::Rom_Processor(const Metric *rom_)
 {
     rom = (Rom*)rom_;
     prev_result = 0.0;
-    prev_score = 0.0;
 }
 
 /********************************************************/
@@ -183,27 +125,23 @@ double Rom_Processor::computeMetric()
         {
             Vector kp_child = curr_skeleton[tag_joint]->getChild(0)->getPoint();
 
-            int component_to_check;
             if(rom->getTagPlane() == "coronal")
             {
                 Vector cor(3,0.0);
                 cor[0]=1.0;
                 plane_normal = cor;
-                component_to_check = 0;
             }
             else if(rom->getTagPlane() == "sagittal")
             {
                 Vector sag(3,0.0);
                 sag[1]=1.0;
                 plane_normal = sag;
-                component_to_check = 1;
             }
             else if(rom->getTagPlane() == "transverse")
             {
                 Vector trans(3,0.0);
                 trans[2]=1.0;
                 plane_normal = trans;
-                component_to_check = 2;
             }
 
             ref_dir = rom->getRefDir();
@@ -216,14 +154,6 @@ double Rom_Processor::computeMetric()
             Vector transformed_kp_child = inv_reference_system*k2;
 
             v1 = transformed_kp_child.subVector(0,2)-transformed_kp_ref.subVector(0,2);
-
-            score_exercise = 0.7;
-            //if(abs(v1[component_to_check])>rom->getRangePlane())
-            //{
-            //    yInfo() << "out of the plane band" << v1[component_to_check];
-            //    score_exercise = 0.4;
-            //}
-
             double dist = dot(v1,plane_normal);
             v1 = v1-dist*plane_normal;
             double n1 = norm(v1);
@@ -236,19 +166,16 @@ double Rom_Processor::computeMetric()
             theta = acos(dot_p/n2); 
             result = theta * (180/M_PI);           
             prev_result = result;
-            prev_score = score_exercise;    
         }
         else
         {
             yError() << "The keypoint does not have a child ";
             result = 0.0;
-            score_exercise = 0.0;
         }
     }
     else
     { 
         result = prev_result;
-        score_exercise = prev_score;
     }
 
     return result;

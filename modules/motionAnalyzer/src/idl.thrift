@@ -51,10 +51,4 @@ service motionAnalyzer_IDL
    */
    bool selectSkel(1:string skel_tag);
 
-   /**
-   * Get the quality of the performed exercise.
-   * @return the quality of the performed exercise between 0 and 1.
-   */
-   double getQuality();
-
 }
