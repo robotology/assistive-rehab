@@ -200,6 +200,8 @@ class JointFeedback
 {
     string j;
     Matrix f;
+    double dtw_thresh,mean_thresh,sdev_thresh;
+    int f_static,range_freq;
 
 public:
 
@@ -213,6 +215,16 @@ public:
     void setName(const string &joint_name)
     {
         j = joint_name;
+    }
+
+    /****************************************************************/
+    void setThresholds(const Vector &thresholds)
+    {
+        dtw_thresh = thresholds[0];
+        mean_thresh = thresholds[1];
+        sdev_thresh = thresholds[2];
+        f_static = (int)thresholds[3];
+        range_freq = (int)thresholds[4];
     }
 
     /****************************************************************/
@@ -251,9 +263,14 @@ public:
         }
     }
 
+    /****************************************************************/
     Matrix getFeedbackMatrix() const { return f; }
     string getName() const { return j; }
-
+    double getDtwThresh() const { return dtw_thresh; }
+    double getMeanThresh() const { return mean_thresh; }
+    double getSdevThresh() const { return sdev_thresh; }
+    int getFstatic() const { return f_static; }
+    int getRangeFreq() const { return range_freq; }
 };
 
 /****************************************************************/
@@ -273,8 +290,6 @@ class Synthetizer : public BufferedPort<Bottle>
     string moduleName;
     BufferedPort<Bottle> speechPort;
 
-    double dtw_thresh,mean_thresh,sdev_thresh,skwns_thresh;
-    int f_static,range_freq;
     map<string,string> bodypart2verbal;
     map<string,pair<string,vector<string>>> speak_map;
     int idtw,imean,isdev,iskwns,ift,ifc,imaxpsdt,imaxpsdc;
@@ -285,16 +300,9 @@ class Synthetizer : public BufferedPort<Bottle>
 public:
 
     /********************************************************/
-    Synthetizer(const string &moduleName_, const string &context, const string &speak_file, const double &dtw_thresh_, 
-                const double &mean_thresh_, const double &sdev_thresh_, const int f_static_, const int range_freq_,
-                const int speak_length_)
+    Synthetizer(const string &moduleName_, const string &context, const string &speak_file, const int speak_length_)
     {
         moduleName = moduleName_;
-        dtw_thresh = dtw_thresh_;
-        mean_thresh = mean_thresh_;
-        sdev_thresh = sdev_thresh_;
-        f_static = f_static_;
-        range_freq = range_freq_;
         speak_length = speak_length_;
 
         vector<string> joint;
@@ -489,6 +497,16 @@ public:
                                   feed_z->get(iskwns).asDouble(),feed_z->get(ift).asInt(),feed_z->get(ifc).asInt(),
                                   feed_z->get(imaxpsdt).asDouble(),feed_z->get(imaxpsdc).asDouble());
                     }
+                    if(Bottle *b_thresholds = joint_list->get(4).asList())
+                    {
+                        Vector thresholds(5,0.0);
+                        thresholds[0]=b_thresholds->get(0).asDouble();
+                        thresholds[1]=b_thresholds->get(1).asDouble();
+                        thresholds[2]=b_thresholds->get(2).asDouble();
+                        thresholds[3]=b_thresholds->get(3).asInt();
+                        thresholds[4]=b_thresholds->get(4).asInt();
+                        fj.setThresholds(thresholds);
+                    }
 
                     //assess how the single joint is moving from its components
                     //the result is a pair with the level of the hierarchy for that joint (int)
@@ -611,9 +629,9 @@ public:
         /*******************/
         {
             string joint = f.getName();
-            bool errcenterx = fabs(mx) > mean_thresh;
-            bool errcentery = fabs(my) > mean_thresh;
-            bool errcenterz = fabs(mz) > mean_thresh;
+            bool errcenterx = fabs(mx) > f.getMeanThresh();
+            bool errcentery = fabs(my) > f.getMeanThresh();
+            bool errcenterz = fabs(mz) > f.getMeanThresh();
             if(joint == KeyPointTag::shoulder_center && (errcenterx || errcentery || errcenterz))
             {
                 vector<string> out;
@@ -632,18 +650,18 @@ public:
         if(!joint_templ_stale && !joint_skel_stale)
         {
             {
-                bool ftxy = ftx <= f_static && fty <= f_static;
-                bool ftxz = ftx <= f_static && ftz <= f_static;
-                bool ftyz = fty <= f_static && ftz <= f_static;
+                bool ftxy = ftx <= f.getFstatic() && fty <= f.getFstatic();
+                bool ftxz = ftx <= f.getFstatic() && ftz <= f.getFstatic();
+                bool ftyz = fty <= f.getFstatic() && ftz <= f.getFstatic();
 
-                bool fcxy = fcx > f_static && fcy > f_static;
-                bool fcxz = fcx > f_static && fcz > f_static;
-                bool fcyz = fcy > f_static && fcz > f_static;
+                bool fcxy = fcx > f.getFstatic() && fcy > f.getFstatic();
+                bool fcxz = fcx > f.getFstatic() && fcz > f.getFstatic();
+                bool fcyz = fcy > f.getFstatic() && fcz > f.getFstatic();
 
                 //we check if the difference is significant
-                bool dfx = fabs(ftx-fcx) > range_freq;
-                bool dfy = fabs(fty-fcy) > range_freq;
-                bool dfz = fabs(ftz-fcz) > range_freq;
+                bool dfx = fabs(ftx-fcx) > f.getRangeFreq();
+                bool dfy = fabs(fty-fcy) > f.getRangeFreq();
+                bool dfz = fabs(ftz-fcz) > f.getRangeFreq();
 
                 if(ftxy && fcxy)
                 {
@@ -677,18 +695,18 @@ public:
 
         if(!joint_templ_stale && !joint_skel_stale)
         {
-            bool ftxy = ftx > f_static && fty > f_static;
-            bool ftxz = ftx > f_static && ftz > f_static;
-            bool ftyz = fty > f_static && ftz > f_static;
+            bool ftxy = ftx > f.getFstatic() && fty > f.getFstatic();
+            bool ftxz = ftx > f.getFstatic() && ftz > f.getFstatic();
+            bool ftyz = fty > f.getFstatic() && ftz > f.getFstatic();
 
-            bool fcxy = fcx <= f_static && fcy <= f_static;
-            bool fcxz = fcx <= f_static && fcz <= f_static;
-            bool fcyz = fcy <= f_static && fcz <= f_static;
+            bool fcxy = fcx <= f.getFstatic() && fcy <= f.getFstatic();
+            bool fcxz = fcx <= f.getFstatic() && fcz <= f.getFstatic();
+            bool fcyz = fcy <= f.getFstatic() && fcz <= f.getFstatic();
 
             //we check if the difference is significant
-            bool dfx = fabs(ftx-fcx) >= range_freq;
-            bool dfy = fabs(fty-fcy) >= range_freq;
-            bool dfz = fabs(ftz-fcz) >= range_freq;
+            bool dfx = fabs(ftx-fcx) >=  f.getRangeFreq();
+            bool dfy = fabs(fty-fcy) >=  f.getRangeFreq();
+            bool dfz = fabs(ftz-fcz) >=  f.getRangeFreq();
 
             if(ftxy && fcxy)
             {
@@ -725,13 +743,13 @@ public:
         //we check the error in position
         if(!joint_templ_stale && !joint_skel_stale)
         {
-            bool dtwx = dx < dtw_thresh;
-            bool dtwy = dy < dtw_thresh;
-            bool dtwz = dz < dtw_thresh;
+            bool dtwx = dx < f.getDtwThresh();
+            bool dtwy = dy < f.getDtwThresh();
+            bool dtwz = dz < f.getDtwThresh();
 
-            bool errx = kx > sdev_thresh;
-            bool erry = ky > sdev_thresh;
-            bool errz = kz > sdev_thresh;
+            bool errx = kx > f.getSdevThresh();
+            bool erry = ky > f.getSdevThresh();
+            bool errz = kz > f.getSdevThresh();
             if( errx || erry || errz )
             {
                 vector<string> out;
@@ -769,12 +787,12 @@ public:
             int dfx = fcx-ftx;
             int dfy = fcy-fty;
             int dfz = fcz-ftz;
-            bool fxy_pos = dfx > range_freq && dfy > range_freq;
-            bool fxz_pos = dfx > range_freq && dfz > range_freq;
-            bool fyz_pos = dfy > range_freq && dfz > range_freq;
-            bool fxy_neg = dfx < -range_freq && dfy < -range_freq;
-            bool fxz_neg = dfx < -range_freq && dfz < -range_freq;
-            bool fyz_neg = dfy < -range_freq && dfz < -range_freq;
+            bool fxy_pos = dfx >  f.getRangeFreq() && dfy >  f.getRangeFreq();
+            bool fxz_pos = dfx >  f.getRangeFreq() && dfz >  f.getRangeFreq();
+            bool fyz_pos = dfy >  f.getRangeFreq() && dfz >  f.getRangeFreq();
+            bool fxy_neg = dfx < - f.getRangeFreq() && dfy < - f.getRangeFreq();
+            bool fxz_neg = dfx < - f.getRangeFreq() && dfz < - f.getRangeFreq();
+            bool fyz_neg = dfy < - f.getRangeFreq() && dfz < - f.getRangeFreq();
 
             vector<string> out;
             if(fxy_pos || fxz_pos || fyz_pos)
@@ -880,15 +898,9 @@ public:
 
         string speak_file=rf.check("speak-file",Value("speak-it")).asString();
         period = rf.check("period",Value(0.1)).asDouble();
-        double dtw_thresh = rf.check("dtw_thresh",Value(0.3)).asDouble();
-        double mean_thresh = rf.check("mean_thresh",Value(0.5)).asDouble();
-        double sdev_thresh = rf.check("sdev_thresh",Value(0.6)).asDouble();
-        int f_static = rf.check("f_static",Value(1)).asInt();
-        int range_freq = rf.check("range_freq",Value(2)).asInt();
         int speak_length = rf.check("speak-length",Value(2)).asInt();
 
-        synthetizer = new Synthetizer(moduleName,rf.getContext(),speak_file,dtw_thresh,mean_thresh,
-                                      sdev_thresh,f_static,range_freq,speak_length);
+        synthetizer = new Synthetizer(moduleName,rf.getContext(),speak_file,speak_length);
         synthetizer->open();
 
         return true;

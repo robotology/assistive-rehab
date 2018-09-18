@@ -28,7 +28,9 @@ Metric::~Metric()
 
 void Metric::initialize(const string &name_, const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
                         const string &tag_plane_, const double &min_, const double &max_, const double &duration_,
-                        const int &nrep_, const int &nenv_, const Vector &camerapos_, const Vector &focalpoint_)
+                        const int &nrep_, const int &nenv_, const Vector &camerapos_, const Vector &focalpoint_,
+                        const vector<string> &relaxed_joints_, const Vector &dtw_thresh_, const Vector &mean_thresh_,
+                        const Vector &sdev_thresh_, const Vector &f_static_, const Vector &range_freq_)
 {
     name = name_;
     motion_type = motion_type_;
@@ -42,6 +44,12 @@ void Metric::initialize(const string &name_, const string &motion_type_, const s
     nenv = nenv_;
     camerapos = camerapos_;
     focalpoint = focalpoint_;
+    relaxed_joints = relaxed_joints_;
+    dtw_thresh = dtw_thresh_;
+    mean_thresh = mean_thresh_;
+    sdev_thresh = sdev_thresh_;
+    f_static = f_static_;
+    range_freq = range_freq_;
 }
 
 void Metric::print()
@@ -49,6 +57,10 @@ void Metric::print()
     yInfo() << "Metric = " << name;
     yInfo() << "Motion type = " << motion_type;
     yInfo() << "Tag joint = " << tag_joint;
+    yInfo() << "Relaxed joints = ";
+    for(size_t i=0; i<relaxed_joints.size(); i++)
+        cout << relaxed_joints[i] << " ";
+    cout << endl;
 }
 
 /************************/

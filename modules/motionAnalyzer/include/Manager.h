@@ -88,11 +88,22 @@ class Manager : public yarp::os::RFModule,
 
     yarp::os::Mutex mutex;
 
+    //thresholds for feedback
+    double dtw_thresh,mean_thresh,sdev_thresh;
+    int f_static,range_freq;
+    std::vector<std::string> relaxed_joints;
+    yarp::sig::Vector relaxed_dtw_thresh;
+    yarp::sig::Vector relaxed_mean_thresh;
+    yarp::sig::Vector relaxed_sdev_thresh;
+    yarp::sig::Vector relaxed_f_static;
+    yarp::sig::Vector relaxed_range_freq;
+
     void init();
     bool loadInitialConf();
     bool loadMotionList();
     double loadMetric(const std::string &metric_tag);
     std::vector<std::string> listMetrics();
+    std::vector<std::string> listRelaxedJoints();
     bool selectSkel(const std::string &skel_tag);
     bool start();
     bool stop();

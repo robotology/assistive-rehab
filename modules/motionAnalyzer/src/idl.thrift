@@ -51,4 +51,10 @@ service motionAnalyzer_IDL
    */
    bool selectSkel(1:string skel_tag);
 
+   /**
+   * List joints whose feedback thresholds are relaxed.
+   * @return the list of joints whose feedback thresholds are relaxed, depending on the exercise.
+   */
+   list<string> listRelaxedJoints()
+
 }

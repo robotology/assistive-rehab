@@ -115,7 +115,6 @@
 
     <module>
        <name>feedbackSynthetizer</name>
-       <parameters>--range_freq 1 --sdev_thresh 0.6</parameters>
        <node>r1-console-linux</node>
     </module>
 
@@ -380,6 +379,12 @@
     <connection>
         <from>/alignmentManager/opc</from>
         <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/alignmentManager/analyzer:rpc</from>
+        <to>/motionAnalyzer/cmd</to>
         <protocol>fast_tcp</protocol>
     </connection>
 

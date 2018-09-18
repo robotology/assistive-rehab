@@ -83,6 +83,12 @@ bool Manager::loadInitialConf()
         }
         else
             yError() << "Could not load initial focal point";
+
+        dtw_thresh = bGeneral.find("dtw_thresh").asDouble();
+        mean_thresh = bGeneral.find("mean_thresh").asDouble();
+        sdev_thresh = bGeneral.find("sdev_thresh").asDouble();
+        f_static = bGeneral.find("f_static").asInt();
+        range_freq = bGeneral.find("range_freq").asInt();
     }
 
     return true;
@@ -158,6 +164,55 @@ bool Manager::loadMotionList()
 
                             string tag_plane = bMotion.find("tag_plane").asString();
 
+                            relaxed_joints.clear();
+                            relaxed_dtw_thresh.clear();
+                            relaxed_mean_thresh.clear();
+                            relaxed_sdev_thresh.clear();
+                            relaxed_f_static.clear();
+                            relaxed_range_freq.clear();
+
+                            relaxed_dtw_thresh.push_back(dtw_thresh);
+                            relaxed_mean_thresh.push_back(mean_thresh);
+                            relaxed_sdev_thresh.push_back(sdev_thresh);
+                            relaxed_f_static.push_back(f_static);
+                            relaxed_range_freq.push_back(range_freq);
+
+                            if(Bottle *bRelaxedJoints = bMotion.find("relaxed_list").asList())
+                            {
+                                for(size_t i=0; i<bRelaxedJoints->size(); i++)
+                                    relaxed_joints.push_back(bRelaxedJoints->get(i).asString());
+
+                                if(Bottle *bDtwThresh = bMotion.find("dtw_thresh").asList())
+                                {
+                                    for(size_t i=0; i<bDtwThresh->size(); i++)
+                                        relaxed_dtw_thresh.push_back(bDtwThresh->get(i).asDouble());
+                                }
+
+                                if(Bottle *bMeanThresh = bMotion.find("mean_thresh").asList())
+                                {
+                                    for(size_t i=0; i<bMeanThresh->size(); i++)
+                                        relaxed_mean_thresh.push_back(bMeanThresh->get(i).asDouble());
+                                }
+
+                                if(Bottle *bSdevThresh = bMotion.find("sdev_thresh").asList())
+                                {
+                                    for(size_t i=0; i<bSdevThresh->size(); i++)
+                                        relaxed_sdev_thresh.push_back(bSdevThresh->get(i).asDouble());
+                                }
+
+                                if(Bottle *bFstatic = bMotion.find("f_static").asList())
+                                {
+                                    for(size_t i=0; i<bFstatic->size(); i++)
+                                        relaxed_f_static.push_back(bFstatic->get(i).asInt());
+                                }
+
+                                if(Bottle *bRangeFreq = bMotion.find("range_freq").asList())
+                                {
+                                    for(size_t i=0; i<bRangeFreq->size(); i++)
+                                        relaxed_range_freq.push_back(bRangeFreq->get(i).asInt());
+                                }
+                            }
+
                             if(curr_tag == Rom_Processor::metric_tag)
                             {
                                 metric_repertoire = new Rom();
@@ -180,11 +235,13 @@ bool Manager::loadMotionList()
                             }
 
                             metric_repertoire->initialize(curr_tag, motion_type, tag_joint, ref_dir, tag_plane,
-                                                          min, max, duration, nrep, nenv, camerapos, focalpoint);
+                                                          min, max, duration, nrep, nenv, camerapos, focalpoint,
+                                                          relaxed_joints,relaxed_dtw_thresh,relaxed_mean_thresh,
+                                                          relaxed_sdev_thresh,relaxed_f_static,relaxed_range_freq);
 
                             //add the current metric to the repertoire
                             motion_repertoire.insert(pair<string, Metric*>(curr_tag+"_"+to_string(j), metric_repertoire));
-//                            motion_repertoire[curr_tag+"_"+to_string(j)]->print();
+                            motion_repertoire[curr_tag+"_"+to_string(j)]->print();
                         }
                     }
                 }
@@ -279,6 +336,15 @@ vector<string> Manager::listMetrics()
 }
 
 /********************************************************/
+vector<string> Manager::listRelaxedJoints()
+{
+    LockGuard lg(mutex);
+
+    vector<string> reply=metric->getRelaxedJoints();
+    return reply;
+}
+
+/********************************************************/
 bool Manager::selectSkel(const string &skel_tag)
 {
     LockGuard lg(mutex);
@@ -352,6 +418,12 @@ bool Manager::start()
     cmd.addInt(metric->getNrep());
     cmd.addInt(metric->getNenv());
     cmd.addDouble(metric->getDuration());
+    cmd.addList().read(metric->getDtwThresh());
+    cmd.addList().read(metric->getMeanThresh());
+    cmd.addList().read(metric->getSdevThresh());
+    cmd.addList().read(metric->getFstatic());
+    cmd.addList().read(metric->getRangeFreq());
+
     dtwPort.write(cmd,reply);
     if(reply.get(0).asVocab()==Vocab::encode("ok"))
     {
