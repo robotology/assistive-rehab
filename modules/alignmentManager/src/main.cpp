@@ -35,17 +35,23 @@ private:
     //ports
     RpcServer rpcPort;
     RpcClient opcPort;
+    RpcClient analyzerPort;
     BufferedPort<Bottle> outPort;
 
     //parameters
     int win,filter_order;
-    double T,tstart,dtw_thresh,period,psd_noise;
+    double T,tstart,period,psd_noise;
 
     SkeletonWaist skeletonIn,skeletonTemplate;
     string skel_tag,template_tag;
     vector<vector<Vector>> skeleton_template,skeleton_candidate;
-    bool updated,start;
+    bool updated,start,first_run;
     vector<double> joint_template,joint_candidate,warped_template,warped_candidate;
+    vector<string> relaxed_joints;
+    Vector dtw_thresh,mean_thresh,sdev_thresh,f_static,range_freq;
+    double outdtw_thresh,outmean_thresh,outsdev_thresh;
+    int outf_static,outrange_freq;
+
 //    ofstream outfile;
 
 
@@ -138,8 +144,32 @@ public:
             T = nenv*(duration/nrep);
             yInfo() << "Check every" << T << "seconds";
 
+            Bottle *bDtw = command.get(4).asList();
+            Bottle *bMean = command.get(5).asList();
+            Bottle *bSdev = command.get(6).asList();
+            Bottle *bFstatic = command.get(7).asList();
+            Bottle *bRangeFreq = command.get(8).asList();
+
+            relaxed_joints.clear();
+
+            for(size_t i=0; i<bDtw->size(); i++)
+                dtw_thresh.push_back(bDtw->get(i).asDouble());
+
+            for(size_t i=0; i<bMean->size(); i++)
+                mean_thresh.push_back(bMean->get(i).asDouble());
+
+            for(size_t i=0; i<bSdev->size(); i++)
+                sdev_thresh.push_back(bSdev->get(i).asDouble());
+
+            for(size_t i=0; i<bFstatic->size(); i++)
+                f_static.push_back(bFstatic->get(i).asInt());
+
+            for(size_t i=0; i<bRangeFreq->size(); i++)
+                range_freq.push_back(bRangeFreq->get(i).asInt());
+
             tstart = Time::now();
             start = true;
+            first_run = true;
             reply.addVocab(Vocab::encode("ok"));
         }
         if(command.get(0).asString() == "stop")
@@ -156,12 +186,12 @@ public:
     {
         win = rf.check("win",Value(-1)).asDouble();
         period = rf.check("period",Value(0.01)).asDouble();
-        dtw_thresh = rf.check("dtw_thresh",Value(0.10)).asDouble();
         psd_noise = rf.check("psd_noise",Value(2000.0)).asDouble();
         filter_order = rf.check("filter_order",Value(3)).asInt();
 
         opcPort.open("/alignmentManager/opc");
         outPort.open("/alignmentManager:o");
+        analyzerPort.open("/alignmentManager/analyzer:rpc");
         rpcPort.open("/alignmentManager/rpc");
         attach(rpcPort);
 
@@ -177,6 +207,7 @@ public:
     {
         opcPort.interrupt();
         outPort.interrupt();
+        analyzerPort.interrupt();
         rpcPort.interrupt();
         yInfo() << "Interrupted module";
         return true;
@@ -189,6 +220,7 @@ public:
 
         opcPort.close();
         outPort.close();
+        analyzerPort.close();
         rpcPort.close();
         yInfo() << "Closed ports";
         return true;
@@ -241,6 +273,23 @@ public:
         //if we query the database
         if(opcPort.getOutputCount() > 0 && start)
         {
+            if(first_run)
+            {
+                Bottle cmd,rep;
+                cmd.addString("listRelaxedJoints");
+                if(analyzerPort.write(cmd,rep))
+                {
+                    Bottle &rel_joints=*rep.get(0).asList();
+                    if(rel_joints.size()>0)
+                    {
+                        for(size_t i=0; i<rel_joints.size(); i++)
+                            relaxed_joints.push_back(rel_joints.get(i).asString());
+                    }
+                }
+
+                first_run = false;
+            }
+
             //get skeleton
             getSkeleton();
 
@@ -262,8 +311,51 @@ public:
                     Bottle &out=outList.addList();
                     for(int i=0;i<skeletonIn.getNumKeyPoints();i++)
                     {
+                        string tag=skeletonIn[i]->getTag();
                         Bottle &feedback=out.addList();
-                        feedback.addString(skeletonIn[i]->getTag());
+                        feedback.addString(tag);
+
+                        if(dtw_thresh.size()>0)
+                            outdtw_thresh=dtw_thresh[0];
+                        if(mean_thresh.size()>0)
+                            outmean_thresh=mean_thresh[0];
+                        if(sdev_thresh.size()>0)
+                            outsdev_thresh=sdev_thresh[0];
+                        if(f_static.size()>0)
+                            outf_static=f_static[0];
+                        if(range_freq.size()>0)
+                            outrange_freq=range_freq[0];
+
+                        if(relaxed_joints.size()>0)
+                        {
+                            for(size_t m=0;m<relaxed_joints.size();m++)
+                            {
+                                if(tag==relaxed_joints[m])
+                                {
+                                    if(dtw_thresh.size()>1)
+                                    {
+                                        outdtw_thresh=dtw_thresh[m+1];
+                                    }
+                                    if(mean_thresh.size()>1)
+                                    {
+                                        outmean_thresh=mean_thresh[m+1];
+                                    }
+                                    if(sdev_thresh.size()>1)
+                                    {
+                                        outsdev_thresh=sdev_thresh[m+1];
+                                    }
+                                    if(f_static.size()>1)
+                                    {
+                                        outf_static=f_static[m+1];
+                                    }
+                                    if(range_freq.size()>1)
+                                    {
+                                        outrange_freq=range_freq[m+1];
+                                    }
+                                    break;
+                                }
+                            }
+                        }
 
                         //for each component (xyz)
                         for(int l=0;l<3;l++)
@@ -338,6 +430,14 @@ public:
                             joint_template.clear();
                             joint_candidate.clear();
                         }
+
+                        Bottle &outthresh=feedback.addList();
+                        outthresh.addString("thresholds");
+                        outthresh.addDouble(outdtw_thresh);
+                        outthresh.addDouble(outmean_thresh);
+                        outthresh.addDouble(outsdev_thresh);
+                        outthresh.addInt(outf_static);
+                        outthresh.addInt(outrange_freq);
                     }
 
                     yInfo() << "Sending feedback";

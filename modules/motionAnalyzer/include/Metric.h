@@ -36,15 +36,26 @@ protected:
     double max;
     yarp::sig::Vector camerapos;
     yarp::sig::Vector focalpoint;
+    std::vector<std::string> relaxed_joints;
+    yarp::sig::Vector dtw_thresh;
+    yarp::sig::Vector mean_thresh;
+    yarp::sig::Vector sdev_thresh;
+    yarp::sig::Vector f_static;
+    yarp::sig::Vector range_freq;
 
 public:
     Metric();
     virtual ~Metric();
 
     void print();
-    void initialize(const std::string &name_, const std::string &motion_type_, const std::string &tag_joint_, const yarp::sig::Vector &ref_dir_,
-                    const std::string &tag_plane_, const double &min_, const double &max_, const double &duration_,
-                    const int &nrep_, const int & nenv_, const yarp::sig::Vector &camerapos_, const yarp::sig::Vector &focalpoint_);
+    void initialize(const std::string &name_, const std::string &motion_type_, const std::string &tag_joint_,
+                    const yarp::sig::Vector &ref_dir_, const std::string &tag_plane_, const double &min_, const double &max_,
+                    const double &duration_, const int &nrep_, const int & nenv_, const yarp::sig::Vector &camerapos_,
+                    const yarp::sig::Vector &focalpoint_, const std::vector<std::string> &relaxed_joints_,
+                    const yarp::sig::Vector &dtw_thresh_, const yarp::sig::Vector &mean_thresh_,
+                    const yarp::sig::Vector &sdev_thresh_, const yarp::sig::Vector &f_static_,
+                    const yarp::sig::Vector &range_freq_);
+
     yarp::sig::Vector getRefDir() const { return ref_dir; }
     double getMax() const { return max; }
     double getMin() const { return min; }
@@ -57,6 +68,12 @@ public:
     std::string getMotionType() const { return motion_type; }
     yarp::sig::Vector getCameraPos() const { return camerapos; }
     yarp::sig::Vector getFocalPoint() const { return focalpoint; }
+    std::vector<std::string> getRelaxedJoints() const { return relaxed_joints; }
+    yarp::sig::Vector getDtwThresh() const { return dtw_thresh; }
+    yarp::sig::Vector getMeanThresh() const { return mean_thresh; }
+    yarp::sig::Vector getSdevThresh() const { return sdev_thresh; }
+    yarp::sig::Vector getFstatic() const { return f_static; }
+    yarp::sig::Vector getRangeFreq() const { return range_freq; }
 
     virtual void setTarget(const yarp::sig::Vector &target_) = 0;
 };
