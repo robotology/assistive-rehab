@@ -283,6 +283,7 @@ public:
                 vtk_textActor->GetCaptionTextProperty()->ShadowOff();
                 vtk_textActor->GetCaptionTextProperty()->BoldOff();
                 vtk_textActor->GetCaptionTextProperty()->ItalicOff();
+                vtk_textActor->SetVisibility(opacity!=0.0);
                 vtk_renderer->AddActor(vtk_textActor);
 
                 Vector p;
@@ -313,7 +314,7 @@ public:
 
             update_color(prop);
             opacity=prop.check("opacity",Value(1.0)).asDouble();
-
+            
             if (skeleton->getNumKeyPoints()>0)
             {
                 update_limbs((*skeleton)[0]);
@@ -322,6 +323,7 @@ public:
                 if (findCaptionPoint(p))
                     vtk_textActor->SetAttachmentPoint(p.data());
                 vtk_textActor->GetCaptionTextProperty()->SetColor(color.data());
+                vtk_textActor->SetVisibility(opacity!=0.0);
             }
         }
 
