@@ -415,7 +415,8 @@ class Interaction : public RFModule, public interactionManager_IDL
     bool updateModule() override
     {
         LockGuard lg(mutex);
-        if ((attentionPort.getOutputCount()==0) || (analyzerPort.getOutputCount()==0))
+        if ((attentionPort.getOutputCount()==0) || (analyzerPort.getOutputCount()==0) ||
+                (speechStreamPort.getOutputCount()==0) || (speechRpcPort.getOutputCount()==0))
         {
             yInfo()<<"not connected";
             return true;
@@ -569,7 +570,7 @@ class Interaction : public RFModule, public interactionManager_IDL
                                         movethr->startMoving();
 
                                         while(movethr->isMoving())
-                                        {									
+                                        {
                                             //wait until it finishes
                                             Time::yield();
                                         }
@@ -583,9 +584,9 @@ class Interaction : public RFModule, public interactionManager_IDL
                                         cmd.addString("start");
                                         if (analyzerPort.write(cmd,rep))
                                         {
-											if (rep.get(0).asVocab()==ok)
+                                            if (rep.get(0).asVocab()==ok)
                                             {
-												movethr->startMoving();
+                                                movethr->startMoving();
                                                 state=State::move;
                                                                                                                                             
                                                 assess_values.clear();
