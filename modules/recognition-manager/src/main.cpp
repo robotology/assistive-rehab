@@ -45,7 +45,6 @@ class Module : public yarp::os::RFModule, public recognition_IDL
 {
     yarp::os::ResourceFinder    *rf;
     yarp::os::RpcServer         rpcPort;
-    yarp::os::RpcClient         rpcClassifier;
     yarp::os::Port              imgClassifier;
 
     yarp::os::BufferedPort<yarp::os::Bottle>        blobsPort;
@@ -211,7 +210,6 @@ public:
         rpcPort.open(("/"+getName("/rpc")).c_str());
 
         blobsPort.open(("/"+getName("/blobs:i")).c_str());
-        rpcClassifier.open(("/"+getName("/classify:rpc")).c_str());
         imgClassifier.open(("/"+getName("/imgClassifier:o")).c_str());
         imageInPort.open(("/"+getName("/image:i")).c_str());
         imageOutPort.open(("/"+getName("/image:o")).c_str());
@@ -650,7 +648,6 @@ public:
         delete thr_query;
 
         blobsPort.close();
-        rpcClassifier.close();
         imgClassifier.close();
         imageInPort.close();
         imageOutPort.close();
