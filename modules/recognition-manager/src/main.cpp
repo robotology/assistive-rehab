@@ -34,7 +34,11 @@
 #include <iostream>
 #include <cstring>
 
+#include <queryThread.h>
 #include "recognition_IDL.h"
+
+#define                 ACK                 VOCAB3('a','c','k')
+#define                 NACK                VOCAB4('n','a','c','k')
 
 /********************************************************/
 class Module : public yarp::os::RFModule, public recognition_IDL
@@ -49,6 +53,8 @@ class Module : public yarp::os::RFModule, public recognition_IDL
     yarp::os::BufferedPort<yarp::os::Bottle >       targetOutPort;
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > imageInPort;
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > imageOutPort;
+
+    yarp::os::RpcClient          port_rpc_classifier;
 
     yarp::os::Mutex     mutex;
 
@@ -69,8 +75,13 @@ class Module : public yarp::os::RFModule, public recognition_IDL
 
     bool                isLiftArm;
     bool                gotTime;
+    bool                sentTrain;
     int                 skip_frames;
     int                 frame_counter;
+
+    bool                recognition_started;
+
+    QueryThread         *thr_query;
 
 public:
 
@@ -83,36 +94,75 @@ public:
     /**********************************************************/
     bool train(const std::string &name) override
     {
-        burst("start");
+        yarp::os::LockGuard lg(mutex);
         allowedTrain = true;
         gotTime = false;
         label = name;
+        sentTrain = false;
+        recognition_started = false;
         return true;
     }
 
     /**********************************************************/
     bool forget(const std::string &label) override
     {
+        yarp::os::LockGuard lg(mutex);
         yarp::os::Bottle cmd, reply;
         cmd.clear();
         reply.clear();
 
-        if (label=="all")
+        bool done = false, class_known = false, empty_classes = false;
+        for (int i=0; !done && i<10; i++)
         {
-            cmd.addVocab(yarp::os::Vocab::encode("forget"));
-            cmd.addString("all");
-            //yInfo() << "Sending clearing request:" << cmd.toString();
-            rpcClassifier.write(cmd,reply);
-            //yInfo() << "Received reply:" << reply.toString();
+            yarp::os::Bottle cmd_classifier,reply_classifier;
+            cmd_classifier.addString("objList");
+            port_rpc_classifier.write(cmd_classifier,reply_classifier);
+
+            yDebug() << reply_classifier.toString().c_str();
+
+            if (reply_classifier.size()>0 && reply_classifier.get(0).asVocab()==ACK)
+            {
+                done = true;
+                yarp::os::Bottle *class_list = reply_classifier.get(1).asList();
+                if (class_list->size()==0)
+                {
+                    empty_classes = true;
+                    yInfo()<<"There are no known classes.";
+                }
+                else
+                {
+                    for (int idx_class=0; idx_class<class_list->size(); idx_class++)
+                    {
+                        if (label==class_list->get(idx_class).asString().c_str())
+                        {
+                            class_known = true;
+                            break;
+                        }
+                    }
+                }
+            }
         }
-        else
+
+        if (empty_classes==false)
         {
-            cmd.addVocab(yarp::os::Vocab::encode("forget"));
-            cmd.addString(label.c_str());
-            //yInfo() << "Sending clearing request" << cmd.toString();
-            rpcClassifier.write(cmd,reply);
-            //yInfo() << "Received reply:" << reply.toString();
+            if (class_known || label=="all")
+            {
+                if (!send_doublecmd2rpc_classifier("forget", label.c_str(), 10))
+                {
+                    yInfo() <<"Classifier busy for forgetting one object!";
+                }
+
+                recognition_started = false;
+
+            }
+            else
+            {
+                yInfo() << "Class is unknown.";
+            }
         }
+        recognition_started = false;
+
+        yDebug() << "done forgetting" <<label;
         return true;
     }
 
@@ -156,7 +206,7 @@ public:
 
         trainingTime = rf.check("training_time",yarp::os::Value(10.0)).asDouble();
 
-        skip_frames = rf.check("skip_frames",yarp::os::Value(3)).asInt();
+        skip_frames = rf.check("skip_frames",yarp::os::Value(5)).asInt();
 
         rpcPort.open(("/"+getName("/rpc")).c_str());
 
@@ -168,6 +218,8 @@ public:
         targetOutPort.open(("/"+getName("/target:o")).c_str());
         targetInPort.open(("/"+getName("/target:i")).c_str());
 
+        port_rpc_classifier.open(("/"+getName("/classifier:io")).c_str());
+
         frame_counter = 0;
 
         closing = false;
@@ -178,6 +230,18 @@ public:
         confidenceThreshold = 0.70;
         isLiftArm = true;
         gotTime = false;
+        sentTrain = false;
+        recognition_started = false;
+
+        thr_query = new QueryThread(rf);
+        thr_query->start();
+
+        bool ok = thr_query->set_skip_frames(skip_frames);
+
+        if (ok)
+            yDebug() << "Correctly set number of Frames";
+        else
+            yError() << "Erros setting number of Frames";
 
         attach(rpcPort);
 
@@ -225,32 +289,6 @@ public:
         {
             img=*tmp;
         }
-    }
-
-    /********************************************************/
-    yarp::os::Bottle classify(const yarp::os::Bottle &blobs)
-    {
-        yarp::os::LockGuard lg(mutex);
-        yarp::os::Bottle cmd,reply;
-
-        imgClassifier.write(img);
-
-        cmd.addVocab(yarp::os::Vocab::encode("classify"));
-        yarp::os::Bottle &options=cmd.addList();
-
-        for (int i=0; i<blobs.size(); i++)
-        {
-            std::ostringstream tag;
-            tag<<"blob_"<<i;
-            yarp::os::Bottle &item=options.addList();
-            item.addString(tag.str().c_str());
-            item.addList()=*blobs.get(i).asList();
-        }
-        //yInfo() << "Sending classification request:" << cmd.toString();
-        rpcClassifier.write(cmd,reply);
-        //yInfo() << "Received reply:" << reply.toString();
-
-        return reply;
     }
 
     /**********************************************************/
@@ -379,33 +417,6 @@ public:
     }
 
     /**********************************************************/
-    void sendTrain(const std::string &object, const yarp::os::Bottle &blobs,
-                   const int i)
-    {
-        yarp::os::LockGuard lg(mutex);
-        imgClassifier.write(img);
-        yarp::os::Bottle cmd,reply;
-        cmd.addVocab(yarp::os::Vocab::encode("train"));
-        yarp::os::Bottle &options=cmd.addList().addList();
-        options.addString(object.c_str());
-        options.add(blobs.get(i));
-        yInfo() << "Sending training request:" << cmd.toString();
-        rpcClassifier.write(cmd,reply);
-        yInfo() << "Received reply:" << reply.toString();
-    }
-
-    void burst(const std::string &tag)
-    {
-        yarp::os::Bottle cmd,reply;
-        cmd.addVocab(yarp::os::Vocab::encode("burst"));
-        cmd.addVocab(yarp::os::Vocab::encode(tag.c_str()));
-
-        yInfo("Sending burst training request: %s",cmd.toString().c_str());
-        rpcClassifier.write(cmd,reply);
-        yInfo("Received reply: %s",reply.toString().c_str());
-    }
-
-    /**********************************************************/
     yarp::os::Bottle sendOutputImage(const yarp::os::Bottle &blobs,
                                      const int i, const yarp::os::Bottle &labels)
     {
@@ -417,12 +428,12 @@ public:
 
         if (allowedTrain)
         {
-            highlight[0] = 57;
-            highlight[1] = 28;
-            highlight[2] = 203;
+            highlight[0] = 204;
+            highlight[1] = 0;
+            highlight[2] = 0;
         }
 
-        cv::Scalar lowlight(203,127, 28);
+        cv::Scalar lowlight(0, 102, 204);
 
         winners.clear();
 
@@ -497,7 +508,6 @@ public:
         //yInfo() << "*************************************************************";
         if (skeletons.size() > 0)
         {
-
             yarp::os::Bottle &target  = targetOutPort.prepare();
 
             target = skeletons;
@@ -551,26 +561,7 @@ public:
                 }
             }
 
-            /*for (int i = 0; i < skeletonSize; i++)
-            {
-                yInfo() << i << "point neck" <<neck[i].x << neck[i].y;
-                yInfo() << i << "point lear" <<lear[i].x << lear[i].y;
-                yInfo() << i << "point rear" <<rear[i].x << rear[i].y;
-                yInfo() << "";
-            }
-
-            yInfo() << "******************************** SIZE BLOB " << blobs.size();
-            */
-            int index =-1;
-
             std::vector<std::pair <int,int> > elements;
-
-
-            /*yInfo() << "******************************** SIZE TARGET " << target.get(0).asList()->size();
-            yInfo() << "******************************** SIZE BLOB " << blobs.size();
-            yInfo() << "******************************** SIZE NECKS " << neck.size();
-            yInfo() << "******************************** SIZE LABELS " << labels.size();*/
-
 
             //consider only if we get blobs and valid necks
             if (blobs.size() > 1 )
@@ -583,10 +574,6 @@ public:
                         {
                             yarp::os::Bottle *item=blobs.get(j).asList();
                             int cog = item->get(2).asInt() - ( (item->get(2).asInt() -item->get(0).asInt()) / 2);
-                            /*yInfo() << "COG = " << j << " with " << cog;
-                            yInfo() << "DIFF NECK" << i << "with  abs(cog - neck[i].x) " << abs(cog - neck[i].x);
-                            yInfo() << "DIFF LEAR" << i << "with  abs(cog - lear[i].x) " << abs(cog - lear[i].x);
-                            yInfo() << "DIFF REAR" << i << "with  abs(cog - rear[i].x) " << abs(cog - rear[i].x);*/
                             if ( abs(cog - neck[i].x) < 50 || abs(cog - lear[i].x) < 50 || abs(cog - rear[i].x) < 50)
                             {
                                 //yInfo() << "adding " << i << j;
@@ -606,18 +593,6 @@ public:
                     elements.push_back(std::make_pair(0, 0));
             }
 
-            /*
-            yInfo() << "******************************** SIZE ELEMENTS " << elements.size();
-            for (int i = 0; i < elements.size(); i++)
-                yInfo() << "******************************** skeleton " << elements[i].first << "blob " << elements[i].second;
-
-            yInfo() << "******************************** SIZE blob " << blobs.size();
-
-            yInfo() << "******************************** SIZE labels " << labels.size();
-            for (int i = 0; i < labels.size(); i++)
-                yInfo() << "******************************** labels " << labels.get(i).asList()->get(0).asString();
-
-            yInfo() << "******************************** target  " << target.get(0).asList()->size();*/
             yarp::os::Bottle &addSkeletons = addStructure.addList();
 
             for (int i=0; i<target.get(0).asList()->size(); i++)
@@ -627,8 +602,6 @@ public:
                 yarp::os::Bottle &options=skeleton->addList();
 
                 options.addString("Name");
-
-                //yInfo() << "******************************** target.size() " << target.get(0).asList()->size() << i;
 
                 if (blobs.size() > 0 )
                 {
@@ -662,15 +635,20 @@ public:
     bool interruptModule() override
     {
         interrupting=true;
+        thr_query->interrupt();
         targetInPort.interrupt();
         blobsPort.interrupt();
         imageInPort.interrupt();
+        port_rpc_classifier.interrupt();
         return true;
     }
 
     /**********************************************************/
     bool close() override
     {
+        thr_query->stop();
+        delete thr_query;
+
         blobsPort.close();
         rpcClassifier.close();
         imgClassifier.close();
@@ -678,6 +656,7 @@ public:
         imageOutPort.close();
         targetInPort.close();
         targetOutPort.close();
+        port_rpc_classifier.close();
 
         return true;
     }
@@ -697,106 +676,195 @@ public:
     }
 
     /********************************************************/
+    bool send_cmd2rpc_classifier(std::string cmdstring, int Ntrials)
+    {
+        bool done = false;
+        for (int i=0; !done && i<Ntrials; i++)
+        {
+            yarp::os::Bottle cmd_classifier,reply_classifier;
+            cmd_classifier.addString(cmdstring.c_str());
+            port_rpc_classifier.write(cmd_classifier,reply_classifier);
+
+            yDebug() << "reply for send_cmd2rpc_classifier " << reply_classifier.toString().c_str();
+            if (reply_classifier.size()>0 && (reply_classifier.get(0).asVocab()==ACK || reply_classifier.get(0).asString() =="ok"))
+                done = true;
+        }
+
+        return done;
+    }
+
+    /********************************************************/
+    bool send_doublecmd2rpc_classifier(std::string cmdstring1, std::string cmdstring2, int Ntrials)
+    {
+        bool done = false;
+        for (int i=0; !done && i<Ntrials; i++)
+        {
+            yarp::os::Bottle cmd_classifier,reply_classifier;
+            cmd_classifier.addString(cmdstring1.c_str());
+            cmd_classifier.addString(cmdstring2.c_str());
+            port_rpc_classifier.write(cmd_classifier,reply_classifier);
+
+            yDebug() << "reply for send_doublecmd2rpc_classifier " << reply_classifier.toString().c_str();
+            if (reply_classifier.size()>0 && (reply_classifier.get(0).asVocab()==ACK || reply_classifier.get(0).asString() =="ok"))
+                done = true;
+        }
+
+        return done;
+    }
+
+    /********************************************************/
+    bool start_train(std::string class_name)
+    {
+        if (!send_doublecmd2rpc_classifier("save", class_name.c_str(), 10))
+        {
+            yDebug() << "Classifier busy for saving!";
+            return false;
+        }
+
+        return true;
+    }
+
+    /********************************************************/
+    bool stop_train(std::string class_name)
+    {
+        if (!send_cmd2rpc_classifier("stop", 10))
+        {
+            yDebug() << "Classifier busy for stopping to save scores: please make it stops somehow!";
+            return false;
+        }
+        return true;
+    }
+
+    /********************************************************/
     bool updateModule() override
     {
-        getImage();
-        yarp::os::Bottle blobs = getBlobs();
-        yarp::os::Bottle skeletons = getSkeletons();
-        yarp::os::Bottle labels;
-
-        if (interrupting)
-            return false;
-
-        int person = -1;
-
-        if (isLiftArm)
-            person = findArmLift(blobs, skeletons);
-        else
-            person = findClosestBlob(blobs);
-
-        if (allowedTrain && person > -1)
+        if (port_rpc_classifier.getOutputCount()==0)
         {
-            if (!gotTime)
-            {
-                t0 = yarp::os::Time::now();
-                gotTime = true;
-            }
-
-            if (frame_counter<skip_frames)
-                frame_counter++;
-            else
-            {
-                sendTrain(label, blobs, person);
-                frame_counter = 0;
-                //yInfo() << "train image sent ";
-            }
-
-            if (gotTime)
-            {
-                if (yarp::os::Time::now() - t0 > trainingTime)
-                {
-                    allowedTrain = false;
-                    burst("stop");
-                    gotTime = false;
-                }
-            }
+            yError() << "Please connect a classifier to start!";
+            yarp::os::Time::delay(1.0);
         }
         else
         {
+            getImage();
+            yarp::os::Bottle blobs = getBlobs();
+            yarp::os::Bottle skeletons = getSkeletons();
+            yarp::os::Bottle labels;
 
-            yarp::os::Bottle scores;
+            if (interrupting)
+                return false;
 
-            scores.clear();
-            labels.clear();
+            int person = -1;
 
-            if (blobs.size()!=0)
-                scores = classify(blobs);
+            if (isLiftArm)
+                person = findArmLift(blobs, skeletons);
+            else
+                person = findClosestBlob(blobs);
 
-            if (scores.size()!=0 && scores.get(0).asList()->size() > 0)
+            thr_query->set_person(blobs, person, allowedTrain);
+
+            if (allowedTrain && person > -1)
             {
-                for (int i=0; i<blobs.size(); i++)
+                if (!gotTime)
                 {
-                    yarp::os::Bottle &labelblobs = labels.addList();
-                    if (scores.get(i).asList()->size() > 0 && scores.get(i).asList()->get(1).asList()->size() > 0)
+                    t0 = yarp::os::Time::now();
+                    gotTime = true;
+                }
+
+                if (!sentTrain)
+                {
+                    yDebug() << "STARRTING SAVING label" << label.c_str();
+                    start_train(label);
+                    sentTrain = true;
+                }
+
+                if (gotTime)
+                {
+                    if (yarp::os::Time::now() - t0 > trainingTime)
                     {
-                        size_t elements = scores.get(i).asList()->get(1).asList()->size();
-                        for (size_t x=0; x<elements; x++)
+                        yDebug() << "STOPPING SAVING label" << label.c_str();
+                        allowedTrain = false;
+                        stop_train(label);
+
+                        yDebug() << "TRAINING FEATURES with Label";
+                        if (!send_cmd2rpc_classifier("train", 10))
                         {
-                            std::string tmp = scores.get(i).asList()->get(1).asList()->get(x).asList()->get(0).asString();
-                            double conf = scores.get(i).asList()->get(1).asList()->get(x).asList()->get(1).asDouble();
-                            yarp::os::Bottle &item=labelblobs.addList();
-                            item.addString(tmp);
-                            item.addDouble(conf);
+                            yDebug() << "Classifier busy for training!";
                         }
+                        gotTime = false;
+                        recognition_started = false;
                     }
-                    else
-                        yError() << "no classes available";
                 }
             }
-            else
+
+            int classes = 0;
+            yarp::os::Bottle cmdObjClass,objClassList;
+            cmdObjClass.addString("objList");
+            port_rpc_classifier.write(cmdObjClass,objClassList);
+            if (objClassList.get(0).asString()=="ack")
+                if (yarp::os::Bottle *objList=objClassList.get(1).asList())
+                    classes = objList->size();
+
+            yInfo()<< "number of classes " << classes;
+
+            if (!allowedTrain && recognition_started==false && classes>0)
             {
-                for (int i=0; i<blobs.size(); i++)
-                {
-                    yarp::os::Bottle &fillScores = scores.addList();
-                    yarp::os::Bottle &labelblobs = labels.addList();
-                }
+                yDebug() << "STARTING RECOGNITION " << label.c_str();
+                yarp::os::Bottle cmd_classifier,reply_classifier;
+                cmd_classifier.addString("recognize");
+                port_rpc_classifier.write(cmd_classifier,reply_classifier);
 
-                if (blobs.size() == 0)
+                if (reply_classifier.get(0).asString()=="nack")
+                    yError() << "Do not have any classes";
+
+                yDebug() << "STARTING RECOGNITION reply_classifier " << reply_classifier.toString().c_str();
+
+                if (reply_classifier.size()>0)
                 {
-                    yarp::os::Bottle &fillScores = scores.addList();
-                    yarp::os::Bottle &labelblobs = labels.addList();
+                    recognition_started = true;
+
+                    if (reply_classifier.get(0).asVocab()!=ACK)
+                    {
+                        thr_query->clear_hist();
+                    }
+
+                } else
+                {
+                    std::cout << "Cannot get response to recognize command." << std::endl;
+                    thr_query->clear_hist();
+                }
+            }
+            yarp::os::LockGuard lg(mutex);
+            if (recognition_started)
+            {
+
+                labels.clear();
+                labels = thr_query->classify(blobs);
+            }
+
+            bool isConsistent = true;
+
+            //check for consistency
+            if (classes>0)
+            {
+                for (int i =0; i<labels.size(); i++)
+                {
+                    yInfo() << "check for consistency " << labels.get(i).asList()->size();
+                    if (labels.get(i).asList()->size() == 0)
+                        isConsistent=false;
+                }
+            }
+            if (isConsistent)
+            {
+                if (allowedTrain)
+                    sendOutputImage(blobs, person, labels);
+                else
+                {
+                    yarp::os::Bottle winners = sendOutputImage(blobs, person, labels);
+                    sendTargetData(blobs, winners, skeletons);
                 }
             }
         }
-        if (allowedTrain)
-            sendOutputImage(blobs, person, labels);
-        else
-        {
-            yarp::os::Bottle winners = sendOutputImage(blobs, person, labels);
-            sendTargetData(blobs, winners, skeletons);
-        }
-
-        return !closing;
+         return !closing;
     }
 };
 
@@ -816,6 +884,9 @@ int main(int argc, char *argv[])
     yarp::os::ResourceFinder rf;
 
     rf.setVerbose();
+    rf.setDefaultContext("recognition-manager");
+    rf.setDefaultConfigFile("config.ini");
+    rf.setDefault("name","recognition-manager");
     rf.configure(argc,argv);
 
     return module.runModule(rf);
