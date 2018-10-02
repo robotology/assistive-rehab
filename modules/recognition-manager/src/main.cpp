@@ -804,7 +804,7 @@ public:
                 if (yarp::os::Bottle *objList=objClassList.get(1).asList())
                     classes = objList->size();
 
-            yInfo()<< "number of classes " << classes;
+            //yInfo()<< "number of classes " << classes;
 
             if (!allowedTrain && recognition_started==false && classes>0)
             {
@@ -836,7 +836,6 @@ public:
             yarp::os::LockGuard lg(mutex);
             if (recognition_started)
             {
-
                 labels.clear();
                 labels = thr_query->classify(blobs);
             }
@@ -848,7 +847,7 @@ public:
             {
                 for (int i =0; i<labels.size(); i++)
                 {
-                    yInfo() << "check for consistency " << labels.get(i).asList()->size();
+                    //yInfo() << "check for consistency " << labels.get(i).asList()->size();
                     if (labels.get(i).asList()->size() == 0)
                         isConsistent=false;
                 }

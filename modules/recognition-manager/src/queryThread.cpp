@@ -42,14 +42,7 @@ bool QueryThread::threadInit()
     port_out_show.open(("/"+name+"/show:o").c_str());
     port_out_crop.open(("/"+name+"/crop:o").c_str());
     
-    yarp::os::Network::connect("/yarpOpenPose/propag:o", port_in_img.getName().c_str() );
-    
-   // yarp::os::Network::connect("/caffeCoder/code:o", "/linearClassifier/features:i");
-    
-    //yarp::os::Network::connect(port_out_crop.getName().c_str(), "/caffeCoder/img:i");
-    
-    //yarp::os::Network::connect("/recognition-manager/classifier:io", "/linearClassifier/rpc");
-    //yarp::os::Network::connect("/linearClassifier/scores:o", port_in_scores.getName().c_str());
+    //yarp::os::Network::connect("/yarpOpenPose/propag:o", port_in_img.getName().c_str() );
     
     return true;
 }
