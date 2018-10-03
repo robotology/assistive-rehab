@@ -6,8 +6,8 @@ project(recognition-manager)
 
 yarp_add_idl(IDL_GEN_FILES ${PROJECT_NAME}.thrift)
 
-file(GLOB source *.cpp)
-file(GLOB header *.h)
+file(GLOB source src/*.cpp)
+file(GLOB header include/*.h)
 set(idl ${PROJECT_NAME}.thrift)
 
 source_group("Source Files" FILES ${source})
