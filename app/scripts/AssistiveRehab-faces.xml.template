@@ -229,6 +229,12 @@
 
     <connection>
         <from>/yarpOpenPose/propag:o</from>
+        <to>/recognition-manager/img:i</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/propag:o</from>
         <to>/recognition-manager/image:i</to>
         <protocol>mjpeg</protocol>
     </connection>
