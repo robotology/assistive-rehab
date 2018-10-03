@@ -119,9 +119,4 @@
         <to>/viewer/crop</to>
         <protocol>mjpeg</protocol>
     </connection>
-
-
-
-
-
 </application>
