@@ -1,3 +1,4 @@
 build*
 *~
 *.user
+report/.ipynb_checkpoints/
