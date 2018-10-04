@@ -23,6 +23,7 @@
 #include <iostream>
 #include <string>
 #include <yarp/os/all.h>
+#include <yarp/dev/all.h>
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
 #include <iCub/ctrl/filters.h>
@@ -32,6 +33,7 @@
 
 using namespace std;
 using namespace yarp::os;
+using namespace yarp::dev;
 using namespace yarp::sig;
 using namespace yarp::math;
 using namespace iCub::ctrl;
@@ -214,18 +216,18 @@ public:
 /****************************************************************/
 class Retriever : public RFModule
 {
+    PolyDriver   camDriver;
+    IRGBDSensor *camView;
+
     BufferedPort<Bottle> skeletonsPort;
-    BufferedPort<ImageOf<PixelFloat>> depthPort;
     BufferedPort<Bottle> viewerPort;
     RpcClient opcPort;
-    RpcClient camPort;
 
     ImageOf<PixelFloat> depth;
 
     unordered_map<string,string> keysRemap;
     vector<shared_ptr<MetaSkeleton>> skeletons;
 
-    bool camera_configured;
     double period;
     double fov_h;
     double fov_v;
@@ -245,31 +247,6 @@ class Retriever : public RFModule
     int filter_limblength_order;
     bool optimize_limblength;
     double t0;
-
-    /****************************************************************/
-    bool getCameraOptions()
-    {
-        if (camPort.getOutputCount()>0)
-        {
-            Bottle cmd,rep;
-            cmd.addVocab(Vocab::encode("visr"));
-            cmd.addVocab(Vocab::encode("get"));
-            cmd.addVocab(Vocab::encode("fov"));
-            if (camPort.write(cmd,rep))
-            {
-                if (rep.size()>=5)
-                {
-                    fov_h=rep.get(3).asDouble();
-                    fov_v=rep.get(4).asDouble();
-                    yInfo()<<"camera fov_h (from sensor) ="<<fov_h;
-                    yInfo()<<"camera fov_v (from sensor) ="<<fov_v;
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
 
     /****************************************************************/
     bool getPoint3D(const int u, const int v, Vector &p) const
@@ -631,7 +608,6 @@ class Retriever : public RFModule
         keysRemap["LAnkle"]=KeyPointTag::ankle_left;
 
         // default values
-        camera_configured=false;
         period=0.01;
         keys_recognition_confidence=0.3;
         keys_recognition_percentage=0.3;
@@ -682,9 +658,27 @@ class Retriever : public RFModule
             optimize_limblength=gFiltering.check("optimize-limblength",Value(optimize_limblength)).asBool();
         }
 
+        bool camera_configured=false;
+        string camRemoteImagePort="/depthCamera/rgbImage:o";
+        string camRemoteDepthPort="/depthCamera/depthImage:o";
+        string camRemoteRpcPort="/depthCamera/rpc:i";
+
         Bottle &gCamera=rf.findGroup("camera");
         if (!gCamera.isNull())
         {
+            if (gCamera.check("remoteImagePort"))
+            {
+                camRemoteImagePort=gCamera.find("remoteImagePort").asString();
+            }
+            if (gCamera.check("remoteDepthPort"))
+            {
+                camRemoteDepthPort=gCamera.find("remoteDepthPort").asString();
+            }
+            if (gCamera.check("remoteRpcPort"))
+            {
+                camRemoteRpcPort=gCamera.find("remoteRpcPort").asString();
+            }
+
             if (gCamera.check("fov"))
             {
                 if (Bottle *fov=gCamera.find("fov").asList())
@@ -701,11 +695,40 @@ class Retriever : public RFModule
             }
         }
 
+        Property camOptions;
+        camOptions.put("device","RGBDSensorClient");
+        camOptions.put("remoteImagePort",camRemoteImagePort);
+        camOptions.put("remoteDepthPort",camRemoteDepthPort);
+        camOptions.put("remoteRpcPort",camRemoteRpcPort);
+        camOptions.put("localImagePort","/skeletonRetriever/cam/img:i");
+        camOptions.put("localDepthPort","/skeletonRetriever/cam/depth:i");
+        camOptions.put("localRpcPort","/skeletonRetriever/cam/rpc:o");
+        if (!camDriver.open(camOptions))
+        {
+            yError()<<"Unable to connect to camera";
+            return false;
+        }
+        camDriver.view(camView);
+
+        if (!camera_configured)
+        {
+            if (camView->getRgbFOV(fov_h,fov_v))
+            {
+                camera_configured=true;
+                yInfo()<<"camera fov_h (from sensor) ="<<fov_h;
+                yInfo()<<"camera fov_v (from sensor) ="<<fov_v;
+            }
+            else
+            {
+                yError()<<"Unable to retrieve camera parameters";
+                camDriver.close();
+                return false;
+            }
+        }
+
         skeletonsPort.open("/skeletonRetriever/skeletons:i");
-        depthPort.open("/skeletonRetriever/depth:i");
         viewerPort.open("/skeletonRetriever/viewer:o");
         opcPort.open("/skeletonRetriever/opc:rpc");
-        camPort.open("/skeletonRetriever/cam:rpc");
 
         t0=Time::now();
         return true;
@@ -724,22 +747,21 @@ class Retriever : public RFModule
         const double dt=t-t0;
         t0=t;
 
-        if (ImageOf<PixelFloat> *depth=depthPort.read(false))
+        ImageOf<PixelFloat> depth;
+        if (camView->getDepthImage(depth))
         {
-            if (depth_enable)
+            if ((depth.width()>0) && (depth.height()>0))
             {
-                filterDepth(*depth,this->depth,depth_kernel_size,depth_iterations,
-                            depth_min_distance,depth_max_distance);
+                if (depth_enable)
+                {
+                    filterDepth(depth,this->depth,depth_kernel_size,depth_iterations,
+                                depth_min_distance,depth_max_distance);
+                }
+                else
+                {
+                    this->depth=depth;
+                }
             }
-            else
-            {
-                this->depth=*depth;
-            }
-        }
-
-        if (!camera_configured)
-        {
-            camera_configured=getCameraOptions();
         }
 
         // garbage collector
@@ -806,10 +828,9 @@ class Retriever : public RFModule
     bool close() override
     {
         skeletonsPort.close();
-        depthPort.close();
         viewerPort.close();
         opcPort.close();
-        camPort.close();
+        camDriver.close();
         return true;
     }
 };
