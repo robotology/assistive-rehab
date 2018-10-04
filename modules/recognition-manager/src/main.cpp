@@ -15,6 +15,7 @@
  * Public License for more details
  */
 
+#include <yarp/os/Vocab.h>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/RFModule.h>
@@ -37,8 +38,8 @@
 #include <queryThread.h>
 #include "recognition_IDL.h"
 
-#define                 ACK                 VOCAB3('a','c','k')
-#define                 NACK                VOCAB4('n','a','c','k')
+#define                 ACK                 yarp::os::createVocab('a','c','k')
+#define                 NACK                yarp::os::createVocab('n','a','c','k')
 
 /********************************************************/
 class Module : public yarp::os::RFModule, public recognition_IDL
@@ -799,7 +800,7 @@ public:
             port_rpc_classifier.write(cmdObjClass,objClassList);
             if (objClassList.get(0).asString()=="ack")
                 if (yarp::os::Bottle *objList=objClassList.get(1).asList())
-                    classes = objList->size();
+                    classes = (int)objList->size();
 
             //yInfo()<< "number of classes " << classes;
 
