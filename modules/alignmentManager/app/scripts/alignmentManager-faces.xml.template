@@ -48,6 +48,14 @@
     <module>
        <name>skeletonRetriever</name>
        <parameters></parameters>
+       <dependencies>
+           <port timeout="10">/depthCamera/depthImage:o</port>
+           <port timeout="10">/depthCamera/rpc:i</port>
+           <port timeout="10">/depthCamera/rgbImage:o</port>
+       </dependencies>
+       <ensure>
+           <wait>3</wait>
+       </ensure>
        <node>console</node>
     </module>
 
@@ -109,18 +117,6 @@
         <from>/depthCamera/rgbImage:o</from>
         <to>/yarpOpenPose/image:i</to>
         <protocol>mjpeg</protocol>
-    </connection>
-
-    <connection>
-        <from>/depthCamera/depthImage:o</from>
-        <to>/skeletonRetriever/depth:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/skeletonRetriever/cam:rpc</from>
-        <to>/depthCamera/rpc:i</to>
-        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
