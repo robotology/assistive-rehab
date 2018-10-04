@@ -262,5 +262,5 @@ bool QueryThread::releaseThread()
     port_in_img.close();
     port_out_show.close();
     port_out_crop.close();
-	return true;
+    return true;
 }
