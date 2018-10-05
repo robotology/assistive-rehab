@@ -191,7 +191,7 @@ reaching_right() {
         sleep $SLEEP
         COUNT=$((COUNT+1))
     done
-    echo "go ((parameters ((mode "full_pose+no_torso_no_heave") (torso_heave 0.0) (lower_arm_heave 0.0))) (target (0.0 -0.3 0.0 -0.6 0.6 0.4 2.14)))" | yarp rpc /cer_reaching-controller/right/rpc
+    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 15.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/right_arm/rpc
 }
 
 show_reaching_right() {
@@ -220,7 +220,7 @@ reaching_left() {
         sleep $SLEEP
         COUNT=$((COUNT+1)) 
     done
-    echo "go ((parameters ((mode "full_pose+no_torso_no_heave") (torso_heave 0.0) (lower_arm_heave 0.0))) (target (0.0 0.3 0.0 -0.6 0.6 0.4 2.14)))" | yarp rpc /cer_reaching-controller/left/rpc
+    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 15.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/left_arm/rpc
 }
 
 show_reaching_left() {
