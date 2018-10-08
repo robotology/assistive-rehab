@@ -185,9 +185,9 @@ reaching_right() {
 
     NREP=$1
     while [  $COUNT -lt $NREP ]; do
-        echo "go ((parameters ((mode "full_pose+no_torso_no_heave") (torso_heave 0.0) (lower_arm_heave 0.0))) (target (0.3 -0.3 0.9 0.0 0.0 1.0 3.14)))" | yarp rpc /cer_reaching-controller/right/rpc
+        echo "go ((parameters ((mode "full_pose+no_torso_no_heave") (torso_heave 0.0) (lower_arm_heave 0.05))) (target (0.3 -0.3 0.9 1.0 0.0 0.0 3.1415)))" | yarp rpc /cer_reaching-controller/right/rpc
         sleep $SLEEP
-        echo "go ((parameters ((mode "full_pose+no_torso_no_heave") (torso_heave 0.0) (lower_arm_heave 0.0))) (target (0.58 -0.3 0.9 0.0 0.0 1.0 3.14)))" | yarp rpc /cer_reaching-controller/right/rpc
+        echo "go ((parameters ((mode "full_pose+no_torso_no_heave") (torso_heave 0.0) (lower_arm_heave 0.05))) (target (0.58 -0.3 0.9 1.0 0.0 0.0 3.1415)))" | yarp rpc /cer_reaching-controller/right/rpc
         sleep $SLEEP
         COUNT=$((COUNT+1))
     done
@@ -214,9 +214,9 @@ reaching_left() {
 
     NREP=$1
     while [  $COUNT -lt $NREP ]; do
-        echo "go ((parameters ((mode "full_pose+no_torso_no_heave") (torso_heave 0.0) (lower_arm_heave 0.0))) (target (0.3 0.3 0.9 0.0 0.0 1.0 0.0)))" | yarp rpc /cer_reaching-controller/left/rpc
+        echo "go ((parameters ((mode "full_pose+no_torso_no_heave") (torso_heave 0.0) (lower_arm_heave 0.05))) (target (0.3 0.3 0.9 0.0 0.0 0.0 0.0)))" | yarp rpc /cer_reaching-controller/left/rpc
         sleep $SLEEP
-        echo "go ((parameters ((mode "full_pose+no_torso_no_heave") (torso_heave 0.0) (lower_arm_heave 0.0))) (target (0.58 0.3 0.9 0.0 0.0 1.0 0.0)))" | yarp rpc /cer_reaching-controller/left/rpc
+        echo "go ((parameters ((mode "full_pose+no_torso_no_heave") (torso_heave 0.0) (lower_arm_heave 0.05))) (target (0.58 0.3 0.9 0.0 0.0 0.0 0.0)))" | yarp rpc /cer_reaching-controller/left/rpc
         sleep $SLEEP
         COUNT=$((COUNT+1)) 
     done
