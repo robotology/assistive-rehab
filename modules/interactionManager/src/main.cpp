@@ -105,6 +105,7 @@ class Interaction : public RFModule, public interactionManager_IDL
 
     MoveThread *movethr;
     string move_file,motion_type;
+    vector<double> engage_distance,engage_azimuth;
 
     unordered_map<string,unordered_set<string>> history;
     unordered_map<string,string> speak_map;
@@ -352,6 +353,26 @@ class Interaction : public RFModule, public interactionManager_IDL
         string speak_file=rf.check("speak-file",Value("speak-it")).asString();
         move_file=rf.check("move-file",Value("run-movements.sh")).asString();
 
+        engage_distance=vector<double>{2.0,4.0};
+        if (Bottle *p=rf.find("engage-distance").asList())
+        {
+            if (p->size()>=2)
+            {
+                engage_distance[0]=p->get(0).asDouble();
+                engage_distance[1]=p->get(1).asDouble();
+            }
+        }
+
+        engage_azimuth=vector<double>{-30.0,30.0};
+        if (Bottle *p=rf.find("engage-azimuth").asList())
+        {
+            if (p->size()>=2)
+            {
+                engage_azimuth[0]=p->get(0).asDouble();
+                engage_azimuth[1]=p->get(1).asDouble();
+            }
+        }
+
         if (!load_speak(rf.getContext(),speak_file))
         {
             string msg="Unable to locate file";
@@ -395,20 +416,27 @@ class Interaction : public RFModule, public interactionManager_IDL
     {
         LockGuard lg(mutex);
         if ((attentionPort.getOutputCount()==0) || (analyzerPort.getOutputCount()==0))
-        // || 
-        //    (speechStreamPort.getOutputCount()==0) || (speechRpcPort.getOutputCount()==0))
         {
             yInfo()<<"not connected";
             return true;
         }
 
-        string follow_tag;
+        string follow_tag("");
+        bool is_follow_tag_ahead=false;
         {
             Bottle cmd,rep;
             cmd.addString("is_following");
             if (attentionPort.write(cmd,rep))
             {
                 follow_tag=rep.get(0).asString();
+                double x=rep.get(1).asDouble();
+                double y=rep.get(2).asDouble();
+                double z=rep.get(3).asDouble();
+
+                double r=sqrt(x*x+y*y+z*z);
+                double azi=(180.0/M_PI)*atan2(y,x);
+                is_follow_tag_ahead=(r>engage_distance[0]) && (r<engage_distance[1]) &&
+                                    (azi>engage_azimuth[0]) && (azi<engage_azimuth[1]);
             }
         }
 
@@ -438,7 +466,7 @@ class Interaction : public RFModule, public interactionManager_IDL
 
         if (state==State::seek)
         {
-            if (!follow_tag.empty())
+            if (!follow_tag.empty() && is_follow_tag_ahead)
             {
                 tag=follow_tag;
                 Bottle cmd,rep;

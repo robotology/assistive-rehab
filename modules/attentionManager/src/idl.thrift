@@ -11,6 +11,34 @@
  */
 
 /**
+* FollowedSkeletonInfo
+*
+* IDL structure to send info on followed skeleton.
+*/
+struct FollowedSkeletonInfo
+{
+   /**
+   * the tag of the followed skeleton; empty otherwise.
+   */
+   1:string tag;
+
+   /**
+   * the x-coordinate.
+   */
+   2:double x;
+
+   /**
+   * the y-coordinate.
+   */
+   3:double y;
+
+   /**
+   * the z-coordinate.
+   */
+   4:double z;
+}
+
+/**
  * attentionManager_IDL
  *
  * IDL Interface to Attention Manager services.
@@ -39,9 +67,9 @@ service attentionManager_IDL
 
    /**
     * Check if the robot is following a skeleton.
-    * @return the tag of the followed skeleton; empty otherwise.
+    * @return info on the followed skeleton in \ref FollowedSkeletonInfo format.
     */
-   string is_following();
+   FollowedSkeletonInfo is_following();
 
    /**
     * Check if any skeleton is with one hand raised.
