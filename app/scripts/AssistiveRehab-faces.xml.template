@@ -48,13 +48,13 @@
     <module>
         <name>linearClassifierModule</name>
         <parameters>--BufferSize 1 --CSVM 1.0 --databaseFolder faceDatabase --WeightedSVM 1</parameters>
-        <node>r1-torso1</node>
+        <node>r1-torso2</node>
     </module>
 
     <module>
         <name>caffeCoder</name>
-        <parameters>--from caffeCoder_caffenet.ini</parameters>
-        <node>r1-torso1</node>
+        <parameters>--from caffeCoder_resnet.ini</parameters>
+        <node>r1-torso2</node>
     </module>
 
     <module>
