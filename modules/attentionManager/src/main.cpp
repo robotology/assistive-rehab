@@ -45,8 +45,10 @@ class Attention : public RFModule, public attentionManager_IDL
     double still_t0;
     double lost_t0;
     bool first_follow_look;
+    bool first_seek_look;
 
     Matrix gaze_frame;
+    Vector is_following_x;
     vector<shared_ptr<Skeleton>> skeletons;
     vector<double> activity;
     string tag;
@@ -109,6 +111,7 @@ class Attention : public RFModule, public attentionManager_IDL
     /****************************************************************/
     bool is_running() override
     {
+        LockGuard lg(mutex);
         if (state<State::idle)
         {
             return false;
@@ -117,9 +120,23 @@ class Attention : public RFModule, public attentionManager_IDL
     }
 
     /****************************************************************/
-    string is_following() override
+    FollowedSkeletonInfo is_following() override
     {
-        return (state==State::follow?tag:string(""));
+        LockGuard lg(mutex);
+        FollowedSkeletonInfo info;
+        if (state==State::follow)
+        {
+            info.tag=tag;
+            info.x=is_following_x[0];
+            info.y=is_following_x[1];
+            info.z=is_following_x[2];
+        }
+        else
+        {
+            info.tag=string("");
+            info.x=info.y=info.z=0.0;
+        }
+        return info;
     }
 
     /****************************************************************/
@@ -257,6 +274,10 @@ class Attention : public RFModule, public attentionManager_IDL
     bool switch_to(const State &next_state)
     {
         state=next_state;
+        if (state==State::seek)
+        {
+            first_seek_look=true;
+        }
         return set_gaze_T(state==State::follow?1.5:2.0);
     }
 
@@ -382,8 +403,10 @@ class Attention : public RFModule, public attentionManager_IDL
         attach(cmdPort);
 
         state=State::unconnected;
+        is_following_x.resize(3,0.0);
         still_t0=lost_t0=Time::now();
         first_follow_look=false;
+        first_seek_look=false;
 
         Rand::init();
         return true;
@@ -435,10 +458,18 @@ class Attention : public RFModule, public attentionManager_IDL
             }
             else if (Time::now()-still_t0>T)
             {
-                Vector random(2);
-                random[0]=Rand::scalar(-30.0,30.0);
-                random[1]=Rand::scalar(-5.0,5.0);
-                look("angular",random);
+                Vector target(2);
+                if (first_seek_look)
+                {
+                    target=0.0;
+                    first_seek_look=false;
+                }
+                else
+                {
+                    target[0]=Rand::scalar(-30.0,30.0);
+                    target[1]=Rand::scalar(-5.0,5.0);
+                }
+                look("angular",target);
                 wait_motion_done();
                 still_t0=Time::now();
             }
@@ -477,10 +508,11 @@ class Attention : public RFModule, public attentionManager_IDL
                 x=gaze_frame*x;
                 x.pop_back();
                 look("cartesian",x);
+                is_following_x=x;
 
                 // gaze speed is faster when chasing,
                 // hence wait till the first movement is done
-                // since it may be wide causing image blur
+                // since it may be causing image blur
                 if (first_follow_look)
                 {
                     wait_motion_done();
