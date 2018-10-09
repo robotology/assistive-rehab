@@ -28,4 +28,5 @@ service interactionManager_IDL
     * @return true/false on success/failure.
     */
    bool stop();
+
 }

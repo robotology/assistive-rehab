@@ -22,9 +22,15 @@ service motionAnalyzer_IDL
    /**
    * Load metric to analyze.
    * @param metric_tag name of the metric to analyze
-   * @return session duration in seconds / -1 on failure.
+   * @return true/false on failure.
    */
-   double loadMetric(1:string metric_tag);
+   bool loadMetric(1:string metric_tag);
+
+   /**
+   * Get the type of motion.
+   * @return string containing the type of motion / empty string on failure.
+   */
+   string getMotionType();
 
    /**
    * List available metrics.

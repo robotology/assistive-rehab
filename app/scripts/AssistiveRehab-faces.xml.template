@@ -98,13 +98,13 @@
 
     <module>
        <name>skeletonScaler</name>
-       <parameters>--twarp 0.5</parameters>
+       <parameters>--twarp 1.0</parameters>
        <node>r1-display-linux</node>
     </module>
 
     <module>
        <name>alignmentManager</name>
-       <parameters>--psd_noise 2000.0</parameters>
+       <parameters>--psd_noise 3000.0</parameters>
        <node>r1-console-linux</node>
     </module>
 
@@ -146,6 +146,18 @@
     <module>
         <name>interactionManager</name>
         <parameters></parameters>
+        <node>r1-console-linux</node>
+    </module>
+
+    <module>
+        <name>ctpService</name>
+        <parameters>--robot cer --part right_arm</parameters>
+        <node>r1-console-linux</node>
+    </module>
+
+    <module>
+        <name>ctpService</name>
+        <parameters>--robot cer --part left_arm</parameters>
         <node>r1-console-linux</node>
     </module>
 
@@ -374,6 +386,12 @@
     <connection>
         <from>/feedbackSynthetizer/speech:o</from>
         <to>/iSpeak</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/feedbackSynthetizer/score:o</from>
+        <to>/interactionManager/synthetizer:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
 

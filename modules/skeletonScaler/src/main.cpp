@@ -86,7 +86,7 @@ class Scaler : public RFModule
                 size_t idx=file.find(".");
                 setTag(file.substr(0,idx));
 
-                opacity=0.3;
+                opacity=0.0;
                 setOpacity(opacity);
             }
             else

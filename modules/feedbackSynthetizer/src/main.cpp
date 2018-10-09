@@ -200,7 +200,7 @@ class JointFeedback
 {
     string j;
     Matrix f;
-    double dtw_thresh,mean_thresh,sdev_thresh;
+    double dtw_thresh,mean_thresh,sx_thresh,sy_thresh,sz_thresh;
     int f_static,range_freq;
 
 public:
@@ -208,7 +208,7 @@ public:
     /****************************************************************/
     JointFeedback()
     {
-        f.resize(3,8);
+        f.resize(3,9);
     }
 
     /****************************************************************/
@@ -222,15 +222,17 @@ public:
     {
         dtw_thresh = thresholds[0];
         mean_thresh = thresholds[1];
-        sdev_thresh = thresholds[2];
-        f_static = (int)thresholds[3];
-        range_freq = (int)thresholds[4];
+        sx_thresh = thresholds[2];
+        sy_thresh = thresholds[3];
+        sz_thresh = thresholds[4];
+        f_static = (int)thresholds[5];
+        range_freq = (int)thresholds[6];
     }
 
     /****************************************************************/
-    void update(const int component, const double dtw, const double mu, const double std, 
+    void update(const int component, const double dtw, const double mu, const double std,
                 const double skwn, const double ft, const double fc, const double maxpsdt,
-                const double maxpsdc)
+                const double maxpsdc, const double std_thresh)
     {
         f[component][0] = dtw;
         f[component][1] = mu;
@@ -240,6 +242,7 @@ public:
         f[component][5] = fc;
         f[component][6] = maxpsdt;
         f[component][7] = maxpsdc;
+        f[component][8] = std_thresh;
     }
 
     /****************************************************************/
@@ -268,7 +271,9 @@ public:
     string getName() const { return j; }
     double getDtwThresh() const { return dtw_thresh; }
     double getMeanThresh() const { return mean_thresh; }
-    double getSdevThresh() const { return sdev_thresh; }
+    double getSxThresh() const { return sx_thresh; }
+    double getSyThresh() const { return sy_thresh; }
+    double getSzThresh() const { return sz_thresh; }
     int getFstatic() const { return f_static; }
     int getRangeFreq() const { return range_freq; }
 };
@@ -289,6 +294,7 @@ class Synthetizer : public BufferedPort<Bottle>
 {
     string moduleName;
     BufferedPort<Bottle> speechPort;
+    BufferedPort<Bottle> scorePort;
 
     map<string,string> bodypart2verbal;
     map<string,pair<string,vector<string>>> speak_map;
@@ -354,6 +360,7 @@ public:
         imaxpsdc = 9;
 
         maxlevel = 3;
+        
     }
 
     /********************************************************/
@@ -367,6 +374,7 @@ public:
         this->useCallback();
         BufferedPort<Bottle>::open("/" + moduleName + "/feedback:i");
         speechPort.open("/" + moduleName + "/speech:o");
+        scorePort.open("/" + moduleName + "/score:o");
 
         return true;
     }
@@ -463,51 +471,55 @@ public:
 
         return true;
     }
-
+    
     /********************************************************/
     void onRead(Bottle &data)
     {
-        if(Bottle *feedb = data.get(0).asList())
+		if(Bottle *feedb = data.get(0).asList())
         {
-            BodyFeedback bf(maxlevel);
+			BodyFeedback bf(maxlevel);
             for(size_t i=0; i<feedb->size(); i++)
             {
                 //we read feedback from the input port and create the object fj
                 //which contains feedback for all the component
-                JointFeedback fj;
+                JointFeedback fj;                            
                 if(Bottle *joint_list = feedb->get(i).asList())
                 {
+				    Vector thresholds;
+                    if(Bottle *b_thresholds = joint_list->get(4).asList())
+                    {												
+                        thresholds.resize(7);
+                        thresholds[0]=b_thresholds->get(1).asDouble();
+                        thresholds[1]=b_thresholds->get(2).asDouble();
+                        thresholds[2]=b_thresholds->get(3).asDouble();
+                        thresholds[3]=b_thresholds->get(4).asDouble();
+                        thresholds[4]=b_thresholds->get(5).asDouble();
+                        thresholds[5]=b_thresholds->get(6).asInt();
+                        thresholds[6]=b_thresholds->get(7).asInt();
+                        fj.setThresholds(thresholds);
+                    }
+					
                     string joint = joint_list->get(0).asString();
                     fj.setName(joint);
                     if(Bottle *feed_x = joint_list->get(1).asList())
                     {
                         fj.update(0,feed_x->get(idtw).asDouble(),feed_x->get(imean).asDouble(),feed_x->get(isdev).asDouble(),
                                   feed_x->get(iskwns).asDouble(),feed_x->get(ift).asInt(),feed_x->get(ifc).asInt(),
-                                  feed_x->get(imaxpsdt).asDouble(),feed_x->get(imaxpsdc).asDouble());
+                                  feed_x->get(imaxpsdt).asDouble(),feed_x->get(imaxpsdc).asDouble(),thresholds[2]);
                     }
                     if(Bottle *feed_y = joint_list->get(2).asList())
                     {
                         fj.update(1,feed_y->get(idtw).asDouble(),feed_y->get(imean).asDouble(),feed_y->get(isdev).asDouble(),
                                   feed_y->get(iskwns).asDouble(),feed_y->get(ift).asInt(),feed_y->get(ifc).asInt(),
-                                  feed_y->get(imaxpsdt).asDouble(),feed_y->get(imaxpsdc).asDouble());
+                                  feed_y->get(imaxpsdt).asDouble(),feed_y->get(imaxpsdc).asDouble(),thresholds[3]);
                     }
                     if(Bottle *feed_z = joint_list->get(3).asList())
                     {
                         fj.update(2,feed_z->get(idtw).asDouble(),feed_z->get(imean).asDouble(),feed_z->get(isdev).asDouble(),
                                   feed_z->get(iskwns).asDouble(),feed_z->get(ift).asInt(),feed_z->get(ifc).asInt(),
-                                  feed_z->get(imaxpsdt).asDouble(),feed_z->get(imaxpsdc).asDouble());
+                                  feed_z->get(imaxpsdt).asDouble(),feed_z->get(imaxpsdc).asDouble(),thresholds[4]);
                     }
-                    if(Bottle *b_thresholds = joint_list->get(4).asList())
-                    {
-                        Vector thresholds(5,0.0);
-                        thresholds[0]=b_thresholds->get(0).asDouble();
-                        thresholds[1]=b_thresholds->get(1).asDouble();
-                        thresholds[2]=b_thresholds->get(2).asDouble();
-                        thresholds[3]=b_thresholds->get(3).asInt();
-                        thresholds[4]=b_thresholds->get(4).asInt();
-                        fj.setThresholds(thresholds);
-                    }
-
+                    
                     //assess how the single joint is moving from its components
                     //the result is a pair with the level of the hierarchy for that joint (int)
                     //and the feedback (vector<string>)
@@ -537,14 +549,17 @@ public:
             //speak
             vector<SpeechParam> params;
             vector<pair<string,vector<SpeechParam>>> speak_buffer;
+            double score;
             switch (fin_level)
             {
             case -1: //moved from initial position
+                score = 0.0;
                 params.clear();
                 speak_buffer.clear();
                 speak_buffer.push_back(make_pair("position-center",params));
                 break;
             case 0: //static joints moving or dynamic joints not moving
+                score = 0.0;
                 speak_buffer.clear();
                 for(size_t i=0; i<bp.size(); i++)
                 {
@@ -562,39 +577,52 @@ public:
                 break;
 
             case 1: //error in position
+                score = 0.5;
                 speak_buffer.clear();
                 for(size_t i=0; i<bp.size(); i++)
                 {
                     params.clear();
                     params.push_back(bodypart2verbal[bp[i]]);
                     for(size_t j=0; j<finalf[i].size(); j++)
+                    {
                         params.push_back(finalf[i][j]);
+				    }
+                        
                     speak_buffer.push_back(make_pair("position",params));
                 }
                 break;
 
             case 2: //error in speed
+                score = 0.5;
                 speak_buffer.clear();
                 for(size_t i=0; i<bp.size(); i++)
                 {
                     params.clear();
                     params.push_back(bodypart2verbal[bp[i]]);
                     for(size_t j=0; j<finalf[i].size(); j++)
+                    {
                         params.push_back(finalf[i][j]);
-                    speak_buffer.push_back(make_pair("speed",params));
+                    }
+				    speak_buffer.push_back(make_pair("speed",params));
                 }
                 break;
 
             case 3: //no error
-                params.clear();
+                score = 1.0;
+         		params.clear();
                 speak_buffer.clear();
                 speak_buffer.push_back(make_pair("perfect",params));
-                break;
-            }
+                break;					
+		    }
 
             speak(speak_buffer);
-
             cout << endl;
+
+            Bottle &outscore = scorePort.prepare();
+            outscore.clear();
+            outscore.addDouble(score);
+            scorePort.write();
+
         }
 
     }
@@ -746,10 +774,11 @@ public:
             bool dtwx = dx < f.getDtwThresh();
             bool dtwy = dy < f.getDtwThresh();
             bool dtwz = dz < f.getDtwThresh();
-
-            bool errx = kx > f.getSdevThresh();
-            bool erry = ky > f.getSdevThresh();
-            bool errz = kz > f.getSdevThresh();
+            
+            bool errx = kx > f.getSxThresh();
+            bool erry = ky > f.getSyThresh();
+            bool errz = kz > f.getSzThresh();                 
+                                   
             if( errx || erry || errz )
             {
                 vector<string> out;
@@ -759,6 +788,7 @@ public:
                         out.push_back(speak_map["position"].second[0]);
                     else
                         out.push_back(speak_map["position"].second[1]);
+                    return make_pair(1,out);
                 }
                 if(erry)
                 {
@@ -766,6 +796,7 @@ public:
                         out.push_back(speak_map["position"].second[2]);
                     else
                         out.push_back(speak_map["position"].second[3]);
+                    return make_pair(1,out);
                 }
                 if(errz)
                 {
@@ -773,8 +804,8 @@ public:
                         out.push_back(speak_map["position"].second[4]);
                     else
                         out.push_back(speak_map["position"].second[5]);
+                    return make_pair(1,out);
                 }
-                return make_pair(1,out);
             }
         }
 
@@ -877,6 +908,7 @@ public:
     {
         BufferedPort<Bottle >::close();
         speechPort.close();
+        scorePort.close();
     }
 
 
