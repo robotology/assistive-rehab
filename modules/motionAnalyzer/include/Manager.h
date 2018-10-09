@@ -89,12 +89,14 @@ class Manager : public yarp::os::RFModule,
     yarp::os::Mutex mutex;
 
     //thresholds for feedback
-    double dtw_thresh,mean_thresh,sdev_thresh;
+    double dtw_thresh,mean_thresh,sx_thresh,sy_thresh,sz_thresh;
     int f_static,range_freq;
     std::vector<std::string> relaxed_joints;
     yarp::sig::Vector relaxed_dtw_thresh;
     yarp::sig::Vector relaxed_mean_thresh;
-    yarp::sig::Vector relaxed_sdev_thresh;
+    yarp::sig::Vector relaxed_sx_thresh;
+    yarp::sig::Vector relaxed_sy_thresh;
+    yarp::sig::Vector relaxed_sz_thresh;
     yarp::sig::Vector relaxed_f_static;
     yarp::sig::Vector relaxed_range_freq;
 

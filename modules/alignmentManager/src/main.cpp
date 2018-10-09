@@ -48,8 +48,8 @@ private:
     bool updated,start,first_run;
     vector<double> joint_template,joint_candidate,warped_template,warped_candidate;
     vector<string> relaxed_joints;
-    Vector dtw_thresh,mean_thresh,sdev_thresh,f_static,range_freq;
-    double outdtw_thresh,outmean_thresh,outsdev_thresh;
+    Vector dtw_thresh,mean_thresh,sx_thresh,sy_thresh,sz_thresh,f_static,range_freq;
+    double outdtw_thresh,outmean_thresh,outsx_thresh,outsy_thresh,outsz_thresh;
     int outf_static,outrange_freq;
 
 //    ofstream outfile;
@@ -146,9 +146,11 @@ public:
 
             Bottle *bDtw = command.get(2).asList();
             Bottle *bMean = command.get(3).asList();
-            Bottle *bSdev = command.get(4).asList();
-            Bottle *bFstatic = command.get(5).asList();
-            Bottle *bRangeFreq = command.get(6).asList();
+            Bottle *bSx = command.get(4).asList();
+            Bottle *bSy = command.get(5).asList();
+            Bottle *bSz = command.get(6).asList();
+            Bottle *bFstatic = command.get(7).asList();
+            Bottle *bRangeFreq = command.get(8).asList();
 
             relaxed_joints.clear();
 
@@ -158,8 +160,16 @@ public:
             for(size_t i=0; i<bMean->size(); i++)
                 mean_thresh.push_back(bMean->get(i).asDouble());
 
-            for(size_t i=0; i<bSdev->size(); i++)
-                sdev_thresh.push_back(bSdev->get(i).asDouble());
+            for(size_t i=0; i<bSx->size(); i++)
+                sx_thresh.push_back(bSx->get(i).asDouble());
+
+            for(size_t i=0; i<bSy->size(); i++)
+                sy_thresh.push_back(bSy->get(i).asDouble());
+
+            for(size_t i=0; i<bSz->size(); i++)
+            {
+                sz_thresh.push_back(bSz->get(i).asDouble());
+			}
 
             for(size_t i=0; i<bFstatic->size(); i++)
                 f_static.push_back(bFstatic->get(i).asInt());
@@ -319,8 +329,12 @@ public:
                             outdtw_thresh=dtw_thresh[0];
                         if(mean_thresh.size()>0)
                             outmean_thresh=mean_thresh[0];
-                        if(sdev_thresh.size()>0)
-                            outsdev_thresh=sdev_thresh[0];
+                        if(sx_thresh.size()>0)
+                            outsx_thresh=sx_thresh[0];
+                        if(sy_thresh.size()>0)
+                            outsy_thresh=sy_thresh[0];
+                        if(sz_thresh.size()>0)
+                            outsz_thresh=sz_thresh[0];
                         if(f_static.size()>0)
                             outf_static=f_static[0];
                         if(range_freq.size()>0)
@@ -340,9 +354,17 @@ public:
                                     {
                                         outmean_thresh=mean_thresh[m+1];
                                     }
-                                    if(sdev_thresh.size()>1)
+                                    if(sx_thresh.size()>1)
                                     {
-                                        outsdev_thresh=sdev_thresh[m+1];
+                                        outsx_thresh=sx_thresh[m+1];
+                                    }                                    
+                                    if(sy_thresh.size()>1)
+                                    {
+                                        outsy_thresh=sy_thresh[m+1];
+                                    }
+                                    if(sz_thresh.size()>1)
+                                    {
+                                        outsz_thresh=sz_thresh[m+1];
                                     }
                                     if(f_static.size()>1)
                                     {
@@ -435,7 +457,9 @@ public:
                         outthresh.addString("thresholds");
                         outthresh.addDouble(outdtw_thresh);
                         outthresh.addDouble(outmean_thresh);
-                        outthresh.addDouble(outsdev_thresh);
+                        outthresh.addDouble(outsx_thresh);
+                        outthresh.addDouble(outsy_thresh);
+                        outthresh.addDouble(outsz_thresh);
                         outthresh.addInt(outf_static);
                         outthresh.addInt(outrange_freq);
                     }

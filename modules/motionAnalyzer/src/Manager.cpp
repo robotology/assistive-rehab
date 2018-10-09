@@ -86,7 +86,9 @@ bool Manager::loadInitialConf()
 
         dtw_thresh = bGeneral.find("dtw_thresh").asDouble();
         mean_thresh = bGeneral.find("mean_thresh").asDouble();
-        sdev_thresh = bGeneral.find("sdev_thresh").asDouble();
+        sx_thresh = bGeneral.find("sx_thresh").asDouble();
+        sy_thresh = bGeneral.find("sy_thresh").asDouble();
+        sz_thresh = bGeneral.find("sz_thresh").asDouble();
         f_static = bGeneral.find("f_static").asInt();
         range_freq = bGeneral.find("range_freq").asInt();
     }
@@ -165,13 +167,17 @@ bool Manager::loadMotionList()
                             relaxed_joints.clear();
                             relaxed_dtw_thresh.clear();
                             relaxed_mean_thresh.clear();
-                            relaxed_sdev_thresh.clear();
+                            relaxed_sx_thresh.clear();
+                            relaxed_sy_thresh.clear();
+                            relaxed_sz_thresh.clear();
                             relaxed_f_static.clear();
                             relaxed_range_freq.clear();
 
                             relaxed_dtw_thresh.push_back(dtw_thresh);
                             relaxed_mean_thresh.push_back(mean_thresh);
-                            relaxed_sdev_thresh.push_back(sdev_thresh);
+                            relaxed_sx_thresh.push_back(sx_thresh);
+                            relaxed_sy_thresh.push_back(sy_thresh);
+                            relaxed_sz_thresh.push_back(sz_thresh);
                             relaxed_f_static.push_back(f_static);
                             relaxed_range_freq.push_back(range_freq);
 
@@ -191,11 +197,23 @@ bool Manager::loadMotionList()
                                     for(size_t i=0; i<bMeanThresh->size(); i++)
                                         relaxed_mean_thresh.push_back(bMeanThresh->get(i).asDouble());
                                 }
-
-                                if(Bottle *bSdevThresh = bMotion.find("sdev_thresh").asList())
+                                
+                                if(Bottle *bSxThresh = bMotion.find("sx_thresh").asList())
                                 {
-                                    for(size_t i=0; i<bSdevThresh->size(); i++)
-                                        relaxed_sdev_thresh.push_back(bSdevThresh->get(i).asDouble());
+                                    for(size_t i=0; i<bSxThresh->size(); i++)
+                                        relaxed_sx_thresh.push_back(bSxThresh->get(i).asDouble());
+                                }
+                                
+                                if(Bottle *bSyThresh = bMotion.find("sy_thresh").asList())
+                                {
+                                    for(size_t i=0; i<bSyThresh->size(); i++)
+                                        relaxed_sy_thresh.push_back(bSyThresh->get(i).asDouble());
+                                }
+                                
+                                if(Bottle *bSzThresh = bMotion.find("sz_thresh").asList())
+                                {
+                                    for(size_t i=0; i<bSzThresh->size(); i++)
+                                        relaxed_sz_thresh.push_back(bSzThresh->get(i).asDouble());
                                 }
 
                                 if(Bottle *bFstatic = bMotion.find("f_static").asList())
@@ -235,7 +253,8 @@ bool Manager::loadMotionList()
                             metric_repertoire->initialize(curr_tag, motion_type, tag_joint, ref_dir, tag_plane,
                                                           min, max, duration, camerapos, focalpoint,
                                                           relaxed_joints,relaxed_dtw_thresh,relaxed_mean_thresh,
-                                                          relaxed_sdev_thresh,relaxed_f_static,relaxed_range_freq);
+                                                          relaxed_sx_thresh,relaxed_sy_thresh, relaxed_sz_thresh,
+                                                          relaxed_f_static,relaxed_range_freq);
 
                             //add the current metric to the repertoire
                             motion_repertoire.insert(pair<string, Metric*>(curr_tag+"_"+to_string(j), metric_repertoire));
@@ -427,7 +446,9 @@ bool Manager::start()
     cmd.addDouble(metric->getDuration());
     cmd.addList().read(metric->getDtwThresh());
     cmd.addList().read(metric->getMeanThresh());
-    cmd.addList().read(metric->getSdevThresh());
+    cmd.addList().read(metric->getSxThresh());
+    cmd.addList().read(metric->getSyThresh());
+    cmd.addList().read(metric->getSzThresh());
     cmd.addList().read(metric->getFstatic());
     cmd.addList().read(metric->getRangeFreq());
     dtwPort.write(cmd,reply);

@@ -30,7 +30,8 @@ void Metric::initialize(const string &name_, const string &motion_type_, const s
                         const string &tag_plane_, const double &min_, const double &max_, const double &duration_,
                         const Vector &camerapos_, const Vector &focalpoint_,
                         const vector<string> &relaxed_joints_, const Vector &dtw_thresh_, const Vector &mean_thresh_,
-                        const Vector &sdev_thresh_, const Vector &f_static_, const Vector &range_freq_)
+                        const Vector &sx_thresh_, const Vector &sy_thresh_, const Vector &sz_thresh_,
+                        const Vector &f_static_, const Vector &range_freq_)
 {
     name = name_;
     motion_type = motion_type_;
@@ -45,7 +46,9 @@ void Metric::initialize(const string &name_, const string &motion_type_, const s
     relaxed_joints = relaxed_joints_;
     dtw_thresh = dtw_thresh_;
     mean_thresh = mean_thresh_;
-    sdev_thresh = sdev_thresh_;
+    sx_thresh = sx_thresh_;
+    sy_thresh = sy_thresh_;
+    sz_thresh = sz_thresh_;
     f_static = f_static_;
     range_freq = range_freq_;
 }

@@ -37,7 +37,9 @@ protected:
     std::vector<std::string> relaxed_joints;
     yarp::sig::Vector dtw_thresh;
     yarp::sig::Vector mean_thresh;
-    yarp::sig::Vector sdev_thresh;
+    yarp::sig::Vector sx_thresh;    
+    yarp::sig::Vector sy_thresh;    
+    yarp::sig::Vector sz_thresh;
     yarp::sig::Vector f_static;
     yarp::sig::Vector range_freq;
 
@@ -51,8 +53,8 @@ public:
                     const double &duration_, const yarp::sig::Vector &camerapos_,
                     const yarp::sig::Vector &focalpoint_, const std::vector<std::string> &relaxed_joints_,
                     const yarp::sig::Vector &dtw_thresh_, const yarp::sig::Vector &mean_thresh_,
-                    const yarp::sig::Vector &sdev_thresh_, const yarp::sig::Vector &f_static_,
-                    const yarp::sig::Vector &range_freq_);
+                    const yarp::sig::Vector &sx_thresh_, const yarp::sig::Vector &sy_thresh_, const yarp::sig::Vector &sz_thresh_,
+                    const yarp::sig::Vector &f_static_, const yarp::sig::Vector &range_freq_);
 
     yarp::sig::Vector getRefDir() const { return ref_dir; }
     double getMax() const { return max; }
@@ -67,7 +69,9 @@ public:
     std::vector<std::string> getRelaxedJoints() const { return relaxed_joints; }
     yarp::sig::Vector getDtwThresh() const { return dtw_thresh; }
     yarp::sig::Vector getMeanThresh() const { return mean_thresh; }
-    yarp::sig::Vector getSdevThresh() const { return sdev_thresh; }
+    yarp::sig::Vector getSxThresh() const { return sx_thresh; }
+    yarp::sig::Vector getSyThresh() const { return sy_thresh; }
+    yarp::sig::Vector getSzThresh() const { return sz_thresh; }
     yarp::sig::Vector getFstatic() const { return f_static; }
     yarp::sig::Vector getRangeFreq() const { return range_freq; }
 
