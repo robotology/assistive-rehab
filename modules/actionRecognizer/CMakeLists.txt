@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # Authors: Ugo Pattacini <ugo.pattacini@iit.it>
 
-project(actionManager)
+project(actionRecognizer)
 
 find_package(TensorflowCC REQUIRED)
 
