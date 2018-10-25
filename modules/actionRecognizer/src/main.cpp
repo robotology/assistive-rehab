@@ -23,6 +23,7 @@
 #include <tensorflow/cc/ops/standard_ops.h>
 #include <tensorflow/cc/ops/array_ops.h>
 #include "AssistiveRehab/skeleton.h"
+#include "src/actionRecognizer_IDL.h"
 
 using namespace std;
 using namespace yarp::os;
@@ -31,7 +32,7 @@ using namespace tensorflow;
 using namespace assistive_rehab;
 
 /****************************************************************/
-class Recognizer : public BufferedPort<Bottle>
+class Recognizer : public BufferedPort<Bottle>, public actionRecognizer_IDL
 {
     string moduleName;
     unordered_map<string,int> keypoint2int;
@@ -45,13 +46,19 @@ class Recognizer : public BufferedPort<Bottle>
     Session* session;
     SessionOptions sess_opts;
 
+    RpcServer analyzerPort;
     BufferedPort<Bottle> outPort;
+
+    Mutex mutex;
+    bool starting;
+    string action_to_perform;
 
 public:
     /****************************************************************/
     Recognizer(const string &moduleName, const int nsteps, const int nclasses,
                const unordered_map<int,string> &class_map, const vector<float> &min,
-               const vector<float> &max, const unordered_map<string,int> &keypoint2int )
+               const vector<float> &max, const unordered_map<string,int> &keypoint2int,
+               const string &pathToGraph, const string &checkpointPath)
     {
         this->moduleName = moduleName;
         this->nsteps = nsteps;
@@ -60,10 +67,6 @@ public:
         this->min = min;
         this->max = max;
         this->keypoint2int = keypoint2int;
-
-        // Set up input paths
-        const string pathToGraph = "/home/vvasco/dev/action-recognition/lstm/fdg-model/2d/model-chevalier/train-random_test-random/model.meta";
-        const string checkpointPath = "/home/vvasco/dev/action-recognition/lstm/fdg-model/2d/model-chevalier/train-random_test-random/model";
 
         sess_opts.config.mutable_gpu_options()->set_allow_growth(true); //to limit GPU usage
         session = NewSession(sess_opts);
@@ -102,6 +105,7 @@ public:
 
         input = Tensor(DT_FLOAT, TensorShape({1,nsteps,36}));
         step = 0;
+        starting = false;
 
         for(size_t i=0; i<nsteps; i++)
         {
@@ -116,6 +120,37 @@ public:
     ~Recognizer()
     {
     };
+
+    /********************************************************/
+    bool attach(RpcServer &source)
+    {
+        return this->yarp().attachAsServer(source);
+    }
+
+    /****************************************************************/
+    bool run() override
+    {
+        LockGuard lg(mutex);
+        starting = true;
+        return starting;
+    }
+
+    /****************************************************************/
+    bool load(const string &exercise) override
+    {
+        LockGuard lg(mutex);
+        action_to_perform = exercise;
+        yInfo() << "Exercise to perform" << action_to_perform;
+        return true;
+    }
+
+    /****************************************************************/
+    bool stop() override
+    {
+        LockGuard lg(mutex);
+        starting = false;
+        return !starting;
+    }
 
     /****************************************************************/
     bool updateInput(const string & tag, const int i, const float &u, const float &v)
@@ -132,76 +167,81 @@ public:
     {
         this->useCallback();
         BufferedPort<Bottle >::open( "/" + moduleName + "/keypoints:i" );
+        analyzerPort.open("/" + moduleName + "/rpc");
         outPort.open("/" + moduleName + "/target:o");
+        attach(analyzerPort);
         return true;
     }
 
     /****************************************************************/
     void onRead(Bottle &data)
     {
-        if(data.size()!=0)
+        if(starting)
         {
-            if(Bottle *b1=data.get(0).asList())
+            if(data.size()!=0)
             {
-                for(size_t i=0; i<b1->size(); i++)
+                if(Bottle *b1=data.get(0).asList())
                 {
-                    Bottle *b2=b1->get(i).asList();
-                    for(size_t j=0; j<b2->size(); j++)
+                    for(size_t i=0; i<b1->size(); i++)
                     {
-                        if (Bottle *k=b2->get(j).asList())
+                        Bottle *b2=b1->get(i).asList();
+                        for(size_t j=0; j<b2->size(); j++)
                         {
-                            if (k->size()==4)
+                            if (Bottle *k=b2->get(j).asList())
                             {
-                                string tag=k->get(0).asString();
-                                float u=k->get(1).asDouble();
-                                float v=k->get(2).asDouble();
-                                updateInput(tag,step,u,v);
+                                if (k->size()==4)
+                                {
+                                    string tag=k->get(0).asString();
+                                    float u=k->get(1).asDouble();
+                                    float v=k->get(2).asDouble();
+                                    updateInput(tag,step,u,v);
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            if(step < nsteps)
-            {
-                step++;
-            }
-            else
-            {
-                Bottle &outBottle = outPort.prepare();
-
-                //run the inference
-                //                cout << (input).tensor<float, (3)>() << endl;
-                cout << "input: " << input.DebugString() << endl;
-                string input_layer = "x:0";
-                vector<string> output_layers = {"add_1:0","ArgMax:0"};
-                vector<Tensor> outputTensors;
-                status = session->Run({{input_layer, input}}, {output_layers}, {}, &outputTensors);
-                cout << "add_1: " << outputTensors[0].DebugString() << endl;
-                cout << "ArgMax: " << outputTensors[1].DebugString() << endl;
-
-                auto score = outputTensors[0].tensor<float,2>();
-                auto out = outputTensors[1].scalar<int64>();
-                int pred = out(0);
-                cout << "prediction: " << pred << " " << class_map[pred] << endl;
-                cout << "scores: ";
-                float n = 0.0;
-                for(size_t k=0; k<nclasses; k++)
-                    n+=exp(score(k));
-                vector<float> scores(nclasses,0.0);
-                for(size_t k=0; k<nclasses; k++)
+                if(step < nsteps)
                 {
-                    scores[k]=exp(score(k))/n;
-                    cout << scores[k] << " ";
+                    step++;
                 }
-                cout << endl;
+                else
+                {
+                    //run the inference
+                    //                cout << (input).tensor<float, (3)>() << endl;
+                    cout << "input: " << input.DebugString() << endl;
+                    string input_layer = "x:0";
+                    vector<string> output_layers = {"add_1:0","ArgMax:0"};
+                    vector<Tensor> outputTensors;
+                    status = session->Run({{input_layer, input}}, {output_layers}, {}, &outputTensors);
+                    cout << "add_1: " << outputTensors[0].DebugString() << endl;
+                    cout << "ArgMax: " << outputTensors[1].DebugString() << endl;
 
-                step = 0;
+                    auto score = outputTensors[0].tensor<float,2>();
+                    auto out = outputTensors[1].scalar<int64>();
+                    int pred = out(0);
+                    cout << "prediction: " << pred << " " << class_map[pred] << endl;
+                    cout << "scores: ";
+                    float n = 0.0;
+                    for(size_t k=0; k<nclasses; k++)
+                        n+=exp(score(k));
+                    vector<float> scores(nclasses,0.0);
+                    for(size_t k=0; k<nclasses; k++)
+                    {
+                        scores[k]=exp(score(k))/n;
+                        cout << scores[k] << " ";
+                    }
+                    cout << endl;
 
-                outBottle.clear();
-                outBottle.addString(class_map[pred]);
-                outBottle.addDouble(scores[pred]);
-                outPort.write();
+                    step = 0;
+
+                    Bottle &outBottle = outPort.prepare();
+                    outBottle.clear();
+                    outBottle.addString(action_to_perform);
+                    outBottle.addString(class_map[pred]);
+                    outBottle.addDouble(scores[pred]);
+                    outPort.write();
+                }
             }
         }
     }
@@ -212,6 +252,7 @@ public:
         session->Close();
         delete session;
         BufferedPort<yarp::os::Bottle >::close();
+        analyzerPort.close();
         outPort.close();
     }
 
@@ -219,6 +260,7 @@ public:
     void interrupt()
     {
         BufferedPort<yarp::os::Bottle >::interrupt();
+        analyzerPort.interrupt();
         outPort.interrupt();
     }
 };
@@ -275,10 +317,11 @@ public:
             class_map[value]=label;
         }
 
-        ifstream file( "/home/vvasco/dev/action-recognition/lstm/fdg-data/2d/train-random_test-random/scale_values.txt" );
+        yInfo() << "Loading scaling values from: " << this->rf->findFileByName("scale_values.txt");
+        ifstream file(this->rf->findFileByName("scale_values.txt"));
         string line = "";
         vector<float> min,max;
-        while (getline(file, line))
+        while(getline(file, line))
         {
             vector<string> vec;
             boost::algorithm::split(vec, line, boost::is_any_of(","));
@@ -305,7 +348,13 @@ public:
         keypoint2int["REar"] = 32;
         keypoint2int["LEar"] = 34;
 
-        recognizer = new Recognizer( moduleName, nsteps, num_classes, class_map, min, max, keypoint2int );
+        // Set up input paths
+        string pathToGraph = this->rf->findFileByName("model.meta");
+        string checkpointPath = pathToGraph.substr(0, pathToGraph.find_last_of("/\\")) + "/model";
+        yInfo() << "Loading model from:" << pathToGraph;
+
+        recognizer = new Recognizer( moduleName, nsteps, num_classes, class_map, min, max, keypoint2int,
+                                     pathToGraph, checkpointPath );
         /* now start the thread to do the work */
         recognizer->open();
 

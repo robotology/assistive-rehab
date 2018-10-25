@@ -37,6 +37,7 @@ class Manager : public yarp::os::RFModule,
     yarp::os::RpcServer rpcPort;
     yarp::os::RpcClient scalerPort;
     yarp::os::RpcClient dtwPort;
+    yarp::os::RpcClient actionPort;
     yarp::os::BufferedPort<yarp::os::Bottle> scopePort;
 
     yarp::os::ResourceFinder *rf;

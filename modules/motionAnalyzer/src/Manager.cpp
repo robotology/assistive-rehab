@@ -290,9 +290,20 @@ bool Manager::loadMetric(const string &metric_tag)
         //send commands to skeletonScaler
         Bottle cmd,reply;
         cmd.addVocab(Vocab::encode("load"));
-        string f = metric->getMotionType() + ".log";
-        string context = rf->getContext();
+        string f = metric->getMotionType();
         cmd.addString(f);
+        actionPort.write(cmd,reply);
+        if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+        {
+            yError() << "actionRecognizer could not motion type" << f;
+            return false;
+        }
+        cmd.clear();
+        reply.clear();
+        cmd.addVocab(Vocab::encode("load"));
+        f = f + ".log";
+        cmd.addString(f);
+        string context = rf->getContext();
         cmd.addString(context);
         scalerPort.write(cmd,reply);
         if(reply.get(0).asVocab()!=Vocab::encode("ok"))
@@ -452,6 +463,7 @@ bool Manager::start()
     cmd.addList().read(metric->getFstatic());
     cmd.addList().read(metric->getRangeFreq());
     dtwPort.write(cmd,reply);
+    actionPort.write(cmd,reply);
     if(reply.get(0).asVocab()==Vocab::encode("ok"))
     {
         tstart_session = Time::now()-tstart;
@@ -471,6 +483,7 @@ bool Manager::stop()
     cmd.addVocab(Vocab::encode("stop"));
     scalerPort.write(cmd,reply);
     dtwPort.write(cmd,reply);
+    actionPort.write(cmd,reply);
     if(reply.get(0).asVocab()==Vocab::encode("ok") && starting)
     {
         cmd.clear();
@@ -602,6 +615,7 @@ bool Manager::configure(ResourceFinder &rf)
     scopePort.open(("/" + getName() + "/scope").c_str());
     scalerPort.open(("/" + getName() + "/scaler:cmd").c_str());
     dtwPort.open(("/" + getName() + "/dtw:cmd").c_str());
+    actionPort.open(("/" + getName() + "/action:cmd").c_str());
     rpcPort.open(("/" + getName() + "/cmd").c_str());
     attach(rpcPort);
 
@@ -632,6 +646,7 @@ bool Manager::interruptModule()
     scopePort.interrupt();
     scalerPort.interrupt();
     dtwPort.interrupt();
+    actionPort.interrupt();
     rpcPort.interrupt();
     yInfo() << "Interrupted module";
 
@@ -651,6 +666,7 @@ bool Manager::close()
     scopePort.close();
     scalerPort.close();
     dtwPort.close();
+    actionPort.close();
     rpcPort.close();
 
     yInfo() << "Closed ports";
