@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <fstream>
+#include <math.h>
 #include <yarp/os/all.h>
 #include <yarp/sig/Matrix.h>
 #include <algorithm>
@@ -35,30 +36,34 @@ class Recognizer : public BufferedPort<Bottle>
     string moduleName;
     unordered_map<string,int> keypoint2int;
     unordered_map<int,string> class_map;
-    int nsteps;
+    int nsteps,nclasses;
     vector<float> min,max;
 
+    int step;
     Status status;
     Tensor input;
     Session* session;
     SessionOptions sess_opts;
-    int step;
+
+    BufferedPort<Bottle> outPort;
 
 public:
     /****************************************************************/
-    Recognizer(const string &moduleName, const int nsteps, const unordered_map<int,string> &class_map,
-               const vector<float> &min, const vector<float> &max, const unordered_map<string,int> &keypoint2int )
+    Recognizer(const string &moduleName, const int nsteps, const int nclasses,
+               const unordered_map<int,string> &class_map, const vector<float> &min,
+               const vector<float> &max, const unordered_map<string,int> &keypoint2int )
     {
         this->moduleName = moduleName;
         this->nsteps = nsteps;
+        this->nclasses = nclasses;
         this->class_map = class_map;
         this->min = min;
         this->max = max;
         this->keypoint2int = keypoint2int;
 
         // Set up input paths
-        const string pathToGraph = "/home/vvasco/dev/action-recognition/lstm/fdg-model/2d/model-chevalier/train_test-1/model-4/model.meta";
-        const string checkpointPath = "/home/vvasco/dev/action-recognition/lstm/fdg-model/2d/model-chevalier/train_test-1/model-4/model";
+        const string pathToGraph = "/home/vvasco/dev/action-recognition/lstm/fdg-model/2d/model-chevalier/train-random_test-random/model.meta";
+        const string checkpointPath = "/home/vvasco/dev/action-recognition/lstm/fdg-model/2d/model-chevalier/train-random_test-random/model";
 
         sess_opts.config.mutable_gpu_options()->set_allow_growth(true); //to limit GPU usage
         session = NewSession(sess_opts);
@@ -127,6 +132,7 @@ public:
     {
         this->useCallback();
         BufferedPort<Bottle >::open( "/" + moduleName + "/keypoints:i" );
+        outPort.open("/" + moduleName + "/target:o");
         return true;
     }
 
@@ -135,14 +141,14 @@ public:
     {
         if(data.size()!=0)
         {
-            if (Bottle *b1=data.get(0).asList())
+            if(Bottle *b1=data.get(0).asList())
             {
-                for (size_t i=0; i<b1->size(); i++)
+                for(size_t i=0; i<b1->size(); i++)
                 {
                     Bottle *b2=b1->get(i).asList();
-                    for (size_t i=0; i<b2->size(); i++)
+                    for(size_t j=0; j<b2->size(); j++)
                     {
-                        if (Bottle *k=b2->get(i).asList())
+                        if (Bottle *k=b2->get(j).asList())
                         {
                             if (k->size()==4)
                             {
@@ -162,20 +168,40 @@ public:
             }
             else
             {
+                Bottle &outBottle = outPort.prepare();
+
                 //run the inference
                 //                cout << (input).tensor<float, (3)>() << endl;
-                //                cout << "input" << input.DebugString() << endl;
+                cout << "input: " << input.DebugString() << endl;
                 string input_layer = "x:0";
-                string output_layer = "ArgMax:0";
+                vector<string> output_layers = {"add_1:0","ArgMax:0"};
                 vector<Tensor> outputTensors;
-                status = session->Run({{input_layer, input}}, {output_layer}, {}, &outputTensors);
-                //                cout << "output " << outputTensors[0].DebugString() << endl;
+                status = session->Run({{input_layer, input}}, {output_layers}, {}, &outputTensors);
+                cout << "add_1: " << outputTensors[0].DebugString() << endl;
+                cout << "ArgMax: " << outputTensors[1].DebugString() << endl;
 
-                auto out = outputTensors[0].scalar<int64>();
+                auto score = outputTensors[0].tensor<float,2>();
+                auto out = outputTensors[1].scalar<int64>();
                 int pred = out(0);
-                cout << "prediction: " << class_map[pred] << endl;
+                cout << "prediction: " << pred << " " << class_map[pred] << endl;
+                cout << "scores: ";
+                float n = 0.0;
+                for(size_t k=0; k<nclasses; k++)
+                    n+=exp(score(k));
+                vector<float> scores(nclasses,0.0);
+                for(size_t k=0; k<nclasses; k++)
+                {
+                    scores[k]=exp(score(k))/n;
+                    cout << scores[k] << " ";
+                }
+                cout << endl;
 
                 step = 0;
+
+                outBottle.clear();
+                outBottle.addString(class_map[pred]);
+                outBottle.addDouble(scores[pred]);
+                outPort.write();
             }
         }
     }
@@ -186,12 +212,14 @@ public:
         session->Close();
         delete session;
         BufferedPort<yarp::os::Bottle >::close();
+        outPort.close();
     }
 
     /********************************************************/
     void interrupt()
     {
         BufferedPort<yarp::os::Bottle >::interrupt();
+        outPort.interrupt();
     }
 };
 
@@ -218,36 +246,36 @@ public:
             yError()<<"Unable to find group \"general\"";
             return false;
         }
-        if (!bGroup.check("num-sections"))
+        if (!bGroup.check("num-classes"))
         {
-            yError()<<"Unable to find key \"num-sections\"";
+            yError()<<"Unable to find key \"num-classes\"";
             return false;
         }
         unordered_map<int,string> class_map;
-        int num_sections=bGroup.find("num-sections").asInt();
-        for (int i=0; i<num_sections; i++)
+        int num_classes=bGroup.find("num-classes").asInt();
+        for (int i=0; i<num_classes; i++)
         {
-            ostringstream section;
-            section<<"section-"<<i;
-            Bottle &bSection=rf.findGroup(section.str());
-            if (bSection.isNull())
+            ostringstream class_i;
+            class_i<<"class-"<<i;
+            Bottle &bClass=rf.findGroup(class_i.str());
+            if (bClass.isNull())
             {
                 string msg="Unable to find section";
-                msg+="\""+section.str()+"\"";
+                msg+="\""+class_i.str()+"\"";
                 yError()<<msg;
                 return false;
             }
-            if (!bSection.check("label") || !bSection.check("value"))
+            if (!bClass.check("label") || !bClass.check("value"))
             {
-                yError()<<"Unable to find key \"key\" and/or \"value\"";
+                yError()<<"Unable to find key \"label\" and/or \"value\"";
                 return false;
             }
-            int value=bSection.find("value").asInt();
-            string label=bSection.find("label").asString();
+            int value=bClass.find("value").asInt();
+            string label=bClass.find("label").asString();
             class_map[value]=label;
         }
 
-        ifstream file( "/home/vvasco/dev/action-recognition/lstm/fdg-data/2d/train_test-1/scale_values.txt" );
+        ifstream file( "/home/vvasco/dev/action-recognition/lstm/fdg-data/2d/train-random_test-random/scale_values.txt" );
         string line = "";
         vector<float> min,max;
         while (getline(file, line))
@@ -277,7 +305,7 @@ public:
         keypoint2int["REar"] = 32;
         keypoint2int["LEar"] = 34;
 
-        recognizer = new Recognizer( moduleName, nsteps, class_map, min, max, keypoint2int );
+        recognizer = new Recognizer( moduleName, nsteps, num_classes, class_map, min, max, keypoint2int );
         /* now start the thread to do the work */
         recognizer->open();
 
