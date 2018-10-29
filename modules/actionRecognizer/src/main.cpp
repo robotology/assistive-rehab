@@ -280,7 +280,7 @@ public:
         string moduleName = rf.check("name", Value("actionRecognizer")).asString();
         setName(moduleName.c_str());
 
-        int nsteps = rf.check("nsteps",Value(50)).asInt(); //must be the one defined when training the model
+        int nsteps = rf.check("nsteps",Value(100)).asInt(); //must be the one defined when training the model
 
         Bottle &bGroup=rf.findGroup("general");
         if (bGroup.isNull())
