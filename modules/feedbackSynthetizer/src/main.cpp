@@ -497,6 +497,7 @@ public:
         string action = target.get(1).asString();
         double confidence = target.get(2).asDouble();
         yInfo() << exercise << action << confidence;
+        double score;
         if(action == exercise && confidence > thresh_confidence)
         {
             Bottle *data = dtwPort.read();
@@ -575,7 +576,6 @@ public:
                 //speak
                 vector<SpeechParam> params;
                 vector<pair<string,vector<SpeechParam>>> speak_buffer;
-                double score;
                 switch (fin_level)
                 {
                 case -1: //moved from initial position
@@ -643,12 +643,6 @@ public:
 
                 speak(speak_buffer);
                 cout << endl;
-
-                Bottle &outscore = scorePort.prepare();
-                outscore.clear();
-                outscore.addDouble(score);
-                scorePort.write();
-
             }
         }
         else
@@ -659,7 +653,13 @@ public:
             params.clear();
             speak_buffer.push_back(make_pair("wrong",params));
             speak(speak_buffer);
+            score = 0.0;
         }
+
+        Bottle &outscore = scorePort.prepare();
+        outscore.clear();
+        outscore.addDouble(score);
+        scorePort.write();
     }
 
     /********************************************************/
