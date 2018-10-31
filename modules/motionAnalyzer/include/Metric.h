@@ -42,6 +42,7 @@ protected:
     yarp::sig::Vector sz_thresh;
     yarp::sig::Vector f_static;
     yarp::sig::Vector range_freq;
+    yarp::sig::Vector psd_thresh;
 
 public:
     Metric();
@@ -54,7 +55,7 @@ public:
                     const yarp::sig::Vector &focalpoint_, const std::vector<std::string> &relaxed_joints_,
                     const yarp::sig::Vector &dtw_thresh_, const yarp::sig::Vector &mean_thresh_,
                     const yarp::sig::Vector &sx_thresh_, const yarp::sig::Vector &sy_thresh_, const yarp::sig::Vector &sz_thresh_,
-                    const yarp::sig::Vector &f_static_, const yarp::sig::Vector &range_freq_);
+                    const yarp::sig::Vector &f_static_, const yarp::sig::Vector &range_freq_, const yarp::sig::Vector &relaxed_psd_thresh_);
 
     yarp::sig::Vector getRefDir() const { return ref_dir; }
     double getMax() const { return max; }
@@ -74,6 +75,7 @@ public:
     yarp::sig::Vector getSzThresh() const { return sz_thresh; }
     yarp::sig::Vector getFstatic() const { return f_static; }
     yarp::sig::Vector getRangeFreq() const { return range_freq; }
+    yarp::sig::Vector getPsdThresh() const { return psd_thresh; }
 
     virtual void setTarget(const yarp::sig::Vector &target_) = 0;
 };

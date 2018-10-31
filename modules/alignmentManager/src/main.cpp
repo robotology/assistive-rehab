@@ -40,7 +40,7 @@ private:
 
     //parameters
     int win,filter_order;
-    double T,tstart,period,psd_noise;
+    double T,tstart,period;
 
     SkeletonWaist skeletonIn,skeletonTemplate;
     string skel_tag,template_tag;
@@ -48,11 +48,11 @@ private:
     bool updated,start,first_run;
     vector<double> joint_template,joint_candidate,warped_template,warped_candidate;
     vector<string> relaxed_joints;
-    Vector dtw_thresh,mean_thresh,sx_thresh,sy_thresh,sz_thresh,f_static,range_freq;
-    double outdtw_thresh,outmean_thresh,outsx_thresh,outsy_thresh,outsz_thresh;
+    Vector dtw_thresh,mean_thresh,sx_thresh,sy_thresh,sz_thresh,f_static,range_freq,psd_thresh;
+    double outdtw_thresh,outmean_thresh,outsx_thresh,outsy_thresh,outsz_thresh,outpsd_thresh;
     int outf_static,outrange_freq;
 
-//    ofstream outfile;
+    ofstream outfile;
 
 
 public:
@@ -151,6 +151,7 @@ public:
             Bottle *bSz = command.get(6).asList();
             Bottle *bFstatic = command.get(7).asList();
             Bottle *bRangeFreq = command.get(8).asList();
+            Bottle *bPsdThresh = command.get(9).asList();
 
             relaxed_joints.clear();
 
@@ -167,15 +168,16 @@ public:
                 sy_thresh.push_back(bSy->get(i).asDouble());
 
             for(size_t i=0; i<bSz->size(); i++)
-            {
                 sz_thresh.push_back(bSz->get(i).asDouble());
-			}
 
             for(size_t i=0; i<bFstatic->size(); i++)
                 f_static.push_back(bFstatic->get(i).asInt());
 
             for(size_t i=0; i<bRangeFreq->size(); i++)
                 range_freq.push_back(bRangeFreq->get(i).asInt());
+
+            for(size_t i=0; i<bPsdThresh->size(); i++)
+                psd_thresh.push_back(bPsdThresh->get(i).asDouble());
 
             tstart = Time::now();
             start = true;
@@ -196,7 +198,6 @@ public:
     {
         win = rf.check("win",Value(-1)).asDouble();
         period = rf.check("period",Value(0.01)).asDouble();
-        psd_noise = rf.check("psd_noise",Value(2000.0)).asDouble();
         filter_order = rf.check("filter_order",Value(3)).asInt();
 
         opcPort.open("/alignmentManager/opc");
@@ -205,7 +206,7 @@ public:
         rpcPort.open("/alignmentManager/rpc");
         attach(rpcPort);
 
-//        outfile.open("dtw-test.txt");
+        outfile.open("dtw-test.txt");
 
         start = false;
 
@@ -226,7 +227,7 @@ public:
     /********************************************************/
     bool close() override
     {
-//        outfile.close();
+        outfile.close();
 
         opcPort.close();
         outPort.close();
@@ -339,6 +340,8 @@ public:
                             outf_static=f_static[0];
                         if(range_freq.size()>0)
                             outrange_freq=range_freq[0];
+                        if(psd_thresh.size()>0)
+                            outpsd_thresh=psd_thresh[0];
 
                         if(relaxed_joints.size()>0)
                         {
@@ -374,6 +377,10 @@ public:
                                     {
                                         outrange_freq=range_freq[m+1];
                                     }
+                                    if(psd_thresh.size()>1)
+                                    {
+                                        outpsd_thresh=psd_thresh[m+1];
+                                    }
                                     break;
                                 }
                             }
@@ -391,25 +398,25 @@ public:
                             dtw->align(joint_template,joint_candidate,warped_template,warped_candidate);
                             double d=dtw->getDistance();
 
-//                            outfile << i << " ";
-//                            for(int k=0; k<joint_template.size(); k++)
-//                                outfile << joint_template[k] << " ";
-//                            outfile << "\n";
+                            outfile << i << " ";
+                            for(int k=0; k<joint_template.size(); k++)
+                                outfile << joint_template[k] << " ";
+                            outfile << "\n";
 
-//                            outfile << i << " ";
-//                            for(int k=0; k<joint_candidate.size(); k++)
-//                                outfile << joint_candidate[k] << " ";
-//                            outfile << "\n";
+                            outfile << i << " ";
+                            for(int k=0; k<joint_candidate.size(); k++)
+                                outfile << joint_candidate[k] << " ";
+                            outfile << "\n";
 
-//                            outfile << i << " " << warped_template.size();
-//                            for(int k=0; k<warped_template.size(); k++)
-//                                outfile << warped_template[k] << " ";
-//                            outfile << "\n";
+                            outfile << i << " " << warped_template.size() << " ";
+                            for(int k=0; k<warped_template.size(); k++)
+                                outfile << warped_template[k] << " ";
+                            outfile << "\n";
 
-//                            outfile << i << " " << warped_candidate.size();
-//                            for(int k=0; k<warped_candidate.size(); k++)
-//                                outfile << warped_candidate[k] << " ";
-//                            outfile << "\n";
+                            outfile << i << " " << warped_candidate.size() << " ";
+                            for(int k=0; k<warped_candidate.size(); k++)
+                                outfile << warped_candidate[k] << " ";
+                            outfile << "\n";
 
                             double maxpsdt,maxpsdc;
                             int ft = performFFT(joint_template,"template",i,maxpsdt);
@@ -428,11 +435,15 @@ public:
                             fout.addDouble(d);
 
                             //evaluate error distribution
+                            outfile << i << " ";
                             double errpos[warped_template.size()];
                             for(int k=0; k<warped_template.size(); k++)
                             {
                                 errpos[k] = warped_candidate[k]-warped_template[k];
+                                outfile << errpos[k] << " ";
                             }
+                            outfile << "\n";
+
                             //the kurtosis for standard normal distribution is 3
                             //                                double kurt = 3.0 + gsl_stats_kurtosis(errpos,1,warped_template.size());
                             double mu = gsl_stats_mean(errpos,1,warped_template.size());
@@ -462,6 +473,7 @@ public:
                         outthresh.addDouble(outsz_thresh);
                         outthresh.addInt(outf_static);
                         outthresh.addInt(outrange_freq);
+                        outthresh.addDouble(outpsd_thresh);
                     }
 
                     yInfo() << "Sending feedback";
@@ -495,10 +507,8 @@ public:
 
         if(max == 0)
             return -1; //joint is stale
-        else if(max > psd_noise)
-            return imax;
         else
-            return 0;
+            return imax;
     }
 
     /********************************************************/
@@ -543,12 +553,12 @@ public:
 //            outfile << in[j][0] << " ";
 //        outfile << "\n";
 
-//        outfile << name << " ";
-//        for(int j=0; j<n; j++)
-//            outfile << psd[j][0] << " ";
-//        outfile << "\n";
+        outfile << "psd" << " ";
+        for(int j=0; j<n; j++)
+            outfile << psd[j][0] << " ";
+        outfile << "\n";
 
-//        outfile << name << " ";
+//        outfile << "psd" << " ";
 //        for(int j=0; j<n; j++)
 //            outfile << filtered_psd[j][0] << " ";
 //        outfile << "\n";

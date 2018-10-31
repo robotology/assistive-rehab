@@ -200,7 +200,7 @@ class JointFeedback
 {
     string j;
     Matrix f;
-    double dtw_thresh,mean_thresh,sx_thresh,sy_thresh,sz_thresh;
+    double dtw_thresh,mean_thresh,sx_thresh,sy_thresh,sz_thresh,psd_thresh;
     int f_static,range_freq;
 
 public:
@@ -208,7 +208,7 @@ public:
     /****************************************************************/
     JointFeedback()
     {
-        f.resize(3,9);
+        f.resize(3,10);
     }
 
     /****************************************************************/
@@ -227,22 +227,33 @@ public:
         sz_thresh = thresholds[4];
         f_static = (int)thresholds[5];
         range_freq = (int)thresholds[6];
+        psd_thresh = thresholds[7];
     }
 
     /****************************************************************/
     void update(const int component, const double dtw, const double mu, const double std,
                 const double skwn, const double ft, const double fc, const double maxpsdt,
-                const double maxpsdc, const double std_thresh)
+                const double maxpsdc, const double std_thresh, const double psd)
     {
         f[component][0] = dtw;
         f[component][1] = mu;
         f[component][2] = std;
         f[component][3] = skwn;
-        f[component][4] = ft;
-        f[component][5] = fc;
+
+        if(ft == -1 || maxpsdt > psd)
+            f[component][4] = ft;
+        else
+            f[component][4] = 0;
+
+        if(fc == -1 || maxpsdc > psd)
+            f[component][5] = fc;
+        else
+            f[component][5] = 0;
+
         f[component][6] = maxpsdt;
         f[component][7] = maxpsdc;
         f[component][8] = std_thresh;
+        f[component][9] = psd;
     }
 
     /****************************************************************/
@@ -276,6 +287,7 @@ public:
     double getSzThresh() const { return sz_thresh; }
     int getFstatic() const { return f_static; }
     int getRangeFreq() const { return range_freq; }
+    double getPsdThresh() const { return psd_thresh; }
 };
 
 /****************************************************************/
@@ -501,7 +513,7 @@ public:
                         Vector thresholds;
                         if(Bottle *b_thresholds = joint_list->get(4).asList())
                         {
-                            thresholds.resize(7);
+                            thresholds.resize(8);
                             thresholds[0]=b_thresholds->get(1).asDouble();
                             thresholds[1]=b_thresholds->get(2).asDouble();
                             thresholds[2]=b_thresholds->get(3).asDouble();
@@ -509,6 +521,7 @@ public:
                             thresholds[4]=b_thresholds->get(5).asDouble();
                             thresholds[5]=b_thresholds->get(6).asInt();
                             thresholds[6]=b_thresholds->get(7).asInt();
+                            thresholds[7]=b_thresholds->get(8).asDouble();
                             fj.setThresholds(thresholds);
                         }
 
@@ -518,19 +531,19 @@ public:
                         {
                             fj.update(0,feed_x->get(idtw).asDouble(),feed_x->get(imean).asDouble(),feed_x->get(isdev).asDouble(),
                                       feed_x->get(iskwns).asDouble(),feed_x->get(ift).asInt(),feed_x->get(ifc).asInt(),
-                                      feed_x->get(imaxpsdt).asDouble(),feed_x->get(imaxpsdc).asDouble(),thresholds[2]);
+                                      feed_x->get(imaxpsdt).asDouble(),feed_x->get(imaxpsdc).asDouble(),thresholds[2],thresholds[7]);
                         }
                         if(Bottle *feed_y = joint_list->get(2).asList())
                         {
                             fj.update(1,feed_y->get(idtw).asDouble(),feed_y->get(imean).asDouble(),feed_y->get(isdev).asDouble(),
                                       feed_y->get(iskwns).asDouble(),feed_y->get(ift).asInt(),feed_y->get(ifc).asInt(),
-                                      feed_y->get(imaxpsdt).asDouble(),feed_y->get(imaxpsdc).asDouble(),thresholds[3]);
+                                      feed_y->get(imaxpsdt).asDouble(),feed_y->get(imaxpsdc).asDouble(),thresholds[3],thresholds[7]);
                         }
                         if(Bottle *feed_z = joint_list->get(3).asList())
                         {
                             fj.update(2,feed_z->get(idtw).asDouble(),feed_z->get(imean).asDouble(),feed_z->get(isdev).asDouble(),
                                       feed_z->get(iskwns).asDouble(),feed_z->get(ift).asInt(),feed_z->get(ifc).asInt(),
-                                      feed_z->get(imaxpsdt).asDouble(),feed_z->get(imaxpsdc).asDouble(),thresholds[4]);
+                                      feed_z->get(imaxpsdt).asDouble(),feed_z->get(imaxpsdc).asDouble(),thresholds[4],thresholds[7]);
                         }
 
                         //assess how the single joint is moving from its components
@@ -589,7 +602,22 @@ public:
                     }
                     break;
 
-                case 1: //error in position
+                case 1: //error in speed
+                    score = 0.5;
+                    speak_buffer.clear();
+                    for(size_t i=0; i<bp.size(); i++)
+                    {
+                        params.clear();
+                        params.push_back(bodypart2verbal[bp[i]]);
+                        for(size_t j=0; j<finalf[i].size(); j++)
+                        {
+                            params.push_back(finalf[i][j]);
+                        }
+                        speak_buffer.push_back(make_pair("speed",params));
+                    }
+                    break;
+
+                case 2: //error in position
                     score = 0.5;
                     speak_buffer.clear();
                     for(size_t i=0; i<bp.size(); i++)
@@ -602,21 +630,6 @@ public:
                         }
 
                         speak_buffer.push_back(make_pair("position",params));
-                    }
-                    break;
-
-                case 2: //error in speed
-                    score = 0.5;
-                    speak_buffer.clear();
-                    for(size_t i=0; i<bp.size(); i++)
-                    {
-                        params.clear();
-                        params.push_back(bodypart2verbal[bp[i]]);
-                        for(size_t j=0; j<finalf[i].size(); j++)
-                        {
-                            params.push_back(finalf[i][j]);
-                        }
-                        speak_buffer.push_back(make_pair("speed",params));
                     }
                     break;
 
@@ -790,6 +803,35 @@ public:
         /********************/
         /*   SECOND CHECK   */
         /********************/
+        //we check the error in speed
+        if(!joint_templ_stale && !joint_skel_stale)
+        {
+            int dfx = fcx-ftx;
+            int dfy = fcy-fty;
+            int dfz = fcz-ftz;
+            bool fxy_pos = dfx >  f.getRangeFreq() && dfy >  f.getRangeFreq();
+            bool fxz_pos = dfx >  f.getRangeFreq() && dfz >  f.getRangeFreq();
+            bool fyz_pos = dfy >  f.getRangeFreq() && dfz >  f.getRangeFreq();
+            bool fxy_neg = dfx < - f.getRangeFreq() && dfy < - f.getRangeFreq();
+            bool fxz_neg = dfx < - f.getRangeFreq() && dfz < - f.getRangeFreq();
+            bool fyz_neg = dfy < - f.getRangeFreq() && dfz < - f.getRangeFreq();
+
+            vector<string> out;
+            if(fxy_pos || fxz_pos || fyz_pos)
+            {
+                out.push_back(speak_map["speed"].second[0]);
+                return make_pair(1,out);
+            }
+            else if(fxy_neg || fxz_neg || fyz_neg)
+            {
+                out.push_back(speak_map["speed"].second[1]);
+                return make_pair(1,out);
+            }
+        }
+
+        /*******************/
+        /*   THIRD CHECK   */
+        /*******************/
         //we check the error in position
         if(!joint_templ_stale && !joint_skel_stale)
         {
@@ -810,7 +852,7 @@ public:
                         out.push_back(speak_map["position"].second[0]);
                     else
                         out.push_back(speak_map["position"].second[1]);
-                    return make_pair(1,out);
+                    return make_pair(2,out);
                 }
                 if(erry)
                 {
@@ -818,7 +860,7 @@ public:
                         out.push_back(speak_map["position"].second[2]);
                     else
                         out.push_back(speak_map["position"].second[3]);
-                    return make_pair(1,out);
+                    return make_pair(2,out);
                 }
                 if(errz)
                 {
@@ -826,37 +868,8 @@ public:
                         out.push_back(speak_map["position"].second[4]);
                     else
                         out.push_back(speak_map["position"].second[5]);
-                    return make_pair(1,out);
+                    return make_pair(2,out);
                 }
-            }
-        }
-
-        /*******************/
-        /*   THIRD CHECK   */
-        /*******************/
-        //we check the error in speed
-        if(!joint_templ_stale && !joint_skel_stale)
-        {
-            int dfx = fcx-ftx;
-            int dfy = fcy-fty;
-            int dfz = fcz-ftz;
-            bool fxy_pos = dfx >  f.getRangeFreq() && dfy >  f.getRangeFreq();
-            bool fxz_pos = dfx >  f.getRangeFreq() && dfz >  f.getRangeFreq();
-            bool fyz_pos = dfy >  f.getRangeFreq() && dfz >  f.getRangeFreq();
-            bool fxy_neg = dfx < - f.getRangeFreq() && dfy < - f.getRangeFreq();
-            bool fxz_neg = dfx < - f.getRangeFreq() && dfz < - f.getRangeFreq();
-            bool fyz_neg = dfy < - f.getRangeFreq() && dfz < - f.getRangeFreq();
-
-            vector<string> out;
-            if(fxy_pos || fxz_pos || fyz_pos)
-            {
-                out.push_back(speak_map["speed"].second[0]);
-                return make_pair(2,out);
-            }
-            else if(fxy_neg || fxz_neg || fyz_neg)
-            {
-                out.push_back(speak_map["speed"].second[1]);
-                return make_pair(2,out);
             }
         }
 
