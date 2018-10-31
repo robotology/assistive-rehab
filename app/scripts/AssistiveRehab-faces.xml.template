@@ -104,7 +104,6 @@
 
     <module>
        <name>alignmentManager</name>
-       <parameters>--psd_noise 3000.0</parameters>
        <node>r1-console-linux</node>
     </module>
 
@@ -397,6 +396,12 @@
     <connection>
         <from>/yarpOpenPose/target:o</from>
         <to>/actionRecognizer/keypoints:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/actionRecognizer/target:o</from>
+        <to>/alignmentManager/action:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
