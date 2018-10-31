@@ -36,11 +36,12 @@ private:
     RpcServer rpcPort;
     RpcClient opcPort;
     RpcClient analyzerPort;
+    BufferedPort<Bottle> actionPort;
     BufferedPort<Bottle> outPort;
 
     //parameters
     int win,filter_order;
-    double T,tstart,period;
+    double period;
 
     SkeletonWaist skeletonIn,skeletonTemplate;
     string skel_tag,template_tag;
@@ -141,17 +142,14 @@ public:
         }
         if(command.get(0).asString() == "run")
         {
-            T = command.get(1).asDouble();
-            yInfo() << "Check every" << T << "seconds";
-
-            Bottle *bDtw = command.get(2).asList();
-            Bottle *bMean = command.get(3).asList();
-            Bottle *bSx = command.get(4).asList();
-            Bottle *bSy = command.get(5).asList();
-            Bottle *bSz = command.get(6).asList();
-            Bottle *bFstatic = command.get(7).asList();
-            Bottle *bRangeFreq = command.get(8).asList();
-            Bottle *bPsdThresh = command.get(9).asList();
+            Bottle *bDtw = command.get(1).asList();
+            Bottle *bMean = command.get(2).asList();
+            Bottle *bSx = command.get(3).asList();
+            Bottle *bSy = command.get(4).asList();
+            Bottle *bSz = command.get(5).asList();
+            Bottle *bFstatic = command.get(6).asList();
+            Bottle *bRangeFreq = command.get(7).asList();
+            Bottle *bPsdThresh = command.get(8).asList();
 
             relaxed_joints.clear();
 
@@ -179,7 +177,6 @@ public:
             for(size_t i=0; i<bPsdThresh->size(); i++)
                 psd_thresh.push_back(bPsdThresh->get(i).asDouble());
 
-            tstart = Time::now();
             start = true;
             first_run = true;
             reply.addVocab(Vocab::encode("ok"));
@@ -203,6 +200,7 @@ public:
         opcPort.open("/alignmentManager/opc");
         outPort.open("/alignmentManager:o");
         analyzerPort.open("/alignmentManager/analyzer:rpc");
+        actionPort.open("/alignmentManager/action:i");
         rpcPort.open("/alignmentManager/rpc");
         attach(rpcPort);
 
@@ -219,6 +217,7 @@ public:
         opcPort.interrupt();
         outPort.interrupt();
         analyzerPort.interrupt();
+        actionPort.interrupt();
         rpcPort.interrupt();
         yInfo() << "Interrupted module";
         return true;
@@ -232,6 +231,7 @@ public:
         opcPort.close();
         outPort.close();
         analyzerPort.close();
+        actionPort.close();
         rpcPort.close();
         yInfo() << "Closed ports";
         return true;
@@ -310,11 +310,10 @@ public:
                 //update vectors to align
                 updateVec();
 
-                if( (Time::now()-tstart)> T )
+                if(actionPort.read(false))
                 {
                     Bottle &outList=outPort.prepare();
                     outList.clear();
-
                     Dtw *dtw;
                     dtw=new Dtw(win);
 
@@ -479,7 +478,6 @@ public:
                     yInfo() << "Sending feedback";
                     outPort.write();
 
-                    tstart=Time::now();
                     skeleton_template.clear();
                     skeleton_candidate.clear();
 

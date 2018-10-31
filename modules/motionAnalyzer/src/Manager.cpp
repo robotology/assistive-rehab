@@ -129,7 +129,7 @@ bool Manager::loadMotionList()
                             string tag_joint = bMotion.find("tag_joint").asString();
                             double min = bMotion.find("min").asDouble();
                             double max = bMotion.find("max").asDouble();
-                            double duration = bMotion.find("duration").asDouble();
+                            int duration = bMotion.find("duration").asInt();
                             Vector camerapos;
                             camerapos.resize(3);
                             if(Bottle *bCamerapos = bMotion.find("camerapos").asList())
@@ -463,7 +463,16 @@ bool Manager::start()
 
     //start alignmentManager
     reply.clear();
-    cmd.addDouble(metric->getDuration());
+    cmd.addInt(metric->getDuration());
+    actionPort.write(cmd,reply);
+    if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+    {
+        yError() << "Could not run actionRecognizer";
+        return false;
+    }
+    reply.clear();
+    cmd.clear();
+    cmd.addVocab(Vocab::encode("run"));
     cmd.addList().read(metric->getDtwThresh());
     cmd.addList().read(metric->getMeanThresh());
     cmd.addList().read(metric->getSxThresh());
@@ -473,13 +482,18 @@ bool Manager::start()
     cmd.addList().read(metric->getRangeFreq());
     cmd.addList().read(metric->getPsdThresh());
     dtwPort.write(cmd,reply);
-    actionPort.write(cmd,reply);
     if(reply.get(0).asVocab()==Vocab::encode("ok"))
     {
         tstart_session = Time::now()-tstart;
         starting = true;
         return true;
     }
+    else
+    {
+        yError() << "Could not run alignmentManager";
+        return false;
+    }
+
     return false;
 }
 

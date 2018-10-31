@@ -41,6 +41,7 @@ class Recognizer : public BufferedPort<Bottle>, public actionRecognizer_IDL
     vector<float> min,max;
 
     int step;
+    string pathToGraph,checkpointPath;
     Status status;
     Tensor input;
     Session* session;
@@ -55,18 +56,37 @@ class Recognizer : public BufferedPort<Bottle>, public actionRecognizer_IDL
 
 public:
     /****************************************************************/
-    Recognizer(const string &moduleName, const int nsteps, const int nclasses,
+    Recognizer(const string &moduleName, const int nclasses,
                const unordered_map<int,string> &class_map, const vector<float> &min,
                const vector<float> &max, const unordered_map<string,int> &keypoint2int,
                const string &pathToGraph, const string &checkpointPath)
     {
         this->moduleName = moduleName;
-        this->nsteps = nsteps;
         this->nclasses = nclasses;
         this->class_map = class_map;
         this->min = min;
         this->max = max;
         this->keypoint2int = keypoint2int;
+        this->pathToGraph = pathToGraph;
+        this->checkpointPath = checkpointPath;
+    }
+
+    /********************************************************/
+    ~Recognizer()
+    {
+    };
+
+    /********************************************************/
+    bool attach(RpcServer &source)
+    {
+        return this->yarp().attachAsServer(source);
+    }
+
+    /****************************************************************/
+    bool run(const int32_t nsteps_) override
+    {
+        LockGuard lg(mutex);
+        nsteps = (int)nsteps_;
 
         sess_opts.config.mutable_gpu_options()->set_allow_growth(true); //to limit GPU usage
         session = NewSession(sess_opts);
@@ -114,23 +134,7 @@ public:
                 input.tensor<float,3>()(0,i,j) = 0.0;
             }
         }
-    }
 
-    /********************************************************/
-    ~Recognizer()
-    {
-    };
-
-    /********************************************************/
-    bool attach(RpcServer &source)
-    {
-        return this->yarp().attachAsServer(source);
-    }
-
-    /****************************************************************/
-    bool run() override
-    {
-        LockGuard lg(mutex);
         starting = true;
         return starting;
     }
@@ -280,8 +284,6 @@ public:
         string moduleName = rf.check("name", Value("actionRecognizer")).asString();
         setName(moduleName.c_str());
 
-        int nsteps = rf.check("nsteps",Value(100)).asInt(); //must be the one defined when training the model
-
         Bottle &bGroup=rf.findGroup("general");
         if (bGroup.isNull())
         {
@@ -353,7 +355,7 @@ public:
         string checkpointPath = pathToGraph.substr(0, pathToGraph.find_last_of("/\\")) + "/model";
         yInfo() << "Loading model from:" << pathToGraph;
 
-        recognizer = new Recognizer( moduleName, nsteps, num_classes, class_map, min, max, keypoint2int,
+        recognizer = new Recognizer( moduleName, num_classes, class_map, min, max, keypoint2int,
                                      pathToGraph, checkpointPath );
         /* now start the thread to do the work */
         recognizer->open();
