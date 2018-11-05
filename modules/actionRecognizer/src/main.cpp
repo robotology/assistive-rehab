@@ -207,6 +207,7 @@ public:
 
                 if(step < nsteps)
                 {
+					yInfo() << "Acquiring frame" << step;
                     step++;
                 }
                 else
