@@ -188,13 +188,13 @@
     <connection>
         <from>/depthCamera/depthImage:o</from>
         <to>/yarpOpenPose/float:i</to>
-        <protocol>fast_tcp</protocol>
+        <protocol>fast_tcp+send.portmonitor+file.zfp+recv.portmonitor+file.zfp+type.dll</protocol>
     </connection>
 
     <connection>
         <from>/yarpOpenPose/float:o</from>
         <to>/skeletonRetriever/depth:i</to>
-        <protocol>fast_tcp</protocol>
+        <protocol>fast_tcp+send.portmonitor+file.zfp+recv.portmonitor+file.zfp+type.dll</protocol>
     </connection>
 
     <connection>
