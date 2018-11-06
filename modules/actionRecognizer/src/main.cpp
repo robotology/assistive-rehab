@@ -40,6 +40,7 @@ class Recognizer : public BufferedPort<Bottle>, public actionRecognizer_IDL
     int nsteps,nclasses;
     vector<float> min,max;
 
+    bool predict;
     int step;
     string pathToGraph,checkpointPath;
     Status status;
@@ -56,19 +57,58 @@ class Recognizer : public BufferedPort<Bottle>, public actionRecognizer_IDL
 
 public:
     /****************************************************************/
-    Recognizer(const string &moduleName, const int nclasses,
-               const unordered_map<int,string> &class_map, const vector<float> &min,
-               const vector<float> &max, const unordered_map<string,int> &keypoint2int,
-               const string &pathToGraph, const string &checkpointPath)
+    Recognizer(const string &moduleName_, const bool &predict_, const int nclasses_,
+               const unordered_map<int,string> &class_map_, const vector<float> &min_,
+               const vector<float> &max_, const unordered_map<string,int> &keypoint2int_,
+               const string &pathToGraph_, const string &checkpointPath_)
     {
-        this->moduleName = moduleName;
-        this->nclasses = nclasses;
-        this->class_map = class_map;
-        this->min = min;
-        this->max = max;
-        this->keypoint2int = keypoint2int;
-        this->pathToGraph = pathToGraph;
-        this->checkpointPath = checkpointPath;
+        moduleName = moduleName_;
+        predict = predict_;
+        nclasses = nclasses_;
+        class_map = class_map_;
+        min = min_;
+        max = max_;
+        keypoint2int = keypoint2int_;
+        pathToGraph = pathToGraph_;
+        checkpointPath = checkpointPath_;
+
+        if(predict)
+        {
+            sess_opts.config.mutable_gpu_options()->set_allow_growth(true); //to limit GPU usage
+            session = NewSession(sess_opts);
+            if (session == nullptr)
+            {
+                throw runtime_error("Could not create Tensorflow session");
+            }
+
+            // Read in the protobuf graph we exported
+            MetaGraphDef graph_def;
+            status = ReadBinaryProto(Env::Default(), pathToGraph, &graph_def);
+            if (!status.ok())
+            {
+                throw runtime_error("Error reading graph definition from " + pathToGraph + ": " + status.ToString());
+            }
+
+            // Add the graph to the session
+            status = session->Create(graph_def.graph_def());
+            if (!status.ok())
+            {
+                throw runtime_error("Error creating graph: " + status.ToString());
+            }
+
+            // Read weights from the saved checkpoint
+            Tensor checkpointPathTensor(DT_STRING, TensorShape());
+            checkpointPathTensor.scalar<std::string>()() = checkpointPath;
+            status = session->Run(
+                    {{ graph_def.saver_def().filename_tensor_name(), checkpointPathTensor },},
+                    {},
+                    {graph_def.saver_def().restore_op_name()},
+                    nullptr);
+            if (!status.ok())
+            {
+                throw runtime_error("Error loading checkpoint from " + checkpointPath + ": " + status.ToString());
+            }
+        }
     }
 
     /********************************************************/
@@ -87,45 +127,8 @@ public:
     {
         LockGuard lg(mutex);
         nsteps = (int)nsteps_;
-
-        sess_opts.config.mutable_gpu_options()->set_allow_growth(true); //to limit GPU usage
-        session = NewSession(sess_opts);
-        if (session == nullptr)
-        {
-            throw runtime_error("Could not create Tensorflow session");
-        }
-
-        // Read in the protobuf graph we exported
-        MetaGraphDef graph_def;
-        status = ReadBinaryProto(Env::Default(), pathToGraph, &graph_def);
-        if (!status.ok())
-        {
-            throw runtime_error("Error reading graph definition from " + pathToGraph + ": " + status.ToString());
-        }
-
-        // Add the graph to the session
-        status = session->Create(graph_def.graph_def());
-        if (!status.ok())
-        {
-            throw runtime_error("Error creating graph: " + status.ToString());
-        }
-
-        // Read weights from the saved checkpoint
-        Tensor checkpointPathTensor(DT_STRING, TensorShape());
-        checkpointPathTensor.scalar<std::string>()() = checkpointPath;
-        status = session->Run(
-                {{ graph_def.saver_def().filename_tensor_name(), checkpointPathTensor },},
-                {},
-                {graph_def.saver_def().restore_op_name()},
-                nullptr);
-        if (!status.ok())
-        {
-            throw runtime_error("Error loading checkpoint from " + checkpointPath + ": " + status.ToString());
-        }
-
         input = Tensor(DT_FLOAT, TensorShape({1,nsteps,36}));
         step = 0;
-        starting = false;
 
         for(size_t i=0; i<nsteps; i++)
         {
@@ -178,7 +181,7 @@ public:
     }
 
     /****************************************************************/
-    void onRead(Bottle &data)
+    void onRead(Bottle &data) override
     {
         if(starting)
         {
@@ -212,39 +215,51 @@ public:
                 }
                 else
                 {
-                    //run the inference
-                    //                cout << (input).tensor<float, (3)>() << endl;
-                    cout << "input: " << input.DebugString() << endl;
-                    string input_layer = "x:0";
-                    vector<string> output_layers = {"add_1:0","ArgMax:0"};
-                    vector<Tensor> outputTensors;
-                    status = session->Run({{input_layer, input}}, {output_layers}, {}, &outputTensors);
-                    cout << "add_1: " << outputTensors[0].DebugString() << endl;
-                    cout << "ArgMax: " << outputTensors[1].DebugString() << endl;
-
-                    auto score = outputTensors[0].tensor<float,2>();
-                    auto out = outputTensors[1].scalar<int64>();
-                    int pred = out(0);
-                    cout << "prediction: " << pred << " " << class_map[pred] << endl;
-                    cout << "scores: ";
-                    float n = 0.0;
-                    for(size_t k=0; k<nclasses; k++)
-                        n+=exp(score(k));
-                    vector<float> scores(nclasses,0.0);
-                    for(size_t k=0; k<nclasses; k++)
+                    string predicted_action;
+                    float outscore;
+                    if(predict)
                     {
-                        scores[k]=exp(score(k))/n;
-                        cout << scores[k] << " ";
+                        //run the inference
+                        //                cout << (input).tensor<float, (3)>() << endl;
+                        cout << "input: " << input.DebugString() << endl;
+                        string input_layer = "x:0";
+                        vector<string> output_layers = {"add_1:0","ArgMax:0"};
+                        vector<Tensor> outputTensors;
+                        status = session->Run({{input_layer, input}}, {output_layers}, {}, &outputTensors);
+                        cout << "add_1: " << outputTensors[0].DebugString() << endl;
+                        cout << "ArgMax: " << outputTensors[1].DebugString() << endl;
+
+                        auto score = outputTensors[0].tensor<float,2>();
+                        auto out = outputTensors[1].scalar<int64>();
+                        int pred = out(0);
+                        cout << "prediction: " << pred << " " << class_map[pred] << endl;
+                        cout << "scores: ";
+                        float n = 0.0;
+                        vector<float> scores(nclasses,0.0);
+                        for(size_t k=0; k<nclasses; k++)
+                            n+=exp(score(k));
+                        for(size_t k=0; k<nclasses; k++)
+                        {
+                            scores[k]=exp(score(k))/n;
+                            cout << scores[k] << " ";
+                        }
+                        cout << endl;
+                        predicted_action=class_map[pred];
+                        outscore=scores[pred];
                     }
-                    cout << endl;
+                    else
+                    {
+                        predicted_action=action_to_perform;
+                        outscore=1.0;
+                    }
 
                     step = 0;
 
                     Bottle &outBottle = outPort.prepare();
                     outBottle.clear();
                     outBottle.addString(action_to_perform);
-                    outBottle.addString(class_map[pred]);
-                    outBottle.addDouble(scores[pred]);
+                    outBottle.addString(predicted_action);
+                    outBottle.addDouble(outscore);
                     outPort.write();
                 }
             }
@@ -252,17 +267,20 @@ public:
     }
 
     /********************************************************/
-    void close()
+    void close() override
     {
-        session->Close();
-        delete session;
+        if(predict)
+        {
+            session->Close();
+            delete session;
+        }
         BufferedPort<yarp::os::Bottle >::close();
         analyzerPort.close();
         outPort.close();
     }
 
     /********************************************************/
-    void interrupt()
+    void interrupt() override
     {
         BufferedPort<yarp::os::Bottle >::interrupt();
         analyzerPort.interrupt();
@@ -284,6 +302,7 @@ public:
         this->rf=&rf;
         string moduleName = rf.check("name", Value("actionRecognizer")).asString();
         setName(moduleName.c_str());
+        bool predict = rf.check("predict",Value(true)).asBool();
 
         Bottle &bGroup=rf.findGroup("general");
         if (bGroup.isNull())
@@ -320,7 +339,10 @@ public:
             class_map[value]=label;
         }
 
-        yInfo() << "Loading scaling values from: " << this->rf->findFileByName("scale_values.txt");
+        if(predict)
+        {
+            yInfo() << "Loading scaling values from: " << this->rf->findFileByName("scale_values.txt");
+        }
         ifstream file(this->rf->findFileByName("scale_values.txt"));
         string line = "";
         vector<float> min,max;
@@ -354,10 +376,13 @@ public:
         // Set up input paths
         string pathToGraph = this->rf->findFileByName("model.meta");
         string checkpointPath = pathToGraph.substr(0, pathToGraph.find_last_of("/\\")) + "/model";
-        yInfo() << "Loading model from:" << pathToGraph;
+        if(predict)
+        {
+            yInfo() << "Loading model from:" << pathToGraph;
+        }
 
-        recognizer = new Recognizer( moduleName, num_classes, class_map, min, max, keypoint2int,
-                                     pathToGraph, checkpointPath );
+        recognizer = new Recognizer( moduleName, predict, num_classes, class_map, min, max,
+                                     keypoint2int, pathToGraph, checkpointPath );
         /* now start the thread to do the work */
         recognizer->open();
 
