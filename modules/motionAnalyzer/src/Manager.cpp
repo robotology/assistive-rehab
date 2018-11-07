@@ -402,12 +402,13 @@ bool Manager::selectSkel(const string &skel_tag)
 
     //send tag to skeletonScaler
     Bottle cmd, reply;
-    cmd.addVocab(Vocab::encode("tag"));
+    cmd.addVocab(Vocab::encode("tags"));
     cmd.addString(this->skel_tag);
     yInfo() << cmd.toString();
 
-    scalerPort.write(cmd, reply);
-    dtwPort.write(cmd, reply);
+    scalerPort.write(cmd,reply);
+    actionPort.write(cmd,reply);
+    dtwPort.write(cmd,reply);
 
 #ifndef NDEBUG
     yInfo() << "Debugging";

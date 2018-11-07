@@ -128,7 +128,7 @@ class Scaler : public RFModule
                 return false;
             }
         }
-        if(command.get(0).asString() == "tag")
+        if(command.get(0).asString() == "tags")
         {
             selectByTag(command.get(1).asString());
             reply.addString("Selecting skeleton" + command.get(1).asString());

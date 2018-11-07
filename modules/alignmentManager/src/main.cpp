@@ -134,7 +134,7 @@ public:
             reply.addVocab(Vocab::encode("ok"));
             yInfo() << reply.toString();
         }
-        if(command.get(0).asString() == "tag")
+        if(command.get(0).asString() == "tags")
         {
             skel_tag = command.get(1).asString();
 		    yInfo() << "Current skeleton" << skel_tag;

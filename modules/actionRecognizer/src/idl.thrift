@@ -25,6 +25,13 @@ service actionRecognizer_IDL
    bool run(1:i32 nsteps_);
 
    /**
+    * Start the interaction.
+    * @param tag of the current skeleton
+    * @return true/false on success/failure.
+    */
+   bool tags(1:string skel_tag_);
+
+   /**
     * Load the name of the exercise to perform.
     * @param exercise name of the exercise to perform.
     * @return true/false on success/failure.

@@ -300,8 +300,8 @@
     </connection>
 
     <connection>
-        <from>/yarpOpenPose/target:o</from>
-        <to>/actionRecognizer/keypoints:i</to>
+        <from>/actionRecognizer/opc</from>
+        <to>/opc/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
