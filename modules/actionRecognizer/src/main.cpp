@@ -37,18 +37,20 @@ class Recognizer : public RFModule, public actionRecognizer_IDL
     string moduleName;
     unordered_map<string,int> keypoint2int;
     unordered_map<int,string> class_map;
-    int nsteps,nclasses,nfeatures;
+    int nframes,nsteps,nclasses,nfeatures;
     vector<float> min,max;
     string skel_tag;
     SkeletonWaist skeletonIn;
 
     bool predict;
-    int step;
+    int idx_frame,idx_step;
     string pathToGraph,checkpointPath;
     Status status;
     Tensor input;
     Session* session;
     SessionOptions sess_opts;
+    vector<string> predictions;
+    vector<float> outscores;
 
     RpcServer analyzerPort;
     BufferedPort<Bottle> outPort;
@@ -65,7 +67,6 @@ public:
         string moduleName = rf.check("name", Value("actionRecognizer")).asString();
         setName(moduleName.c_str());
         predict = rf.check("predict",Value(true)).asBool();
-
         Bottle &bGroup=rf.findGroup("general");
         if (bGroup.isNull())
         {
@@ -79,6 +80,7 @@ public:
         }
         nclasses=bGroup.find("num-classes").asInt();
         nfeatures=bGroup.find("num-features").asInt();
+        nsteps=bGroup.find("num-steps").asInt();
         for (int i=0; i<nclasses; i++)
         {
             ostringstream class_i;
@@ -211,14 +213,13 @@ public:
     }
 
     /****************************************************************/
-    bool run(const int32_t nsteps_) override
+    bool run(const int32_t nframes_) override
     {
         LockGuard lg(mutex);
-        nsteps = (int)nsteps_;
-        input = Tensor(DT_FLOAT, TensorShape({1,nsteps,nfeatures}));
-        step = 0;
-
-        for(size_t i=0; i<nsteps; i++)
+        nframes = (int)nframes_;
+        input = Tensor(DT_FLOAT, TensorShape({1,nframes,36}));
+        idx_frame = 0;
+        for(size_t i=0; i<nframes; i++)
         {
             for(size_t j=0; j<nfeatures; j++)
             {
@@ -331,13 +332,14 @@ public:
                 string tagjoint=skeletonIn[i]->getTag();
                 float x=skeletonIn[i]->getPoint()[0];
                 float y=skeletonIn[i]->getPoint()[1];
-                updateInput(tagjoint,step,x,y);
+                updateInput(tagjoint,idx_frame,x,y);
             }
 
-            if(step < nsteps)
+            if(idx_frame < nframes)
             {
-                yInfo() << "Acquiring frame" << step;
-                step++;
+                if(idx_frame%10==0)
+                    yInfo() << "Acquiring frame" << idx_frame;
+                idx_frame++;
             }
             else
             {
@@ -360,7 +362,7 @@ public:
                     int pred = out(0);
                     cout << "prediction: " << pred << " " << class_map[pred] << endl;
                     cout << "scores: ";
-                    float n = 0.0;
+                    float n=0.0;
                     vector<float> scores(nclasses,0.0);
                     for(size_t k=0; k<nclasses; k++)
                         n+=exp(score(k));
@@ -372,21 +374,49 @@ public:
                     cout << endl;
                     predicted_action=class_map[pred];
                     outscore=scores[pred];
+                    predictions.push_back(predicted_action);
+                    outscores.push_back(outscore);
                 }
                 else
                 {
                     predicted_action=action_to_perform;
                     outscore=1.0;
+                    predictions.push_back(predicted_action);
+                    outscores.push_back(outscore);
                 }
 
-                step = 0;
+                idx_frame=0;
+                idx_step++;
 
-                Bottle &outBottle = outPort.prepare();
-                outBottle.clear();
-                outBottle.addString(action_to_perform);
-                outBottle.addString(predicted_action);
-                outBottle.addDouble(outscore);
-                outPort.write();
+                if(idx_step==nsteps)
+                {
+                    //we consider the most voted action
+                    int max=count(predictions.begin(),predictions.end(),predictions.at(0));
+                    string voted_action=predictions[0];
+                    float voted_score=outscores[0];
+                    for(size_t i=1; i<predictions.size(); i++)
+                    {
+                        int temp=count(predictions.begin(),predictions.end(),predictions.at(i));
+                        if(temp>max)
+                        {
+                            max=temp;
+                            voted_action=predictions[i];
+                            voted_score=outscores[i];
+                        }
+                    }
+                    yInfo() << "The most voted action is" << voted_action << "voted" << max << "times";
+
+                    Bottle &outBottle = outPort.prepare();
+                    outBottle.clear();
+                    outBottle.addString(action_to_perform);
+                    outBottle.addString(voted_action);
+                    outBottle.addDouble(voted_score);
+                    outPort.write();
+
+                    idx_step=0;
+                    predictions.clear();
+                    outscores.clear();
+                }
             }
         }
 
