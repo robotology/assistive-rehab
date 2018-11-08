@@ -690,7 +690,7 @@ public:
         /*******************/
         /*   ZERO CHECK    */
         /*******************/
-        {
+        /*{
             string joint = f.getName();
             bool errcenterx = fabs(mx) > f.getMeanThresh();
             bool errcentery = fabs(my) > f.getMeanThresh();
@@ -701,7 +701,7 @@ public:
                 out.push_back("");
                 return make_pair(-1,out);
             }
-        }        
+        } */       
          
         /*******************/
         /*   FIRST CHECK   */
@@ -710,7 +710,7 @@ public:
         //dynamic joints in the template must move
         bool joint_templ_stale = ftx < 0 && fty < 0 && ftz < 0;
         bool joint_skel_stale = fcx < 0 && fcy < 0 && fcz < 0;
-        if(!joint_templ_stale && !joint_skel_stale)
+        /* if(!joint_templ_stale && !joint_skel_stale)
         {
             {
                 bool ftxy = ftx <= f.getFstatic() && fty <= f.getFstatic();
@@ -798,7 +798,7 @@ public:
                     return make_pair(0,out);
                 }
             }
-        }
+        } */
 
         /********************/
         /*   SECOND CHECK   */
