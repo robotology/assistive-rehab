@@ -22,7 +22,7 @@ service actionRecognizer_IDL
     * @param number of frames used to train the model
     * @return true/false on success/failure.
     */
-   bool run(1:i32 nsteps_);
+   bool run(1:i32 nframes_);
 
    /**
     * Start the interaction.
