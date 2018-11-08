@@ -218,7 +218,7 @@ public:
     {
         LockGuard lg(mutex);
         nframes = (int)nframes_;
-        input = Tensor(DT_FLOAT, TensorShape({1,nframes,36}));
+        input = Tensor(DT_FLOAT, TensorShape({1,nframes,nfeatures}));
         idx_frame = 0;
         for(size_t i=0; i<nframes; i++)
         {
@@ -329,6 +329,7 @@ public:
     {
         if(opcPort.getOutputCount() > 0 && starting)
         {
+            getSkeleton();
             for(size_t i=0; i<skeletonIn.getNumKeyPoints(); i++)
             {
                 string tagjoint=skeletonIn[i]->getTag();
