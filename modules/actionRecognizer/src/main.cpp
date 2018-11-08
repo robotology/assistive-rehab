@@ -130,6 +130,7 @@ public:
 
         skel_tag = " ";
         starting = false;
+        idx_step=0;
 
         // Set up input paths
         pathToGraph = rf.findFileByName("model.meta");
@@ -254,6 +255,7 @@ public:
         LockGuard lg(mutex);
         starting = false;
         skel_tag = " ";
+        idx_step = 0;
         return !starting;
     }
 
