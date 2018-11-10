@@ -6,27 +6,33 @@
  ******************************************************************************/
 
 /**
- * @file nlp.h
+ * @file utils.h
  * @authors: Ugo Pattacini <ugo.pattacini@iit.it>
  */
 
-#ifndef NLP_H
-#define NLP_H
-
-#include <vector>
-#include <utility>
-#include <yarp/sig/Vector.h>
-#include "AssistiveRehab/skeleton.h"
-#include "utils.h"
+#ifndef UTILS_H
+#define UTILS_H
 
 
 /****************************************************************/
-struct LimbOptimizer
+class CamParamsHelper
 {
+    size_t width,height;
+    double fov_h,focal;
+    CamParamsHelper()=delete;
+
+public:
     /****************************************************************/
-    static std::vector<std::pair<std::string,yarp::sig::Vector>> optimize(const CamParamsHelper &camParams,
-                                                                          const assistive_rehab::KeyPoint* k,
-                                                                          const std::vector<double>& lengths);
+    CamParamsHelper(const size_t w, const size_t h, const double f) :
+                    width(w), height(h), fov_h(f)
+    {
+        focal=width/(2.0*tan(fov_h*(M_PI/180.0)/2.0));
+    }
+
+    /****************************************************************/
+    const size_t& get_width() const { return width; }
+    const size_t& get_height() const { return height; }
+    const double& get_focal() const { return focal; }
 };
 
 #endif
