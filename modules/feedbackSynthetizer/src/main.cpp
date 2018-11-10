@@ -527,6 +527,9 @@ public:
                         }
 
                         string joint = joint_list->get(0).asString();
+                        if(joint == KeyPointTag::elbow_left || joint == KeyPointTag::elbow_right)
+                            continue;
+                             
                         fj.setName(joint);
                         if(Bottle *feed_x = joint_list->get(1).asList())
                         {
