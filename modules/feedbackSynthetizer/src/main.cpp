@@ -151,7 +151,7 @@ public:
     int getMinLev() const { return finh; }
 
     /****************************************************************/
-    pair<vector<string>, vector<vector<string>>> getFeedback()
+    pair<vector<string>, vector<vector<string>>> getFeedback(const int nminjoints)
     {
         vector<string> bp;
         vector<vector<string>> finalf;
@@ -166,7 +166,7 @@ public:
             {
                 pair<int,vector<string>> jnts = getJointsMinLev(bodypart);
                 int njnts = jnts.first;
-                if(njnts > 1)
+                if(njnts > nminjoints)
                     bp.push_back(bodypart);
                 else
                 {
@@ -316,17 +316,19 @@ class Synthetizer : public BufferedPort<Bottle>
     int idtw,imean,isdev,iskwns,ift,ifc,imaxpsdt,imaxpsdc;
     int maxlevel;
     int speak_length;
+    int nminjoints;
     string conj;
 
 public:
 
     /********************************************************/
     Synthetizer(const string &moduleName_, const string &context, const string &speak_file, const int speak_length_,
-                const double &thresh_confidence_)
+                const double &thresh_confidence_, const int nminjoints_)
     {
         moduleName = moduleName_;
         speak_length = speak_length_;
         thresh_confidence = thresh_confidence_;
+        nminjoints = nminjoints_;
 
         vector<string> joint;
         joint.clear();
@@ -572,7 +574,7 @@ public:
                 bf.updateBodyPart();
                 int fin_level = bf.getMinLev();
                 bf.print();
-                pair<vector<string>,vector<vector<string>>> feedbacklist = bf.getFeedback();
+                pair<vector<string>,vector<vector<string>>> feedbacklist = bf.getFeedback(nminjoints);
                 vector<string> bp = feedbacklist.first;
                 vector<vector<string>> finalf = feedbacklist.second;
 
@@ -971,8 +973,10 @@ public:
         period = rf.check("period",Value(0.1)).asDouble();
         int speak_length = rf.check("speak-length",Value(2)).asInt();
         double thresh_confidence = rf.check("thresh-conf",Value(0.7)).asDouble();
+        int nminjoints = rf.check("nmin-joints",Value(1)).asInt();
 
-        synthetizer = new Synthetizer(moduleName,rf.getContext(),speak_file,speak_length,thresh_confidence);
+        synthetizer = new Synthetizer(moduleName,rf.getContext(),speak_file,speak_length,
+                                      thresh_confidence,nminjoints);
         synthetizer->open();
 
         return true;
