@@ -543,8 +543,16 @@ class Interaction : public RFModule, public interactionManager_IDL
                             if(analyzerPort.write(cmd,rep))
                             {
                                 motion_type=rep.get(0).asString();
-                                string script_show=move_file+" "+"show_"+motion_type;
-                                string script_perform=move_file+" "+"perform_"+motion_type;
+                                size_t found=motion_type.find_last_of("_");
+                                string part=motion_type.substr(found+1,motion_type.size());
+                                string mirrorpart;
+                                if(part=="left")
+                                    mirrorpart="right";
+                                if(part=="right")
+                                    mirrorpart="left";
+                                string motion_type_mirrored=motion_type.substr(0,found)+"_"+mirrorpart;
+                                string script_show=move_file+" "+"show_"+motion_type_mirrored;
+                                string script_perform=move_file+" "+"perform_"+motion_type_mirrored;
 
                                 cmd.clear();
                                 cmd.addString("selectSkel");
