@@ -59,6 +59,7 @@ class Recognizer : public RFModule, public actionRecognizer_IDL
     Mutex mutex;
     bool starting;
     string action_to_perform;
+    
 
 public:
     /********************************************************/
@@ -112,22 +113,21 @@ public:
             min.push_back(stof((vec[0]).c_str(),0));
             max.push_back(stof((vec[1]).c_str(),0));
         }
+        
         keypoint2int[KeyPointTag::head] = 0;
         keypoint2int[KeyPointTag::hand_left] = 2;
-        keypoint2int[KeyPointTag::elbow_left] = 4;
-        keypoint2int[KeyPointTag::shoulder_left] = 6;
-        keypoint2int[KeyPointTag::hand_right] = 8;
-        keypoint2int[KeyPointTag::elbow_right] = 10;
-        keypoint2int[KeyPointTag::shoulder_right] = 12;
-        keypoint2int[KeyPointTag::ankle_left] = 14;
-        keypoint2int[KeyPointTag::knee_left] = 16;
-        keypoint2int[KeyPointTag::hip_left] = 18;
-        keypoint2int[KeyPointTag::ankle_right] = 20;
-        keypoint2int[KeyPointTag::knee_right] = 22;
-        keypoint2int[KeyPointTag::hip_right] = 24;
-        keypoint2int[KeyPointTag::hip_center] = 26;
-        keypoint2int[KeyPointTag::shoulder_center] = 28;
-
+        keypoint2int[KeyPointTag::shoulder_left] = 4;
+        keypoint2int[KeyPointTag::hand_right] = 6;
+        keypoint2int[KeyPointTag::shoulder_right] = 8;
+        keypoint2int[KeyPointTag::ankle_left] = 10;
+        keypoint2int[KeyPointTag::knee_left] = 12;
+        keypoint2int[KeyPointTag::hip_left] = 14;
+        keypoint2int[KeyPointTag::ankle_right] = 16;
+        keypoint2int[KeyPointTag::knee_right] = 18;
+        keypoint2int[KeyPointTag::hip_right] = 20;
+        keypoint2int[KeyPointTag::hip_center] = 22;
+        keypoint2int[KeyPointTag::shoulder_center] = 24;
+        
         skel_tag = " ";
         starting = false;
         idx_step=0;
@@ -195,6 +195,7 @@ public:
             session->Close();
             delete session;
         }
+               
         analyzerPort.close();
         opcPort.close();
         outPort.close();
@@ -220,17 +221,23 @@ public:
         nframes = (int)nframes_;
         input = Tensor(DT_FLOAT, TensorShape({1,nframes,nfeatures}));
         idx_frame = 0;
-        for(size_t i=0; i<nframes; i++)
+        resetTensor();
+
+        starting = true;
+        return starting;
+    }
+    
+     /****************************************************************/
+    void resetTensor()
+    {
+		for(size_t i=0; i<nframes; i++)
         {
             for(size_t j=0; j<nfeatures; j++)
             {
                 input.tensor<float,3>()(0,i,j) = 0.0;
             }
-        }
-
-        starting = true;
-        return starting;
-    }
+        }		
+	}
 
     /****************************************************************/
     bool tags(const string &skel_tag_) override
@@ -333,19 +340,22 @@ public:
             for(size_t i=0; i<skeletonIn.getNumKeyPoints(); i++)
             {
                 string tagjoint=skeletonIn[i]->getTag();
-                float x=skeletonIn[i]->getPoint()[0];
-                float y=skeletonIn[i]->getPoint()[1];
-                updateInput(tagjoint,idx_frame,x,y);
+                if(tagjoint != KeyPointTag::elbow_left && tagjoint != KeyPointTag::elbow_right)
+                {
+					float x=skeletonIn[i]->getPoint()[0];
+					float y=skeletonIn[i]->getPoint()[1];
+					updateInput(tagjoint,idx_frame,x,y);
+				}
             }
 
             if(idx_frame < nframes)
-            {
+            {		
                 if(idx_frame%10==0)
                     yInfo() << "Acquiring frame" << idx_frame;
                 idx_frame++;
             }
             else
-            {
+            {							
                 string predicted_action;
                 float outscore;
                 if(predict)
@@ -379,6 +389,7 @@ public:
                     outscore=scores[pred];
                     predictions.push_back(predicted_action);
                     outscores.push_back(outscore);
+                    resetTensor();
                 }
                 else
                 {
