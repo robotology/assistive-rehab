@@ -28,7 +28,7 @@ protected:
     std::string motion_type;
     std::string tag_joint;
     std::string tag_plane;
-    double duration;
+    int duration;
     yarp::sig::Vector ref_dir;
     double min;
     double max;
@@ -42,6 +42,7 @@ protected:
     yarp::sig::Vector sz_thresh;
     yarp::sig::Vector f_static;
     yarp::sig::Vector range_freq;
+    yarp::sig::Vector psd_thresh;
 
 public:
     Metric();
@@ -50,16 +51,16 @@ public:
     void print();
     void initialize(const std::string &name_, const std::string &motion_type_, const std::string &tag_joint_,
                     const yarp::sig::Vector &ref_dir_, const std::string &tag_plane_, const double &min_, const double &max_,
-                    const double &duration_, const yarp::sig::Vector &camerapos_,
+                    const int &duration_, const yarp::sig::Vector &camerapos_,
                     const yarp::sig::Vector &focalpoint_, const std::vector<std::string> &relaxed_joints_,
                     const yarp::sig::Vector &dtw_thresh_, const yarp::sig::Vector &mean_thresh_,
                     const yarp::sig::Vector &sx_thresh_, const yarp::sig::Vector &sy_thresh_, const yarp::sig::Vector &sz_thresh_,
-                    const yarp::sig::Vector &f_static_, const yarp::sig::Vector &range_freq_);
+                    const yarp::sig::Vector &f_static_, const yarp::sig::Vector &range_freq_, const yarp::sig::Vector &relaxed_psd_thresh_);
 
     yarp::sig::Vector getRefDir() const { return ref_dir; }
     double getMax() const { return max; }
     double getMin() const { return min; }
-    double getDuration() const { return duration; }
+    int getDuration() const { return duration; }
     std::string getName() const { return name; }
     std::string getTagPlane() const { return tag_plane; }
     std::string getTagJoint() const { return tag_joint; }
@@ -74,6 +75,7 @@ public:
     yarp::sig::Vector getSzThresh() const { return sz_thresh; }
     yarp::sig::Vector getFstatic() const { return f_static; }
     yarp::sig::Vector getRangeFreq() const { return range_freq; }
+    yarp::sig::Vector getPsdThresh() const { return psd_thresh; }
 
     virtual void setTarget(const yarp::sig::Vector &target_) = 0;
 };

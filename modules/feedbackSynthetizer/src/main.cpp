@@ -200,7 +200,7 @@ class JointFeedback
 {
     string j;
     Matrix f;
-    double dtw_thresh,mean_thresh,sx_thresh,sy_thresh,sz_thresh;
+    double dtw_thresh,mean_thresh,sx_thresh,sy_thresh,sz_thresh,psd_thresh;
     int f_static,range_freq;
 
 public:
@@ -208,7 +208,7 @@ public:
     /****************************************************************/
     JointFeedback()
     {
-        f.resize(3,9);
+        f.resize(3,10);
     }
 
     /****************************************************************/
@@ -227,22 +227,33 @@ public:
         sz_thresh = thresholds[4];
         f_static = (int)thresholds[5];
         range_freq = (int)thresholds[6];
+        psd_thresh = thresholds[7];
     }
 
     /****************************************************************/
     void update(const int component, const double dtw, const double mu, const double std,
                 const double skwn, const double ft, const double fc, const double maxpsdt,
-                const double maxpsdc, const double std_thresh)
+                const double maxpsdc, const double std_thresh, const double psd)
     {
         f[component][0] = dtw;
         f[component][1] = mu;
         f[component][2] = std;
         f[component][3] = skwn;
-        f[component][4] = ft;
-        f[component][5] = fc;
+
+        if(ft == -1 || maxpsdt > psd)
+            f[component][4] = ft;
+        else
+            f[component][4] = 0;
+
+        if(fc == -1 || maxpsdc > psd)
+            f[component][5] = fc;
+        else
+            f[component][5] = 0;
+
         f[component][6] = maxpsdt;
         f[component][7] = maxpsdc;
         f[component][8] = std_thresh;
+        f[component][9] = psd;
     }
 
     /****************************************************************/
@@ -276,6 +287,7 @@ public:
     double getSzThresh() const { return sz_thresh; }
     int getFstatic() const { return f_static; }
     int getRangeFreq() const { return range_freq; }
+    double getPsdThresh() const { return psd_thresh; }
 };
 
 /****************************************************************/
@@ -293,8 +305,11 @@ public:
 class Synthetizer : public BufferedPort<Bottle>
 {
     string moduleName;
+    BufferedPort<Bottle> dtwPort;
     BufferedPort<Bottle> speechPort;
     BufferedPort<Bottle> scorePort;
+
+    double thresh_confidence;
 
     map<string,string> bodypart2verbal;
     map<string,pair<string,vector<string>>> speak_map;
@@ -306,10 +321,12 @@ class Synthetizer : public BufferedPort<Bottle>
 public:
 
     /********************************************************/
-    Synthetizer(const string &moduleName_, const string &context, const string &speak_file, const int speak_length_)
+    Synthetizer(const string &moduleName_, const string &context, const string &speak_file, const int speak_length_,
+                const double &thresh_confidence_)
     {
         moduleName = moduleName_;
         speak_length = speak_length_;
+        thresh_confidence = thresh_confidence_;
 
         vector<string> joint;
         joint.clear();
@@ -372,7 +389,8 @@ public:
     bool open()
     {
         this->useCallback();
-        BufferedPort<Bottle>::open("/" + moduleName + "/feedback:i");
+        BufferedPort<Bottle>::open("/" + moduleName + "/action:i");
+        dtwPort.open("/" + moduleName + "/dtw:i");
         speechPort.open("/" + moduleName + "/speech:o");
         scorePort.open("/" + moduleName + "/score:o");
 
@@ -473,158 +491,178 @@ public:
     }
     
     /********************************************************/
-    void onRead(Bottle &data)
+    void onRead(Bottle &target)
     {
-		if(Bottle *feedb = data.get(0).asList())
+        string exercise = target.get(0).asString();
+        string action = target.get(1).asString();
+        double confidence = target.get(2).asDouble();
+        yInfo() << exercise << action << confidence;
+        double score;
+        if(action == exercise && confidence > thresh_confidence)
         {
-			BodyFeedback bf(maxlevel);
-            for(size_t i=0; i<feedb->size(); i++)
+            Bottle *data = dtwPort.read();
+            if(Bottle *feedb = data->get(0).asList())
             {
-                //we read feedback from the input port and create the object fj
-                //which contains feedback for all the component
-                JointFeedback fj;                            
-                if(Bottle *joint_list = feedb->get(i).asList())
+                BodyFeedback bf(maxlevel);
+                for(size_t i=0; i<feedb->size(); i++)
                 {
-				    Vector thresholds;
-                    if(Bottle *b_thresholds = joint_list->get(4).asList())
-                    {												
-                        thresholds.resize(7);
-                        thresholds[0]=b_thresholds->get(1).asDouble();
-                        thresholds[1]=b_thresholds->get(2).asDouble();
-                        thresholds[2]=b_thresholds->get(3).asDouble();
-                        thresholds[3]=b_thresholds->get(4).asDouble();
-                        thresholds[4]=b_thresholds->get(5).asDouble();
-                        thresholds[5]=b_thresholds->get(6).asInt();
-                        thresholds[6]=b_thresholds->get(7).asInt();
-                        fj.setThresholds(thresholds);
-                    }
-					
-                    string joint = joint_list->get(0).asString();
-                    fj.setName(joint);
-                    if(Bottle *feed_x = joint_list->get(1).asList())
+                    //we read feedback from the input port and create the object fj
+                    //which contains feedback for all the component
+                    JointFeedback fj;
+                    if(Bottle *joint_list = feedb->get(i).asList())
                     {
-                        fj.update(0,feed_x->get(idtw).asDouble(),feed_x->get(imean).asDouble(),feed_x->get(isdev).asDouble(),
-                                  feed_x->get(iskwns).asDouble(),feed_x->get(ift).asInt(),feed_x->get(ifc).asInt(),
-                                  feed_x->get(imaxpsdt).asDouble(),feed_x->get(imaxpsdc).asDouble(),thresholds[2]);
-                    }
-                    if(Bottle *feed_y = joint_list->get(2).asList())
-                    {
-                        fj.update(1,feed_y->get(idtw).asDouble(),feed_y->get(imean).asDouble(),feed_y->get(isdev).asDouble(),
-                                  feed_y->get(iskwns).asDouble(),feed_y->get(ift).asInt(),feed_y->get(ifc).asInt(),
-                                  feed_y->get(imaxpsdt).asDouble(),feed_y->get(imaxpsdc).asDouble(),thresholds[3]);
-                    }
-                    if(Bottle *feed_z = joint_list->get(3).asList())
-                    {
-                        fj.update(2,feed_z->get(idtw).asDouble(),feed_z->get(imean).asDouble(),feed_z->get(isdev).asDouble(),
-                                  feed_z->get(iskwns).asDouble(),feed_z->get(ift).asInt(),feed_z->get(ifc).asInt(),
-                                  feed_z->get(imaxpsdt).asDouble(),feed_z->get(imaxpsdc).asDouble(),thresholds[4]);
-                    }
-                    
-                    //assess how the single joint is moving from its components
-                    //the result is a pair with the level of the hierarchy for that joint (int)
-                    //and the feedback (vector<string>)
-                    pair<int,vector<string>> feed_jnt = assess(fj);
-//                    if(feed_jnt.first != 3)
-//                    {
-                        cout << endl;
-                        yInfo() << fj.getName() << feed_jnt.first;
-                        for(size_t i=0; i<feed_jnt.second.size(); i++)
-                            cout << feed_jnt.second[i] << " ";
-                        cout << endl;
-                        fj.print();
-//                    }
+                        Vector thresholds;
+                        if(Bottle *b_thresholds = joint_list->get(4).asList())
+                        {
+                            thresholds.resize(8);
+                            thresholds[0]=b_thresholds->get(1).asDouble();
+                            thresholds[1]=b_thresholds->get(2).asDouble();
+                            thresholds[2]=b_thresholds->get(3).asDouble();
+                            thresholds[3]=b_thresholds->get(4).asDouble();
+                            thresholds[4]=b_thresholds->get(5).asDouble();
+                            thresholds[5]=b_thresholds->get(6).asInt();
+                            thresholds[6]=b_thresholds->get(7).asInt();
+                            thresholds[7]=b_thresholds->get(8).asDouble();
+                            fj.setThresholds(thresholds);
+                        }
 
-                    bf.createHierarchy(joint,feed_jnt);
+                        string joint = joint_list->get(0).asString();
+                        if(joint == KeyPointTag::elbow_left || joint == KeyPointTag::elbow_right)
+                            continue;
+                             
+                        fj.setName(joint);
+                        if(Bottle *feed_x = joint_list->get(1).asList())
+                        {
+                            fj.update(0,feed_x->get(idtw).asDouble(),feed_x->get(imean).asDouble(),feed_x->get(isdev).asDouble(),
+                                      feed_x->get(iskwns).asDouble(),feed_x->get(ift).asInt(),feed_x->get(ifc).asInt(),
+                                      feed_x->get(imaxpsdt).asDouble(),feed_x->get(imaxpsdc).asDouble(),thresholds[2],thresholds[7]);
+                        }
+                        if(Bottle *feed_y = joint_list->get(2).asList())
+                        {
+                            fj.update(1,feed_y->get(idtw).asDouble(),feed_y->get(imean).asDouble(),feed_y->get(isdev).asDouble(),
+                                      feed_y->get(iskwns).asDouble(),feed_y->get(ift).asInt(),feed_y->get(ifc).asInt(),
+                                      feed_y->get(imaxpsdt).asDouble(),feed_y->get(imaxpsdc).asDouble(),thresholds[3],thresholds[7]);
+                        }
+                        if(Bottle *feed_z = joint_list->get(3).asList())
+                        {
+                            fj.update(2,feed_z->get(idtw).asDouble(),feed_z->get(imean).asDouble(),feed_z->get(isdev).asDouble(),
+                                      feed_z->get(iskwns).asDouble(),feed_z->get(ift).asInt(),feed_z->get(ifc).asInt(),
+                                      feed_z->get(imaxpsdt).asDouble(),feed_z->get(imaxpsdc).asDouble(),thresholds[4],thresholds[7]);
+                        }
+
+                        //assess how the single joint is moving from its components
+                        //the result is a pair with the level of the hierarchy for that joint (int)
+                        //and the feedback (vector<string>)
+                        pair<int,vector<string>> feed_jnt = assess(fj);
+    //                    if(feed_jnt.first != 3)
+    //                    {
+                            cout << endl;
+                            yInfo() << fj.getName() << feed_jnt.first;
+                            for(size_t i=0; i<feed_jnt.second.size(); i++)
+                                cout << feed_jnt.second[i] << " ";
+                            cout << endl;
+                            fj.print();
+    //                    }
+
+                        bf.createHierarchy(joint,feed_jnt);
+                    }
                 }
+                cout << endl;
+
+                bf.updateBodyPart();
+                int fin_level = bf.getMinLev();
+                bf.print();
+                pair<vector<string>,vector<vector<string>>> feedbacklist = bf.getFeedback();
+                vector<string> bp = feedbacklist.first;
+                vector<vector<string>> finalf = feedbacklist.second;
+
+                //speak
+                vector<SpeechParam> params;
+                vector<pair<string,vector<SpeechParam>>> speak_buffer;
+                switch (fin_level)
+                {
+                case -1: //moved from initial position
+                    score = 0.0;
+                    params.clear();
+                    speak_buffer.clear();
+                    speak_buffer.push_back(make_pair("position-center",params));
+                    break;
+                case 0: //static joints moving or dynamic joints not moving
+                    score = 0.0;
+                    speak_buffer.clear();
+                    for(size_t i=0; i<bp.size(); i++)
+                    {
+                        params.clear();
+                        params.push_back(bodypart2verbal[bp[i]]);
+                        if(finalf[i][0] == "static")
+                        {
+                            speak_buffer.push_back(make_pair("static",params));
+                        }
+                        else
+                        {
+                            speak_buffer.push_back(make_pair("dynamic",params));
+                        }
+                    }
+                    break;
+
+                case 1: //error in speed
+                    score = 0.5;
+                    speak_buffer.clear();
+                    for(size_t i=0; i<bp.size(); i++)
+                    {
+                        params.clear();
+                        params.push_back(bodypart2verbal[bp[i]]);
+                        for(size_t j=0; j<finalf[i].size(); j++)
+                        {
+                            params.push_back(finalf[i][j]);
+                        }
+                        speak_buffer.push_back(make_pair("speed",params));
+                    }
+                    break;
+
+                case 2: //error in position
+                    score = 0.5;
+                    speak_buffer.clear();
+                    for(size_t i=0; i<bp.size(); i++)
+                    {
+                        params.clear();
+                        params.push_back(bodypart2verbal[bp[i]]);
+                        for(size_t j=0; j<finalf[i].size(); j++)
+                        {
+                            params.push_back(finalf[i][j]);
+                        }
+
+                        speak_buffer.push_back(make_pair("position",params));
+                    }
+                    break;
+
+                case 3: //no error
+                    score = 1.0;
+                    params.clear();
+                    speak_buffer.clear();
+                    speak_buffer.push_back(make_pair("perfect",params));
+                    break;
+                }
+
+                speak(speak_buffer);
+                cout << endl;
             }
-            cout << endl;
-
-            bf.updateBodyPart();
-            int fin_level = bf.getMinLev();
-            bf.print();
-            pair<vector<string>,vector<vector<string>>> feedbacklist = bf.getFeedback();
-            vector<string> bp = feedbacklist.first;
-            vector<vector<string>> finalf = feedbacklist.second;
-
-            //speak
-            vector<SpeechParam> params;
+        }
+        else
+        {
             vector<pair<string,vector<SpeechParam>>> speak_buffer;
-            double score;
-            switch (fin_level)
-            {
-            case -1: //moved from initial position
-                score = 0.0;
-                params.clear();
-                speak_buffer.clear();
-                speak_buffer.push_back(make_pair("position-center",params));
-                break;
-            case 0: //static joints moving or dynamic joints not moving
-                score = 0.0;
-                speak_buffer.clear();
-                for(size_t i=0; i<bp.size(); i++)
-                {
-                    params.clear();
-                    params.push_back(bodypart2verbal[bp[i]]);
-                    if(finalf[i][0] == "static")
-                    {
-                        speak_buffer.push_back(make_pair("static",params));
-                    }
-                    else
-                    {
-                        speak_buffer.push_back(make_pair("dynamic",params));
-                    }
-                }
-                break;
-
-            case 1: //error in position
-                score = 0.5;
-                speak_buffer.clear();
-                for(size_t i=0; i<bp.size(); i++)
-                {
-                    params.clear();
-                    params.push_back(bodypart2verbal[bp[i]]);
-                    for(size_t j=0; j<finalf[i].size(); j++)
-                    {
-                        params.push_back(finalf[i][j]);
-				    }
-                        
-                    speak_buffer.push_back(make_pair("position",params));
-                }
-                break;
-
-            case 2: //error in speed
-                score = 0.5;
-                speak_buffer.clear();
-                for(size_t i=0; i<bp.size(); i++)
-                {
-                    params.clear();
-                    params.push_back(bodypart2verbal[bp[i]]);
-                    for(size_t j=0; j<finalf[i].size(); j++)
-                    {
-                        params.push_back(finalf[i][j]);
-                    }
-				    speak_buffer.push_back(make_pair("speed",params));
-                }
-                break;
-
-            case 3: //no error
-                score = 1.0;
-         		params.clear();
-                speak_buffer.clear();
-                speak_buffer.push_back(make_pair("perfect",params));
-                break;					
-		    }
-
+            vector<SpeechParam> params;
+            speak_buffer.clear();
+            params.clear();
+            speak_buffer.push_back(make_pair("wrong",params));
             speak(speak_buffer);
-            cout << endl;
-
-            Bottle &outscore = scorePort.prepare();
-            outscore.clear();
-            outscore.addDouble(score);
-            scorePort.write();
-
+            score = 0.0;
         }
 
+        Bottle &outscore = scorePort.prepare();
+        outscore.clear();
+        outscore.addDouble(score);
+        scorePort.write();
     }
 
     /********************************************************/
@@ -655,7 +693,7 @@ public:
         /*******************/
         /*   ZERO CHECK    */
         /*******************/
-        {
+        /*{
             string joint = f.getName();
             bool errcenterx = fabs(mx) > f.getMeanThresh();
             bool errcentery = fabs(my) > f.getMeanThresh();
@@ -666,7 +704,7 @@ public:
                 out.push_back("");
                 return make_pair(-1,out);
             }
-        }        
+        } */       
          
         /*******************/
         /*   FIRST CHECK   */
@@ -675,7 +713,7 @@ public:
         //dynamic joints in the template must move
         bool joint_templ_stale = ftx < 0 && fty < 0 && ftz < 0;
         bool joint_skel_stale = fcx < 0 && fcy < 0 && fcz < 0;
-        if(!joint_templ_stale && !joint_skel_stale)
+        /* if(!joint_templ_stale && !joint_skel_stale)
         {
             {
                 bool ftxy = ftx <= f.getFstatic() && fty <= f.getFstatic();
@@ -763,11 +801,40 @@ public:
                     return make_pair(0,out);
                 }
             }
-        }
+        } */
 
         /********************/
         /*   SECOND CHECK   */
         /********************/
+        //we check the error in speed
+        if(!joint_templ_stale && !joint_skel_stale)
+        {
+            int dfx = fcx-ftx;
+            int dfy = fcy-fty;
+            int dfz = fcz-ftz;
+            bool fxy_pos = dfx >  f.getRangeFreq() && dfy >  f.getRangeFreq();
+            bool fxz_pos = dfx >  f.getRangeFreq() && dfz >  f.getRangeFreq();
+            bool fyz_pos = dfy >  f.getRangeFreq() && dfz >  f.getRangeFreq();
+            bool fxy_neg = dfx < - f.getRangeFreq() && dfy < - f.getRangeFreq();
+            bool fxz_neg = dfx < - f.getRangeFreq() && dfz < - f.getRangeFreq();
+            bool fyz_neg = dfy < - f.getRangeFreq() && dfz < - f.getRangeFreq();
+
+            vector<string> out;
+            if(fxy_pos || fxz_pos || fyz_pos)
+            {
+                out.push_back(speak_map["speed"].second[0]);
+                return make_pair(1,out);
+            }
+            else if(fxy_neg || fxz_neg || fyz_neg)
+            {
+                out.push_back(speak_map["speed"].second[1]);
+                return make_pair(1,out);
+            }
+        }
+
+        /*******************/
+        /*   THIRD CHECK   */
+        /*******************/
         //we check the error in position
         if(!joint_templ_stale && !joint_skel_stale)
         {
@@ -788,7 +855,7 @@ public:
                         out.push_back(speak_map["position"].second[0]);
                     else
                         out.push_back(speak_map["position"].second[1]);
-                    return make_pair(1,out);
+                    return make_pair(2,out);
                 }
                 if(erry)
                 {
@@ -796,7 +863,7 @@ public:
                         out.push_back(speak_map["position"].second[2]);
                     else
                         out.push_back(speak_map["position"].second[3]);
-                    return make_pair(1,out);
+                    return make_pair(2,out);
                 }
                 if(errz)
                 {
@@ -804,37 +871,8 @@ public:
                         out.push_back(speak_map["position"].second[4]);
                     else
                         out.push_back(speak_map["position"].second[5]);
-                    return make_pair(1,out);
+                    return make_pair(2,out);
                 }
-            }
-        }
-
-        /*******************/
-        /*   THIRD CHECK   */
-        /*******************/
-        //we check the error in speed
-        if(!joint_templ_stale && !joint_skel_stale)
-        {
-            int dfx = fcx-ftx;
-            int dfy = fcy-fty;
-            int dfz = fcz-ftz;
-            bool fxy_pos = dfx >  f.getRangeFreq() && dfy >  f.getRangeFreq();
-            bool fxz_pos = dfx >  f.getRangeFreq() && dfz >  f.getRangeFreq();
-            bool fyz_pos = dfy >  f.getRangeFreq() && dfz >  f.getRangeFreq();
-            bool fxy_neg = dfx < - f.getRangeFreq() && dfy < - f.getRangeFreq();
-            bool fxz_neg = dfx < - f.getRangeFreq() && dfz < - f.getRangeFreq();
-            bool fyz_neg = dfy < - f.getRangeFreq() && dfz < - f.getRangeFreq();
-
-            vector<string> out;
-            if(fxy_pos || fxz_pos || fyz_pos)
-            {
-                out.push_back(speak_map["speed"].second[0]);
-                return make_pair(2,out);
-            }
-            else if(fxy_neg || fxz_neg || fyz_neg)
-            {
-                out.push_back(speak_map["speed"].second[1]);
-                return make_pair(2,out);
             }
         }
 
@@ -907,6 +945,7 @@ public:
     void close()
     {
         BufferedPort<Bottle >::close();
+        dtwPort.close();
         speechPort.close();
         scorePort.close();
     }
@@ -931,8 +970,9 @@ public:
         string speak_file=rf.check("speak-file",Value("speak-it")).asString();
         period = rf.check("period",Value(0.1)).asDouble();
         int speak_length = rf.check("speak-length",Value(2)).asInt();
+        double thresh_confidence = rf.check("thresh-conf",Value(0.7)).asDouble();
 
-        synthetizer = new Synthetizer(moduleName,rf.getContext(),speak_file,speak_length);
+        synthetizer = new Synthetizer(moduleName,rf.getContext(),speak_file,speak_length,thresh_confidence);
         synthetizer->open();
 
         return true;

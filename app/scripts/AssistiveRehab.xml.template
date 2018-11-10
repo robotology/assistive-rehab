@@ -82,7 +82,11 @@
 
     <module>
        <name>alignmentManager</name>
-       <parameters>--psd_noise 3000.0</parameters>
+       <node>r1-console-linux</node>
+    </module>
+
+    <module>
+       <name>actionRecognizer</name>
        <node>r1-console-linux</node>
     </module>
 
@@ -224,6 +228,12 @@
     </connection>
 
     <connection>
+        <from>/motionAnalyzer/action:cmd</from>
+        <to>/actionRecognizer/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
         <from>/skeletonPlayer/opc:rpc</from>
         <to>/opc/rpc</to>
         <protocol>fast_tcp</protocol>
@@ -285,7 +295,25 @@
 
     <connection>
         <from>/alignmentManager:o</from>
-        <to>/feedbackSynthetizer/feedback:i</to>
+        <to>/feedbackSynthetizer/dtw:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/actionRecognizer/opc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/actionRecognizer/target:o</from>
+        <to>/alignmentManager/action:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/actionRecognizer/target:o</from>
+        <to>/feedbackSynthetizer/action:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
 

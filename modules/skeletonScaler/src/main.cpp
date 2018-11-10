@@ -86,7 +86,7 @@ class Scaler : public RFModule
                 size_t idx=file.find(".");
                 setTag(file.substr(0,idx));
 
-                opacity=0.0;
+                opacity=0.3;
                 setOpacity(opacity);
             }
             else
@@ -128,7 +128,7 @@ class Scaler : public RFModule
                 return false;
             }
         }
-        if(command.get(0).asString() == "tag")
+        if(command.get(0).asString() == "tags")
         {
             selectByTag(command.get(1).asString());
             reply.addString("Selecting skeleton" + command.get(1).asString());

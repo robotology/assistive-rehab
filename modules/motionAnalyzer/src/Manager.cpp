@@ -91,6 +91,7 @@ bool Manager::loadInitialConf()
         sz_thresh = bGeneral.find("sz_thresh").asDouble();
         f_static = bGeneral.find("f_static").asInt();
         range_freq = bGeneral.find("range_freq").asInt();
+        psd_thresh = bGeneral.find("psd_thresh").asDouble();
     }
 
     return true;
@@ -128,7 +129,7 @@ bool Manager::loadMotionList()
                             string tag_joint = bMotion.find("tag_joint").asString();
                             double min = bMotion.find("min").asDouble();
                             double max = bMotion.find("max").asDouble();
-                            double duration = bMotion.find("duration").asDouble();
+                            int duration = bMotion.find("duration").asInt();
                             Vector camerapos;
                             camerapos.resize(3);
                             if(Bottle *bCamerapos = bMotion.find("camerapos").asList())
@@ -172,6 +173,7 @@ bool Manager::loadMotionList()
                             relaxed_sz_thresh.clear();
                             relaxed_f_static.clear();
                             relaxed_range_freq.clear();
+                            relaxed_psd_thresh.clear();
 
                             relaxed_dtw_thresh.push_back(dtw_thresh);
                             relaxed_mean_thresh.push_back(mean_thresh);
@@ -180,6 +182,7 @@ bool Manager::loadMotionList()
                             relaxed_sz_thresh.push_back(sz_thresh);
                             relaxed_f_static.push_back(f_static);
                             relaxed_range_freq.push_back(range_freq);
+                            relaxed_psd_thresh.push_back(psd_thresh);
 
                             if(Bottle *bRelaxedJoints = bMotion.find("relaxed_list").asList())
                             {
@@ -227,6 +230,12 @@ bool Manager::loadMotionList()
                                     for(size_t i=0; i<bRangeFreq->size(); i++)
                                         relaxed_range_freq.push_back(bRangeFreq->get(i).asInt());
                                 }
+
+                                if(Bottle *bPsdThresh = bMotion.find("psd_thresh").asList())
+                                {
+                                    for(size_t i=0; i<bPsdThresh->size(); i++)
+                                        relaxed_psd_thresh.push_back(bPsdThresh->get(i).asDouble());
+                                }
                             }
 
                             if(curr_tag == Rom_Processor::metric_tag)
@@ -254,7 +263,7 @@ bool Manager::loadMotionList()
                                                           min, max, duration, camerapos, focalpoint,
                                                           relaxed_joints,relaxed_dtw_thresh,relaxed_mean_thresh,
                                                           relaxed_sx_thresh,relaxed_sy_thresh, relaxed_sz_thresh,
-                                                          relaxed_f_static,relaxed_range_freq);
+                                                          relaxed_f_static,relaxed_range_freq,relaxed_psd_thresh);
 
                             //add the current metric to the repertoire
                             motion_repertoire.insert(pair<string, Metric*>(curr_tag+"_"+to_string(j), metric_repertoire));
@@ -290,9 +299,20 @@ bool Manager::loadMetric(const string &metric_tag)
         //send commands to skeletonScaler
         Bottle cmd,reply;
         cmd.addVocab(Vocab::encode("load"));
-        string f = metric->getMotionType() + ".log";
-        string context = rf->getContext();
+        string f = metric->getMotionType();
         cmd.addString(f);
+        actionPort.write(cmd,reply);
+        if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+        {
+            yError() << "actionRecognizer could not motion type" << f;
+            return false;
+        }
+        cmd.clear();
+        reply.clear();
+        cmd.addVocab(Vocab::encode("load"));
+        f = f + ".log";
+        cmd.addString(f);
+        string context = rf->getContext();
         cmd.addString(context);
         scalerPort.write(cmd,reply);
         if(reply.get(0).asVocab()!=Vocab::encode("ok"))
@@ -382,12 +402,13 @@ bool Manager::selectSkel(const string &skel_tag)
 
     //send tag to skeletonScaler
     Bottle cmd, reply;
-    cmd.addVocab(Vocab::encode("tag"));
+    cmd.addVocab(Vocab::encode("tags"));
     cmd.addString(this->skel_tag);
     yInfo() << cmd.toString();
 
-    scalerPort.write(cmd, reply);
-    dtwPort.write(cmd, reply);
+    scalerPort.write(cmd,reply);
+    actionPort.write(cmd,reply);
+    dtwPort.write(cmd,reply);
 
 #ifndef NDEBUG
     yInfo() << "Debugging";
@@ -443,7 +464,16 @@ bool Manager::start()
 
     //start alignmentManager
     reply.clear();
-    cmd.addDouble(metric->getDuration());
+    cmd.addInt(metric->getDuration());
+    actionPort.write(cmd,reply);
+    if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+    {
+        yError() << "Could not run actionRecognizer";
+        return false;
+    }
+    reply.clear();
+    cmd.clear();
+    cmd.addVocab(Vocab::encode("run"));
     cmd.addList().read(metric->getDtwThresh());
     cmd.addList().read(metric->getMeanThresh());
     cmd.addList().read(metric->getSxThresh());
@@ -451,6 +481,7 @@ bool Manager::start()
     cmd.addList().read(metric->getSzThresh());
     cmd.addList().read(metric->getFstatic());
     cmd.addList().read(metric->getRangeFreq());
+    cmd.addList().read(metric->getPsdThresh());
     dtwPort.write(cmd,reply);
     if(reply.get(0).asVocab()==Vocab::encode("ok"))
     {
@@ -458,6 +489,12 @@ bool Manager::start()
         starting = true;
         return true;
     }
+    else
+    {
+        yError() << "Could not run alignmentManager";
+        return false;
+    }
+
     return false;
 }
 
@@ -471,6 +508,7 @@ bool Manager::stop()
     cmd.addVocab(Vocab::encode("stop"));
     scalerPort.write(cmd,reply);
     dtwPort.write(cmd,reply);
+    actionPort.write(cmd,reply);
     if(reply.get(0).asVocab()==Vocab::encode("ok") && starting)
     {
         cmd.clear();
@@ -602,6 +640,7 @@ bool Manager::configure(ResourceFinder &rf)
     scopePort.open(("/" + getName() + "/scope").c_str());
     scalerPort.open(("/" + getName() + "/scaler:cmd").c_str());
     dtwPort.open(("/" + getName() + "/dtw:cmd").c_str());
+    actionPort.open(("/" + getName() + "/action:cmd").c_str());
     rpcPort.open(("/" + getName() + "/cmd").c_str());
     attach(rpcPort);
 
@@ -632,6 +671,7 @@ bool Manager::interruptModule()
     scopePort.interrupt();
     scalerPort.interrupt();
     dtwPort.interrupt();
+    actionPort.interrupt();
     rpcPort.interrupt();
     yInfo() << "Interrupted module";
 
@@ -651,6 +691,7 @@ bool Manager::close()
     scopePort.close();
     scalerPort.close();
     dtwPort.close();
+    actionPort.close();
     rpcPort.close();
 
     yInfo() << "Closed ports";
