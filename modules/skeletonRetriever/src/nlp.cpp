@@ -76,7 +76,11 @@ protected:
         Ipopt::Index i=0;
         for (auto c=k; c!=nullptr; c=c->getChild(0))
         {
-            double d=(i==0?0.05:0.2);
+            double d=0.3;
+            if ((i==0) || (i==n-1))
+            {
+                d/=10.0;
+            }
             x_l[i]=std::max(c->getPoint()[2],0.01);
             x_u[i]=x_l[i]+d;
             i++;
@@ -150,7 +154,7 @@ protected:
                 double d2=dot(d1,d1)-lengths[i]*lengths[i];
 
                 grad_f[i]+=4.0*d2*dot(d1,Dy1);
-                grad_f[i+1]+=-4.0*d2*dot(d1,Dy2);
+                grad_f[i+1]-=4.0*d2*dot(d1,Dy2);
                 i++;
             }
         }
