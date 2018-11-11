@@ -145,7 +145,7 @@
 
     <module>
         <name>cer_reaching-controller</name>
-        <parameters>--robot cer --arm-type left --verbosity 1 --T 1.0</parameters>
+        <parameters>--robot cer --arm-type left --verbosity 1 --T 2.0</parameters>
         <node>r1-base</node>
     </module>
 
@@ -157,7 +157,7 @@
 
     <module>
         <name>cer_reaching-controller</name>
-        <parameters>--robot cer --arm-type right --verbosity 1 --T 1.0</parameters>
+        <parameters>--robot cer --arm-type right --verbosity 1 --T 2.0</parameters>
         <node>r1-base</node>
     </module>
 
