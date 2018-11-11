@@ -77,8 +77,8 @@ protected:
         for (auto c=k; c!=nullptr; c=c->getChild(0))
         {
             double d=(i==0?0.05:0.2);
-            x_l[i]=std::max(c->getPoint()[2]-d,0.01);
-            x_u[i]=std::max(c->getPoint()[2]+d,x_l[i]);
+            x_l[i]=std::max(c->getPoint()[2],0.01);
+            x_u[i]=x_l[i]+d;
             i++;
         }
         return true;
