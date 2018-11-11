@@ -137,6 +137,30 @@
         <node>r1-console-linux</node>
     </module>
 
+    <module>
+        <name>cer_reaching-solver</name>
+        <parameters>--robot cer --arm-type left --verbosity 1</parameters>
+        <node>r1-base</node>
+    </module>
+
+    <module>
+        <name>cer_reaching-controller</name>
+        <parameters>--robot cer --arm-type left --verbosity 1 --T 2.0</parameters>
+        <node>r1-base</node>
+    </module>
+
+    <module>
+        <name>cer_reaching-solver</name>
+        <parameters>--robot cer --arm-type right --verbosity 1</parameters>
+        <node>r1-base</node>
+    </module>
+
+    <module>
+        <name>cer_reaching-controller</name>
+        <parameters>--robot cer --arm-type right --verbosity 1 --T 2.0</parameters>
+        <node>r1-base</node>
+    </module>
+
     <connection>
         <from>/faceExpressionImage/image:o</from>
         <to>/robot/faceDisplay/image:i</to>
@@ -350,6 +374,18 @@
     <connection>
         <from>/interactionManager/speech:rpc</from>
         <to>/iSpeak/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer_reaching-controller/left/solver:rpc</from>
+        <to>/cer_reaching-solver/left/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer_reaching-controller/right/solver:rpc</from>
+        <to>/cer_reaching-solver/right/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
 </application>

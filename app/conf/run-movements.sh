@@ -175,4 +175,64 @@ perform_internal_rotation_right() {
     internal_rotation_right $NREP_PERFORM
 }
 
+#########################
+#    REACHING RIGHT     #
+#########################
+reaching_right() {
+
+    T=2.0
+    echo "set T $T" | yarp rpc /cer_reaching-controller/right/rpc
+
+    NREP=$1
+    while [  $COUNT -lt $NREP ]; do
+        echo "go ((parameters ((mode "full_pose+no_torso_no_heave") (torso_heave 0.1) (lower_arm_heave 0.05))) (target (0.35 -0.35 0.55 1.0 0.0 0.0 3.1415)))" | yarp rpc /cer_reaching-controller/right/rpc
+        sleep 3.5
+        echo "go ((parameters ((mode "full_pose+no_torso_no_heave") (torso_heave 0.1) (lower_arm_heave 0.05))) (target (0.55 -0.33 1.2 1.0 0.0 0.0 3.1415)))" | yarp rpc /cer_reaching-controller/right/rpc
+        sleep 3.5
+        COUNT=$((COUNT+1))
+    done
+    sleep 2.0
+    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 15.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/right_arm/rpc
+}
+
+show_reaching_right() {
+
+    reaching_right $NREP_SHOW
+}
+
+perform_reaching_right() {
+
+    reaching_right $NREP_PERFORM
+}
+
+#########################
+#     REACHING LEFT     #
+#########################
+reaching_left() {
+
+    T=2.0
+    echo "set T $T" | yarp rpc /cer_reaching-controller/left/rpc
+
+    NREP=$1
+    while [  $COUNT -lt $NREP ]; do
+        echo "go ((parameters ((mode "full_pose+no_torso_no_heave") (torso_heave 0.1) (lower_arm_heave 0.05))) (target (0.35 0.3 0.55 0.0 0.0 0.0 0.0)))" | yarp rpc /cer_reaching-controller/left/rpc
+        sleep 3.5
+        echo "go ((parameters ((mode "full_pose+no_torso_no_heave") (torso_heave 0.1) (lower_arm_heave 0.05))) (target (0.55 0.33 1.2 0.0 0.0 0.0 0.0)))" | yarp rpc /cer_reaching-controller/left/rpc
+        sleep 3.5
+        COUNT=$((COUNT+1)) 
+    done
+    sleep 2.0
+    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 15.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/left_arm/rpc
+}
+
+show_reaching_left() {
+
+    reaching_left $NREP_SHOW
+}
+
+perform_reaching_left() {
+
+    reaching_left $NREP_PERFORM
+}
+
 $1
