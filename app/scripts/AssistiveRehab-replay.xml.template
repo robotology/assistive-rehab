@@ -3,7 +3,7 @@
 
     <module>
        <name>objectsPropertiesCollector</name>
-       <parameters>--name opc --no-load-db --no-save-db --async-bc</parameters>
+       <parameters>--name opc --no-load-db --no-save-db</parameters>
        <node>localhost</node>
     </module>
 

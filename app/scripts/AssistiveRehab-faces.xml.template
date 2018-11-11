@@ -59,7 +59,7 @@
 
     <module>
        <name>objectsPropertiesCollector</name>
-       <parameters>--name opc --no-load-db --no-save-db --async-bc</parameters>
+       <parameters>--name opc --no-load-db --no-save-db --sync-bc 0.1</parameters>
        <node>r1-console-linux</node>
     </module>
 
