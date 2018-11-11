@@ -31,6 +31,11 @@ protected:
     const vector<double>& lengths;
     vector<pair<string,Vector>> result;
 
+    vector<Vector> p1,y1,Dy1;
+    vector<Vector> p2,y2,Dy2;
+    vector<Vector> d1;
+    vector<double> d2;
+
     /****************************************************************/
     Vector get2D(const Vector &x) const
     {
@@ -50,6 +55,29 @@ protected:
         x[0]*=(p[0]-(camParams.get_width()-1)/2.0)/camParams.get_focal();
         x[1]*=(p[1]-(camParams.get_height()-1)/2.0)/camParams.get_focal();
         return x;
+    }
+
+    /****************************************************************/
+    void compute_quantities(const Ipopt::Number *x)
+    {
+        size_t i=0;
+        for (auto c1=k; c1!=nullptr; c1=c1->getChild(0))
+        {
+            if (auto c2=c1->getChild(0))
+            {
+                p1[i]=get2D(c1->getPoint());
+                y1[i]=get3D(p1[i],x[i]);
+                Dy1[i]=get3D(p1[i],1.0);
+
+                p2[i]=get2D(c2->getPoint());
+                y2[i]=get3D(p2[i],x[i+1]);
+                Dy2[i]=get3D(p2[i],1.0);
+
+                d1[i]=y1[i]-y2[i];
+                d2[i]=dot(d1[i],d1[i])-lengths[i]*lengths[i];
+                i++;
+            }
+        }
     }
 
     /****************************************************************/
@@ -108,20 +136,17 @@ protected:
     bool eval_f(Ipopt::Index n, const Ipopt::Number *x,
                 bool new_x, Ipopt::Number &obj_value) override
     {
+        if (new_x)
+        {
+            compute_quantities(x);
+        }
+
         obj_value=0.0; size_t i=0;
         for (auto c1=k; c1!=nullptr; c1=c1->getChild(0))
         {
             if (auto c2=c1->getChild(0))
             {
-                Vector p1=get2D(c1->getPoint());
-                Vector y1=get3D(p1,x[i]);
-
-                Vector p2=get2D(c2->getPoint());
-                Vector y2=get3D(p2,x[i+1]);
-
-                Vector d1=y1-y2;
-                double d2=dot(d1,d1)-lengths[i]*lengths[i];
-                obj_value+=d2*d2;
+                obj_value+=d2[i]*d2[i];
                 i++;
             }
         }
@@ -132,6 +157,11 @@ protected:
     bool eval_grad_f(Ipopt::Index n, const Ipopt::Number *x,
                      bool new_x, Ipopt::Number *grad_f) override
     {
+        if (new_x)
+        {
+            compute_quantities(x);
+        }
+
         for (Ipopt::Index i=0; i<n; i++)
         {
             grad_f[i]=0.0;
@@ -142,19 +172,8 @@ protected:
         {
             if (auto c2=c1->getChild(0))
             {
-                Vector p1=get2D(c1->getPoint());
-                Vector y1=get3D(p1,x[i]);
-                Vector Dy1=get3D(p1,1.0);
-
-                Vector p2=get2D(c2->getPoint());
-                Vector y2=get3D(p2,x[i+1]);
-                Vector Dy2=get3D(p2,1.0);
-
-                Vector d1=y1-y2;
-                double d2=dot(d1,d1)-lengths[i]*lengths[i];
-
-                grad_f[i]+=4.0*d2*dot(d1,Dy1);
-                grad_f[i+1]-=4.0*d2*dot(d1,Dy2);
+                grad_f[i]+=4.0*d2[i]*dot(d1[i],Dy1[i]);
+                grad_f[i+1]-=4.0*d2[i]*dot(d1[i],Dy2[i]);
                 i++;
             }
         }
@@ -211,7 +230,20 @@ public:
     /****************************************************************/
     LimbOptimizerNLP(const CamParamsHelper &camParams_, const KeyPoint* k_,
                      const vector<double>& lengths_) :
-                     camParams(camParams_), k(k_), lengths(lengths_) { }
+                     camParams(camParams_), k(k_), lengths(lengths_)
+    {
+        size_t i=0;
+        for (auto c1=k; c1!=nullptr; c1=c1->getChild(0))
+        {
+            if (auto c2=c1->getChild(0))
+            {
+                i++;
+            }
+        }
+        p1=vector<Vector>(i); y1=vector<Vector>(i); Dy1=vector<Vector>(i);
+        p2=vector<Vector>(i); y2=vector<Vector>(i); Dy2=vector<Vector>(i);
+        d1=vector<Vector>(i); d2=vector<double>(i);
+    }
 
     /****************************************************************/
     vector<pair<string,Vector>> get_result() const
