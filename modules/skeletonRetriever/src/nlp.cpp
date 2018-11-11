@@ -224,7 +224,7 @@ vector<pair<string,Vector>> LimbOptimizer::optimize(const CamParamsHelper &camPa
 {
     
     Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
-    app->Options()->SetNumericValue("tol",1e-5);
+    app->Options()->SetNumericValue("tol",0.0001);
     app->Options()->SetIntegerValue("acceptable_iter",0);
     app->Options()->SetStringValue("mu_strategy","adaptive");
     app->Options()->SetStringValue("hessian_approximation","limited-memory");
