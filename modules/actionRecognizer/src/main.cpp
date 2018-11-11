@@ -38,7 +38,6 @@ class Recognizer : public RFModule, public actionRecognizer_IDL
     unordered_map<string,int> keypoint2int;
     unordered_map<int,string> class_map;
     int nframes,nsteps,nclasses,nfeatures;
-    vector<float> min,max;
     string skel_tag;
     SkeletonWaist skeletonIn;
 
@@ -104,16 +103,6 @@ public:
             class_map[value]=label;
         }
 
-        ifstream file(rf.findFileByName("scale_values.txt"));
-        string line = "";
-        while(getline(file, line))
-        {
-            vector<string> vec;
-            boost::algorithm::split(vec, line, boost::is_any_of(","));
-            min.push_back(stof((vec[0]).c_str(),0));
-            max.push_back(stof((vec[1]).c_str(),0));
-        }
-        
         keypoint2int[KeyPointTag::head] = 0;
         keypoint2int[KeyPointTag::hand_left] = 2;
         keypoint2int[KeyPointTag::shoulder_left] = 4;
@@ -138,7 +127,6 @@ public:
         if(predict)
         {
             yInfo() << "Loading model from:" << pathToGraph;
-            yInfo() << "Loading scaling values from: " << rf.findFileByName("scale_values.txt");
 
             sess_opts.config.mutable_gpu_options()->set_allow_growth(true); //to limit GPU usage
             session = NewSession(sess_opts);
@@ -270,8 +258,8 @@ public:
     bool updateInput(const string & tag, const int i, const float &x, const float &y)
    {
         int j = keypoint2int[tag];
-        input.tensor<float,3>()(0,i,j) = (x-min[j])/(max[j]-min[j]);
-        input.tensor<float,3>()(0,i,j+1) = (y-min[j+1])/(max[j+1]-min[j+1]);
+        input.tensor<float,3>()(0,i,j) = x/10.0;
+        input.tensor<float,3>()(0,i,j+1) = y/10.0;
         return true;
     }
 
@@ -337,17 +325,19 @@ public:
         if(opcPort.getOutputCount() > 0 && starting)
         {
             getSkeleton();
+            skeletonIn.normalize();
+            float xc=skeletonIn[KeyPointTag::shoulder_center]->getPoint()[0];
+            float yc=skeletonIn[KeyPointTag::shoulder_center]->getPoint()[1];
             for(size_t i=0; i<skeletonIn.getNumKeyPoints(); i++)
             {
                 string tagjoint=skeletonIn[i]->getTag();
                 if(tagjoint != KeyPointTag::elbow_left && tagjoint != KeyPointTag::elbow_right)
                 {
-					float x=skeletonIn[i]->getPoint()[0];
-					float y=skeletonIn[i]->getPoint()[1];
+                    float x=skeletonIn[i]->getPoint()[0]-xc;
+                    float y=skeletonIn[i]->getPoint()[1]-yc;
 					updateInput(tagjoint,idx_frame,x,y);
 				}
             }
-
             if(idx_frame < nframes)
             {		
                 if(idx_frame%10==0)
