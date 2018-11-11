@@ -93,8 +93,8 @@ class Overlayer : public RFModule
 
     bool configure(ResourceFinder &rf) override
     {
-        filter_depth_kernel_size=rf.check("filter-depth-kernel-size",Value(4)).asInt();
-        filter_depth_iterations=rf.check("filter-depth-iterations",Value(3)).asInt();
+        filter_depth_kernel_size=rf.check("filter-depth-kernel-size",Value(6)).asInt();
+        filter_depth_iterations=rf.check("filter-depth-iterations",Value(4)).asInt();
         filter_depth_min_dist=(float)rf.check("filter-depth-min-dist",Value(1.0)).asDouble();
         filter_depth_max_dist=(float)rf.check("filter-depth-max-dist",Value(4.0)).asDouble();
 
