@@ -13,6 +13,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <cmath>
 
 /****************************************************************/
 class CamParamsHelper
@@ -26,7 +27,7 @@ public:
     CamParamsHelper(const size_t w, const size_t h, const double f) :
                     width(w), height(h), fov_h(f)
     {
-        focal=width/(2.0*tan(fov_h*(M_PI/180.0)/2.0));
+        focal=width/(2.0*std::tan(fov_h*(M_PI/180.0)/2.0));
     }
 
     /****************************************************************/

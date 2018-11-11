@@ -12,7 +12,6 @@
 
 #include <cstdlib>
 #include <memory>
-#include <cmath>
 #include <limits>
 #include <algorithm>
 #include <vector>
