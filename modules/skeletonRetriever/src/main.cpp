@@ -28,6 +28,7 @@
 #include <iCub/ctrl/filters.h>
 #include "AssistiveRehab/helpers.h"
 #include "AssistiveRehab/skeleton.h"
+#include "utils.h"
 #include "nlp.h"
 
 using namespace std;
@@ -53,11 +54,11 @@ class MetaSkeleton
     unordered_map<string,shared_ptr<MedianFilter>> limbs_length;
     unordered_map<string,unsigned int> limbs_length_cnt;
     bool optimize_limblength;
+    CamParamsHelper camParams;
     
     /****************************************************************/
-    vector<pair<string,Vector>> optimize_limb(const vector<string> &tags)
+    vector<pair<string,Vector>> optimize_limbs(const vector<string> &tags)
     {
-        vector<pair<string,Vector>> unordered;
         bool all_updated=true;
         vector<double> lengths;
         for (const auto &tag:tags)
@@ -67,15 +68,17 @@ class MetaSkeleton
             if (cnt!=limbs_length_cnt.end())
             {
                 auto &flt=limbs_length[tag];
-                if (cnt->second>=flt->getOrder())
+                if (cnt->second>flt->getOrder())
                 {
                     lengths.push_back(flt->output()[0]);
                 }
             }
         }
+
+        vector<pair<string,Vector>> unordered;
         if (all_updated && (lengths.size()==tags.size()-1))
         {
-            unordered=LimbOptimizer::optimize((*skeleton)[tags[0]],lengths);
+            unordered=LimbOptimizer::optimize(camParams,(*skeleton)[tags[0]],lengths);
         }
         return unordered;
     }
@@ -90,10 +93,10 @@ public:
     double name_confidence;
 
     /****************************************************************/
-    MetaSkeleton(const double t, const int filter_keypoint_order_,
+    MetaSkeleton(const CamParamsHelper &camParams_, const double t, const int filter_keypoint_order_,
                  const int filter_limblength_order_, const bool optimize_limblength_) : 
-                 timer(t), opc_id(opc_id_invalid), optimize_limblength(optimize_limblength_),
-                 name_confidence(0.0)
+                 camParams(camParams_), timer(t), opc_id(opc_id_invalid),
+                 optimize_limblength(optimize_limblength_), name_confidence(0.0)
     {
         skeleton=shared_ptr<SkeletonWaist>(new SkeletonWaist());
         keys_acceptable_misses.assign(skeleton->getNumKeyPoints(),0);
@@ -157,10 +160,24 @@ public:
             if (k->isUpdated() && p->isUpdated())
             {
                 double d=norm(k->getPoint()-p->getPoint());
-                it1.second->filt(Vector(1,d));
-                if (limbs_length_cnt[it1.first]>=it1.second->getOrder())
+
+                // filter only when the skeleton shows up initially
+                if (limbs_length_cnt[it1.first]<=it1.second->getOrder())
                 {
-                    // account for too long limb parts
+                    it1.second->filt(Vector(1,d));
+                    limbs_length_cnt[it1.first]++;
+                }
+                // print the filtered limb length once
+                if (limbs_length_cnt[it1.first]==it1.second->getOrder()+1)
+                {
+                    yInfo()<<"Skeleton:"<<skeleton->getTag()
+                           <<"limb:"<<p->getTag()<<"-"<<k->getTag()
+                           <<"length:"<<it1.second->output()[0];
+                    limbs_length_cnt[it1.first]++;
+                }
+                // seek for too long limb parts
+                if (limbs_length_cnt[it1.first]>it1.second->getOrder())
+                {
                     if (d>2.0*it1.second->output()[0])
                     {
                         for (auto it2=begin(unordered_filtered); it2!=end(unordered_filtered); it2++)
@@ -172,14 +189,6 @@ public:
                             }
                         }
                     }
-
-                    yInfo()<<"Skeleton:"<<skeleton->getTag()
-                           <<"limb:"<<p->getTag()<<"-"<<k->getTag()
-                           <<"length:"<<it1.second->output()[0];
-                }
-                else
-                {
-                    limbs_length_cnt[it1.first]++;
                 }
             }
         }
@@ -192,16 +201,16 @@ public:
         if (optimize_limblength)
         {
             vector<pair<string,Vector>> tmp;
-            tmp=optimize_limb({KeyPointTag::shoulder_left,KeyPointTag::elbow_left,KeyPointTag::hand_left});
+            tmp=optimize_limbs({KeyPointTag::shoulder_left,KeyPointTag::elbow_left,KeyPointTag::hand_left});
             unordered_filtered.insert(end(unordered_filtered),begin(tmp),end(tmp));
 
-            tmp=optimize_limb({KeyPointTag::shoulder_right,KeyPointTag::elbow_right,KeyPointTag::hand_right});
+            tmp=optimize_limbs({KeyPointTag::shoulder_right,KeyPointTag::elbow_right,KeyPointTag::hand_right});
             unordered_filtered.insert(end(unordered_filtered),begin(tmp),end(tmp));
 
-            tmp=optimize_limb({KeyPointTag::hip_left,KeyPointTag::knee_left,KeyPointTag::ankle_left});
+            tmp=optimize_limbs({KeyPointTag::hip_left,KeyPointTag::knee_left,KeyPointTag::ankle_left});
             unordered_filtered.insert(end(unordered_filtered),begin(tmp),end(tmp));
 
-            tmp=optimize_limb({KeyPointTag::hip_right,KeyPointTag::knee_right,KeyPointTag::ankle_right});
+            tmp=optimize_limbs({KeyPointTag::hip_right,KeyPointTag::knee_right,KeyPointTag::ankle_right});
             unordered_filtered.insert(end(unordered_filtered),begin(tmp),end(tmp));
 
             // update 3: adjust limbs' keypoints through optimization
@@ -276,7 +285,7 @@ class Retriever : public RFModule
     {
         if ((u>=0) && (u<depth.width()) && (v>=0) && (v<depth.height()))
         {
-            double f=depth.width()/(2.0*tan(fov_h*(M_PI/180.0)/2.0));
+            double f=CamParamsHelper(depth.width(),depth.height(),fov_h).get_focal();
             double d=depth(u,v);
             if ((d>0.0) && (f>0.0))
             {
@@ -305,10 +314,9 @@ class Retriever : public RFModule
     /****************************************************************/
     shared_ptr<MetaSkeleton> create(Bottle *keys)
     {
-        shared_ptr<MetaSkeleton> s(new MetaSkeleton(time_to_live,
-                                   filter_keypoint_order,
-                                   filter_limblength_order,
-                                   optimize_limblength));
+        shared_ptr<MetaSkeleton> s(new MetaSkeleton(CamParamsHelper(depth.width(),depth.height(),fov_h),
+                                                    time_to_live,filter_keypoint_order,filter_limblength_order,
+                                                    optimize_limblength));
         vector<pair<string,Vector>> unordered;
         vector<Vector> hips;
 
