@@ -67,7 +67,9 @@ perform_abduction_right() {
 ##################################
 external_rotation_left() {
 
-    NREP=$1
+    NREP=$1   
+    echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 80.0)" | yarp rpc /ctpservice/left_arm/rpc
+    sleep 1.0
     while [  $COUNT -lt $NREP ]; do
         echo "ctpq time $TIME off 0 pos (80.0 83.0 0.0 80.0)" | yarp rpc /ctpservice/left_arm/rpc
         sleep $SLEEP
@@ -80,8 +82,6 @@ external_rotation_left() {
 
 show_external_rotation_left() {
 
-    echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 80.0)" | yarp rpc /ctpservice/left_arm/rpc
-    sleep 1.0
     external_rotation_left $NREP_SHOW
 }
 
@@ -96,6 +96,8 @@ perform_external_rotation_left() {
 external_rotation_right() {
 
     NREP=$1
+    echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 80.0)" | yarp rpc /ctpservice/right_arm/rpc
+    sleep 1.0
     while [  $COUNT -lt $NREP ]; do
         echo "ctpq time $TIME off 0 pos (80.0 83.0 0.0 80.0)" | yarp rpc /ctpservice/right_arm/rpc
         sleep $SLEEP
@@ -108,8 +110,6 @@ external_rotation_right() {
 
 show_external_rotation_right() {
 
-    echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 80.0)" | yarp rpc /ctpservice/right_arm/rpc
-    sleep 1.0
     external_rotation_right $NREP_SHOW
 }
 
@@ -124,6 +124,8 @@ perform_external_rotation_right() {
 internal_rotation_left() {
 
     NREP=$1
+    echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 85.0)" | yarp rpc /ctpservice/left_arm/rpc
+    sleep 1.0
     while [  $COUNT -lt $NREP ]; do
         echo "ctpq time $TIME off 0 pos (-60.0 83.0 0.0 85.0)" | yarp rpc /ctpservice/left_arm/rpc
         sleep $SLEEP
@@ -136,8 +138,6 @@ internal_rotation_left() {
 
 show_internal_rotation_left() {
 
-    echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 85.0)" | yarp rpc /ctpservice/left_arm/rpc
-    sleep 1.0
     internal_rotation_left $NREP_SHOW
 
 }
@@ -153,6 +153,8 @@ perform_internal_rotation_left() {
 internal_rotation_right() {
 
     NREP=$1
+    echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 85.0)" | yarp rpc /ctpservice/right_arm/rpc
+    sleep 1.0
     while [  $COUNT -lt $NREP ]; do
         echo "ctpq time $TIME off 0 pos (-60.0 83.0 0.0 85.0)" | yarp rpc /ctpservice/right_arm/rpc
         sleep $SLEEP    
@@ -165,8 +167,6 @@ internal_rotation_right() {
 
 show_internal_rotation_right() {
 
-    echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 85.0)" | yarp rpc /ctpservice/right_arm/rpc
-    sleep 1.0
     internal_rotation_right $NREP_SHOW
 }
 
