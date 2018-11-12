@@ -166,7 +166,7 @@ public:
             {
                 pair<int,vector<string>> jnts = getJointsMinLev(bodypart);
                 int njnts = jnts.first;
-                if(njnts > nminjoints)
+                if(njnts >= nminjoints)
                     bp.push_back(bodypart);
                 else
                 {
