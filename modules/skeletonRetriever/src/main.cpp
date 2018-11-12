@@ -56,7 +56,7 @@ class MetaSkeleton
     CamParamsHelper camParams;
     
     /****************************************************************/
-    vector<pair<string,Vector>> optimize_limbs(const string tag_center,
+    vector<pair<string,Vector>> optimize_limbs(const string &tag_center,
                                                const vector<string> &tags)
     {
         bool all_updated=true;
