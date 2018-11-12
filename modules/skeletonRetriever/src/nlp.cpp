@@ -27,6 +27,7 @@ class LimbOptimizerNLP : public Ipopt::TNLP
 {
 protected:
     const CamParamsHelper& camParams;
+    const double center_depth;
     const KeyPoint* k;
     const vector<double>& lengths;
     vector<pair<string,Vector>> result;
@@ -77,6 +78,10 @@ protected:
                 d2[i]=dot(d1[i],d1[i])-lengths[i]*lengths[i];
                 i++;
             }
+            else
+            {
+                break;
+            }
         }
     }
 
@@ -86,11 +91,7 @@ protected:
                       Ipopt::Index &nnz_h_lag,
                       IndexStyleEnum &index_style) override
     {
-        n=0;
-        for (auto c=k; c!=nullptr; c=c->getChild(0))
-        {
-            n++;
-        }
+        n=(Ipopt::Index)d2.size()+1;
         m=nnz_jac_g=nnz_h_lag=0;
         index_style=TNLP::C_STYLE;
         return true;
@@ -101,18 +102,20 @@ protected:
                          Ipopt::Number *x_u, Ipopt::Index m,
                          Ipopt::Number *g_l, Ipopt::Number *g_u) override
     {
-        Ipopt::Index i=0;
-        for (auto c=k; c!=nullptr; c=c->getChild(0))
+        // anchor the first keypoint to center
+        x_l[0]=std::max(center_depth,0.01);
+        x_u[0]=x_l[0]+0.01;
+
+        Ipopt::Index i=1;
+        for (auto c=k->getChild(0); c!=nullptr; c=c->getChild(0))
         {
-            double d=0.3;
-            if ((i==0) || (i==n-1))
-            {
-                d/=10.0;
-            }
             x_l[i]=std::max(c->getPoint()[2],0.01);
-            x_u[i]=x_l[i]+d;
+            x_u[i]=x_l[i]+0.3;
             i++;
         }
+
+        // anchor the last keypoint to the its depth
+        x_u[n-1]=x_l[n-1]+0.01;
         return true;
     }
 
@@ -123,8 +126,10 @@ protected:
                             Ipopt::Index m, bool init_lambda,
                             Ipopt::Number *lambda) override
     {
-        Ipopt::Index i=0;
-        for (auto c=k; c!=nullptr; c=c->getChild(0))
+        x[0]=center_depth;
+
+        Ipopt::Index i=1;
+        for (auto c=k->getChild(0); c!=nullptr; c=c->getChild(0))
         {
             x[i]=c->getPoint()[2];
             i++;
@@ -141,14 +146,10 @@ protected:
             compute_quantities(x);
         }
 
-        obj_value=0.0; size_t i=0;
-        for (auto c1=k; c1!=nullptr; c1=c1->getChild(0))
+        obj_value=0.0;
+        for (size_t i=0; i<d2.size(); i++)
         {
-            if (auto c2=c1->getChild(0))
-            {
-                obj_value+=d2[i]*d2[i];
-                i++;
-            }
+            obj_value+=d2[i]*d2[i];
         }
         return true;
     }
@@ -167,15 +168,10 @@ protected:
             grad_f[i]=0.0;
         }
 
-        size_t i=0;
-        for (auto c1=k; c1!=nullptr; c1=c1->getChild(0))
+        for (size_t i=0; i<d2.size(); i++)
         {
-            if (auto c2=c1->getChild(0))
-            {
-                grad_f[i]+=4.0*d2[i]*dot(d1[i],Dy1[i]);
-                grad_f[i+1]-=4.0*d2[i]*dot(d1[i],Dy2[i]);
-                i++;
-            }
+            grad_f[i]+=4.0*d2[i]*dot(d1[i],Dy1[i]);
+            grad_f[i+1]-=4.0*d2[i]*dot(d1[i],Dy2[i]);
         }
         return true;
     }
@@ -222,24 +218,24 @@ protected:
         for (auto c=k; c!=nullptr; c=c->getChild(0))
         {
             Vector v=get2D(c->getPoint());
-            result.push_back(make_pair(c->getTag(),get3D(v,x[i++])));
+            result.push_back(make_pair(c->getTag(),get3D(v,x[i])));
+            i++;
         }
     }
 
 public:
     /****************************************************************/
-    LimbOptimizerNLP(const CamParamsHelper &camParams_, const KeyPoint* k_,
-                     const vector<double>& lengths_) :
-                     camParams(camParams_), k(k_), lengths(lengths_)
+    LimbOptimizerNLP(const CamParamsHelper &camParams_, const double center_depth_,
+                     const KeyPoint* k_, const vector<double>& lengths_) :
+                     camParams(camParams_), center_depth(center_depth_),
+                     k(k_), lengths(lengths_)
     {
         size_t i=0;
         for (auto c1=k; c1!=nullptr; c1=c1->getChild(0))
         {
-            if (auto c2=c1->getChild(0))
-            {
-                i++;
-            }
+            i++;
         }
+        i--;
         p1=vector<Vector>(i); y1=vector<Vector>(i); Dy1=vector<Vector>(i);
         p2=vector<Vector>(i); y2=vector<Vector>(i); Dy2=vector<Vector>(i);
         d1=vector<Vector>(i); d2=vector<double>(i);
@@ -255,6 +251,7 @@ public:
 
 /****************************************************************/
 vector<pair<string,Vector>> LimbOptimizer::optimize(const CamParamsHelper &camParams,
+                                                    const double center_depth,
                                                     const KeyPoint* k,
                                                     const vector<double>& lengths)
 {
@@ -269,7 +266,7 @@ vector<pair<string,Vector>> LimbOptimizer::optimize(const CamParamsHelper &camPa
     app->Options()->SetIntegerValue("print_level",0);
     app->Initialize();
 
-    Ipopt::SmartPtr<LimbOptimizerNLP> nlp=new LimbOptimizerNLP(camParams,k,lengths);
+    Ipopt::SmartPtr<LimbOptimizerNLP> nlp=new LimbOptimizerNLP(camParams,center_depth,k,lengths);
     Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(nlp));
     switch (status)
     {
