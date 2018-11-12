@@ -5,11 +5,11 @@
         <node>cuda-machine</node>
     </module>
     <module>
-        <name>human-structure</name>
+        <name>humanStructure</name>
         <node>localhost</node>
     </module>
     <module>
-        <name>recognition-manager</name>
+        <name>faceRecognizer</name>
         <node>localhost</node>
     </module>
     <module>
@@ -47,37 +47,37 @@
 
     <connection>
         <from>/yarpOpenPose/propag:o</from>
-        <to>/recognition-manager/img:i</to>
+        <to>/faceRecognizer/img:i</to>
         <protocol>mjpeg</protocol>
     </connection>
 
     <connection>
         <from>/yarpOpenPose/propag:o</from>
-        <to>/human-structure/image:i</to>
+        <to>/humanStructure/image:i</to>
         <protocol>mjpeg</protocol>
     </connection>
 
     <connection>
         <from>/yarpOpenPose/propag:o</from>
-        <to>/recognition-manager/image:i</to>
+        <to>/faceRecognizer/image:i</to>
         <protocol>mjpeg</protocol>
     </connection>
 
     <connection>
         <from>/yarpOpenPose/target:o</from>
-        <to>/human-structure/skeleton:i</to>
+        <to>/humanStructure/skeleton:i</to>
         <protocol>tcp</protocol>
     </connection>
 
     <connection>
-        <from>/human-structure/blobs:o</from>
-        <to>/recognition-manager/blobs:i</to>
+        <from>/humanStructure/blobs:o</from>
+        <to>/faceRecognizer/blobs:i</to>
         <protocol>tcp</protocol>
     </connection>
 
     <connection>
-        <from>/human-structure/target:o</from>
-        <to>/recognition-manager/target:i</to>
+        <from>/humanStructure/target:o</from>
+        <to>/faceRecognizer/target:i</to>
         <protocol>tcp</protocol>
     </connection>
 
@@ -90,20 +90,20 @@
     </connection>
 
     <connection>
-        <from>/recognition-manager/crop:o</from>
+        <from>/faceRecognizer/crop:o</from>
         <to>/caffeCoder/img:i</to>
         <protocol>mjpeg</protocol>
     </connection>
 
     <connection>
-        <from>/recognition-manager/classifier:io</from>
+        <from>/faceRecognizer/classifier:io</from>
         <to>/linearClassifier/rpc</to>
         <protocol>tcp</protocol>
     </connection>
 
     <connection>
         <from>/linearClassifier/scores:o</from>
-        <to>/recognition-manager/scores:i</to>
+        <to>/faceRecognizer/scores:i</to>
         <protocol>tcp</protocol>
     </connection>
 
@@ -115,13 +115,13 @@
     </connection>
 
     <connection>
-        <from>/recognition-manager/image:o</from>
+        <from>/faceRecognizer/image:o</from>
         <to>/viewer/faces</to>
         <protocol>mjpeg</protocol>
     </connection>
 
     <connection>
-        <from>/recognition-manager/crop:o</from>
+        <from>/faceRecognizer/crop:o</from>
         <to>/viewer/crop</to>
         <protocol>mjpeg</protocol>
     </connection>

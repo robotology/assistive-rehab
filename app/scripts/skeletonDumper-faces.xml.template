@@ -28,7 +28,7 @@
     </connection>
 
     <connection>
-        <from>/recognition-manager/target:o</from>
+        <from>/faceRecognizer/target:o</from>
         <to>/skeletonDumper/skeletons-data</to>
         <protocol>fast_tcp</protocol>
     </connection>
@@ -40,7 +40,7 @@
     </connection>
 
     <connection>
-        <from>/recognition-manager/image:o</from>
+        <from>/faceRecognizer/image:o</from>
         <to>/skeletonDumper/faces</to>
         <protocol>mjpeg</protocol>
     </connection>

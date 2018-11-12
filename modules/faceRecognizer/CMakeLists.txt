@@ -2,7 +2,7 @@
 # Authors: Vadim Tikhanoff
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 
-project(recognition-manager)
+project(faceRecognizer)
 
 yarp_add_idl(IDL_GEN_FILES ${PROJECT_NAME}.thrift)
 

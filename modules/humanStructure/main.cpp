@@ -383,7 +383,7 @@ public:
     bool configure(yarp::os::ResourceFinder &rf)
     {
         this->rf=&rf;
-        std::string moduleName = rf.check("name", yarp::os::Value("human-structure"), "module name (string)").asString();
+        std::string moduleName = rf.check("name", yarp::os::Value("humanStructure"), "module name (string)").asString();
         setName(moduleName.c_str());
 
         rpcPort.open(("/"+getName("/rpc")).c_str());
@@ -443,6 +443,8 @@ int main(int argc, char *argv[])
     yarp::os::ResourceFinder rf;
 
     rf.setVerbose();
+    rf.setDefaultContext("humanStructure");
+    rf.setDefaultConfigFile("config.ini");
     rf.configure(argc,argv);
 
     return module.runModule(rf);
