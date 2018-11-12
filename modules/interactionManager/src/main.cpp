@@ -110,6 +110,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     unordered_map<string,unordered_set<string>> history;
     unordered_map<string,string> speak_map;
     vector<double> assess_values;
+    vector<string> parttomove;
 
     Mutex mutex;
 
@@ -224,12 +225,18 @@ class Interaction : public RFModule, public interactionManager_IDL
             yError()<<"Unable to find group \"general\"";
             return false;
         }
-        if (!bGroup.check("num-sections"))
+        if (!bGroup.check("num-sections") || !bGroup.check("part"))
         {
-            yError()<<"Unable to find key \"num-sections\"";
+            yError()<<"Unable to find key \"num-sections\" or \"part\"";
             return false;
         }
         int num_sections=bGroup.find("num-sections").asInt();
+        parttomove.resize(2);
+        if(Bottle *bPart=bGroup.find("part").asList())
+        {
+            parttomove[0]=bPart->get(0).asString();
+            parttomove[1]=bPart->get(1).asString();
+        }
         for (int i=0; i<num_sections; i++)
         {
             ostringstream section;
@@ -543,8 +550,22 @@ class Interaction : public RFModule, public interactionManager_IDL
                             if(analyzerPort.write(cmd,rep))
                             {
                                 motion_type=rep.get(0).asString();
-                                string script_show=move_file+" "+"show_"+motion_type;
-                                string script_perform=move_file+" "+"perform_"+motion_type;
+                                size_t found=motion_type.find_last_of("_");
+                                string part=motion_type.substr(found+1,motion_type.size());
+                                string partrob,partskel;
+                                if(part=="left")
+                                {
+                                    partrob="right";
+                                    partskel=parttomove[1];
+                                }
+                                if(part=="right")
+                                {
+                                    partrob="left";
+                                    partskel=parttomove[0];
+                                }
+                                string motion_type_mirrored=motion_type.substr(0,found)+"_"+partrob;
+                                string script_show=move_file+" "+"show_"+motion_type_mirrored;
+                                string script_perform=move_file+" "+"perform_"+motion_type_mirrored;
 
                                 cmd.clear();
                                 cmd.addString("selectSkel");
@@ -565,7 +586,9 @@ class Interaction : public RFModule, public interactionManager_IDL
                                             speak("in-the-know",true,p);
                                         }
 
-                                        speak("show",true);
+                                        vector<SpeechParam> p;
+                                        p.push_back(SpeechParam(partskel));
+                                        speak("show",true,p);
                                         movethr->setFile(script_show);
                                         movethr->startMoving();
 
