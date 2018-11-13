@@ -27,7 +27,6 @@ class LimbOptimizerNLP : public Ipopt::TNLP
 {
 protected:
     const CamParamsHelper& camParams;
-    const double center_depth;
     const KeyPoint* k;
     const vector<double>& lengths;
     vector<pair<string,Vector>> result;
@@ -102,8 +101,8 @@ protected:
                          Ipopt::Number *x_u, Ipopt::Index m,
                          Ipopt::Number *g_l, Ipopt::Number *g_u) override
     {
-        // anchor the first keypoint to center
-        x_l[0]=std::max(center_depth,0.01);
+        // anchor the first keypoint to the center
+        x_l[0]=std::max(k->getParent(0)->getPoint()[2],0.01);
         x_u[0]=x_l[0]+0.01;
 
         Ipopt::Index i=1;
@@ -126,7 +125,7 @@ protected:
                             Ipopt::Index m, bool init_lambda,
                             Ipopt::Number *lambda) override
     {
-        x[0]=center_depth;
+        x[0]=k->getParent(0)->getPoint()[2];
 
         Ipopt::Index i=1;
         for (auto c=k->getChild(0); c!=nullptr; c=c->getChild(0))
@@ -225,10 +224,9 @@ protected:
 
 public:
     /****************************************************************/
-    LimbOptimizerNLP(const CamParamsHelper &camParams_, const double center_depth_,
-                     const KeyPoint* k_, const vector<double>& lengths_) :
-                     camParams(camParams_), center_depth(center_depth_),
-                     k(k_), lengths(lengths_)
+    LimbOptimizerNLP(const CamParamsHelper &camParams_, const KeyPoint* k_,
+                     const vector<double>& lengths_) :
+                     camParams(camParams_), k(k_), lengths(lengths_)
     {
         size_t i=0;
         for (auto c1=k; c1!=nullptr; c1=c1->getChild(0))
@@ -251,7 +249,6 @@ public:
 
 /****************************************************************/
 vector<pair<string,Vector>> LimbOptimizer::optimize(const CamParamsHelper &camParams,
-                                                    const double center_depth,
                                                     const KeyPoint* k,
                                                     const vector<double>& lengths)
 {
@@ -266,7 +263,7 @@ vector<pair<string,Vector>> LimbOptimizer::optimize(const CamParamsHelper &camPa
     app->Options()->SetIntegerValue("print_level",0);
     app->Initialize();
 
-    Ipopt::SmartPtr<LimbOptimizerNLP> nlp=new LimbOptimizerNLP(camParams,center_depth,k,lengths);
+    Ipopt::SmartPtr<LimbOptimizerNLP> nlp=new LimbOptimizerNLP(camParams,k,lengths);
     Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(nlp));
     switch (status)
     {

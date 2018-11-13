@@ -56,8 +56,7 @@ class MetaSkeleton
     CamParamsHelper camParams;
     
     /****************************************************************/
-    vector<pair<string,Vector>> optimize_limbs(const string &tag_center,
-                                               const vector<string> &tags)
+    vector<pair<string,Vector>> optimize_limbs(const vector<string> &tags)
     {
         bool all_updated=true;
         vector<double> lengths;
@@ -78,8 +77,7 @@ class MetaSkeleton
         vector<pair<string,Vector>> unordered;
         if (all_updated && (lengths.size()==tags.size()-1))
         {
-            unordered=LimbOptimizer::optimize(camParams,(*skeleton)[tag_center]->getPoint()[2],
-                                              (*skeleton)[tags[0]],lengths);
+            unordered=LimbOptimizer::optimize(camParams,(*skeleton)[tags[0]],lengths);
         }
         return unordered;
     }
@@ -202,20 +200,16 @@ public:
         if (optimize_limblength)
         {
             vector<pair<string,Vector>> tmp;
-            tmp=optimize_limbs(KeyPointTag::shoulder_center,
-                               {KeyPointTag::shoulder_left,KeyPointTag::elbow_left,KeyPointTag::hand_left});
+            tmp=optimize_limbs({KeyPointTag::shoulder_left,KeyPointTag::elbow_left,KeyPointTag::hand_left});
             unordered_filtered.insert(end(unordered_filtered),begin(tmp),end(tmp));
 
-            tmp=optimize_limbs(KeyPointTag::shoulder_center,
-                               {KeyPointTag::shoulder_right,KeyPointTag::elbow_right,KeyPointTag::hand_right});
+            tmp=optimize_limbs({KeyPointTag::shoulder_right,KeyPointTag::elbow_right,KeyPointTag::hand_right});
             unordered_filtered.insert(end(unordered_filtered),begin(tmp),end(tmp));
 
-            tmp=optimize_limbs(KeyPointTag::hip_center,
-                               {KeyPointTag::hip_left,KeyPointTag::knee_left,KeyPointTag::ankle_left});
+            tmp=optimize_limbs({KeyPointTag::hip_left,KeyPointTag::knee_left,KeyPointTag::ankle_left});
             unordered_filtered.insert(end(unordered_filtered),begin(tmp),end(tmp));
 
-            tmp=optimize_limbs(KeyPointTag::hip_center,
-                               {KeyPointTag::hip_right,KeyPointTag::knee_right,KeyPointTag::ankle_right});
+            tmp=optimize_limbs({KeyPointTag::hip_right,KeyPointTag::knee_right,KeyPointTag::ankle_right});
             unordered_filtered.insert(end(unordered_filtered),begin(tmp),end(tmp));
 
             // update 3: adjust limbs' keypoints through optimization
