@@ -199,7 +199,7 @@ public:
     bool configure(yarp::os::ResourceFinder &rf) override
     {
         this->rf=&rf;
-        std::string moduleName = rf.check("name", yarp::os::Value("recognition-manager"), "module name (string)").asString();
+        std::string moduleName = rf.check("name", yarp::os::Value("faceRecognizer"), "module name (string)").asString();
         setName(moduleName.c_str());
 
         blobs_detection_timeout  = rf.check("blobs_detection_timeout",yarp::os::Value(0.2)).asDouble();
@@ -881,9 +881,9 @@ int main(int argc, char *argv[])
     yarp::os::ResourceFinder rf;
 
     rf.setVerbose();
-    rf.setDefaultContext("recognition-manager");
+    rf.setDefaultContext("faceRecognizer");
     rf.setDefaultConfigFile("config.ini");
-    rf.setDefault("name","recognition-manager");
+    rf.setDefault("name","faceRecognizer");
     rf.configure(argc,argv);
 
     return module.runModule(rf);

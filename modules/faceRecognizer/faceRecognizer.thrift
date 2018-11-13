@@ -2,10 +2,10 @@
 # Authors: Vadim Tikhanoff
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 #
-# recognition-manager.thrift
+# faceRecognizer.thrift
 
 /**
-* recognition-manager_IDL
+* faceRecognizer_IDL
 *
 * IDL Interface to \ref human structure module.
 */
