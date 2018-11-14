@@ -209,6 +209,11 @@ class Player : public RFModule, public skeletonPlayer_IDL
         vector<MetaSkeleton> skeletons_;
         for (string line; getline(fin,line);)
         {
+            if (fin.eof())
+            {
+                break;
+            }
+
             Bottle bottle(line);
             if (bottle.size()!=4)
             {
@@ -228,7 +233,7 @@ class Player : public RFModule, public skeletonPlayer_IDL
             else
             {
                 ok=(bottle.get(3).asString()=="empty");
-                break;
+                continue;
             }
 
             skeletons_.push_back(sk);
