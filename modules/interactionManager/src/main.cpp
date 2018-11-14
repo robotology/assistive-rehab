@@ -13,8 +13,8 @@
 #include <cstdlib>
 #include <cmath>
 #include <iterator>
+#include <map>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 #include <algorithm>
 #include <string>
@@ -107,7 +107,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     string move_file,motion_type;
     vector<double> engage_distance,engage_azimuth;
 
-    unordered_map<string,unordered_set<string>> history;
+    map<string,vector<string>> history;
     unordered_map<string,string> speak_map;
     vector<double> assess_values;
     vector<string> parttomove;
@@ -299,12 +299,16 @@ class Interaction : public RFModule, public interactionManager_IDL
         }
         else
         {
-            unordered_set<string> s1,diff;
+            vector<string> s1,diff;
             for (int i=0; i<metrics.size(); i++)
             {
-                s1.insert(metrics.get(i).asString());
+                s1.push_back(metrics.get(i).asString());
             }
+            sort(begin(s1),end(s1));
+
             auto &s2=it1->second;
+            sort(begin(s2),end(s2));
+
             set_difference(begin(s1),end(s1),begin(s2),end(s2),inserter(diff,end(diff)));
             if (diff.empty())
             {
@@ -600,7 +604,7 @@ class Interaction : public RFModule, public interactionManager_IDL
                                         
                                         Time::delay(2.0);
                                         speak("start",true);
-                                        history[tag].insert(metric);
+                                        history[tag].push_back(metric);
                                         movethr->setFile(script_perform);
                                         
                                         cmd.clear();
