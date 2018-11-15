@@ -13,7 +13,6 @@
 #include <cstdlib>
 #include <cmath>
 #include <iterator>
-#include <map>
 #include <unordered_map>
 #include <vector>
 #include <algorithm>
@@ -107,7 +106,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     string move_file,motion_type;
     vector<double> engage_distance,engage_azimuth;
 
-    map<string,vector<string>> history;
+    unordered_map<string,vector<string>> history;
     unordered_map<string,string> speak_map;
     vector<double> assess_values;
     vector<string> parttomove;

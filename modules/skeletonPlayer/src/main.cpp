@@ -209,11 +209,6 @@ class Player : public RFModule, public skeletonPlayer_IDL
         vector<MetaSkeleton> skeletons_;
         for (string line; getline(fin,line);)
         {
-            if (fin.eof())
-            {
-                break;
-            }
-
             Bottle bottle(line);
             if (bottle.size()!=4)
             {
