@@ -130,6 +130,7 @@ bool Manager::loadMotionList()
                             double min = bMotion.find("min").asDouble();
                             double max = bMotion.find("max").asDouble();
                             int duration = bMotion.find("duration").asInt();
+                            double twarp = bMotion.find("twarp").asDouble();
                             Vector camerapos;
                             camerapos.resize(3);
                             if(Bottle *bCamerapos = bMotion.find("camerapos").asList())
@@ -260,7 +261,7 @@ bool Manager::loadMotionList()
                             }
 
                             metric_repertoire->initialize(curr_tag, motion_type, tag_joint, ref_dir, tag_plane,
-                                                          min, max, duration, camerapos, focalpoint,
+                                                          min, max, duration, twarp, camerapos, focalpoint,
                                                           relaxed_joints,relaxed_dtw_thresh,relaxed_mean_thresh,
                                                           relaxed_sx_thresh,relaxed_sy_thresh, relaxed_sz_thresh,
                                                           relaxed_f_static,relaxed_range_freq,relaxed_psd_thresh);
@@ -435,6 +436,7 @@ bool Manager::start()
 
     Bottle cmd,reply;
     cmd.addVocab(Vocab::encode("run"));
+    cmd.addDouble(metric->getTwarp());
     scalerPort.write(cmd,reply);
     if(reply.get(0).asVocab()!=Vocab::encode("ok"))
     {
@@ -463,7 +465,9 @@ bool Manager::start()
     processor->setInitialConf(skeletonIn);
 
     //start alignmentManager
+    cmd.clear();
     reply.clear();
+    cmd.addVocab(Vocab::encode("run"));
     cmd.addInt(metric->getDuration());
     actionPort.write(cmd,reply);
     if(reply.get(0).asVocab()!=Vocab::encode("ok"))

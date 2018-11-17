@@ -37,7 +37,6 @@ class Scaler : public RFModule
 //    string context;
     double opacity;
     int nsessions;
-    double twarp;
     double tbegin;
 
     bool hasStarted;
@@ -55,7 +54,6 @@ class Scaler : public RFModule
         attach(rpcPort);
 
         nsessions=rf.check("nsessions",Value(0)).asInt();
-        twarp=rf.check("twarp",Value(0.5)).asDouble();
         tbegin=rf.check("tbegin",Value(0.0)).asDouble();
 
         hasStarted=false;
@@ -117,6 +115,7 @@ class Scaler : public RFModule
         }
         if(command.get(0).asString() == "run")
         {
+            double twarp = command.get(1).asDouble();
             if(start(nsessions,twarp))
             {
                 reply.addVocab(Vocab::encode("ok"));

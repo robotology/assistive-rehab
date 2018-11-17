@@ -28,10 +28,10 @@ Metric::~Metric()
 
 void Metric::initialize(const string &name_, const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
                         const string &tag_plane_, const double &min_, const double &max_, const int &duration_,
-                        const Vector &camerapos_, const Vector &focalpoint_, const vector<string> &relaxed_joints_,
-                        const Vector &dtw_thresh_, const Vector &mean_thresh_, const Vector &sx_thresh_,
-                        const Vector &sy_thresh_, const Vector &sz_thresh_, const Vector &f_static_,
-                        const Vector &range_freq_, const Vector &psd_thresh_)
+                        const double &twarp_, const Vector &camerapos_, const Vector &focalpoint_,
+                        const vector<string> &relaxed_joints_, const Vector &dtw_thresh_, const Vector &mean_thresh_,
+                        const Vector &sx_thresh_, const Vector &sy_thresh_, const Vector &sz_thresh_,
+                        const Vector &f_static_, const Vector &range_freq_, const Vector &psd_thresh_)
 {
     name = name_;
     motion_type = motion_type_;
@@ -41,6 +41,7 @@ void Metric::initialize(const string &name_, const string &motion_type_, const s
     min = min_;
     max = max_;
     duration = duration_;
+    twarp = twarp_;
     camerapos = camerapos_;
     focalpoint = focalpoint_;
     relaxed_joints = relaxed_joints_;

@@ -98,7 +98,6 @@
 
     <module>
        <name>skeletonScaler</name>
-       <parameters>--twarp 1.0</parameters>
        <node>r1-display-linux</node>
     </module>
 
