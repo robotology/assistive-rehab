@@ -628,6 +628,10 @@ class Interaction : public RFModule, public interactionManager_IDL
             }
             if (state!=State::move)
             {
+                Bottle cmd,rep;
+                cmd.addString("stop");
+                analyzerPort.write(cmd,rep);
+
                 speak("ouch",true);
                 disengage();
             }
