@@ -22,6 +22,8 @@
 #include <iostream>
 #include <string>
 #include <yarp/os/all.h>
+#include <yarp/dev/IVisualParams.h>
+#include <yarp/dev/GenericVocabs.h>
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
 #include <iCub/ctrl/filters.h>
@@ -260,9 +262,9 @@ class Retriever : public RFModule
         if (camPort.getOutputCount()>0)
         {
             Bottle cmd,rep;
-            cmd.addVocab(Vocab::encode("visr"));
-            cmd.addVocab(Vocab::encode("get"));
-            cmd.addVocab(Vocab::encode("fov"));
+            cmd.addVocab(VOCAB_RGB_VISUAL_PARAMS);
+            cmd.addVocab(VOCAB_GET);
+            cmd.addVocab(VOCAB_FOV);
             if (camPort.write(cmd,rep))
             {
                 if (rep.size()>=5)
