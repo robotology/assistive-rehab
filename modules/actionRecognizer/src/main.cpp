@@ -105,13 +105,15 @@ public:
 
         keypoint2int[KeyPointTag::head] = 0;
         keypoint2int[KeyPointTag::hand_left] = 2;
-        keypoint2int[KeyPointTag::shoulder_left] = 4;
-        keypoint2int[KeyPointTag::hand_right] = 6;
-        keypoint2int[KeyPointTag::shoulder_right] = 8;
-        keypoint2int[KeyPointTag::hip_left] = 10;
-        keypoint2int[KeyPointTag::hip_right] = 12;
-        keypoint2int[KeyPointTag::hip_center] = 14;
-        keypoint2int[KeyPointTag::shoulder_center] = 16;
+        keypoint2int[KeyPointTag::elbow_left] = 4;
+        keypoint2int[KeyPointTag::shoulder_left] = 6;
+        keypoint2int[KeyPointTag::hand_right] = 8;
+        keypoint2int[KeyPointTag::elbow_right] = 10;
+        keypoint2int[KeyPointTag::shoulder_right] = 12;
+        keypoint2int[KeyPointTag::hip_left] = 14;
+        keypoint2int[KeyPointTag::hip_right] = 16;
+        keypoint2int[KeyPointTag::hip_center] = 18;
+        keypoint2int[KeyPointTag::shoulder_center] = 20;
         
         skel_tag = " ";
         starting = false;
@@ -327,8 +329,7 @@ public:
             for(size_t i=0; i<skeletonIn.getNumKeyPoints(); i++)
             {
                 string tagjoint=skeletonIn[i]->getTag();
-                if(tagjoint != KeyPointTag::elbow_left && tagjoint != KeyPointTag::elbow_right
-                        && tagjoint != KeyPointTag::ankle_left && tagjoint != KeyPointTag::ankle_right
+                if(tagjoint != KeyPointTag::ankle_left && tagjoint != KeyPointTag::ankle_right
                         && tagjoint != KeyPointTag::knee_left && tagjoint != KeyPointTag::knee_right)
                 {
                     float x=skeletonIn[i]->getPoint()[0]-xc;

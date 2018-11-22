@@ -654,7 +654,7 @@ class Retriever : public RFModule
         depth_max_distance=4.0;
         filter_keypoint_order=3;
         filter_limblength_order=40;
-        optimize_limblength=false;
+        optimize_limblength=true;
 
         // retrieve values from config file
         Bottle &gGeneral=rf.findGroup("general");
