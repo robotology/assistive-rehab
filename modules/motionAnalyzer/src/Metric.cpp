@@ -29,9 +29,7 @@ Metric::~Metric()
 void Metric::initialize(const string &name_, const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
                         const string &tag_plane_, const double &min_, const double &max_, const int &duration_,
                         const double &twarp_, const Vector &camerapos_, const Vector &focalpoint_,
-                        const vector<string> &relaxed_joints_, const Vector &dtw_thresh_, const Vector &mean_thresh_,
-                        const Vector &sx_thresh_, const Vector &sy_thresh_, const Vector &sz_thresh_,
-                        const Vector &f_static_, const Vector &range_freq_, const Vector &psd_thresh_)
+                        const vector<string> &joint_list_)
 {
     name = name_;
     motion_type = motion_type_;
@@ -44,15 +42,7 @@ void Metric::initialize(const string &name_, const string &motion_type_, const s
     twarp = twarp_;
     camerapos = camerapos_;
     focalpoint = focalpoint_;
-    relaxed_joints = relaxed_joints_;
-    dtw_thresh = dtw_thresh_;
-    mean_thresh = mean_thresh_;
-    sx_thresh = sx_thresh_;
-    sy_thresh = sy_thresh_;
-    sz_thresh = sz_thresh_;
-    f_static = f_static_;
-    range_freq = range_freq_;
-    psd_thresh = psd_thresh_;
+    joint_list = joint_list_;
 }
 
 void Metric::print()
@@ -60,9 +50,9 @@ void Metric::print()
     yInfo() << "Metric = " << name;
     yInfo() << "Motion type = " << motion_type;
     yInfo() << "Tag joint = " << tag_joint;
-    yInfo() << "Relaxed joints = ";
-    for(size_t i=0; i<relaxed_joints.size(); i++)
-        cout << relaxed_joints[i] << " ";
+    yInfo() << "Joint list for feedback = ";
+    for(size_t i=0; i<joint_list.size(); i++)
+        cout << joint_list[i] << " ";
     cout << endl;
 }
 
@@ -72,6 +62,32 @@ void Metric::print()
 Rom::Rom()
 {
 
+}
+
+void Rom::setFeedbackThresholds(const yarp::sig::Vector &sx_thresh_, const yarp::sig::Vector &sy_thresh_,
+                                const yarp::sig::Vector &sz_thresh_, const yarp::sig::Vector &range_freq_,
+                                const yarp::sig::Vector &psd_thresh_)
+{
+    sx_thresh = sx_thresh_;
+    sy_thresh = sy_thresh_;
+    sz_thresh = sz_thresh_;
+    range_freq = range_freq_;
+    psd_thresh = psd_thresh_;
+}
+
+Matrix Rom::getFeedbackThresholds()
+{
+    thresholds.resize(5,joint_list.size());
+    for(size_t i=0; i<joint_list.size(); i++)
+    {
+        thresholds[0][i]=sx_thresh[i];
+        thresholds[1][i]=sy_thresh[i];
+        thresholds[2][i]=sz_thresh[i];
+        thresholds[3][i]=range_freq[i];
+        thresholds[4][i]=psd_thresh[i];
+    }
+
+    return thresholds;
 }
 
 /************************/
@@ -92,7 +108,23 @@ void EndPoint::setSmoothness(const double &smoothness_)
     smoothness = smoothness_;
 }
 
+void EndPoint::setFeedbackThresholds(const double &target_thresh_)
+{
+    target_thresh = target_thresh_;
+}
+
 void EndPoint::setTarget(const Vector &target_)
 {
     target = target_;
+}
+
+Matrix EndPoint::getFeedbackThresholds()
+{
+    thresholds.resize(1,joint_list.size());
+    for(size_t i=0; i<joint_list.size(); i++)
+    {
+        thresholds[0][i]=target_thresh;
+    }
+
+    return thresholds;
 }
