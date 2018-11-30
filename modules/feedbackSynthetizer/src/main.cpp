@@ -115,7 +115,7 @@ public:
         priority_map["speed"]=0;
         priority_map["position-rom"]=1;
         priority_map["perfect"]=2;
-        priority_map["position-ep"]=0;
+        priority_map["position-ep"]=-1;
         maxpriority=0;
     }
 

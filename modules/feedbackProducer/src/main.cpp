@@ -52,7 +52,10 @@ private:
     bool updated,started,first_run;
     vector<string> joint_list;
     Matrix feedback_thresholds;
-    Vector ref;
+    vector<double> target;
+    Matrix T;
+
+    ofstream outfile;
 
 public:
 
@@ -67,7 +70,25 @@ public:
     {
         LockGuard lg(mutex);
         feedback_thresholds = feedback_thresholds_;
-        yInfo() << "feedback thresholds" << feedback_thresholds.toString();
+        yInfo() << "Feedback thresholds" << feedback_thresholds.toString();
+        return true;
+    }
+
+    /****************************************************************/
+    bool setTarget(const vector<double> &target_) override
+    {
+        LockGuard lg(mutex);
+        target = target_;
+        yInfo() << "Target to reach" << target;
+        return true;
+    }
+
+    /****************************************************************/
+    bool setTransformation(const Matrix &T_) override
+    {
+        LockGuard lg(mutex);
+        T = T_;
+        yDebug() << "Transformation matrix" << T.toString();
         return true;
     }
 
@@ -102,6 +123,7 @@ public:
     bool start() override
     {
         LockGuard lg(mutex);
+        yInfo() << "Start!";
         started = true;
         first_run = true;
         return true;
@@ -114,6 +136,7 @@ public:
         skel_tag.clear();
         template_tag.clear();
         joint_list.clear();
+        target.clear();
         skeleton_template.clear();
         skeleton_candidate.clear();
         started = false;
@@ -166,6 +189,8 @@ public:
                                         {
                                             Skeleton* skeleton = skeleton_factory(prop);
                                             skeletonIn.update(skeleton->toProperty());
+                                            skeletonIn.setTransformation(T);
+                                            skeletonIn.update();
                                             skeletonIn.normalize(); //we normalize to avoid differences due to different physiques
                                             updated = true;
                                             delete skeleton;
@@ -174,6 +199,8 @@ public:
                                         {
                                             Skeleton* skeleton = skeleton_factory(prop);
                                             skeletonTemplate.update(skeleton->toProperty());
+                                            skeletonTemplate.setTransformation(T);
+                                            skeletonTemplate.update();
                                             skeletonTemplate.normalize();
                                             delete skeleton;
                                         }
@@ -203,6 +230,8 @@ public:
 
         started = false;
 
+        outfile.open("test-ep.txt");
+
         return true;
     }
 
@@ -221,6 +250,8 @@ public:
     /********************************************************/
     bool close() override
     {
+        outfile.close();
+
         opcPort.close();
         outPort.close();
         analyzerPort.close();
@@ -373,19 +404,32 @@ public:
     }
 
     /********************************************************/
-    void produceFeedback(const int idx_joint, const double &maxt, const double &maxc, Bottle &feedback)
+    void produceFeedback(const int idx_joint, const Vector &dtemplate2target,
+                         const Vector &dcandidate2target, Bottle &feedback)
     {
-        double target_thresh = feedback_thresholds[0][idx_joint];
-        if( maxc-maxt > target_thresh )
+        int score_thresh = feedback_thresholds[1][idx_joint];
+        double inliers_thresh = feedback_thresholds[2][idx_joint];
+
+        //extract statistics from template
+        double mu_template = gsl_stats_mean(dtemplate2target.data(),1,dtemplate2target.size());
+        double std_template = gsl_stats_sd(dtemplate2target.data(),1,dtemplate2target.size());
+
+        //count how many points are inside the template distribution
+        int count=0;
+        for(size_t i=0; i<dcandidate2target.size(); i++)
         {
-            feedback.addString("position-ep");
-            feedback.addString("pos");
-            return;
+            double zscorei=(dcandidate2target[i]-mu_template)/std_template;
+            if(zscorei < score_thresh)
+                count++;
         }
-        else if( maxc-maxt < -target_thresh )
+
+        //if the number of inliers is not enough, the target is not reached
+        double inliers = ((double)count/dcandidate2target.size());
+        yDebug()<< "Template statistics" << mu_template << std_template;
+        yDebug()<< "Number of inliers:" << count << inliers;
+        if(inliers < inliers_thresh)
         {
             feedback.addString("position-ep");
-            feedback.addString("neg");
             return;
         }
         feedback.addString("perfect");
@@ -408,6 +452,7 @@ public:
             vector<int> freqt,freqc;
             vector<double> stats;
 
+            Vector xth,yth,zth,xch,ych,zch;
             //for each component (xyz)
             for(int l=0;l<3;l++)
             {
@@ -416,6 +461,31 @@ public:
                 {
                     joint_template.push_back(skeleton_template[j][i][l]);
                     joint_candidate.push_back(skeleton_candidate[j][i][l]);
+                }
+
+                if(l%3==0)
+                {
+                    for(int k=0; k<joint_template.size(); k++)
+                    {
+                        xth.push_back(joint_template[k]);
+                        xch.push_back(joint_candidate[k]);
+                    }
+                }
+                if(l%3==1)
+                {
+                    for(int k=0; k<joint_template.size(); k++)
+                    {
+                        yth.push_back(joint_template[k]);
+                        ych.push_back(joint_candidate[k]);
+                    }
+                }
+                if(l%3==2)
+                {
+                    for(int k=0; k<joint_template.size(); k++)
+                    {
+                        zth.push_back(joint_template[k]);
+                        zch.push_back(joint_candidate[k]);
+                    }
                 }
 
                 /****************/
@@ -451,6 +521,13 @@ public:
                 warped_candidate.clear();
             }
 
+            for(int k=0; k<xth.size(); k++)
+            {
+                outfile << xth[k] << " " << yth[k] << " " << zth[k] << " "
+                        << xch[k] << " " << ych[k] << " " << zch[k] << "\n";
+            }
+            outfile << "\n";
+
             //produce feedback for a single joint
             feedbackjoint.addString(tag);
             produceFeedback(i,freqt,freqc,stats,feedbackjoint);
@@ -463,11 +540,13 @@ public:
     void analyzeEP(Bottle &outfeedback)
     {
         vector<double> joint_template,joint_candidate;
-        Bottle &f=outfeedback.addList();
+        Bottle &f=outfeedback.addList();      
 
         Vector xth,yth,zth,xch,ych,zch;
         for(int i=0;i<joint_list.size();i++)
         {
+            double radius = feedback_thresholds[0][i];
+
             Bottle &feedbackjoint=f.addList();
             string tag=joint_list[i];
 
@@ -488,24 +567,24 @@ public:
                 {
                     for(int k=0; k<joint_template.size(); k++)
                     {
-                        xth.push_back(joint_template[k]-ref[0]);
-                        xch.push_back(joint_candidate[k]-ref[0]);
+                        xth.push_back(joint_template[k]);
+                        xch.push_back(joint_candidate[k]);
                     }
                 }
                 if(l%3==1)
                 {
                     for(int k=0; k<joint_template.size(); k++)
                     {
-                        yth.push_back(joint_template[k]-ref[1]);
-                        ych.push_back(joint_candidate[k]-ref[1]);
+                        yth.push_back(joint_template[k]);
+                        ych.push_back(joint_candidate[k]);
                     }
                 }
                 if(l%3==2)
                 {
                     for(int k=0; k<joint_template.size(); k++)
                     {
-                        zth.push_back(joint_template[k]-ref[2]);
-                        zch.push_back(joint_candidate[k]-ref[2]);
+                        zth.push_back(joint_template[k]);
+                        zch.push_back(joint_candidate[k]);
                     }
                 }
 
@@ -513,21 +592,24 @@ public:
                 joint_candidate.clear();
             }
 
-            Vector len_template_hand,len_candidate_hand;
+            Vector dist_template2target,dist_candidate2target;
             for(int k=0; k<xth.size(); k++)
             {
-                double lt = sqrt(pow(xth[k],2)+pow(yth[k],2)+pow(zth[k],2));
-                double lc = sqrt(pow(xch[k],2)+pow(ych[k],2)+pow(zch[k],2));
-                len_template_hand.push_back(lt);
-                len_candidate_hand.push_back(lc);
+                outfile << xth[k] << " " << yth[k] << " " << zth[k] << " "
+                        << xch[k] << " " << ych[k] << " " << zch[k] << "\n";
+                double dtt = pow(xth[k]-target[0],2)+pow(yth[k]-target[1],2)+pow(zth[k]-target[2],2);
+                double dct = pow(xch[k]-target[0],2)+pow(ych[k]-target[1],2)+pow(zch[k]-target[2],2);
+                if(dtt < pow(radius,2))
+                {
+                    dist_template2target.push_back(dtt);
+                }
+                dist_candidate2target.push_back(dct);
             }
-            double maxt = yarp::math::findMax(len_template_hand);
-            double maxc = yarp::math::findMax(len_candidate_hand);
-            yInfo() << "Max displacement between targets" << maxc-maxt << maxt << maxc;
+            outfile << "\n";
 
             //produce feedback for a single joint
             feedbackjoint.addString(tag);
-            produceFeedback(i,maxt,maxc,feedbackjoint);
+            produceFeedback(i,dist_template2target,dist_candidate2target,feedbackjoint);
         }
     }
 
@@ -539,6 +621,9 @@ public:
         //if we query the database
         if(opcPort.getOutputCount() > 0 && started)
         {
+            //get skeleton
+            getSkeleton();
+
             if(first_run)
             {
                 Bottle cmd,rep;
@@ -553,17 +638,8 @@ public:
                     }
                 }
                 yInfo()<<"Joints under analysis:"<<joint_list;
-
-                if(metric_tag.find("EP") != std::string::npos)
-                {
-                    ref=skeletonIn[joint_list[0]]->getParent(0)->getParent(0)->getPoint();
-                }
-
                 first_run = false;
             }
-
-            //get skeleton
-            getSkeleton();
 
             //if the skeleton has been updated
             if(updated)

@@ -108,9 +108,11 @@ void EndPoint::setSmoothness(const double &smoothness_)
     smoothness = smoothness_;
 }
 
-void EndPoint::setFeedbackThresholds(const double &target_thresh_)
+void EndPoint::setFeedbackThresholds(const double &radius_,const int zscore_thresh_,const double &inliers_thresh_)
 {
-    target_thresh = target_thresh_;
+    radius = radius_;
+    zscore_thresh = zscore_thresh_;
+    inliers_thresh = inliers_thresh_;
 }
 
 void EndPoint::setTarget(const Vector &target_)
@@ -118,12 +120,14 @@ void EndPoint::setTarget(const Vector &target_)
     target = target_;
 }
 
-Matrix EndPoint::getFeedbackThresholds()
+yarp::sig::Matrix EndPoint::getFeedbackThresholds()
 {
-    thresholds.resize(1,joint_list.size());
+    thresholds.resize(3,joint_list.size());
     for(size_t i=0; i<joint_list.size(); i++)
     {
-        thresholds[0][i]=target_thresh;
+        thresholds[0][i]=radius;
+        thresholds[1][i]=zscore_thresh;
+        thresholds[2][i]=inliers_thresh;
     }
 
     return thresholds;

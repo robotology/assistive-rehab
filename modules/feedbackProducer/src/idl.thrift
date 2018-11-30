@@ -53,6 +53,20 @@ service feedbackProducer_IDL
    bool setFeedbackThresh(1:Matrix feedback_thresholds_);
 
    /**
+    * Set the target to reach.
+    * @param target_ is the vector containing target to reach.
+    * @return true/false on success/failure.
+    */
+   bool setTarget(1:list<double> target_);
+
+   /**
+    * Set the transformation matrix of the skeleton.
+    * @param T_ is the transformation matrix.
+    * @return true/false on success/failure.
+    */
+   bool setTransformation(1:Matrix T_);
+
+   /**
     * Start analysis.
     * @return true/false on success/failure.
     */

@@ -219,7 +219,9 @@ bool Manager::loadMotionList()
                             }
                             else if(curr_tag == EndPoint_Processor::metric_tag)
                             {
-                                target_thresh = bMotion.find("target_thresh").asDouble();
+                                radius = bMotion.find("radius").asDouble();
+                                zscore_thresh = bMotion.find("zscore_thresh").asInt();
+                                inliers_thresh = bMotion.find("inliers_thresh").asDouble();
 
                                 Vector target;
                                 target.resize(3);
@@ -233,7 +235,7 @@ bool Manager::loadMotionList()
                                     yError() << "Could not find target";
 
                                 metric_repertoire = new EndPoint();
-                                metric_repertoire->setFeedbackThresholds(target_thresh);
+                                metric_repertoire->setFeedbackThresholds(radius,zscore_thresh,inliers_thresh);
                                 metric_repertoire->setTarget(target);
                             }
 
@@ -341,6 +343,17 @@ bool Manager::loadMetric(const string &metric_tag)
         if(reply.get(0).asVocab()!=Vocab::encode("ok"))
         {
             yError() << "alignmentManager could not load the feedback thresholds";
+            return false;
+        }
+
+        cmd.clear();
+        reply.clear();
+        cmd.addString("setTarget");
+        cmd.addList().read(metric->getTarget());
+        dtwPort.write(cmd,reply);
+        if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+        {
+            yError() << "feedbackProducer could not load the target";
             return false;
         }
 
@@ -469,7 +482,8 @@ bool Manager::start()
         Time::yield();
     }    
 
-    processor->setInitialConf(skeletonIn);
+    Matrix T;
+    processor->setInitialConf(skeletonIn,T);
 
     //start alignmentManager
     cmd.clear();
@@ -482,6 +496,19 @@ bool Manager::start()
         yError() << "Could not run actionRecognizer";
         return false;
     }
+
+    reply.clear();
+    cmd.clear();
+    cmd.addString("setTransformation");
+    cmd.addList().read(T);
+    yDebug() << T.toString();
+    dtwPort.write(cmd,reply);
+    if(!reply.get(0).asVocab()==Vocab::encode("ok"))
+    {
+        yError() << "Could not set tranformation in feedbackProducer";
+        return false;
+    }
+
     reply.clear();
     cmd.clear();
     cmd.addString("start");

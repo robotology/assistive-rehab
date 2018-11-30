@@ -64,9 +64,9 @@ public:
     virtual void setFeedbackThresholds(const yarp::sig::Vector &sx_thresh_, const yarp::sig::Vector &sy_thresh_,
                                        const yarp::sig::Vector &sz_thresh_, const yarp::sig::Vector &range_freq_,
                                        const yarp::sig::Vector &psd_thresh_) = 0;
-    virtual void setFeedbackThresholds(const double &target_thresh_) = 0;
+    virtual void setFeedbackThresholds(const double &radius_, const int zscore_thresh_, const double &inliers_thresh_) = 0;
     virtual void setTarget(const yarp::sig::Vector &target_) = 0;
-
+    virtual yarp::sig::Vector getTarget() = 0;
     virtual yarp::sig::Matrix getFeedbackThresholds() = 0;
 
 };
@@ -85,7 +85,7 @@ public:
     void setFeedbackThresholds(const yarp::sig::Vector &sx_thresh_, const yarp::sig::Vector &sy_thresh_,
                                const yarp::sig::Vector &sz_thresh_, const yarp::sig::Vector &range_freq_,
                                const yarp::sig::Vector &psd_thresh_);
-    void setFeedbackThresholds(const double &target_thresh_) {;}
+    void setFeedbackThresholds(const double &radius_, const int zscore_thresh_, const double &inliers_thresh_) {;}
     void setTarget(const yarp::sig::Vector &target_) {;}
 
     yarp::sig::Vector getSxThresh() const { return sx_thresh; }
@@ -95,13 +95,15 @@ public:
     yarp::sig::Vector getPsdThresh() const { return psd_thresh; }
 
     yarp::sig::Matrix getFeedbackThresholds();
+    yarp::sig::Vector getTarget() { return yarp::sig::Vector(3,0.0);}
 
 };
 
 class EndPoint : public Metric
 {
     yarp::sig::Vector target;
-    double target_thresh;
+    double radius,inliers_thresh;
+    int zscore_thresh;
     double vel;
     double smoothness;
 
@@ -111,16 +113,18 @@ public:
     void setFeedbackThresholds(const yarp::sig::Vector &sx_thresh_, const yarp::sig::Vector &sy_thresh_,
                                const yarp::sig::Vector &sz_thresh_, const yarp::sig::Vector &range_freq_,
                                const yarp::sig::Vector &psd_thresh_) {;}
-    void setFeedbackThresholds(const double &target_thresh_);
+    void setFeedbackThresholds(const double &radius_, const int zscore_thresh_, const double &inliers_thresh_);
     void setTarget(const yarp::sig::Vector &target_);
     void setVel(const double &vel_);
     void setSmoothness(const double &smoothness_);
     double getVel() const { return vel; }
     double getSmoothness() const { return smoothness; }
-    yarp::sig::Vector getTarget() const { return target; }
-    double getTargetThresh() const { return target_thresh; }
+    double getRadius() const { return radius; }
+    int getZscoreThresh() const { return zscore_thresh; }
+    double getInliersThresh() const { return inliers_thresh; }
 
     yarp::sig::Matrix getFeedbackThresholds();
+    yarp::sig::Vector getTarget() { return target; }
 
 };
 

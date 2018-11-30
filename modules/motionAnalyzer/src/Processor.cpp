@@ -62,7 +62,7 @@ void print(const Matrix& m)
 }
 
 /********************************************************/
-void Processor::setInitialConf(SkeletonWaist &skeleton_)
+void Processor::setInitialConf(SkeletonWaist &skeleton_, Matrix &T)
 {
     first_skeleton.update(skeleton_.toProperty());
     first_skeleton.normalize();
@@ -81,7 +81,7 @@ void Processor::setInitialConf(SkeletonWaist &skeleton_)
     T1.setSubcol(p,0,3);
     T1(3,3)=1.0;
     inv_reference_system = SE3inv(T1);
-
+    T = inv_reference_system;
 }
 
 /****************************************************************/

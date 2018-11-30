@@ -98,7 +98,8 @@ class Manager : public yarp::os::RFModule,
     yarp::sig::Vector psd_thresh;
 
     //thresholds for feedback for ep
-    double target_thresh;
+    double radius,inliers_thresh;
+    int zscore_thresh;
 
     void init();
     bool loadInitialConf();
