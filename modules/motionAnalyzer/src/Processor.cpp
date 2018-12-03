@@ -266,7 +266,7 @@ double EndPoint_Processor::computeMetric()
     ep->setVel(vel);
     ep->setSmoothness(smoothness);
 
-    return est_traj;
+    return vel;
 }
 
 /********************************************************/
