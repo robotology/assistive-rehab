@@ -84,14 +84,6 @@ bool Manager::loadInitialConf()
         else
             yError() << "Could not load initial focal point";
 
-        dtw_thresh = bGeneral.find("dtw_thresh").asDouble();
-        mean_thresh = bGeneral.find("mean_thresh").asDouble();
-        sx_thresh = bGeneral.find("sx_thresh").asDouble();
-        sy_thresh = bGeneral.find("sy_thresh").asDouble();
-        sz_thresh = bGeneral.find("sz_thresh").asDouble();
-        f_static = bGeneral.find("f_static").asInt();
-        range_freq = bGeneral.find("range_freq").asInt();
-        psd_thresh = bGeneral.find("psd_thresh").asDouble();
     }
 
     return true;
@@ -119,7 +111,6 @@ bool Manager::loadMotionList()
                 {
                     string curr_tag = metric_tag->get(i).asString();
                     int motion_number = n_metric_tag->get(i).asInt();
-
                     for(int j=0; j<motion_number; j++)
                     {
                         Bottle &bMotion = rf.findGroup(curr_tag+"_"+to_string(j));
@@ -166,85 +157,72 @@ bool Manager::loadMotionList()
 
                             string tag_plane = bMotion.find("tag_plane").asString();
 
-                            relaxed_joints.clear();
-                            relaxed_dtw_thresh.clear();
-                            relaxed_mean_thresh.clear();
-                            relaxed_sx_thresh.clear();
-                            relaxed_sy_thresh.clear();
-                            relaxed_sz_thresh.clear();
-                            relaxed_f_static.clear();
-                            relaxed_range_freq.clear();
-                            relaxed_psd_thresh.clear();
-
-                            relaxed_dtw_thresh.push_back(dtw_thresh);
-                            relaxed_mean_thresh.push_back(mean_thresh);
-                            relaxed_sx_thresh.push_back(sx_thresh);
-                            relaxed_sy_thresh.push_back(sy_thresh);
-                            relaxed_sz_thresh.push_back(sz_thresh);
-                            relaxed_f_static.push_back(f_static);
-                            relaxed_range_freq.push_back(range_freq);
-                            relaxed_psd_thresh.push_back(psd_thresh);
-
-                            if(Bottle *bRelaxedJoints = bMotion.find("relaxed_list").asList())
+                            joint_list.clear();
+                            if(Bottle *bJointList = bMotion.find("joint_list").asList())
                             {
-                                for(size_t i=0; i<bRelaxedJoints->size(); i++)
-                                    relaxed_joints.push_back(bRelaxedJoints->get(i).asString());
-
-                                if(Bottle *bDtwThresh = bMotion.find("dtw_thresh").asList())
-                                {
-                                    for(size_t i=0; i<bDtwThresh->size(); i++)
-                                        relaxed_dtw_thresh.push_back(bDtwThresh->get(i).asDouble());
-                                }
-
-                                if(Bottle *bMeanThresh = bMotion.find("mean_thresh").asList())
-                                {
-                                    for(size_t i=0; i<bMeanThresh->size(); i++)
-                                        relaxed_mean_thresh.push_back(bMeanThresh->get(i).asDouble());
-                                }
-                                
-                                if(Bottle *bSxThresh = bMotion.find("sx_thresh").asList())
-                                {
-                                    for(size_t i=0; i<bSxThresh->size(); i++)
-                                        relaxed_sx_thresh.push_back(bSxThresh->get(i).asDouble());
-                                }
-                                
-                                if(Bottle *bSyThresh = bMotion.find("sy_thresh").asList())
-                                {
-                                    for(size_t i=0; i<bSyThresh->size(); i++)
-                                        relaxed_sy_thresh.push_back(bSyThresh->get(i).asDouble());
-                                }
-                                
-                                if(Bottle *bSzThresh = bMotion.find("sz_thresh").asList())
-                                {
-                                    for(size_t i=0; i<bSzThresh->size(); i++)
-                                        relaxed_sz_thresh.push_back(bSzThresh->get(i).asDouble());
-                                }
-
-                                if(Bottle *bFstatic = bMotion.find("f_static").asList())
-                                {
-                                    for(size_t i=0; i<bFstatic->size(); i++)
-                                        relaxed_f_static.push_back(bFstatic->get(i).asInt());
-                                }
-
-                                if(Bottle *bRangeFreq = bMotion.find("range_freq").asList())
-                                {
-                                    for(size_t i=0; i<bRangeFreq->size(); i++)
-                                        relaxed_range_freq.push_back(bRangeFreq->get(i).asInt());
-                                }
-
-                                if(Bottle *bPsdThresh = bMotion.find("psd_thresh").asList())
-                                {
-                                    for(size_t i=0; i<bPsdThresh->size(); i++)
-                                        relaxed_psd_thresh.push_back(bPsdThresh->get(i).asDouble());
-                                }
+                                for(size_t k=0; k<bJointList->size(); k++)
+                                    joint_list.push_back(bJointList->get(k).asString());
                             }
+                            else
+                                yError() << "Could not find joint list";
 
                             if(curr_tag == Rom_Processor::metric_tag)
                             {
+                                sx_thresh.clear();
+                                if(Bottle *bSxThresh = bMotion.find("sx_thresh").asList())
+                                {
+                                    for(size_t k=0; k<bSxThresh->size(); k++)
+                                        sx_thresh.push_back(bSxThresh->get(k).asDouble());
+                                }
+                                else
+                                    yError() << "Could not find sx thresh";
+
+                                sy_thresh.clear();
+                                if(Bottle *bSyThresh = bMotion.find("sy_thresh").asList())
+                                {
+                                    for(size_t k=0; k<bSyThresh->size(); k++)
+                                        sy_thresh.push_back(bSyThresh->get(k).asDouble());
+                                }
+                                else
+                                    yError() << "Could not find sy thresh";
+
+                                sz_thresh.clear();
+                                if(Bottle *bSzThresh = bMotion.find("sz_thresh").asList())
+                                {
+                                    for(size_t k=0; k<bSzThresh->size(); k++)
+                                        sz_thresh.push_back(bSzThresh->get(k).asDouble());
+                                }
+                                else
+                                    yError() << "Could not find sz thresh";
+
+                                range_freq.clear();
+                                if(Bottle *bFreqThresh = bMotion.find("range_freq").asList())
+                                {
+                                    for(size_t k=0; k<bFreqThresh->size(); k++)
+                                        range_freq.push_back(bFreqThresh->get(k).asInt());
+                                }
+                                else
+                                    yError() << "Could not find range freq";
+
+                                psd_thresh.clear();
+                                if(Bottle *bPsdThresh = bMotion.find("psd_thresh").asList())
+                                {
+                                    for(size_t k=0; k<bPsdThresh->size(); k++)
+                                        psd_thresh.push_back(bPsdThresh->get(k).asDouble());
+                                }
+                                else
+                                    yError() << "Could not find psd thresh";
+
                                 metric_repertoire = new Rom();
+                                metric_repertoire->setFeedbackThresholds(sx_thresh,sy_thresh,sz_thresh,
+                                                                         range_freq,psd_thresh);
                             }
                             else if(curr_tag == EndPoint_Processor::metric_tag)
                             {
+                                radius = bMotion.find("radius").asDouble();
+                                zscore_thresh = bMotion.find("zscore_thresh").asInt();
+                                inliers_thresh = bMotion.find("inliers_thresh").asDouble();
+
                                 Vector target;
                                 target.resize(3);
                                 if(Bottle *bTarget = bMotion.find("target").asList())
@@ -257,14 +235,13 @@ bool Manager::loadMotionList()
                                     yError() << "Could not find target";
 
                                 metric_repertoire = new EndPoint();
+                                metric_repertoire->setFeedbackThresholds(radius,zscore_thresh,inliers_thresh);
                                 metric_repertoire->setTarget(target);
                             }
 
                             metric_repertoire->initialize(curr_tag, motion_type, tag_joint, ref_dir, tag_plane,
                                                           min, max, duration, twarp, camerapos, focalpoint,
-                                                          relaxed_joints,relaxed_dtw_thresh,relaxed_mean_thresh,
-                                                          relaxed_sx_thresh,relaxed_sy_thresh, relaxed_sz_thresh,
-                                                          relaxed_f_static,relaxed_range_freq,relaxed_psd_thresh);
+                                                          joint_list);
 
                             //add the current metric to the repertoire
                             motion_repertoire.insert(pair<string, Metric*>(curr_tag+"_"+to_string(j), metric_repertoire));
@@ -337,13 +314,46 @@ bool Manager::loadMetric(const string &metric_tag)
 
         cmd.clear();
         reply.clear();
-        cmd.addVocab(Vocab::encode("tagt"));
+        cmd.addString("setTemplateTag");
         string tag_template = metric->getMotionType();
         cmd.addString(tag_template);
         dtwPort.write(cmd,reply);
         if(reply.get(0).asVocab()!=Vocab::encode("ok"))
         {
-            yError() << "alignmentManager could not load the skeleton tag";
+            yError() << "alignmentManager could not load the template tag";
+            return false;
+        }
+
+        cmd.clear();
+        reply.clear();
+        cmd.addString("setMetric");
+        cmd.addString(metric_tag);
+        dtwPort.write(cmd,reply);
+        if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+        {
+            yError() << "alignmentManager could not load the metric tag";
+            return false;
+        }
+
+        cmd.clear();
+        reply.clear();
+        cmd.addString("setFeedbackThresh");
+        cmd.addList().read(metric->getFeedbackThresholds());
+        dtwPort.write(cmd,reply);
+        if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+        {
+            yError() << "alignmentManager could not load the feedback thresholds";
+            return false;
+        }
+
+        cmd.clear();
+        reply.clear();
+        cmd.addString("setTarget");
+        cmd.addList().read(metric->getTarget());
+        dtwPort.write(cmd,reply);
+        if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+        {
+            yError() << "feedbackProducer could not load the target";
             return false;
         }
 
@@ -385,11 +395,11 @@ vector<string> Manager::listMetrics()
 }
 
 /********************************************************/
-vector<string> Manager::listRelaxedJoints()
+vector<string> Manager::listJoints()
 {
     LockGuard lg(mutex);
 
-    vector<string> reply=metric->getRelaxedJoints();
+    vector<string> reply=metric->getJoints();
     return reply;
 }
 
@@ -409,7 +419,17 @@ bool Manager::selectSkel(const string &skel_tag)
 
     scalerPort.write(cmd,reply);
     actionPort.write(cmd,reply);
+
+    cmd.clear();
+    reply.clear();
+    cmd.addString("setSkelTag");
+    cmd.addString(this->skel_tag);
     dtwPort.write(cmd,reply);
+    if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+    {
+        yError() << "alignmentManager could not load the skeleton tag";
+        return false;
+    }
 
 #ifndef NDEBUG
     yInfo() << "Debugging";
@@ -462,7 +482,8 @@ bool Manager::start()
         Time::yield();
     }    
 
-    processor->setInitialConf(skeletonIn);
+    Matrix T;
+    processor->setInitialConf(skeletonIn,T);
 
     //start alignmentManager
     cmd.clear();
@@ -475,17 +496,22 @@ bool Manager::start()
         yError() << "Could not run actionRecognizer";
         return false;
     }
+
     reply.clear();
     cmd.clear();
-    cmd.addVocab(Vocab::encode("run"));
-    cmd.addList().read(metric->getDtwThresh());
-    cmd.addList().read(metric->getMeanThresh());
-    cmd.addList().read(metric->getSxThresh());
-    cmd.addList().read(metric->getSyThresh());
-    cmd.addList().read(metric->getSzThresh());
-    cmd.addList().read(metric->getFstatic());
-    cmd.addList().read(metric->getRangeFreq());
-    cmd.addList().read(metric->getPsdThresh());
+    cmd.addString("setTransformation");
+    cmd.addList().read(T);
+    yDebug() << T.toString();
+    dtwPort.write(cmd,reply);
+    if(!reply.get(0).asVocab()==Vocab::encode("ok"))
+    {
+        yError() << "Could not set tranformation in feedbackProducer";
+        return false;
+    }
+
+    reply.clear();
+    cmd.clear();
+    cmd.addString("start");
     dtwPort.write(cmd,reply);
     if(reply.get(0).asVocab()==Vocab::encode("ok"))
     {

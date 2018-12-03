@@ -35,15 +35,8 @@ protected:
     double twarp;
     yarp::sig::Vector camerapos;
     yarp::sig::Vector focalpoint;
-    std::vector<std::string> relaxed_joints;
-    yarp::sig::Vector dtw_thresh;
-    yarp::sig::Vector mean_thresh;
-    yarp::sig::Vector sx_thresh;    
-    yarp::sig::Vector sy_thresh;    
-    yarp::sig::Vector sz_thresh;
-    yarp::sig::Vector f_static;
-    yarp::sig::Vector range_freq;
-    yarp::sig::Vector psd_thresh;
+    std::vector<std::string> joint_list;
+    yarp::sig::Matrix thresholds;
 
 public:
     Metric();
@@ -51,12 +44,9 @@ public:
 
     void print();
     void initialize(const std::string &name_, const std::string &motion_type_, const std::string &tag_joint_,
-                    const yarp::sig::Vector &ref_dir_, const std::string &tag_plane_, const double &min_, const double &max_,
-                    const int &duration_, const double &twarp_, const yarp::sig::Vector &camerapos_,
-                    const yarp::sig::Vector &focalpoint_, const std::vector<std::string> &relaxed_joints_,
-                    const yarp::sig::Vector &dtw_thresh_, const yarp::sig::Vector &mean_thresh_,
-                    const yarp::sig::Vector &sx_thresh_, const yarp::sig::Vector &sy_thresh_, const yarp::sig::Vector &sz_thresh_,
-                    const yarp::sig::Vector &f_static_, const yarp::sig::Vector &range_freq_, const yarp::sig::Vector &relaxed_psd_thresh_);
+                    const yarp::sig::Vector &ref_dir_, const std::string &tag_plane_, const double &min_,
+                    const double &max_, const int &duration_, const double &twarp_, const yarp::sig::Vector &camerapos_,
+                    const yarp::sig::Vector &focalpoint_, const std::vector<std::string> &joint_list_);
 
     yarp::sig::Vector getRefDir() const { return ref_dir; }
     double getMax() const { return max; }
@@ -69,43 +59,72 @@ public:
     std::string getMotionType() const { return motion_type; }
     yarp::sig::Vector getCameraPos() const { return camerapos; }
     yarp::sig::Vector getFocalPoint() const { return focalpoint; }
-    std::vector<std::string> getRelaxedJoints() const { return relaxed_joints; }
-    yarp::sig::Vector getDtwThresh() const { return dtw_thresh; }
-    yarp::sig::Vector getMeanThresh() const { return mean_thresh; }
-    yarp::sig::Vector getSxThresh() const { return sx_thresh; }
-    yarp::sig::Vector getSyThresh() const { return sy_thresh; }
-    yarp::sig::Vector getSzThresh() const { return sz_thresh; }
-    yarp::sig::Vector getFstatic() const { return f_static; }
-    yarp::sig::Vector getRangeFreq() const { return range_freq; }
-    yarp::sig::Vector getPsdThresh() const { return psd_thresh; }
+    std::vector<std::string> getJoints() const { return joint_list; }
 
+    virtual void setFeedbackThresholds(const yarp::sig::Vector &sx_thresh_, const yarp::sig::Vector &sy_thresh_,
+                                       const yarp::sig::Vector &sz_thresh_, const yarp::sig::Vector &range_freq_,
+                                       const yarp::sig::Vector &psd_thresh_) = 0;
+    virtual void setFeedbackThresholds(const double &radius_, const int zscore_thresh_, const double &inliers_thresh_) = 0;
     virtual void setTarget(const yarp::sig::Vector &target_) = 0;
+    virtual yarp::sig::Vector getTarget() = 0;
+    virtual yarp::sig::Matrix getFeedbackThresholds() = 0;
+
 };
 
 class Rom : public Metric
 {
+    yarp::sig::Vector sx_thresh;
+    yarp::sig::Vector sy_thresh;
+    yarp::sig::Vector sz_thresh;
+    yarp::sig::Vector range_freq;
+    yarp::sig::Vector psd_thresh;
 
 public:
     Rom();
+
+    void setFeedbackThresholds(const yarp::sig::Vector &sx_thresh_, const yarp::sig::Vector &sy_thresh_,
+                               const yarp::sig::Vector &sz_thresh_, const yarp::sig::Vector &range_freq_,
+                               const yarp::sig::Vector &psd_thresh_);
+    void setFeedbackThresholds(const double &radius_, const int zscore_thresh_, const double &inliers_thresh_) {;}
     void setTarget(const yarp::sig::Vector &target_) {;}
+
+    yarp::sig::Vector getSxThresh() const { return sx_thresh; }
+    yarp::sig::Vector getSyThresh() const { return sy_thresh; }
+    yarp::sig::Vector getSzThresh() const { return sz_thresh; }
+    yarp::sig::Vector getRangeFreq() const { return range_freq; }
+    yarp::sig::Vector getPsdThresh() const { return psd_thresh; }
+
+    yarp::sig::Matrix getFeedbackThresholds();
+    yarp::sig::Vector getTarget() { return yarp::sig::Vector(3,0.0);}
 
 };
 
 class EndPoint : public Metric
 {
     yarp::sig::Vector target;
+    double radius,inliers_thresh;
+    int zscore_thresh;
     double vel;
     double smoothness;
 
 public:
     EndPoint();
 
+    void setFeedbackThresholds(const yarp::sig::Vector &sx_thresh_, const yarp::sig::Vector &sy_thresh_,
+                               const yarp::sig::Vector &sz_thresh_, const yarp::sig::Vector &range_freq_,
+                               const yarp::sig::Vector &psd_thresh_) {;}
+    void setFeedbackThresholds(const double &radius_, const int zscore_thresh_, const double &inliers_thresh_);
     void setTarget(const yarp::sig::Vector &target_);
     void setVel(const double &vel_);
     void setSmoothness(const double &smoothness_);
     double getVel() const { return vel; }
     double getSmoothness() const { return smoothness; }
-    yarp::sig::Vector getTarget() const { return target; }
+    double getRadius() const { return radius; }
+    int getZscoreThresh() const { return zscore_thresh; }
+    double getInliersThresh() const { return inliers_thresh; }
+
+    yarp::sig::Matrix getFeedbackThresholds();
+    yarp::sig::Vector getTarget() { return target; }
 
 };
 

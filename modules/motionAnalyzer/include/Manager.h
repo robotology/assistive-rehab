@@ -89,25 +89,24 @@ class Manager : public yarp::os::RFModule,
 
     yarp::os::Mutex mutex;
 
-    //thresholds for feedback
-    double dtw_thresh,mean_thresh,sx_thresh,sy_thresh,sz_thresh,psd_thresh;
-    int f_static,range_freq;
-    std::vector<std::string> relaxed_joints;
-    yarp::sig::Vector relaxed_dtw_thresh;
-    yarp::sig::Vector relaxed_mean_thresh;
-    yarp::sig::Vector relaxed_sx_thresh;
-    yarp::sig::Vector relaxed_sy_thresh;
-    yarp::sig::Vector relaxed_sz_thresh;
-    yarp::sig::Vector relaxed_f_static;
-    yarp::sig::Vector relaxed_range_freq;
-    yarp::sig::Vector relaxed_psd_thresh;
+    //thresholds for feedback for rom
+    std::vector<std::string> joint_list;
+    yarp::sig::Vector sx_thresh;
+    yarp::sig::Vector sy_thresh;
+    yarp::sig::Vector sz_thresh;
+    yarp::sig::Vector range_freq;
+    yarp::sig::Vector psd_thresh;
+
+    //thresholds for feedback for ep
+    double radius,inliers_thresh;
+    int zscore_thresh;
 
     void init();
     bool loadInitialConf();
     bool loadMotionList();
     bool loadMetric(const std::string &metric_tag);
     std::vector<std::string> listMetrics();
-    std::vector<std::string> listRelaxedJoints();
+    std::vector<std::string> listJoints();
     bool selectSkel(const std::string &skel_tag);
     std::string getMotionType();
     bool start();

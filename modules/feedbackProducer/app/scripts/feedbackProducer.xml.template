@@ -1,5 +1,5 @@
 <application>
-<name>Assistive Rehabilitation alignmentManager App</name>
+<name>Assistive Rehabilitation feedbackProducer App</name>
 
     <module>
         <name>yarpdev</name>
@@ -43,7 +43,7 @@
     </module>
 
     <module>
-       <name>alignmentManager</name>
+       <name>feedbackProducer</name>
        <parameters></parameters>
        <node>localhost</node>
     </module>
@@ -152,7 +152,7 @@
 
     <connection>
         <from>/motionAnalyzer/dtw:cmd</from>
-        <to>/alignmentManager/rpc</to>
+        <to>/feedbackProducer/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
@@ -175,7 +175,7 @@
     </connection>
 
     <connection>
-        <from>/alignmentManager/opc</from>
+        <from>/feedbackProducer/opc</from>
         <to>/opc/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>

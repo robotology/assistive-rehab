@@ -40,7 +40,7 @@ protected:
 public:
     Processor();
     virtual ~Processor() {;}
-    void setInitialConf(assistive_rehab::SkeletonWaist &skeleton_);
+    void setInitialConf(assistive_rehab::SkeletonWaist &skeleton_, yarp::sig::Matrix &T);
     void update(assistive_rehab::SkeletonWaist& curr_skeleton_);
     yarp::sig::Vector getPlaneNormal() const { return plane_normal; }
     virtual double computeMetric() = 0;

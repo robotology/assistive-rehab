@@ -102,7 +102,7 @@
     </module>
 
     <module>
-       <name>alignmentManager</name>
+       <name>feedbackProducer</name>
        <node>r1-console-linux</node>
     </module>
 
@@ -334,7 +334,7 @@
 
     <connection>
         <from>/motionAnalyzer/dtw:cmd</from>
-        <to>/alignmentManager/rpc</to>
+        <to>/feedbackProducer/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
@@ -399,19 +399,19 @@
     </connection>
 
     <connection>
-        <from>/alignmentManager/opc</from>
+        <from>/feedbackProducer/opc</from>
         <to>/opc/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
-        <from>/alignmentManager/analyzer:rpc</from>
+        <from>/feedbackProducer/analyzer:rpc</from>
         <to>/motionAnalyzer/cmd</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
-        <from>/alignmentManager:o</from>
+        <from>/feedbackProducer:o</from>
         <to>/feedbackSynthetizer/dtw:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
@@ -424,7 +424,7 @@
 
     <connection>
         <from>/actionRecognizer/target:o</from>
-        <to>/alignmentManager/action:i</to>
+        <to>/feedbackProducer/action:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
