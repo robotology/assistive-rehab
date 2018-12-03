@@ -92,7 +92,7 @@ public:
     ~EndPoint_Processor();
     double computeMetric();
     void estimate();
-    double getIdeal() { return ideal_traj; }
+    double getIdeal() { return 0.0; }
     std::string getProcessedMetric() { return ep->getName(); }
     double getVel() { return ep->getVel(); }
     double getSmoothness() { return ep->getSmoothness(); }
