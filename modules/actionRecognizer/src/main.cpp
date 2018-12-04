@@ -15,6 +15,7 @@
 #include <math.h>
 #include <yarp/os/all.h>
 #include <yarp/sig/Matrix.h>
+#include <yarp/math/Math.h>
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <tensorflow/core/public/session.h>
@@ -28,6 +29,7 @@
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
+using namespace yarp::math;
 using namespace tensorflow;
 using namespace assistive_rehab;
 
@@ -41,7 +43,7 @@ class Recognizer : public RFModule, public actionRecognizer_IDL
     string skel_tag;
     SkeletonWaist skeletonIn;
 
-    bool predict;
+    bool predict,updated;
     int idx_frame,idx_step;
     string pathToGraph,checkpointPath;
     Status status;
@@ -50,6 +52,7 @@ class Recognizer : public RFModule, public actionRecognizer_IDL
     SessionOptions sess_opts;
     vector<string> predictions;
     vector<float> outscores;
+    Matrix T;
 
     RpcServer analyzerPort;
     BufferedPort<Bottle> outPort;
@@ -243,12 +246,23 @@ public:
     }
 
     /****************************************************************/
+    bool setTransformation(const Matrix &T_) override
+    {
+        LockGuard lg(mutex);
+        T = T_;
+        yInfo() << "Transformation matrix" << T.toString();
+        return true;
+    }
+
+    /****************************************************************/
     bool stop() override
     {
         LockGuard lg(mutex);
         starting = false;
         skel_tag = " ";
         idx_step = 0;
+        cout << endl;
+        cout << endl;
         return !starting;
     }
 
@@ -280,6 +294,7 @@ public:
                     {
                         if(!skel_tag.empty())
                         {
+                            updated=false;
                             for(int i=0; i<idValues->size(); i++)
                             {
                                 int id = idValues->get(i).asInt();
@@ -304,6 +319,7 @@ public:
                                             {
                                                 Skeleton* skeleton = skeleton_factory(prop);
                                                 skeletonIn.update(skeleton->toProperty());
+                                                updated=true;
                                                 delete skeleton;
                                             }
                                         }
@@ -320,105 +336,111 @@ public:
     /****************************************************************/
     bool updateModule() override
     {
+        LockGuard lg(mutex);
         if(opcPort.getOutputCount() > 0 && starting)
         {
             getSkeleton();
-            skeletonIn.normalize();
-            float xc=skeletonIn[KeyPointTag::shoulder_center]->getPoint()[0];
-            float yc=skeletonIn[KeyPointTag::shoulder_center]->getPoint()[1];
-            for(size_t i=0; i<skeletonIn.getNumKeyPoints(); i++)
-            {
-                string tagjoint=skeletonIn[i]->getTag();
-                if(tagjoint != KeyPointTag::ankle_left && tagjoint != KeyPointTag::ankle_right
-                        && tagjoint != KeyPointTag::knee_left && tagjoint != KeyPointTag::knee_right)
-                {
-                    float x=skeletonIn[i]->getPoint()[0]-xc;
-                    float y=skeletonIn[i]->getPoint()[1]-yc;
-					updateInput(tagjoint,idx_frame,x,y);
-				}
-            }
-            if(idx_frame < nframes)
-            {		
-                if(idx_frame%10==0)
-                    yInfo() << "Acquiring frame" << idx_frame;
-                idx_frame++;
-            }
-            else
-            {							
-                string predicted_action;
-                float outscore;
-                if(predict)
-                {
-                    //run the inference
-                    //                cout << (input).tensor<float, (3)>() << endl;
-                    cout << "input: " << input.DebugString() << endl;
-                    string input_layer = "x:0";
-                    vector<string> output_layers = {"add_1:0","ArgMax:0"};
-                    vector<Tensor> outputTensors;
-                    status = session->Run({{input_layer, input}}, {output_layers}, {}, &outputTensors);
-                    cout << "add_1: " << outputTensors[0].DebugString() << endl;
-                    cout << "ArgMax: " << outputTensors[1].DebugString() << endl;
 
-                    auto score = outputTensors[0].tensor<float,2>();
-                    auto out = outputTensors[1].scalar<int64>();
-                    int pred = out(0);
-                    cout << "prediction: " << pred << " " << class_map[pred] << endl;
-                    cout << "scores: ";
-                    float n=0.0;
-                    vector<float> scores(nclasses,0.0);
-                    for(size_t k=0; k<nclasses; k++)
-                        n+=exp(score(k));
-                    for(size_t k=0; k<nclasses; k++)
+            if(updated)
+            {
+                skeletonIn.normalize();
+                for(size_t i=0; i<skeletonIn.getNumKeyPoints(); i++)
+                {
+                    string tagjoint=skeletonIn[i]->getTag();
+                    if(tagjoint != KeyPointTag::ankle_left && tagjoint != KeyPointTag::ankle_right
+                            && tagjoint != KeyPointTag::knee_left && tagjoint != KeyPointTag::knee_right)
                     {
-                        scores[k]=exp(score(k))/n;
-                        cout << scores[k] << " ";
+                        Vector p=skeletonIn[i]->getPoint();
+                        p.push_back(1.0);
+                        Vector transf_p=T*p;
+                        float x=transf_p[1];
+                        float y=transf_p[2];
+                        updateInput(tagjoint,idx_frame,x,y);
                     }
-                    cout << endl;
-                    predicted_action=class_map[pred];
-                    outscore=scores[pred];
-                    predictions.push_back(predicted_action);
-                    outscores.push_back(outscore);
-                    resetTensor();
+                }
+                if(idx_frame < nframes)
+                {
+                    if(idx_frame%10==0)
+                        yInfo() << "Acquiring frame" << idx_frame;
+                    idx_frame++;
                 }
                 else
                 {
-                    predicted_action=action_to_perform;
-                    outscore=1.0;
-                    predictions.push_back(predicted_action);
-                    outscores.push_back(outscore);
-                }
-
-                idx_frame=0;
-                idx_step++;
-
-                if(idx_step==nsteps)
-                {
-                    //we consider the most voted action
-                    int max=count(predictions.begin(),predictions.end(),predictions.at(0));
-                    string voted_action=predictions[0];
-                    float voted_score=outscores[0];
-                    for(size_t i=1; i<predictions.size(); i++)
+                    string predicted_action;
+                    float outscore;
+                    if(predict)
                     {
-                        int temp=count(predictions.begin(),predictions.end(),predictions.at(i));
-                        if(temp>max)
+                        //run the inference
+                        //                cout << (input).tensor<float, (3)>() << endl;
+                        cout << "input: " << input.DebugString() << endl;
+                        string input_layer = "x:0";
+                        vector<string> output_layers = {"add_1:0","ArgMax:0"};
+                        vector<Tensor> outputTensors;
+                        status = session->Run({{input_layer, input}}, {output_layers}, {}, &outputTensors);
+                        cout << "add_1: " << outputTensors[0].DebugString() << endl;
+                        cout << "ArgMax: " << outputTensors[1].DebugString() << endl;
+
+                        auto score = outputTensors[0].tensor<float,2>();
+                        auto out = outputTensors[1].scalar<int64>();
+                        int pred = out(0);
+                        cout << "prediction: " << pred << " " << class_map[pred] << endl;
+                        cout << "scores: ";
+                        float n=0.0;
+                        vector<float> scores(nclasses,0.0);
+                        for(size_t k=0; k<nclasses; k++)
+                            n+=exp(score(k));
+                        for(size_t k=0; k<nclasses; k++)
                         {
-                            max=temp;
-                            voted_action=predictions[i];
-                            voted_score=outscores[i];
+                            scores[k]=exp(score(k))/n;
+                            cout << scores[k] << " ";
                         }
+                        cout << endl;
+                        predicted_action=class_map[pred];
+                        outscore=scores[pred];
+                        predictions.push_back(predicted_action);
+                        outscores.push_back(outscore);
+                        resetTensor();
                     }
-                    yInfo() << "The most voted action is" << voted_action << "voted" << max << "times";
+                    else
+                    {
+                        predicted_action=action_to_perform;
+                        outscore=1.0;
+                        predictions.push_back(predicted_action);
+                        outscores.push_back(outscore);
+                    }
 
-                    Bottle &outBottle = outPort.prepare();
-                    outBottle.clear();
-                    outBottle.addString(action_to_perform);
-                    outBottle.addString(voted_action);
-                    outBottle.addDouble(voted_score);
-                    outPort.write();
+                    idx_frame=0;
+                    idx_step++;
 
-                    idx_step=0;
-                    predictions.clear();
-                    outscores.clear();
+                    if(idx_step==nsteps)
+                    {
+                        //we consider the most voted action
+                        int max=count(predictions.begin(),predictions.end(),predictions.at(0));
+                        string voted_action=predictions[0];
+                        float voted_score=outscores[0];
+                        for(size_t i=1; i<predictions.size(); i++)
+                        {
+                            int temp=count(predictions.begin(),predictions.end(),predictions.at(i));
+                            if(temp>max)
+                            {
+                                max=temp;
+                                voted_action=predictions[i];
+                                voted_score=outscores[i];
+                            }
+                        }
+                        yInfo() << "The most voted action is" << voted_action << "voted" << max << "times";
+
+                        Bottle &outBottle = outPort.prepare();
+                        outBottle.clear();
+                        outBottle.addString(action_to_perform);
+                        outBottle.addString(voted_action);
+                        outBottle.addDouble(voted_score);
+                        outPort.write();
+
+                        idx_step=0;
+                        predictions.clear();
+                        outscores.clear();
+                    }
                 }
             }
         }

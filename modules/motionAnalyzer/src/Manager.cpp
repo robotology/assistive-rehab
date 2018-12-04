@@ -282,7 +282,7 @@ bool Manager::loadMetric(const string &metric_tag)
         actionPort.write(cmd,reply);
         if(reply.get(0).asVocab()!=Vocab::encode("ok"))
         {
-            yError() << "actionRecognizer could not motion type" << f;
+            yError() << "actionRecognizer could not load motion type" << f;
             return false;
         }
         cmd.clear();
@@ -320,7 +320,7 @@ bool Manager::loadMetric(const string &metric_tag)
         dtwPort.write(cmd,reply);
         if(reply.get(0).asVocab()!=Vocab::encode("ok"))
         {
-            yError() << "alignmentManager could not load the template tag";
+            yError() << "feedbackProducer could not load the template tag";
             return false;
         }
 
@@ -331,7 +331,7 @@ bool Manager::loadMetric(const string &metric_tag)
         dtwPort.write(cmd,reply);
         if(reply.get(0).asVocab()!=Vocab::encode("ok"))
         {
-            yError() << "alignmentManager could not load the metric tag";
+            yError() << "feedbackProducer could not load the metric tag";
             return false;
         }
 
@@ -342,7 +342,7 @@ bool Manager::loadMetric(const string &metric_tag)
         dtwPort.write(cmd,reply);
         if(reply.get(0).asVocab()!=Vocab::encode("ok"))
         {
-            yError() << "alignmentManager could not load the feedback thresholds";
+            yError() << "feedbackProducer could not load the feedback thresholds";
             return false;
         }
 
@@ -427,7 +427,7 @@ bool Manager::selectSkel(const string &skel_tag)
     dtwPort.write(cmd,reply);
     if(reply.get(0).asVocab()!=Vocab::encode("ok"))
     {
-        yError() << "alignmentManager could not load the skeleton tag";
+        yError() << "feedbackProducer could not load the skeleton tag";
         return false;
     }
 
@@ -485,18 +485,6 @@ bool Manager::start()
     Matrix T;
     processor->setInitialConf(skeletonIn,T);
 
-    //start alignmentManager
-    cmd.clear();
-    reply.clear();
-    cmd.addVocab(Vocab::encode("run"));
-    cmd.addInt(metric->getDuration());
-    actionPort.write(cmd,reply);
-    if(reply.get(0).asVocab()!=Vocab::encode("ok"))
-    {
-        yError() << "Could not run actionRecognizer";
-        return false;
-    }
-
     reply.clear();
     cmd.clear();
     cmd.addString("setTransformation");
@@ -506,6 +494,25 @@ bool Manager::start()
     if(!reply.get(0).asVocab()==Vocab::encode("ok"))
     {
         yError() << "Could not set tranformation in feedbackProducer";
+        return false;
+    }
+
+    reply.clear();
+    actionPort.write(cmd,reply);
+    if(!reply.get(0).asVocab()==Vocab::encode("ok"))
+    {
+        yError() << "Could not set tranformation in actionRecognizer";
+        return false;
+    }
+
+    cmd.clear();
+    reply.clear();
+    cmd.addVocab(Vocab::encode("run"));
+    cmd.addInt(metric->getDuration());
+    actionPort.write(cmd,reply);
+    if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+    {
+        yError() << "Could not run actionRecognizer";
         return false;
     }
 
@@ -521,7 +528,7 @@ bool Manager::start()
     }
     else
     {
-        yError() << "Could not run alignmentManager";
+        yError() << "Could not run feedbackProducer";
         return false;
     }
 
