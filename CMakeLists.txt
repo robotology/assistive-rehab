@@ -26,9 +26,12 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+#this comes first as it includes find_package(YARP)
+#otherwise, it might cause conflicts with future versions of yarp, when selecting specific components for yarp
+find_package(ICUBcontrib REQUIRED)
+
 find_package(YARP REQUIRED)
 find_package(ICUB REQUIRED)
-find_package(ICUBcontrib REQUIRED)
 find_package(OpenCV REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})
 list(APPEND CMAKE_MODULE_PATH ${ICUBCONTRIB_MODULE_PATH})
