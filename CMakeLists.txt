@@ -26,8 +26,8 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-#this comes first as it includes find_package(YARP)
-#otherwise, it might cause conflicts with future versions of yarp, when selecting specific components for yarp
+# ICUBcontrib shall come first as it includes find_package(YARP)
+# otherwise, it might cause conflicts when selecting specific YARP components
 find_package(ICUBcontrib REQUIRED)
 
 find_package(YARP REQUIRED)
