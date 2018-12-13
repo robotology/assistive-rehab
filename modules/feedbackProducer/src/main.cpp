@@ -55,8 +55,6 @@ private:
     vector<double> target;
     Matrix T;
 
-    ofstream outfile;
-
 public:
 
     /****************************************************************/
@@ -88,7 +86,7 @@ public:
     {
         LockGuard lg(mutex);
         T = T_;
-        yDebug() << "Transformation matrix" << T.toString();
+        yInfo() << "Transformation matrix" << T.toString();
         return true;
     }
 
@@ -133,6 +131,7 @@ public:
     bool stop() override
     {
         LockGuard lg(mutex);
+        yInfo() << "Stop!";
         skel_tag.clear();
         template_tag.clear();
         joint_list.clear();
@@ -230,8 +229,6 @@ public:
 
         started = false;
 
-        outfile.open("test-ep.txt");
-
         return true;
     }
 
@@ -250,8 +247,6 @@ public:
     /********************************************************/
     bool close() override
     {
-        outfile.close();
-
         opcPort.close();
         outPort.close();
         analyzerPort.close();
@@ -425,8 +420,8 @@ public:
 
         //if the number of inliers is not enough, the target is not reached
         double inliers = ((double)count/dcandidate2target.size());
-        yDebug()<< "Template statistics" << mu_template << std_template;
-        yDebug()<< "Number of inliers:" << count << inliers;
+        yInfo()<< "Template statistics" << mu_template << std_template;
+        yInfo()<< "Number of inliers:" << count << inliers;
         if(inliers < inliers_thresh)
         {
             feedback.addString("position-ep");
@@ -521,13 +516,6 @@ public:
                 warped_candidate.clear();
             }
 
-            for(int k=0; k<xth.size(); k++)
-            {
-                outfile << xth[k] << " " << yth[k] << " " << zth[k] << " "
-                        << xch[k] << " " << ych[k] << " " << zch[k] << "\n";
-            }
-            outfile << "\n";
-
             //produce feedback for a single joint
             feedbackjoint.addString(tag);
             produceFeedback(i,freqt,freqc,stats,feedbackjoint);
@@ -595,8 +583,6 @@ public:
             Vector dist_template2target,dist_candidate2target;
             for(int k=0; k<xth.size(); k++)
             {
-                outfile << xth[k] << " " << yth[k] << " " << zth[k] << " "
-                        << xch[k] << " " << ych[k] << " " << zch[k] << "\n";
                 double dtt = pow(xth[k]-target[0],2)+pow(yth[k]-target[1],2)+pow(zth[k]-target[2],2);
                 double dct = pow(xch[k]-target[0],2)+pow(ych[k]-target[1],2)+pow(zch[k]-target[2],2);
                 if(dtt < pow(radius,2))
@@ -605,7 +591,6 @@ public:
                 }
                 dist_candidate2target.push_back(dct);
             }
-            outfile << "\n";
 
             //produce feedback for a single joint
             feedbackjoint.addString(tag);
@@ -717,7 +702,8 @@ public:
     }
 
     /********************************************************/
-    int performFFT(const vector<double> &s, double &max)
+    int
+    performFFT(const vector<double> &s, double &max)
     {
         int n = s.size();
         fftw_complex *in,*out;

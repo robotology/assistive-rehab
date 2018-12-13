@@ -10,6 +10,12 @@
  * @authors: Valentina Vasco <valentina.vasco@iit.it>
  */
 
+struct Matrix { }
+(
+   yarp.name="yarp::sig::Matrix"
+   yarp.includefile="yarp/sig/Matrix.h"
+)
+
 /**
  * actionRecognizer_IDL
  *
@@ -37,6 +43,13 @@ service actionRecognizer_IDL
     * @return true/false on success/failure.
     */
    bool load(1:string exercise);
+
+   /**
+    * Set the transformation matrix of the skeleton.
+    * @param T_ is the transformation matrix.
+    * @return true/false on success/failure.
+    */
+   bool setTransformation(1:Matrix T_);
 
    /**
     * Stop the interaction.
