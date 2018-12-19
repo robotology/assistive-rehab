@@ -49,7 +49,7 @@ private:
     SkeletonWaist skeletonIn,skeletonTemplate;
     string skel_tag,template_tag,metric_tag;
     vector<vector<Vector>> skeleton_template,skeleton_candidate;
-    bool updated,started,first_run;
+    bool updated,started;
     vector<string> joint_list;
     Matrix feedback_thresholds;
     vector<double> target;
@@ -118,12 +118,25 @@ public:
     }
 
     /****************************************************************/
+    bool setJoints(const vector<string> &joint_list_) override
+    {
+        LockGuard lg(mutex);
+        yInfo() << "Joint list";
+        joint_list.resize(joint_list_.size());
+        for(size_t i=0; i<joint_list_.size(); i++)
+        {
+            joint_list[i] = joint_list_[i];
+            yInfo() << joint_list[i];
+        }
+        return true;
+    }
+
+    /****************************************************************/
     bool start() override
     {
         LockGuard lg(mutex);
         yInfo() << "Start!";
         started = true;
-        first_run = true;
         return true;
     }
 
@@ -139,7 +152,6 @@ public:
         skeleton_template.clear();
         skeleton_candidate.clear();
         started = false;
-        first_run = true;
         return true;
     }
 
@@ -330,12 +342,18 @@ public:
 
             if(fxy_pos || fxz_pos || fyz_pos)
             {
+                yDebug() << "fx:" << fcx << ftx;
+                yDebug() << "fy:" << fcy << fty;
+                yDebug() << "fz:" << fcz << ftz;
                 feedback.addString("speed");
                 feedback.addString("pos");
                 return;
             }
             else if(fxy_neg || fxz_neg || fyz_neg)
             {
+                yDebug() << "fx:" << fcx << ftx;
+                yDebug() << "fy:" << fcy << fty;
+                yDebug() << "fz:" << fcz << ftz;
                 feedback.addString("speed");
                 feedback.addString("neg");
                 return;
@@ -349,6 +367,9 @@ public:
             bool errx = devx > sx_thresh;
             bool erry = devy > sy_thresh;
             bool errz = devz > sz_thresh;
+            yDebug() << "devx:" << devx;
+            yDebug() << "devy:" << devy;
+            yDebug() << "devz:" << devz;
             if( errx || erry || errz )
             {
                 if(errx)
@@ -356,12 +377,12 @@ public:
                     feedback.addString("position-rom");
                     if(skwnx > 0.0)
                     {
-                        feedback.addString("pos x");
+                        feedback.addString("neg z");
                         return;
                     }
                     else
                     {
-                        feedback.addString("neg x");
+                        feedback.addString("pos z");
                         return;
                     }
                 }
@@ -370,12 +391,12 @@ public:
                     feedback.addString("position-rom");
                     if(skwny > 0.0)
                     {
-                        feedback.addString("pos y");
+                        feedback.addString("neg x");
                         return;
                     }
                     else
                     {
-                        feedback.addString("neg y");
+                        feedback.addString("pos x");
                         return;
                     }
                 }
@@ -384,12 +405,12 @@ public:
                     feedback.addString("position-rom");
                     if(skwnz > 0.0)
                     {
-                        feedback.addString("pos z");
+                        feedback.addString("neg y");
                         return;
                     }
                     else
                     {
-                        feedback.addString("neg z");
+                        feedback.addString("pos y");
                         return;
                     }
                 }
@@ -608,23 +629,6 @@ public:
         {
             //get skeleton
             getSkeleton();
-
-            if(first_run)
-            {
-                Bottle cmd,rep;
-                cmd.addString("listJoints");
-                if(analyzerPort.write(cmd,rep))
-                {
-                    Bottle &bJoint=*rep.get(0).asList();
-                    if(bJoint.size()>0)
-                    {
-                        for(size_t i=0; i<bJoint.size(); i++)
-                            joint_list.push_back(bJoint.get(i).asString());
-                    }
-                }
-                yInfo()<<"Joints under analysis:"<<joint_list;
-                first_run = false;
-            }
 
             //if the skeleton has been updated
             if(updated)

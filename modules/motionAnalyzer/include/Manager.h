@@ -106,7 +106,6 @@ class Manager : public yarp::os::RFModule,
     bool loadMotionList();
     bool loadMetric(const std::string &metric_tag);
     std::vector<std::string> listMetrics();
-    std::vector<std::string> listJoints();
     bool selectSkel(const std::string &skel_tag);
     std::string getMotionType();
     bool start();

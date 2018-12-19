@@ -351,9 +351,25 @@ bool Manager::loadMetric(const string &metric_tag)
         cmd.addString("setTarget");
         cmd.addList().read(metric->getTarget());
         dtwPort.write(cmd,reply);
+        yInfo() << cmd.toString();
         if(reply.get(0).asVocab()!=Vocab::encode("ok"))
         {
             yError() << "feedbackProducer could not load the target";
+            return false;
+        }
+
+        cmd.clear();
+        reply.clear();
+        cmd.addString("setJoints");
+        vector<string> joint_list = metric->getJoints();
+        Bottle &jl = cmd.addList();
+        for(size_t i=0; i<joint_list.size(); i++)
+            jl.addString(joint_list[i]);
+        yInfo() << cmd.toString();
+        dtwPort.write(cmd,reply);
+        if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+        {
+            yError() << "feedbackProducer could not load the joint list";
             return false;
         }
 
@@ -391,15 +407,6 @@ vector<string> Manager::listMetrics()
         reply.push_back(it->first);
     }
 
-    return reply;
-}
-
-/********************************************************/
-vector<string> Manager::listJoints()
-{
-    LockGuard lg(mutex);
-
-    vector<string> reply=metric->getJoints();
     return reply;
 }
 
