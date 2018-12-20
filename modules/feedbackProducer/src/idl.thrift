@@ -46,6 +46,13 @@ service feedbackProducer_IDL
    bool setMetric(1:string metric_tag_);
 
    /**
+    * Set joints under analysis.
+    * @param joint_list_ is the list of the joints under analysis.
+    * @return true/false on success/failure.
+    */
+   bool setJoints(1:list<string> joint_list_);
+
+   /**
     * Set the thresholds for the feedback.
     * @param feedback_thresholds_ is the matrix containing all the thresholds.
     * @return true/false on success/failure.
