@@ -22,7 +22,6 @@ bool QueryThread::threadInit()
 {
     yarp::os::LockGuard lg(mutex);
     verbose = rf.check("verbose");
-    
     std::string name = rf.find("name").asString().c_str();
     skip_frames = rf.check("skip_frames",yarp::os::Value(5)).asInt();
     
@@ -35,8 +34,6 @@ bool QueryThread::threadInit()
     //input
     port_in_img.open(("/"+name+"/img:i").c_str());
     port_in_scores.open(("/"+name+"/scores:i").c_str());
-    
-    port_out_show.open(("/"+name+"/show:o").c_str());
     port_out_crop.open(("/"+name+"/crop:o").c_str());
     
     return true;
@@ -120,7 +117,6 @@ yarp::os::Bottle QueryThread::classify(yarp::os::Bottle &persons)
 {
     yarp::os::LockGuard lg(mutex);
     yarp::os::Bottle reply;
-    reply.clear();
     
     yarp::sig::Image *img=port_in_img.read(true);
     cv::Mat img_mat = cv::cvarrToMat(img->getIplImage());
@@ -140,8 +136,6 @@ yarp::os::Bottle QueryThread::classify(yarp::os::Bottle &persons)
         brx = window->get(2).asInt();
         bry = window->get(3).asInt();
         
-        //yInfo()<<img_mat.rows << img_mat.cols;
-        
         if (tlx<5)
             tlx = 5;
         if (tlx>img_mat.cols-10)
@@ -159,7 +153,6 @@ yarp::os::Bottle QueryThread::classify(yarp::os::Bottle &persons)
             bry = 10;
         if (bry>img_mat.rows-5)
             bry = img_mat.rows-5;
-        
         
         cv::Rect img_ROI = cv::Rect(cv::Point( tlx, tly ), cv::Point( brx, bry ));
         yarp::sig::ImageOf<yarp::sig::PixelRgb> img_crop;
@@ -195,9 +188,9 @@ yarp::os::Bottle QueryThread::classify(yarp::os::Bottle &persons)
 /********************************************************/
 bool QueryThread::set_skip_frames(int skip_frames)
 {
+    yarp::os::LockGuard lg(mutex);
     if (skip_frames>=0)
     {
-        yarp::os::LockGuard lg(mutex);
         this->skip_frames = skip_frames;
         return true;
     }
@@ -208,9 +201,9 @@ bool QueryThread::set_skip_frames(int skip_frames)
 /********************************************************/
 bool QueryThread::set_person(yarp::os::Bottle &person, int personIndex, bool allowTrain)
 {
+    yarp::os::LockGuard lg(mutex);
     if (person.size()>0)
     {
-        yarp::os::LockGuard lg(mutex);
         this->allowedTrain = allowTrain;
         this->personIndex = personIndex;
         this->blob_person = person;
@@ -235,7 +228,6 @@ void QueryThread::interrupt()
     port_in_img.interrupt();
     port_in_scores.interrupt();
     port_out_crop.interrupt();
-    port_out_show.interrupt();
 }
 
 /********************************************************/
@@ -243,7 +235,6 @@ bool QueryThread::releaseThread()
 {
     port_in_scores.close();
     port_in_img.close();
-    port_out_show.close();
     port_out_crop.close();
     return true;
 }

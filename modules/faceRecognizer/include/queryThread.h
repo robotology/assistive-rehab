@@ -62,7 +62,6 @@ private:
     yarp::os::BufferedPort<yarp::sig::Image>    port_in_img;
     yarp::os::BufferedPort<yarp::os::Bottle>    port_in_scores;
     
-    yarp::os::Port                              port_out_show;
     yarp::os::Port                              port_out_crop;
     
     int                                         skip_frames;
@@ -93,7 +92,6 @@ public:
     virtual void interrupt();
 
     virtual bool releaseThread();
-
 };
 
 

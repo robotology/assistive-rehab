@@ -494,7 +494,7 @@ public:
         }
 
         imageOutPort.prepare()=img;
-        imageOutPort.write();
+        imageOutPort.writeStrict();
 
         return winners;
     }
@@ -626,7 +626,7 @@ public:
                 addSkeletons=*skeleton;
             }
 
-            targetOutPort.write();
+            targetOutPort.writeStrict();
         }
     }
 
