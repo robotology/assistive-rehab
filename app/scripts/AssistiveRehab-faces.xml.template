@@ -268,12 +268,6 @@
 
     <connection>
         <from>/yarpOpenPose/propag:o</from>
-        <to>/faceRecognizer/img:i</to>
-        <protocol>mjpeg</protocol>
-    </connection>
-
-    <connection>
-        <from>/yarpOpenPose/propag:o</from>
         <to>/faceRecognizer/image:i</to>
         <protocol>mjpeg</protocol>
     </connection>

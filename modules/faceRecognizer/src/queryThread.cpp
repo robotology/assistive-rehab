@@ -15,7 +15,6 @@
  * Public License for more details
  */
 
-#include <utility>
 #include <queryThread.h>
 #include <yarp/cv/Cv.h>
 
@@ -32,13 +31,39 @@ bool QueryThread::threadInit()
     
     frame_counter = 0;
     displayed_class="?";
+
+    img_cnt = 0;
     
     //input
-    port_in_img.open(("/"+name+"/img:i").c_str());
     port_in_scores.open(("/"+name+"/scores:i").c_str());
     port_out_crop.open(("/"+name+"/crop:o").c_str());
     
     return true;
+}
+
+/********************************************************/
+void QueryThread::setImage(const yarp::sig::ImageOf<yarp::sig::PixelRgb> &img,
+                           const yarp::os::Stamp &stamp)
+{
+    yarp::os::LockGuard lg(img_mutex);
+    img_buffer=std::make_pair(img,stamp);
+    img_cnt++;
+}
+
+/********************************************************/
+bool QueryThread::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb> &img,
+                           yarp::os::Stamp &stamp)
+{
+    yarp::os::LockGuard lg(img_mutex);
+    if (img_cnt>0)
+    {
+        img=img_buffer.first;
+        stamp=img_buffer.second;
+        img_cnt=0;
+        return true;
+    }
+    else
+        return false;
 }
 
 /********************************************************/
@@ -47,14 +72,13 @@ void QueryThread::run()
     if (personIndex>-1)
     {
         yarp::os::LockGuard lg(mutex);
-        yarp::sig::ImageOf<yarp::sig::PixelRgb> *img=port_in_img.read(false);
-        if(img==NULL)
+        yarp::sig::ImageOf<yarp::sig::PixelRgb> img;
+        yarp::os::Stamp stamp;
+        if (!getImage(img,stamp))
         {
             return;
         }
-        cv::Mat img_mat = yarp::cv::toCvMat(*img);
-        yarp::os::Stamp stamp;
-        port_in_img.getEnvelope(stamp);
+        cv::Mat img_mat = yarp::cv::toCvMat(img);
     
         int tlx  = -1;
         int tly  = -1;
@@ -119,9 +143,11 @@ yarp::os::Bottle QueryThread::classify(yarp::os::Bottle &persons)
 {
     yarp::os::LockGuard lg(mutex);
     yarp::os::Bottle reply;
-    
-    yarp::sig::ImageOf<yarp::sig::PixelRgb> *img=port_in_img.read(true);
-    cv::Mat img_mat = yarp::cv::toCvMat(*img);
+
+    // as classify() gets called within the same thread that calls
+    // setImage(), we are here safe to copy the image straight away
+    auto img=img_buffer.first;  // copying is strictly required
+    cv::Mat img_mat = yarp::cv::toCvMat(img);
     
     yInfo() << "Starting classification";
     
@@ -227,7 +253,6 @@ bool QueryThread::clear_hist()
 /********************************************************/
 void QueryThread::interrupt()
 {
-    port_in_img.interrupt();
     port_in_scores.interrupt();
     port_out_crop.interrupt();
 }
@@ -236,7 +261,6 @@ void QueryThread::interrupt()
 bool QueryThread::releaseThread()
 {
     port_in_scores.close();
-    port_in_img.close();
     port_out_crop.close();
     return true;
 }

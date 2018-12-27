@@ -48,6 +48,7 @@
 #include <iostream>
 #include <fstream>
 #include <list>
+#include <utility>
 
 
 class QueryThread: public yarp::os::PeriodicThread
@@ -59,9 +60,7 @@ private:
     yarp::os::Mutex                             mutex;
     bool                                        verbose;
     
-    yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb>> port_in_img;
-    yarp::os::BufferedPort<yarp::os::Bottle>    port_in_scores;
-    
+    yarp::os::BufferedPort<yarp::os::Bottle>    port_in_scores;    
     yarp::os::Port                              port_out_crop;
     
     int                                         skip_frames;
@@ -72,6 +71,10 @@ private:
     int                                         personIndex;
     bool                                        allowedTrain;
     std::list<yarp::os::Bottle>                 scores_buffer;
+
+    yarp::os::Mutex img_mutex; int img_cnt;
+    std::pair<yarp::sig::ImageOf<yarp::sig::PixelRgb>,yarp::os::Stamp> img_buffer;
+    bool getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb> &img, yarp::os::Stamp &stamp);
 
 public:
 
@@ -92,6 +95,9 @@ public:
     virtual void interrupt();
 
     virtual bool releaseThread();
+
+    void setImage(const yarp::sig::ImageOf<yarp::sig::PixelRgb> &img,
+                  const yarp::os::Stamp &stamp);
 };
 
 
