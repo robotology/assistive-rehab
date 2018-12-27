@@ -23,7 +23,8 @@
 #include <yarp/os/Time.h>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/PeriodicThread.h>
-#include <yarp/os/Semaphore.h>
+#include <yarp/os/Mutex.h>
+#include <yarp/os/LockGuard.h>
 #include <yarp/os/RpcClient.h>
 #include <yarp/os/PortReport.h>
 #include <yarp/os/Stamp.h>
@@ -55,7 +56,7 @@ class QueryThread: public yarp::os::PeriodicThread
 private:
 
     yarp::os::ResourceFinder                    &rf;
-    yarp::os::Semaphore                         mutex;
+    yarp::os::Mutex                             mutex;
     bool                                        verbose;
     
     yarp::os::BufferedPort<yarp::sig::Image>    port_in_img;

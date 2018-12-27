@@ -20,9 +20,8 @@
 /********************************************************/
 bool QueryThread::threadInit()
 {
+    yarp::os::LockGuard lg(mutex);
     verbose = rf.check("verbose");
-    
-    mutex.wait();
     
     std::string name = rf.find("name").asString().c_str();
     skip_frames = rf.check("skip_frames",yarp::os::Value(5)).asInt();
@@ -33,8 +32,6 @@ bool QueryThread::threadInit()
     frame_counter = 0;
     displayed_class="?";
     
-    mutex.post();
-    
     //input
     port_in_img.open(("/"+name+"/img:i").c_str());
     port_in_scores.open(("/"+name+"/scores:i").c_str());
@@ -42,28 +39,23 @@ bool QueryThread::threadInit()
     port_out_show.open(("/"+name+"/show:o").c_str());
     port_out_crop.open(("/"+name+"/crop:o").c_str());
     
-    //yarp::os::Network::connect("/yarpOpenPose/propag:o", port_in_img.getName().c_str() );
-    
     return true;
 }
 
 /********************************************************/
 void QueryThread::run()
 {
-    
     if (personIndex>-1)
     {
-        mutex.wait();
+        yarp::os::LockGuard lg(mutex);
         yarp::sig::Image *img=port_in_img.read(false);
         if(img==NULL)
         {
-            mutex.post();
             return;
         }
         cv::Mat img_mat = cv::cvarrToMat(img->getIplImage());
         yarp::os::Stamp stamp;
         port_in_img.getEnvelope(stamp);
-
     
         int tlx  = -1;
         int tly  = -1;
@@ -121,14 +113,12 @@ void QueryThread::run()
             }
         }
     }
-    
-    mutex.post();
 }
 
 /********************************************************/
 yarp::os::Bottle QueryThread::classify(yarp::os::Bottle &persons)
 {
-    mutex.wait();
+    yarp::os::LockGuard lg(mutex);
     yarp::os::Bottle reply;
     reply.clear();
     
@@ -199,7 +189,6 @@ yarp::os::Bottle QueryThread::classify(yarp::os::Bottle &persons)
             }
         }
     }
-    mutex.post();
     return reply;
 }
 
@@ -208,9 +197,8 @@ bool QueryThread::set_skip_frames(int skip_frames)
 {
     if (skip_frames>=0)
     {
-        mutex.wait();
+        yarp::os::LockGuard lg(mutex);
         this->skip_frames = skip_frames;
-        mutex.post();
         return true;
     }
     else
@@ -222,11 +210,10 @@ bool QueryThread::set_person(yarp::os::Bottle &person, int personIndex, bool all
 {
     if (person.size()>0)
     {
-        mutex.wait();
+        yarp::os::LockGuard lg(mutex);
         this->allowedTrain = allowTrain;
         this->personIndex = personIndex;
         this->blob_person = person;
-        mutex.post();
         return true;
     }
     else
@@ -236,12 +223,8 @@ bool QueryThread::set_person(yarp::os::Bottle &person, int personIndex, bool all
 /********************************************************/
 bool QueryThread::clear_hist()
 {
-    mutex.wait();
-    
+    yarp::os::LockGuard lg(mutex);
     scores_buffer.clear();
-    
-    mutex.post();
-    
     return true;
 }
 
