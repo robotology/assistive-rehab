@@ -23,6 +23,7 @@
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Semaphore.h>
 #include <yarp/sig/Image.h>
+#include <yarp/cv/Cv.h>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/opencv.hpp>
@@ -183,7 +184,7 @@ public:
             }
         }
 
-        cv::Mat out_cv = cv::cvarrToMat((IplImage *)outImage.getIplImage());
+        cv::Mat out_cv = yarp::cv::toCvMat(std::move(outImage));
 
         //need this increment as case might be that skeleton does not
         //satisfy conditions to fill in bottle

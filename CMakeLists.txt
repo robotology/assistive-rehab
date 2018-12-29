@@ -30,7 +30,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 # otherwise, it might cause conflicts when selecting specific YARP components
 find_package(ICUBcontrib REQUIRED)
 
-find_package(YARP REQUIRED)
+find_package(YARP 3.1.100 REQUIRED COMPONENTS OS sig dev math cv)
 find_package(ICUB REQUIRED)
 find_package(OpenCV REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})

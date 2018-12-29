@@ -59,7 +59,7 @@ private:
     yarp::os::Mutex                             mutex;
     bool                                        verbose;
     
-    yarp::os::BufferedPort<yarp::sig::Image>    port_in_img;
+    yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb>> port_in_img;
     yarp::os::BufferedPort<yarp::os::Bottle>    port_in_scores;
     
     yarp::os::Port                              port_out_crop;

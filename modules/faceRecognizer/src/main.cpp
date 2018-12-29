@@ -26,6 +26,7 @@
 #include <yarp/os/Mutex.h>
 #include <yarp/os/LockGuard.h>
 #include <yarp/sig/Image.h>
+#include <yarp/cv/Cv.h>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/opencv.hpp>
@@ -34,6 +35,7 @@
 #include <sstream>
 #include <iostream>
 #include <cstring>
+#include <utility>
 
 #include <queryThread.h>
 #include "recognition_IDL.h"
@@ -421,7 +423,7 @@ public:
     {
         yarp::os::Bottle winners;
         yarp::sig::ImageOf<yarp::sig::PixelRgb> imgOut = img;
-        cv::Mat imgMat=cv::cvarrToMat(img.getIplImage());
+        cv::Mat imgMat=yarp::cv::toCvMat(std::move(img));
 
         cv::Scalar highlight(14,198,8);
 

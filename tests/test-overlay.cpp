@@ -11,6 +11,7 @@
  */
 
 #include <cstdlib>
+#include <utility>
 #include <opencv2/opencv.hpp>
 #include <yarp/os/Network.h>
 #include <yarp/os/LogStream.h>
@@ -18,11 +19,13 @@
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/Bottle.h>
 #include <yarp/sig/Image.h>
+#include <yarp/cv/Cv.h>
 #include "AssistiveRehab/helpers.h"
 
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
+using namespace yarp::cv;
 using namespace assistive_rehab;
 
 class Overlayer : public RFModule
@@ -143,9 +146,9 @@ class Overlayer : public RFModule
             ImageOf<PixelRgb> &ovl=ovlPort.prepare();
             ovl.resize(rgb);
 
-            cv::Mat src1=cv::cvarrToMat(rgb.getIplImage());
-            cv::Mat src2=cv::cvarrToMat(depth.getIplImage());
-            cv::Mat dst=cv::cvarrToMat(ovl.getIplImage());
+            cv::Mat src1=toCvMat(std::move(rgb));
+            cv::Mat src2=toCvMat(std::move(depth));
+            cv::Mat dst=toCvMat(std::move(ovl));
             cv::addWeighted(src1,alpha,src2,beta,0.0,dst);
             addKeys(dst);
 

@@ -11,11 +11,14 @@
  */
 
 #include <limits>
+#include <utility>
 #include <opencv2/opencv.hpp>
+#include <yarp/cv/Cv.h>
 #include "AssistiveRehab/helpers.h"
 
 using namespace std;
 using namespace yarp::sig;
+using namespace yarp::cv;
 using namespace assistive_rehab;
 
 void assistive_rehab::filterDepth(const ImageOf<PixelFloat> &src, ImageOf<PixelFloat> &dst,
@@ -35,7 +38,7 @@ void assistive_rehab::filterDepth(const ImageOf<PixelFloat> &src, ImageOf<PixelF
         }
     }
 
-    cv::Mat dstMat=cv::cvarrToMat(dst.getIplImage());
+    cv::Mat dstMat=toCvMat(std::move(dst));
     cv::Mat kernel=cv::getStructuringElement(cv::MORPH_ELLIPSE,cv::Size(kernelSize,kernelSize));
     cv::erode(dstMat,dstMat,kernel,cv::Point(-1,-1),iterations);
     cv::threshold(dstMat,dstMat,max_dist,0,cv::THRESH_TOZERO_INV);
