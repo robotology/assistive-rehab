@@ -423,7 +423,7 @@ public:
     {
         yarp::os::Bottle winners;
         yarp::sig::ImageOf<yarp::sig::PixelRgb> imgOut = img;
-        cv::Mat imgMat=yarp::cv::toCvMat(std::move(img));
+        cv::Mat imgMat=yarp::cv::toCvMat(img);
 
         cv::Scalar highlight(14,198,8);
 

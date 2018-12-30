@@ -38,7 +38,7 @@ void assistive_rehab::filterDepth(const ImageOf<PixelFloat> &src, ImageOf<PixelF
         }
     }
 
-    cv::Mat dstMat=toCvMat(std::move(dst));
+    cv::Mat dstMat=toCvMat(dst);
     cv::Mat kernel=cv::getStructuringElement(cv::MORPH_ELLIPSE,cv::Size(kernelSize,kernelSize));
     cv::erode(dstMat,dstMat,kernel,cv::Point(-1,-1),iterations);
     cv::threshold(dstMat,dstMat,max_dist,0,cv::THRESH_TOZERO_INV);

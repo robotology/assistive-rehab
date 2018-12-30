@@ -52,7 +52,7 @@ void QueryThread::run()
         {
             return;
         }
-        cv::Mat img_mat = yarp::cv::toCvMat(std::move(*img));
+        cv::Mat img_mat = yarp::cv::toCvMat(*img);
         yarp::os::Stamp stamp;
         port_in_img.getEnvelope(stamp);
     
@@ -97,7 +97,7 @@ void QueryThread::run()
             cv::Rect img_ROI = cv::Rect(cv::Point( tlx, tly ), cv::Point( brx, bry ));
             yarp::sig::ImageOf<yarp::sig::PixelRgb> img_crop;
             img_crop.resize(img_ROI.width, img_ROI.height);
-            cv::Mat img_crop_mat = yarp::cv::toCvMat(std::move(img_crop));
+            cv::Mat img_crop_mat = yarp::cv::toCvMat(img_crop);
             img_mat(img_ROI).copyTo(img_crop_mat);
             
             if (frame_counter<skip_frames)
@@ -121,7 +121,7 @@ yarp::os::Bottle QueryThread::classify(yarp::os::Bottle &persons)
     yarp::os::Bottle reply;
     
     yarp::sig::ImageOf<yarp::sig::PixelRgb> *img=port_in_img.read(true);
-    cv::Mat img_mat = yarp::cv::toCvMat(std::move(*img));
+    cv::Mat img_mat = yarp::cv::toCvMat(*img);
     
     yInfo() << "Starting classification";
     
@@ -159,7 +159,7 @@ yarp::os::Bottle QueryThread::classify(yarp::os::Bottle &persons)
         cv::Rect img_ROI = cv::Rect(cv::Point( tlx, tly ), cv::Point( brx, bry ));
         yarp::sig::ImageOf<yarp::sig::PixelRgb> img_crop;
         img_crop.resize(img_ROI.width, img_ROI.height);
-        cv::Mat img_crop_mat = yarp::cv::toCvMat(std::move(img_crop));
+        cv::Mat img_crop_mat = yarp::cv::toCvMat(img_crop);
         img_mat(img_ROI).copyTo(img_crop_mat);
         port_out_crop.write(img_crop);
         

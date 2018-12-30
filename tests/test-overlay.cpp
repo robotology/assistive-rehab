@@ -146,9 +146,9 @@ class Overlayer : public RFModule
             ImageOf<PixelRgb> &ovl=ovlPort.prepare();
             ovl.resize(rgb);
 
-            cv::Mat src1=toCvMat(std::move(rgb));
-            cv::Mat src2=toCvMat(std::move(depth));
-            cv::Mat dst=toCvMat(std::move(ovl));
+            cv::Mat src1=toCvMat(rgb);
+            cv::Mat src2=toCvMat(depth);
+            cv::Mat dst=toCvMat(ovl);
             cv::addWeighted(src1,alpha,src2,beta,0.0,dst);
             addKeys(dst);
 

@@ -184,7 +184,7 @@ public:
             }
         }
 
-        cv::Mat out_cv = yarp::cv::toCvMat(std::move(outImage));
+        cv::Mat out_cv = yarp::cv::toCvMat(outImage);
 
         //need this increment as case might be that skeleton does not
         //satisfy conditions to fill in bottle
