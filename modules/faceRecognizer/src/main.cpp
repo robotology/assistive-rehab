@@ -486,12 +486,8 @@ public:
                     tmp.addDouble(0.0);
                     tag<<"-";
                 }
-
-
-                cv::putText(imgMat,tag.str().c_str(),txtLoc,  cv::FONT_HERSHEY_SIMPLEX ,
-                            0.5,(j==i)?highlight:lowlight,2);
+                cv::putText(imgMat,tag.str(),txtLoc,cv::FONT_HERSHEY_SIMPLEX,0.5,(j==i)?highlight:lowlight,2);
             }
-
             cv::rectangle(imgMat,tl,br,(j==i)?highlight:lowlight,2);
         }
 
