@@ -1,0 +1,171 @@
+\doxysection{motion\+Analyzer}
+\label{group__motionAnalyzer}\index{motionAnalyzer@{motionAnalyzer}}
+
+
+This module is responsible for analyzing the performed exercise in real-\/time.  
+
+
+This module is responsible for analyzing the performed exercise in real-\/time. 
+
+Version\+:0.\+6.\+0 \begin{DoxyAuthor}{Author}
+Valentina Vasco \href{mailto:valentina.vasco@iit.it}{\texttt{ valentina.\+vasco@iit.\+it}} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the BSD 3-\/Clause License. 
+\end{DoxyCopyright}
+\hypertarget{group__skeletonViewer_intro_sec}{}\doxysubsection{Description}\label{group__skeletonViewer_intro_sec}
+This module is responsible for analyzing the performed exercise in real-\/time. A single exercise has its own metrics and feedback, defined in the related config file, for example abduction left is described in {\ttfamily abduction\+\_\+left.\+ini} file. All the available exercises with related config files are included in the config file {\ttfamily motion-\/repertoire.\+ini}. The available metrics are the range of motion (ROM), end-\/point (EP) parameters (trajectory, speed and smoothness) and step parameters (step length, step width, cadence and speed), which can be visualized on a yarpscope through the provided API. The module is also responsible for generating matio files in order to produce an offline report. It makes use of matio and hdf5 libraries.\hypertarget{group__motionAnalyzer_sec-conf}{}\doxysubsubsection{Configuration files}\label{group__motionAnalyzer_sec-conf}
+Each exercise has its configuration file which is included in the general config file motion-\/repertoire.\+ini. Configuration files are described in the following sections.\hypertarget{group__motionAnalyzer_sec-motion-rep}{}\doxyparagraph{motion-\/repertoire.\+ini}\label{group__motionAnalyzer_sec-motion-rep}
+This section describes the conf file motion-\/repertoire.\+ini. This file includes all the configuration files of the single exercises, which are defined by {\ttfamily exercises}. The labels of the {\ttfamily rehabilitation} exercises have to match the names of the files loaded by \mbox{\hyperlink{group__skeletonPlayer}{skeleton\+Player}} and the labels of the classed predicted by \mbox{\hyperlink{group__actionRecognizer}{action\+Recognizer}}.
+
+Each specific file inlcudes the following sections\+:
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{[general]}
+\DoxyCodeLine{type                           rehabilitation}
+\DoxyCodeLine{}
+\DoxyCodeLine{[metrics]}
+\DoxyCodeLine{tag                            (ROM)}
+\DoxyCodeLine{nmetrics                       (1)}
+
+\end{DoxyCode}
+
+
+The {\ttfamily \mbox{[}general\mbox{]}} section describes the kind of exercise (test or rehabilitation). The {\ttfamily \mbox{[}metrics\mbox{]}} section defines the metrics to be computed for the specific exercise. Exercises tagged as {\ttfamily rehabilitation} also include an additional {\ttfamily \mbox{[}feedback\mbox{]}} section, which defines the parameters sent to \mbox{\hyperlink{group__feedbackProducer}{feedback\+Producer}} for providing a feedback to the user.\hypertarget{group__motionAnalyzer_sec-abduction}{}\doxyparagraph{abduction\+\_\+left.\+ini, internal\+\_\+rotation\+\_\+left.\+ini, external\+\_\+rotation\+\_\+left.\+ini}\label{group__motionAnalyzer_sec-abduction}
+This section describes the conf file abduction-\/left.\+ini, internal\+\_\+rotation\+\_\+left.\+ini, external\+\_\+rotation\+\_\+left.\+ini. For this exercises we compute the range of motion, as angle between the vector formed by the reference joint ({\ttfamily tag\+\_\+joint}) and its child (projected onto the projection plane defined by {\ttfamily tag\+\_\+plane}) and the reference direction {\ttfamily ref\+\_\+dir}, described as following\+:
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{[ROM\_0]}
+\DoxyCodeLine{tag\_joint                      shoulderLeft}
+\DoxyCodeLine{ref\_dir                        (0.0 0.0 -\/1.0)}
+\DoxyCodeLine{tag\_plane                      coronal}
+\DoxyCodeLine{min                            0.0}
+\DoxyCodeLine{max                            100.0}
+
+\end{DoxyCode}
+
+
+The {\ttfamily \mbox{[}feedback\mbox{]}} section contains the thresholds required for producing the feedback\+:
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{[feedback]}
+\DoxyCodeLine{duration                       30}
+\DoxyCodeLine{twarp                          0.9}
+\DoxyCodeLine{joint\_list                     (elbowLeft handLeft)}
+\DoxyCodeLine{sx\_thresh                      (0.5 0.5)}
+\DoxyCodeLine{sy\_thresh                      (0.5 0.5)}
+\DoxyCodeLine{sz\_thresh                      (0.2 0.3)}
+\DoxyCodeLine{range\_freq                     (2 2)}
+\DoxyCodeLine{psd\_thresh                     (10000.0 10000.0)}
+
+\end{DoxyCode}
+
+
+The joints of the skeleton under analysis are defined by {\ttfamily joint\+\_\+list}. They are compared to those of a template skeleton, which is reproduced by the \mbox{\hyperlink{group__skeletonPlayer}{skeleton\+Player}} with a warping factor of {\ttfamily twarp}. The skeleton is also analyzed by the \mbox{\hyperlink{group__actionRecognizer}{action\+Recognizer}}, which predicts a label for the exercise every {\ttfamily duration} frames. Such exercises can produce two feedbacks, i.\+e. on the speed and on the range of motion\+:
+
+
+\begin{DoxyItemize}
+\item range of motion\+: the error between the observed and template joints under analysis is computed. A statistical analysis is carried out, which looks for tails in the error distribution. {\ttfamily sx\+\_\+thresh}, {\ttfamily sy\+\_\+thresh} and {\ttfamily sz\+\_\+thresh} define, for each joint in {\ttfamily joint\+\_\+list}, the thresholds on the standard deviation of the error in position along x, y and z respectively.
+\item speed\+: we compute the Fourier transform of each component of the joints under analysis in a predefined temporal window, for both the observed and the template skeleton. The difference in speed is proportional to the difference in frequency. {\ttfamily range\+\_\+freq} and {\ttfamily psd\+\_\+thresh} define, for each joint in {\ttfamily joint\+\_\+list}, the thresholds on the difference in frequency and on the power spectrum density between template and observed joints respectively.
+\end{DoxyItemize}\hypertarget{group__motionAnalyzer_sec-reaching}{}\doxyparagraph{reaching-\/left.\+ini}\label{group__motionAnalyzer_sec-reaching}
+This section describes the conf file reaching-\/left.\+ini. For this exercise we compute the end point parameters, specifically trajectory, speed and smoothness. The section describing the metric includes the same parameters defined in \mbox{\hyperlink{group__motionAnalyzer_sec-abduction}{abduction\+\_\+left.\+ini, internal\+\_\+rotation\+\_\+left.\+ini, external\+\_\+rotation\+\_\+left.\+ini}}, plus an additional {\ttfamily target}, which defines the target to reach in the skeleton reference system.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{[EP\_0]}
+\DoxyCodeLine{tag\_joint                      handLeft}
+\DoxyCodeLine{ref\_dir                        (0.0 0.0 -\/1.0)}
+\DoxyCodeLine{tag\_plane                      sagittal}
+\DoxyCodeLine{min                            0.0}
+\DoxyCodeLine{max                            5.0}
+\DoxyCodeLine{target                         (2.0 1.0 0.0)}
+
+\end{DoxyCode}
+
+
+The feedback section differs from the one defined in sec-\/abduction\+:
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{[feedback]}
+\DoxyCodeLine{duration                       30}
+\DoxyCodeLine{twarp                          1.0}
+\DoxyCodeLine{joint\_list                     (handLeft)}
+\DoxyCodeLine{radius                         (1.0)}
+\DoxyCodeLine{zscore\_thresh                  (2)}
+\DoxyCodeLine{inliers\_thresh                 (0.3)}
+
+\end{DoxyCode}
+
+
+As in \mbox{\hyperlink{group__motionAnalyzer_sec-abduction}{abduction\+\_\+left.\+ini, internal\+\_\+rotation\+\_\+left.\+ini, external\+\_\+rotation\+\_\+left.\+ini}}, the joints under analysis are defined by {\ttfamily joint\+\_\+list} and compared to those of a template skeleton, which is reproduced by the \mbox{\hyperlink{group__skeletonPlayer}{skeleton\+Player}} with a warping factor of {\ttfamily twarp}. The skeleton is also analyzed by the \mbox{\hyperlink{group__actionRecognizer}{action\+Recognizer}}, which predicts a label for the exercise every {\ttfamily duration} frames.
+
+Differently than \mbox{\hyperlink{group__motionAnalyzer_sec-abduction}{abduction\+\_\+left.\+ini, internal\+\_\+rotation\+\_\+left.\+ini, external\+\_\+rotation\+\_\+left.\+ini}}, such exercise produces a single feedback, related to how well a predefined target is reached. The target distribution is statistically described by the template points falling inside a sphere around the {\ttfamily target}, defined by {\ttfamily radius}. Statistics of the distribution of the observed points are extracted and points whose score is below the {\ttfamily zscore\+\_\+thresh} are considered inliers. Finally, if the number of inliers have to be higher than {\ttfamily inliers\+\_\+thresh}, the target is considered reached.\hypertarget{group__motionAnalyzer_sec-tug}{}\doxyparagraph{tug.\+ini}\label{group__motionAnalyzer_sec-tug}
+This section describes the conf file tug.\+ini. The {\ttfamily general} section includes the following parameters\+:
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{[general]}
+\DoxyCodeLine{type                           test}
+\DoxyCodeLine{finish-\/line-\/thresh             0.3}
+\DoxyCodeLine{standing-\/thresh                0.025}
+\DoxyCodeLine{distance                       3.0}
+\DoxyCodeLine{time-\/high                      10.0}
+\DoxyCodeLine{time-\/medium                    20.0}
+\DoxyCodeLine{vel\_estimator\_N                100}
+\DoxyCodeLine{vel\_estimator\_D                5.0}
+\DoxyCodeLine{max-\/finish-\/line-\/overrun        0.3}
+
+\end{DoxyCode}
+
+
+with\+:
+\begin{DoxyItemize}
+\item {\ttfamily finish-\/line-\/thresh}\+: threshold on the distance between foot and finish line \mbox{[}m\mbox{]};
+\item {\ttfamily standing-\/thresh}\+: threshold on the speed of the shoulder center height \mbox{[}m/s\mbox{]};
+\item {\ttfamily distance}\+: the distance to travel \mbox{[}m\mbox{]};
+\item {\ttfamily time-\/high}\+: the time the user should take to travel {\ttfamily distance} and get a high score \mbox{[}s\mbox{]};
+\item {\ttfamily time-\/high}\+: the time the user should take to travel {\ttfamily distance} and get a medium score \mbox{[}s\mbox{]};
+\item {\ttfamily vel\+\_\+estimator\+\_\+N}\+: maximum length of the window used to estimate the shoulder height speed;
+\item {\ttfamily vel\+\_\+estimator\+\_\+D}\+: threshold applied to the linear estimator.
+\item {\ttfamily max-\/finish-\/line-\/overrun}\+: maximum allowed overrun with respect to the finish line \mbox{[}m\mbox{]};
+\end{DoxyItemize}
+
+For this exercise we compute the range of motion of six joints and the step parameters, specifically step length, step width, cadence and speed. The sections describing the range of motion metrics are the same defined in \mbox{\hyperlink{group__motionAnalyzer_sec-abduction}{abduction\+\_\+left.\+ini, internal\+\_\+rotation\+\_\+left.\+ini, external\+\_\+rotation\+\_\+left.\+ini}}. There is an additional section for extracting the step parameters\+:
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{[step\_0]}
+\DoxyCodeLine{median\_filter\_window           4}
+\DoxyCodeLine{step\_thresh                    0.25}
+\DoxyCodeLine{step\_window                    3}
+\DoxyCodeLine{time\_window                    3.0}
+\DoxyCodeLine{enable\_plane\_projection        \textcolor{keyword}{false}}
+
+\end{DoxyCode}
+
+
+{\ttfamily median\+\_\+filter\+\_\+window} defines the filter parameter applied to the distance between feet for computing the step parameters. A step is identified as occurring between two consecutive maximum values of the distance between the feet. The average step length is evaluated by first computing such distance along the sagittal plane and extracting the last {\ttfamily step\+\_\+window} maximum values exceeding {\ttfamily step\+\_\+thresh}. Only the maximum values occurring within the last {\ttfamily time\+\_\+window} seconds from the last detected step are considered. {\ttfamily enable\+\_\+plane\+\_\+projection} is a flag that enables the projection of the difference between the two ankles on the sagittal and coronal planes of the skeleton.\hypertarget{group__skeletonViewer_parameters_sec}{}\doxysubsection{Parameters}\label{group__skeletonViewer_parameters_sec}
+
+\begin{DoxyItemize}
+\item --name\+: The module\textquotesingle{}s name; all the open ports will be tagged with the prefix /name
+\item --from\+: Configuration file name with the list of exercises that can be analyzed.
+\item --general\+::exercises\+: List of exercises that can be analyzed. 
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_inputports_sec}{}\doxysubsection{Input Ports}\label{group__skeletonViewer_inputports_sec}
+\hypertarget{group__skeletonViewer_outputports_sec}{}\doxysubsection{Output Ports}\label{group__skeletonViewer_outputports_sec}
+
+\begin{DoxyItemize}
+\item /motion\+Analyzer/opc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to objects\+Properties\+Collector to retrieve 3D skeletons.
+\item /motion\+Analyzer/scaler\+:cmd \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to \mbox{\hyperlink{group__skeletonScaler}{skeleton\+Scaler}} to load and move the template skeleton.
+\item /motion\+Analyzer/dtw\+:cmd \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to \mbox{\hyperlink{group__feedbackProducer}{feedback\+Producer}} to start the analysis for producing feeback.
+\item /motion\+Analyzer/action\+:cmd \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to \mbox{\hyperlink{group__actionRecognizer}{action\+Recognizer}} to start the action recognition.
+\item /motion\+Analyzer/scope \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Outputs a yarp bottle containing the result of the computation along with the ideal value.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_services_sec}{}\doxysubsection{Services}\label{group__skeletonViewer_services_sec}
+
+\begin{DoxyItemize}
+\item /motion\+Analyzer/cmd \mbox{[}rpc-\/server\mbox{]}\+: service port . This service is described in \mbox{\hyperlink{classmotionAnalyzer__IDL}{motion\+Analyzer\+\_\+\+IDL}} (idl.\+thrift) 
+\end{DoxyItemize}

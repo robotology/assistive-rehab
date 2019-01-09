@@ -1,0 +1,29 @@
+\doxysection{skeleton\+Player}
+\label{group__skeletonPlayer}\index{skeletonPlayer@{skeletonPlayer}}
+
+
+This module is responsible for playing back the trajectory of a skeleton.  
+
+
+This module is responsible for playing back the trajectory of a skeleton. 
+
+Version\+:0.\+6.\+0 \begin{DoxyAuthor}{Author}
+Ugo Pattacini \href{mailto:ugo.pattacini@iit.it}{\texttt{ ugo.\+pattacini@iit.\+it}} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the BSD 3-\/Clause License. 
+\end{DoxyCopyright}
+\hypertarget{group__skeletonViewer_intro_sec}{}\doxysubsection{Description}\label{group__skeletonViewer_intro_sec}
+This module is responsible for playing back the trajectory of a skeleton, as recorded by means of yarpdatadumper.\hypertarget{group__skeletonViewer_parameters_sec}{}\doxysubsection{Parameters}\label{group__skeletonViewer_parameters_sec}
+\hypertarget{group__skeletonViewer_inputports_sec}{}\doxysubsection{Input Ports}\label{group__skeletonViewer_inputports_sec}
+\hypertarget{group__skeletonViewer_outputports_sec}{}\doxysubsection{Output Ports}\label{group__skeletonViewer_outputports_sec}
+
+\begin{DoxyItemize}
+\item /skeleton\+Player/opc\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to objects\+Properties\+Collector to add played skeleton to the database.
+\item /skeleton\+Player/viewer\+:o \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Steams out the 3D skeleton to be visualized. To connect to \mbox{\hyperlink{group__skeletonViewer}{skeleton\+Viewer}}.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_services_sec}{}\doxysubsection{Services}\label{group__skeletonViewer_services_sec}
+
+\begin{DoxyItemize}
+\item /skeleton\+Player/cmd\+:rpc \mbox{[}rpc-\/server\mbox{]}\+: service port . This service is described in \mbox{\hyperlink{classskeletonPlayer__IDL}{skeleton\+Player\+\_\+\+IDL}} (idl.\+thrift) 
+\end{DoxyItemize}

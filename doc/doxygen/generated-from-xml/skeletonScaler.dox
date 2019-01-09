@@ -1,0 +1,56 @@
+
+  /**
+  *
+  * @ingroup skeletonScaler
+  * \defgroup skeletonScaler skeletonScaler
+  * This module superimposes a (pre-recorded) template skeleton on the current skeleton.
+  * Version:0.6.0
+  * \author  Valentina Vasco valentina.vasco@iit.it
+  * \n
+  * \copyright  Released under the terms of the BSD 3-Clause License.
+  * \section intro_sec Description
+  *
+  
+   This module superimposes a (pre-recorded) template skeleton on the current skeleton. It sends commands to the \ref skeletonPlayer for loading the template skeleton and computes the roto-translation matrix which allows to align the shoulder center keypoints and the planes of both skeletons.
+  
+  * \section parameters_sec Parameters
+  
+  *- --nsessions: Number of repetitions the recorded skeleton is played (0 means infinite)
+  *- --tbegin: Stream starting time computed from the time origin.
+  * \section inputports_sec Input Ports
+  * 
+  *- /skeletonScaler/rpc [rpc]  [default carrier:]: Receives the following commands and provides replies: (notation: "." identifies a string)
+       -# <b>load skeleton file</b> <i>"load" "file" "context"</i>:load skeleton file. "file" name of the file containing the skeleton data. "context" context used to look for the file.
+       -# <b>set camera options</b> <i>"rot" pos_list focal_list </i>:set camera options to \ref skeletonViewer. pos_list the position of the camera in world coordinates. focal_list the focal point of the camera in world coordinates.
+       -# <b>start</b> <i>"run" twarp </i>:start. twarp specifies the warping factor squeezing (dilating) in time the original stream if less than 1 (greater than 1).
+       -# <b>set skeleton's tag</b> <i>"tags" "tag" </i>:set skeleton's tag. "tag" tag of the skeleton.
+       -# <b>stop</b> <i>"stop"</i>:stop.
+       
+  *
+  
+  * \section outputports_sec Output Ports
+  * 
+  *- /skeletonScaler/opc [rpc]  [default carrier:]: 
+          Sends commands to \ref objectsPropertiesCollector to retrieve template and selected skeletons.
+        
+  *
+  
+  *- /skeletonScaler/player:rpc [rpc]  [default carrier:]: 
+          Sends commands to \ref skeletonPlayer for playing back the trajectory of the selected skeleton.
+        
+  *
+  
+  *- /skeletonScaler/viewer:rpc [rpc]  [default carrier:]: 
+          Sends commands to \ref skeletonViewer to set camera options for visualization.
+        
+  *
+  
+  *
+  * \section services_sec Services
+  * 
+  *
+  * 
+  *
+  *
+  **/
+

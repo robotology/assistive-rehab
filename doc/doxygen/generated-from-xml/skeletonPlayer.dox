@@ -1,0 +1,45 @@
+
+  /**
+  *
+  * @ingroup skeletonPlayer
+  * \defgroup skeletonPlayer skeletonPlayer
+  * This module is responsible for playing back the trajectory of a skeleton.
+  * Version:0.6.0
+  * \author  Ugo Pattacini ugo.pattacini@iit.it
+  * \n
+  * \copyright  Released under the terms of the BSD 3-Clause License.
+  * \section intro_sec Description
+  *
+  
+   This module is responsible for playing back the trajectory of a skeleton, as recorded by means of yarpdatadumper.
+  
+  * \section parameters_sec Parameters
+  
+  * \section inputports_sec Input Ports
+  * 
+  * \section outputports_sec Output Ports
+  * 
+  *- /skeletonPlayer/opc:rpc [rpc]  [default carrier:]: 
+            Sends commands to \ref objectsPropertiesCollector to add played skeleton to the database.
+          
+  *
+  
+  *- /skeletonPlayer/viewer:o [Bottle]  [default carrier:]: 
+            Steams out the 3D skeleton to be visualized. To connect to \ref skeletonViewer.
+          
+  *
+  
+  *
+  * \section services_sec Services
+  * 
+  *- /skeletonPlayer/cmd:rpc
+  *  [rpc-server]: 
+  * service port
+  * . This service is described in skeletonPlayer_IDL (idl.thrift)
+  * 
+  *
+  * 
+  *
+  *
+  **/
+

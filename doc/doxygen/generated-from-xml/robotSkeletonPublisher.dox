@@ -1,0 +1,58 @@
+
+  /**
+  *
+  * @ingroup robotSkeletonPublisher
+  * \defgroup robotSkeletonPublisher robotSkeletonPublisher
+  * This module publish the skeleton representing the robot.
+  * Version:0.6.0
+  * \author  Ugo Pattacini ugo.pattacini@iit.it
+  * \n
+  * \copyright  Released under the terms of the BSD 3-Clause License.
+  * \section intro_sec Description
+  *
+  
+   This module connects to robot's state ports to retrieve the joints and then uses such information to compute the 
+   3D configuration of the limbs. The resulting skeleton is sent to the viewer and to the OPC.
+   The 3D info are expressed in the world frame if the navigation state is provided; the root becomes the depth_center
+   frame otherwise.
+  
+  * \section parameters_sec Parameters
+  
+  *- --skeleton-name: Name of the skeleton to be displayed.
+  *- --skeleton-color: Skeleton's color using rgb color specification.
+  *- --period: Periodicity of the module (s).
+  *- --robot: Name of the robot to connect to.
+  *- --visibility: Flag to set/unset visibility in the viewer.
+  * \section inputports_sec Input Ports
+  * 
+  *- /robotSkeletonPublisher/nav:i [Property]  [default carrier:]: 
+            Receives the navigation status broadcast.
+          
+  *
+  
+  * \section outputports_sec Output Ports
+  * 
+  *- /robotSkeletonPublisher/viewer:o [Bottle]  [default carrier:]: 
+            Outputs 3D skeletons to send to \ref skeletonViewer for visualization.
+          
+  *
+  
+  *- /robotSkeletonPublisher/opc:rpc [rpc]  [default carrier:]: 
+              Sends commands to \ref objectsPropertiesCollector to add the skeleton to the database.
+          
+  *
+  
+  *
+  * \section services_sec Services
+  * 
+  *- /robotSkeletonPublisher/cmd:rpc
+  *  [rpc-server]: 
+  * service port
+  * . This service is described in robotSkeletonPublisher_IDL (idl.thrift)
+  * 
+  *
+  * 
+  *
+  *
+  **/
+

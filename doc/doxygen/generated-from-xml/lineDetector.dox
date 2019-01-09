@@ -1,0 +1,96 @@
+
+  /**
+  *
+  * @ingroup lineDetector
+  * \defgroup lineDetector lineDetector
+  * This module takes as input the RGB image containing two lines composed of a set of ArUco markers and publishes the estimated pose of the markers with respect to the robot camera and root.
+  * Version:0.6.0
+  * \author  Valentina Vasco valentina.vasco@iit.it
+  * \n
+  * \copyright  Released under the terms of the BSD 3-Clause License.
+  * \section intro_sec Description
+  *
+  
+   This module takes as input the RGB image containing two lines composed of a set of markers and publishes the estimated poses of the markers with respect to the camera and to robot root.
+   It makes use of an OpenCV ArUco Board of 6x1 markers. The used boards can be found in `modules/lineDetector/app/conf` (the two images were sticked togheter for printing a marker big enough to be visible from a certain distance).
+   Gazebo models of the ArUco Boards can be found in `app/gazebo/tug` (note that the variable `GAZEBO_MODEL_PATH` has to point to this folder).
+   The start-line is used as world frame for the TUG app, with `x` pointing along the side of the line, `y` pointing backward and `z` upward.
+   The detected start and finish lines are published into the \ref objectsPropertiesCollector, with the pose estimated with respect to the world frame (`pose_world`), and the size of the line, as following:
+
+   \code
+   ((finish-line ((pose_world (x y z ax ay az theta)) (size (width height)))) (id opc_id))
+   \endcode
+
+  
+  * \section parameters_sec Parameters
+  
+  *- --name: The module's name; all the open ports will be tagged with the prefix /name.
+  *- --period: Periodicity of the module.
+  *- --nlines: Number of lines handled.
+  *- --line-filter-order: Order of the median filter applied to the estimated lines poses.
+  *- --nx: Vector containing the number of markers along X direction, for the start and the finish line respectively.
+  *- --ny: Vector containing the number of markers along Y direction, for the start and the finish line respectively.
+  *- --marker-size: Vector containing the marker's length, for the start and the finish line respectively [m].
+  *- --marker-dist: Vector containing the distance between markers, for the start and the finish line respectively [m].
+  *- --simulation: If true, lines poses are obtained directly from the gazebo world scenario.
+  *- --use-initial-guess: If true, it uses the previously estimated pose of the line as a guess for the estimation of the current line
+  *- --camera::intrinsics: Camera's intrinsics if specified from file.
+  *- --camera::remote: Camera's remote to connect to
+  * \section inputports_sec Input Ports
+  * 
+  *- /lineDetector/img:i [ImageOfPixelRgb]  [default carrier:]: 
+            Receives the RGB image.
+          
+  *
+  
+  *- /lineDetector/gaze/state:i [Property]  [default carrier:]: 
+            Retrieves the current pose of the camera.
+          
+  *
+  
+  * \section outputports_sec Output Ports
+  * 
+  *- /lineDetector/img:o [ImageOfPixelRgb]  [default carrier:]: 
+            Streams out the input image with detected axes.
+          
+  *
+  
+  *- /lineDetector/cam:rpc [rpc]  [default carrier:]: 
+            Retrieves intrinsics from the camera.
+          
+  *
+  
+  *- /lineDetector/opc:rpc [rpc]  [default carrier:]: 
+            Adds the start and the finish line to \ref objectsPropertiesCollector.
+          
+  *
+  
+  *- /lineDetector/nav:rpc [rpc]  [default carrier:]: 
+            Retrieves the current pose of the base.
+          
+  *
+  
+  *- /lineDetector/viewer:rpc [rpc]  [default carrier:]: 
+            Sends commands to \ref skeletonViewer to draw the lines.
+          
+  *
+  
+  *- /lineDetector/gazebo:rpc [rpc]  [default carrier:]: 
+            Sends command to gazebo plugin \ref tuginterface, if simulation is set to true.
+          
+  *
+  
+  *
+  * \section services_sec Services
+  * 
+  *- /lineDetector/cmd:rpc
+  *  [rpc-server]: 
+  * service port
+  * . This service is described in lineDetector_IDL (idl.thrift)
+  * 
+  *
+  * 
+  *
+  *
+  **/
+

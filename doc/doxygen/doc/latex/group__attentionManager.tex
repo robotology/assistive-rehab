@@ -1,0 +1,43 @@
+\doxysection{attention\+Manager}
+\label{group__attentionManager}\index{attentionManager@{attentionManager}}
+
+
+This module controls the gaze of the robot toward the salient part of the scene.  
+
+
+This module controls the gaze of the robot toward the salient part of the scene. 
+
+Version\+:0.\+6.\+0 \begin{DoxyAuthor}{Author}
+Ugo Pattacini \href{mailto:ugo.pattacini@iit.it}{\texttt{ ugo.\+pattacini@iit.\+it}} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the BSD 3-\/Clause License. 
+\end{DoxyCopyright}
+\hypertarget{group__skeletonViewer_intro_sec}{}\doxysubsection{Description}\label{group__skeletonViewer_intro_sec}
+This module redirects the robot\textquotesingle{}s gaze toward a keypoint of the skeleton in the scene. By default the skeleton keypoint is the head. It sends commands to cer\+\_\+gaze-\/controller.\hypertarget{group__skeletonViewer_parameters_sec}{}\doxysubsection{Parameters}\label{group__skeletonViewer_parameters_sec}
+
+\begin{DoxyItemize}
+\item --auto-\/start\+: Enable autonomous mode.
+\item --period\+: Periodicity of the module (s).
+\item --gaze-\/follow-\/T\+: Time constant of the gaze controller used while tracking skeletons (s).
+\item --gaze-\/seek-\/T\+: Time constant of the gaze controller used while looking around (s).
+\item --inactivity-\/thres\+: Threshold for detecting inactivity of the skeleton.
+\item --virtual-\/mode\+: Enable virtual modality.
+\item --robot-\/skeleton-\/name\+: Tag of the robot\textquotesingle{}s skeleton.
+\item --line-\/filter-\/order\+: Order of the median filter applied to the estimates of the end-\/line.
+\item --frame\+: Frame wrt which the skeleton is transformed (camera or world). 
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_inputports_sec}{}\doxysubsection{Input Ports}\label{group__skeletonViewer_inputports_sec}
+
+\begin{DoxyItemize}
+\item /attention\+Manager/opc\+:i \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Retrieves 3D skeletons from objects\+Properties\+Collector.
+\item /attention\+Manager/gaze/state\+:i \mbox{[}Property\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Retrieves the current pose of the camera.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_outputports_sec}{}\doxysubsection{Output Ports}\label{group__skeletonViewer_outputports_sec}
+
+\begin{DoxyItemize}
+\item /attention\+Manager/gaze/cmd\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to cer\+\_\+gaze-\/controller.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_services_sec}{}\doxysubsection{Services}\label{group__skeletonViewer_services_sec}
+
+\begin{DoxyItemize}
+\item /attention\+Manager/cmd\+:rpc \mbox{[}rpc-\/server\mbox{]}\+: service port . This service is described in \mbox{\hyperlink{classattentionManager__IDL}{attention\+Manager\+\_\+\+IDL}} (idl.\+thrift) 
+\end{DoxyItemize}

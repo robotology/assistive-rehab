@@ -1,0 +1,38 @@
+\doxysection{action\+Recognizer}
+\label{group__actionRecognizer}\index{actionRecognizer@{actionRecognizer}}
+
+
+This module is responsible for recognizing actions.  
+
+
+This module is responsible for recognizing actions. 
+
+Version\+:0.\+6.\+0 \begin{DoxyAuthor}{Author}
+Valentina Vasco \href{mailto:valentina.vasco@iit.it}{\texttt{ valentina.\+vasco@iit.\+it}} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the BSD 3-\/Clause License. 
+\end{DoxyCopyright}
+\hypertarget{group__skeletonViewer_intro_sec}{}\doxysubsection{Description}\label{group__skeletonViewer_intro_sec}
+This module retrieves the selected 3D skeleton from objects\+Properties\+Collector and sends the upper body 2D keypoints (x,y) (ankles and knees discarded), observed in a predefined window, to a pretrained LSTM. The retrieved skeleton is normalized and keypoints are transformed and rescaled by a factor of 10 (same operations were performed during training). When the window is full, the network outputs the label of the predicted action. Predicted actions are accumulated for a (settable) number of times, and the label of the most voted action is provided as output. The adopted classes are defined in the config.\+ini file. It makes use of Tensor\+Flow\+CC.\hypertarget{group__skeletonViewer_parameters_sec}{}\doxysubsection{Parameters}\label{group__skeletonViewer_parameters_sec}
+
+\begin{DoxyItemize}
+\item --name\+: Module\textquotesingle{}s name; all the open ports will be tagged with the prefix /name.
+\item --predict\+: To enable prediction.
+\item --general\+::num-\/classes\+: Number of classes. This has to be the same as defined during training.
+\item --general\+::num-\/features\+: Number of features (upper body 2D keypoints\textquotesingle{} coordinates) provided to the network. This has to be the same as defined during training.
+\item --general\+::num-\/steps\+: Number of times predicted actions are accumulated. Only the most voted action is provided as output.
+\item --class-\/i\+::label\+: Label of the class.
+\item --class-\/i\+::value\+: Class number as provided by the network. 
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_inputports_sec}{}\doxysubsection{Input Ports}\label{group__skeletonViewer_inputports_sec}
+\hypertarget{group__skeletonViewer_outputports_sec}{}\doxysubsection{Output Ports}\label{group__skeletonViewer_outputports_sec}
+
+\begin{DoxyItemize}
+\item /action\+Recognizer/target\+:o \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Outputs a yarp bottle containing the label of the action to perform, the label of the predicted action and the confidence score.
+\item /action\+Recognizer/opc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to objects\+Properties\+Collector to retrieve 3D skeletons. (Note\+: only 2D keypoints are used).
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_services_sec}{}\doxysubsection{Services}\label{group__skeletonViewer_services_sec}
+
+\begin{DoxyItemize}
+\item /action\+Recognizer/rpc \mbox{[}rpc-\/server\mbox{]}\+: service port . This service is described in \mbox{\hyperlink{classactionRecognizer__IDL}{action\+Recognizer\+\_\+\+IDL}} (idl.\+thrift) 
+\end{DoxyItemize}

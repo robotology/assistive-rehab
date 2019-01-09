@@ -1,0 +1,58 @@
+\doxysection{line\+Detector}
+\label{group__lineDetector}\index{lineDetector@{lineDetector}}
+
+
+This module takes as input the RGB image containing two lines composed of a set of Ar\+Uco markers and publishes the estimated pose of the markers with respect to the robot camera and root.  
+
+
+This module takes as input the RGB image containing two lines composed of a set of Ar\+Uco markers and publishes the estimated pose of the markers with respect to the robot camera and root. 
+
+Version\+:0.\+6.\+0 \begin{DoxyAuthor}{Author}
+Valentina Vasco \href{mailto:valentina.vasco@iit.it}{\texttt{ valentina.\+vasco@iit.\+it}} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the BSD 3-\/Clause License. 
+\end{DoxyCopyright}
+\hypertarget{group__skeletonViewer_intro_sec}{}\doxysubsection{Description}\label{group__skeletonViewer_intro_sec}
+This module takes as input the RGB image containing two lines composed of a set of markers and publishes the estimated poses of the markers with respect to the camera and to robot root. It makes use of an Open\+CV Ar\+Uco Board of 6x1 markers. The used boards can be found in {\ttfamily modules/line\+Detector/app/conf} (the two images were sticked togheter for printing a marker big enough to be visible from a certain distance). Gazebo models of the Ar\+Uco Boards can be found in {\ttfamily app/gazebo/tug} (note that the variable {\ttfamily GAZEBO\+\_\+\+MODEL\+\_\+\+PATH} has to point to this folder). The start-\/line is used as world frame for the TUG app, with {\ttfamily x} pointing along the side of the line, {\ttfamily y} pointing backward and {\ttfamily z} upward. The detected start and finish lines are published into the objects\+Properties\+Collector, with the pose estimated with respect to the world frame ({\ttfamily pose\+\_\+world}), and the size of the line, as following\+:
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{((finish-\/line ((pose\_world (x y z ax ay az theta)) (size (width height)))) (\textcolor{keywordtype}{id} opc\_id))}
+
+\end{DoxyCode}
+\hypertarget{group__skeletonViewer_parameters_sec}{}\doxysubsection{Parameters}\label{group__skeletonViewer_parameters_sec}
+
+\begin{DoxyItemize}
+\item --name\+: The module\textquotesingle{}s name; all the open ports will be tagged with the prefix /name.
+\item --period\+: Periodicity of the module.
+\item --nlines\+: Number of lines handled.
+\item --line-\/filter-\/order\+: Order of the median filter applied to the estimated lines poses.
+\item --nx\+: Vector containing the number of markers along X direction, for the start and the finish line respectively.
+\item --ny\+: Vector containing the number of markers along Y direction, for the start and the finish line respectively.
+\item --marker-\/size\+: Vector containing the marker\textquotesingle{}s length, for the start and the finish line respectively \mbox{[}m\mbox{]}.
+\item --marker-\/dist\+: Vector containing the distance between markers, for the start and the finish line respectively \mbox{[}m\mbox{]}.
+\item --simulation\+: If true, lines poses are obtained directly from the gazebo world scenario.
+\item --use-\/initial-\/guess\+: If true, it uses the previously estimated pose of the line as a guess for the estimation of the current line
+\item --camera\+::intrinsics\+: Camera\textquotesingle{}s intrinsics if specified from file.
+\item --camera\+::remote\+: Camera\textquotesingle{}s remote to connect to 
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_inputports_sec}{}\doxysubsection{Input Ports}\label{group__skeletonViewer_inputports_sec}
+
+\begin{DoxyItemize}
+\item /line\+Detector/img\+:i \mbox{[}Image\+Of\+Pixel\+Rgb\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives the RGB image.
+\item /line\+Detector/gaze/state\+:i \mbox{[}Property\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Retrieves the current pose of the camera.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_outputports_sec}{}\doxysubsection{Output Ports}\label{group__skeletonViewer_outputports_sec}
+
+\begin{DoxyItemize}
+\item /line\+Detector/img\+:o \mbox{[}Image\+Of\+Pixel\+Rgb\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Streams out the input image with detected axes.
+\item /line\+Detector/cam\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Retrieves intrinsics from the camera.
+\item /line\+Detector/opc\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Adds the start and the finish line to objects\+Properties\+Collector.
+\item /line\+Detector/nav\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Retrieves the current pose of the base.
+\item /line\+Detector/viewer\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to \mbox{\hyperlink{group__skeletonViewer}{skeleton\+Viewer}} to draw the lines.
+\item /line\+Detector/gazebo\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends command to gazebo plugin tuginterface, if simulation is set to true.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_services_sec}{}\doxysubsection{Services}\label{group__skeletonViewer_services_sec}
+
+\begin{DoxyItemize}
+\item /line\+Detector/cmd\+:rpc \mbox{[}rpc-\/server\mbox{]}\+: service port . This service is described in \mbox{\hyperlink{classlineDetector__IDL}{line\+Detector\+\_\+\+IDL}} (idl.\+thrift) 
+\end{DoxyItemize}

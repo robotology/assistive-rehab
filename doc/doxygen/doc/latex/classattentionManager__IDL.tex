@@ -1,0 +1,195 @@
+\doxysection{attention\+Manager\+\_\+\+IDL Class Reference}
+\label{classattentionManager__IDL}\index{attentionManager\_IDL@{attentionManager\_IDL}}
+
+
+\mbox{\hyperlink{classattentionManager__IDL}{attention\+Manager\+\_\+\+IDL}} IDL Interface to Attention Manager services.  
+
+
+
+
+{\ttfamily \#include $<$attention\+Manager\+\_\+\+IDL.\+h$>$}
+
+
+
+Inherits yarp\+::os\+::\+Wire.
+
+
+
+Inherited by Attention.
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual bool \mbox{\hyperlink{classattentionManager__IDL_a42941cc508bb57aa390578ecdbfde7c2}{look}} (const std\+::string \&tag, const std\+::string \&keypoint=\char`\"{}head\char`\"{})
+\begin{DoxyCompactList}\small\item\em Look at the specified skeleton. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classattentionManager__IDL_aa5e3fb18a0336d8b65c316e7f6a675a8}{stop}} ()
+\begin{DoxyCompactList}\small\item\em Stop any ongoing actions. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classattentionManager__IDL_ada750e5a7c6a0bb99be495e24d34dcdd}{is\+\_\+running}} ()
+\begin{DoxyCompactList}\small\item\em Check if any action is being performed. \end{DoxyCompactList}\item 
+virtual Followed\+Skeleton\+Info \mbox{\hyperlink{classattentionManager__IDL_a03b844a8bd3d6e2b4cf5ba88ace27429}{is\+\_\+following}} ()
+\begin{DoxyCompactList}\small\item\em Check if the robot is following a skeleton. \end{DoxyCompactList}\item 
+virtual std\+::vector$<$ std\+::string $>$ \mbox{\hyperlink{classattentionManager__IDL_ad0b7882cea4dd8b0269cd3eaf0f5dbae}{is\+\_\+any\+\_\+raised\+\_\+hand}} ()
+\begin{DoxyCompactList}\small\item\em Check if any skeleton is with one hand raised. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classattentionManager__IDL_aa6b2c971be0e878ab259675c83bba2dc}{is\+\_\+with\+\_\+raised\+\_\+hand}} (const std\+::string \&tag)
+\begin{DoxyCompactList}\small\item\em Check if the specified skeleton is with one hand raised. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classattentionManager__IDL_a3c0c61fdb996d2b7378c02e6225a6c20}{set\+\_\+auto}} ()
+\begin{DoxyCompactList}\small\item\em Enable autonomous mode. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classattentionManager__IDL_a9278a1d0df7c7b1c3b0aa46ef78f8009}{set\+\_\+virtual}} ()
+\begin{DoxyCompactList}\small\item\em Enable virtual scenario mode. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classattentionManager__IDL_ae50c946fce68f55cac50fe5136e1bc02}{set\+\_\+robot\+\_\+skeleton\+\_\+name}} (const std\+::string \&robot\+\_\+skeleton\+\_\+name)
+\begin{DoxyCompactList}\small\item\em Set the name of the robot skeleton to avoid following it. \end{DoxyCompactList}\item 
+\mbox{\label{classattentionManager__IDL_ac3c162b2616ec83ecb6f605d79c7b6af}} 
+virtual std\+::vector$<$ std\+::string $>$ {\bfseries help} (const std\+::string \&function\+Name=\char`\"{}-\/-\/all\char`\"{})
+\item 
+\mbox{\label{classattentionManager__IDL_ab7ca0482a77f24b49fa05448fb32ba54}} 
+bool {\bfseries read} (yarp\+::os\+::\+Connection\+Reader \&connection) override
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\mbox{\hyperlink{classattentionManager__IDL}{attention\+Manager\+\_\+\+IDL}} IDL Interface to Attention Manager services. 
+
+Definition at line 25 of file attention\+Manager\+\_\+\+IDL.\+h.
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\label{classattentionManager__IDL_ad0b7882cea4dd8b0269cd3eaf0f5dbae}} 
+\index{attentionManager\_IDL@{attentionManager\_IDL}!is\_any\_raised\_hand@{is\_any\_raised\_hand}}
+\index{is\_any\_raised\_hand@{is\_any\_raised\_hand}!attentionManager\_IDL@{attentionManager\_IDL}}
+\doxysubsubsection{\texorpdfstring{is\_any\_raised\_hand()}{is\_any\_raised\_hand()}}
+{\footnotesize\ttfamily virtual std\+::vector$<$std\+::string$>$ attention\+Manager\+\_\+\+IDL\+::is\+\_\+any\+\_\+raised\+\_\+hand (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Check if any skeleton is with one hand raised. 
+
+\begin{DoxyReturn}{Returns}
+the list of skeletons\textquotesingle{} tags. 
+\end{DoxyReturn}
+\mbox{\label{classattentionManager__IDL_a03b844a8bd3d6e2b4cf5ba88ace27429}} 
+\index{attentionManager\_IDL@{attentionManager\_IDL}!is\_following@{is\_following}}
+\index{is\_following@{is\_following}!attentionManager\_IDL@{attentionManager\_IDL}}
+\doxysubsubsection{\texorpdfstring{is\_following()}{is\_following()}}
+{\footnotesize\ttfamily virtual Followed\+Skeleton\+Info attention\+Manager\+\_\+\+IDL\+::is\+\_\+following (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Check if the robot is following a skeleton. 
+
+\begin{DoxyReturn}{Returns}
+info on the followed skeleton in Followed\+Skeleton\+Info format. 
+\end{DoxyReturn}
+\mbox{\label{classattentionManager__IDL_ada750e5a7c6a0bb99be495e24d34dcdd}} 
+\index{attentionManager\_IDL@{attentionManager\_IDL}!is\_running@{is\_running}}
+\index{is\_running@{is\_running}!attentionManager\_IDL@{attentionManager\_IDL}}
+\doxysubsubsection{\texorpdfstring{is\_running()}{is\_running()}}
+{\footnotesize\ttfamily virtual bool attention\+Manager\+\_\+\+IDL\+::is\+\_\+running (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Check if any action is being performed. 
+
+\begin{DoxyReturn}{Returns}
+true/false on running/stationary. 
+\end{DoxyReturn}
+\mbox{\label{classattentionManager__IDL_aa6b2c971be0e878ab259675c83bba2dc}} 
+\index{attentionManager\_IDL@{attentionManager\_IDL}!is\_with\_raised\_hand@{is\_with\_raised\_hand}}
+\index{is\_with\_raised\_hand@{is\_with\_raised\_hand}!attentionManager\_IDL@{attentionManager\_IDL}}
+\doxysubsubsection{\texorpdfstring{is\_with\_raised\_hand()}{is\_with\_raised\_hand()}}
+{\footnotesize\ttfamily virtual bool attention\+Manager\+\_\+\+IDL\+::is\+\_\+with\+\_\+raised\+\_\+hand (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{tag }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Check if the specified skeleton is with one hand raised. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em tag} & the tag of the skeleton. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classattentionManager__IDL_a42941cc508bb57aa390578ecdbfde7c2}} 
+\index{attentionManager\_IDL@{attentionManager\_IDL}!look@{look}}
+\index{look@{look}!attentionManager\_IDL@{attentionManager\_IDL}}
+\doxysubsubsection{\texorpdfstring{look()}{look()}}
+{\footnotesize\ttfamily virtual bool attention\+Manager\+\_\+\+IDL\+::look (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{tag,  }\item[{const std\+::string \&}]{keypoint = {\ttfamily \char`\"{}head\char`\"{}} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Look at the specified skeleton. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em tag} & the tag of the skeleton to look at. \\
+\hline
+{\em keypoint} & the keypoint of the skeleton to look at. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classattentionManager__IDL_a3c0c61fdb996d2b7378c02e6225a6c20}} 
+\index{attentionManager\_IDL@{attentionManager\_IDL}!set\_auto@{set\_auto}}
+\index{set\_auto@{set\_auto}!attentionManager\_IDL@{attentionManager\_IDL}}
+\doxysubsubsection{\texorpdfstring{set\_auto()}{set\_auto()}}
+{\footnotesize\ttfamily virtual bool attention\+Manager\+\_\+\+IDL\+::set\+\_\+auto (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Enable autonomous mode. 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classattentionManager__IDL_ae50c946fce68f55cac50fe5136e1bc02}} 
+\index{attentionManager\_IDL@{attentionManager\_IDL}!set\_robot\_skeleton\_name@{set\_robot\_skeleton\_name}}
+\index{set\_robot\_skeleton\_name@{set\_robot\_skeleton\_name}!attentionManager\_IDL@{attentionManager\_IDL}}
+\doxysubsubsection{\texorpdfstring{set\_robot\_skeleton\_name()}{set\_robot\_skeleton\_name()}}
+{\footnotesize\ttfamily virtual bool attention\+Manager\+\_\+\+IDL\+::set\+\_\+robot\+\_\+skeleton\+\_\+name (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{robot\+\_\+skeleton\+\_\+name }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Set the name of the robot skeleton to avoid following it. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em robot\+\_\+skeleton\+\_\+name} & name of the robot skeleton. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classattentionManager__IDL_a9278a1d0df7c7b1c3b0aa46ef78f8009}} 
+\index{attentionManager\_IDL@{attentionManager\_IDL}!set\_virtual@{set\_virtual}}
+\index{set\_virtual@{set\_virtual}!attentionManager\_IDL@{attentionManager\_IDL}}
+\doxysubsubsection{\texorpdfstring{set\_virtual()}{set\_virtual()}}
+{\footnotesize\ttfamily virtual bool attention\+Manager\+\_\+\+IDL\+::set\+\_\+virtual (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Enable virtual scenario mode. 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classattentionManager__IDL_aa5e3fb18a0336d8b65c316e7f6a675a8}} 
+\index{attentionManager\_IDL@{attentionManager\_IDL}!stop@{stop}}
+\index{stop@{stop}!attentionManager\_IDL@{attentionManager\_IDL}}
+\doxysubsubsection{\texorpdfstring{stop()}{stop()}}
+{\footnotesize\ttfamily virtual bool attention\+Manager\+\_\+\+IDL\+::stop (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Stop any ongoing actions. 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+idl\+\_\+dox/attention\+Manager\+\_\+\+IDL.\+h\end{DoxyCompactItemize}

@@ -1,0 +1,33 @@
+\doxysection{event\+Collector}
+\label{group__eventCollector}\index{eventCollector@{eventCollector}}
+
+
+This module collects events from speech and navigation during a Timed Up and Go (TUG).  
+
+
+This module collects events from speech and navigation during a Timed Up and Go (TUG). 
+
+Version\+:0.\+6.\+0 \begin{DoxyAuthor}{Author}
+Alexandre Antunes \href{mailto:alexandre.gomespereira@iit.it}{\texttt{ alexandre.\+gomespereira@iit.\+it}}, Valentina Vasco \href{mailto:valentina.vasco@iit.it}{\texttt{ valentina.\+vasco@iit.\+it}}, Mattia Fussi \href{mailto:mattia.fussi@iit.it}{\texttt{ mattia.\+fussi@iit.\+it}} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the BSD 3-\/Clause License. 
+\end{DoxyCopyright}
+\hypertarget{group__skeletonViewer_intro_sec}{}\doxysubsection{Description}\label{group__skeletonViewer_intro_sec}
+\hypertarget{group__skeletonViewer_parameters_sec}{}\doxysubsection{Parameters}\label{group__skeletonViewer_parameters_sec}
+
+\begin{DoxyItemize}
+\item --module\+\_\+name\+: Name of the module. All the open ports will be tagged with the prefix /module\+\_\+name. 
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_inputports_sec}{}\doxysubsection{Input Ports}\label{group__skeletonViewer_inputports_sec}
+
+\begin{DoxyItemize}
+\item /event\+Collector/speech\+:i \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives skeletons and lines from objects\+Properties\+Collector.
+\item /event\+Collector/speech-\/process\+:i \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives the answer to the question from google\+Speech\+Processing.
+\item /event\+Collector/obstacle\+:i \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives info (distance and which laser) about the presence of an obstacle from \mbox{\hyperlink{group__obstacleDetector}{obstacle\+Detector}}.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_outputports_sec}{}\doxysubsection{Output Ports}\label{group__skeletonViewer_outputports_sec}
+\hypertarget{group__skeletonViewer_services_sec}{}\doxysubsection{Services}\label{group__skeletonViewer_services_sec}
+
+\begin{DoxyItemize}
+\item /event\+Collector/cmd \mbox{[}rpc-\/server\mbox{]}\+: service port . This service is described in event\+Collector\+\_\+\+IDL (idl.\+thrift) 
+\end{DoxyItemize}

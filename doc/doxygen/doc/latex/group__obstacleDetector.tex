@@ -1,0 +1,35 @@
+\doxysection{obstacle\+Detector}
+\label{group__obstacleDetector}\index{obstacleDetector@{obstacleDetector}}
+
+
+This module detects obstacles using data coming from the robot\textquotesingle{}s laser.  
+
+
+This module detects obstacles using data coming from the robot\textquotesingle{}s laser. 
+
+Version\+:0.\+6.\+0 \begin{DoxyAuthor}{Author}
+Valentina \href{mailto:Vascovalentina.vasco@iit.it}{\texttt{ Vascovalentina.\+vasco@iit.\+it}} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the BSD 3-\/Clause License. 
+\end{DoxyCopyright}
+\hypertarget{group__skeletonViewer_intro_sec}{}\doxysubsection{Description}\label{group__skeletonViewer_intro_sec}
+This moudule aims at detecting obstacles along the robot\textquotesingle{}s path using data coming from the laser. If an obstacle is found, the robot stops navigating.\hypertarget{group__skeletonViewer_parameters_sec}{}\doxysubsection{Parameters}\label{group__skeletonViewer_parameters_sec}
+
+\begin{DoxyItemize}
+\item --period\+: Periodicity of the module (s).
+\item --name\+: Name of the module.
+\item --robot\+: Name of the robot to read laser data from.
+\item --dist-\/thresh\+: Minimum distance between laser points to cluster them (m).
+\item --dist-\/obstacle\+: Distance from the obstacle to stop the navigation (m).
+\item --min-\/points\+: Minimum number of points the cluster can include to be considered valid.
+\item --ver-\/step\+: Vertical resolution shown on the image (Every ver-\/step a circle is shown). 
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_inputports_sec}{}\doxysubsection{Input Ports}\label{group__skeletonViewer_inputports_sec}
+\hypertarget{group__skeletonViewer_outputports_sec}{}\doxysubsection{Output Ports}\label{group__skeletonViewer_outputports_sec}
+
+\begin{DoxyItemize}
+\item /obstacle\+Detector/obstacle\+:o \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Provides info about the obstacle found, including its distance from the robot and from which laser was detected.
+\item /obstacle\+Detector/viewer\+:o \mbox{[}Image\+Of\+Pixel\+Rgb\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Outputs an image with clustered points in different colors.
+\item /obstacle\+Detector/nav\+:rpc \mbox{[}Rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to nav\+Controller.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_services_sec}{}\doxysubsection{Services}\label{group__skeletonViewer_services_sec}

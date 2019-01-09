@@ -1,0 +1,44 @@
+\doxysection{face\+Recognizer}
+\label{group__faceRecognizer}\index{faceRecognizer@{faceRecognizer}}
+
+
+This module is responsible for recognizing human faces from an image, where faces have been detected.  
+
+
+This module is responsible for recognizing human faces from an image, where faces have been detected. 
+
+Version\+:0.\+6.\+0 \begin{DoxyAuthor}{Author}
+Vadim Tikhanoff \href{mailto:vadim.tikhanoff@iit.it}{\texttt{ vadim.\+tikhanoff@iit.\+it}} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the BSD 3-\/Clause License. 
+\end{DoxyCopyright}
+\hypertarget{group__skeletonViewer_intro_sec}{}\doxysubsection{Description}\label{group__skeletonViewer_intro_sec}
+This module is responsible for recognizing human faces from an image, where faces have been detected. The module receives blobs around faces from \mbox{\hyperlink{group__humanStructure}{human\+Structure}} and sends the cropped image to caffe\+Coder, which extracts a vectorial representation of the input image using a previously trained network. The extracted features are finally classified by icub\+\_\+linear\+Classifier. Training can be carried out in real-\/time using the provided API. The module outputs the image with labelled blobs around the recognized faces, and 2D skeletons with the option \char`\"{}\+Name\char`\"{} followed by the label of the face (\char`\"{}?\char`\"{} for empty label) and the size of the blob. The name is used by \mbox{\hyperlink{group__skeletonRetriever}{skeleton\+Retriever}} to set a unique tag to the 3D skeleton.\hypertarget{group__skeletonViewer_parameters_sec}{}\doxysubsection{Parameters}\label{group__skeletonViewer_parameters_sec}
+
+\begin{DoxyItemize}
+\item --name\+: The module\textquotesingle{}s name; all the open ports will be tagged with the prefix /name.
+\item --blobs\+\_\+detection\+\_\+timeout\+: Life span of detected blobs (s).
+\item --training\+\_\+time\+: Time used for training a face (s).
+\item --skip\+\_\+frames\+: Number of frames skipped for sending the cropped image.
+\item --confidence\+\_\+threhold\+: Default value of the confidence threshold. 
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_inputports_sec}{}\doxysubsection{Input Ports}\label{group__skeletonViewer_inputports_sec}
+
+\begin{DoxyItemize}
+\item /face\+Recognizer/blobs\+:i \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives blobs\textquotesingle{} coordinates around detected faces, as top left and bottom right corners.
+\item /face\+Recognizer/image\+:i \mbox{[}Image\+Of\+Pixel\+Rgb\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives the input image.
+\item /face\+Recognizer/target\+:i \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives input skeletons.
+\item /face\+Recognizer/scores\+:i \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives the scores associated to each class.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_outputports_sec}{}\doxysubsection{Output Ports}\label{group__skeletonViewer_outputports_sec}
+
+\begin{DoxyItemize}
+\item /face\+Recognizer/classifier\+:io \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to the classifier for training and classifying.
+\item /face\+Recognizer/image\+:o \mbox{[}Image\+Of\+Pixel\+Rgb\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Streams out the image with labelled blobs around the recognized faces.
+\item /face\+Recognizer/target\+:o \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Streams out 2D skeletons.
+\item /face\+Recognizer/crop\+:o \mbox{[}Image\+Of\+Pixel\+Rgb\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Streams out the region of interest with the recognized face (the closest or the one with a lifted hand).
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_services_sec}{}\doxysubsection{Services}\label{group__skeletonViewer_services_sec}
+
+\begin{DoxyItemize}
+\item /face\+Recognizer/rpc \mbox{[}rpc-\/server\mbox{]}\+: service port . This service is described in \mbox{\hyperlink{classrecognition__IDL}{recognition\+\_\+\+IDL}} (face\+Recognizer.\+thrift) 
+\end{DoxyItemize}

@@ -1,0 +1,42 @@
+\doxysection{feedback\+Synthetizer}
+\label{group__feedbackSynthetizer}\index{feedbackSynthetizer@{feedbackSynthetizer}}
+
+
+This module is responsible for producing a verbal feedback.  
+
+
+This module is responsible for producing a verbal feedback. 
+
+Version\+:0.\+6.\+0 \begin{DoxyAuthor}{Author}
+Valentina Vasco \href{mailto:valentina.vasco@iit.it}{\texttt{ valentina.\+vasco@iit.\+it}} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the BSD 3-\/Clause License. 
+\end{DoxyCopyright}
+\hypertarget{group__skeletonViewer_intro_sec}{}\doxysubsection{Description}\label{group__skeletonViewer_intro_sec}
+This module is responsible for translating the numerical feedback provided by \mbox{\hyperlink{group__feedbackProducer}{feedback\+Producer}} into a verbal feedback. The speak file contains the verbal feedback for the following scenarios\+:
+\begin{DoxyItemize}
+\item \char`\"{}speed\char`\"{}\+: when an error in speed is detected;
+\item \char`\"{}position-\/rom\char`\"{}\+: when an error in position for range of motion exercises is detected;
+\item \char`\"{}position-\/ep\char`\"{}\+: when an error for reaching exercises is detected;
+\item \char`\"{}wrong\char`\"{}\+: when the wrong exercise is performed;
+\item \char`\"{}perfect\char`\"{}\+: when none of the previous situations occurs. The default speak file is in italian; the english version can be loaded by running the module followed by the command --from config-\/en.\+ini (note\+: the yarp dev speech has to be run by setting the default language as english).
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_parameters_sec}{}\doxysubsection{Parameters}\label{group__skeletonViewer_parameters_sec}
+
+\begin{DoxyItemize}
+\item --name\+: The module\textquotesingle{}s name; all the open ports will be tagged with the prefix /name
+\item --from\+: Configuration file name for the speak.
+\item --speak-\/file\+: Configuration file name for the speak.
+\item --period\+: Periodicity of the module (s).
+\item --speak-\/length\+: Maximum number of verbal feedbacks provided. 
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_inputports_sec}{}\doxysubsection{Input Ports}\label{group__skeletonViewer_inputports_sec}
+
+\begin{DoxyItemize}
+\item /feedback\+Synthetizer/dtw\+:i \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives numerical feedback. To be connected to /feedback\+Producer\+:o.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_outputports_sec}{}\doxysubsection{Output Ports}\label{group__skeletonViewer_outputports_sec}
+
+\begin{DoxyItemize}
+\item /feedback\+Synthetizer/speech\+:o \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Streams out the verbal feedback. To be connected to i\+Speak.
+\item /feedback\+Synthetizer/score\+:o \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Streams out the score associated to the performed exercise.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_services_sec}{}\doxysubsection{Services}\label{group__skeletonViewer_services_sec}

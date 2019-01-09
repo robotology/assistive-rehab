@@ -1,0 +1,57 @@
+
+  /**
+  *
+  * @ingroup feedbackSynthetizer
+  * \defgroup feedbackSynthetizer feedbackSynthetizer
+  * This module is responsible for producing a verbal feedback.
+  * Version:0.6.0
+  * \author  Valentina Vasco valentina.vasco@iit.it
+  * \n
+  * \copyright  Released under the terms of the BSD 3-Clause License.
+  * \section intro_sec Description
+  *
+  
+   This module is responsible for translating the numerical feedback provided by \ref feedbackProducer into a verbal feedback.
+   The speak file contains the verbal feedback for the following scenarios:
+   - "speed": when an error in speed is detected;
+   - "position-rom": when an error in position for range of motion exercises is detected;
+   - "position-ep": when an error for reaching exercises is detected;
+   - "wrong": when the wrong exercise is performed;
+   - "perfect": when none of the previous situations occurs.
+   The default speak file is in italian; the english version can be loaded by running the module followed by the command --from config-en.ini (note: the yarp dev speech has to be run by setting the default language as english).
+  
+  * \section parameters_sec Parameters
+  
+  *- --name: The module's name; all the open ports will be tagged with the prefix /name
+  *- --from: Configuration file name for the speak.
+  *- --speak-file: Configuration file name for the speak.
+  *- --period: Periodicity of the module (s).
+  *- --speak-length: Maximum number of verbal feedbacks provided.
+  * \section inputports_sec Input Ports
+  * 
+  *- /feedbackSynthetizer/dtw:i [Bottle]  [default carrier:]: 
+            Receives numerical feedback. To be connected to /feedbackProducer:o.
+          
+  *
+  
+  * \section outputports_sec Output Ports
+  * 
+  *- /feedbackSynthetizer/speech:o [Bottle]  [default carrier:]: 
+            Streams out the verbal feedback. To be connected to \ref iSpeak.
+          
+  *
+  
+  *- /feedbackSynthetizer/score:o [Bottle]  [default carrier:]: 
+            Streams out the score associated to the performed exercise.
+          
+  *
+  
+  *
+  * \section services_sec Services
+  * 
+  *
+  * 
+  *
+  *
+  **/
+

@@ -1,0 +1,357 @@
+\doxysection{assistive\+\_\+rehab\+::Dtw Class Reference}
+\label{classassistive__rehab_1_1Dtw}\index{assistive\_rehab::Dtw@{assistive\_rehab::Dtw}}
+
+
+Class for DTW (Dynamic Time Warping).  
+
+
+
+
+{\ttfamily \#include $<$dtw.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\label{classassistive__rehab_1_1Dtw_a0d7ee684ba230b3c8289f7edd58b18da}} 
+\mbox{\hyperlink{classassistive__rehab_1_1Dtw_a0d7ee684ba230b3c8289f7edd58b18da}{Dtw}} ()
+\begin{DoxyCompactList}\small\item\em Default constructor. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classassistive__rehab_1_1Dtw_adb11d58b5482f14ade22f5f630a24843}{Dtw}} (const int \&win\+\_\+)
+\begin{DoxyCompactList}\small\item\em Overloaded constructor. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classassistive__rehab_1_1Dtw_a0e3012c72cf4c10a53b914ea7f670e10}{align}} (const std\+::vector$<$ double $>$ \&s, const std\+::vector$<$ double $>$ \&t, std\+::vector$<$ double $>$ \&ws, std\+::vector$<$ double $>$ \&wt)
+\begin{DoxyCompactList}\small\item\em Align two 1D temporal sequences s,t. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classassistive__rehab_1_1Dtw_ac63edfdf11768f9e74df20a952c538d3}{align}} (const std\+::vector$<$ std\+::vector$<$ double $>$$>$ \&s, const std\+::vector$<$ std\+::vector$<$ double $>$$>$ \&t, std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&ws, std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&wt)
+\begin{DoxyCompactList}\small\item\em Align two ND temporal sequences s,t. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classassistive__rehab_1_1Dtw_ab530a2ea914ddab06899dfc511a13eed}{get\+Distance}} () const
+\begin{DoxyCompactList}\small\item\em Retrieve the optimal distance. \end{DoxyCompactList}\item 
+\mbox{\label{classassistive__rehab_1_1Dtw_a8d81b36760d197ede52df4c47bedb3ab}} 
+virtual \mbox{\hyperlink{classassistive__rehab_1_1Dtw_a8d81b36760d197ede52df4c47bedb3ab}{$\sim$\+Dtw}} ()
+\begin{DoxyCompactList}\small\item\em Virtual destructor. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+yarp\+::sig\+::\+Matrix \mbox{\hyperlink{classassistive__rehab_1_1Dtw_a9b3ce7097b8646230f2f9a918126bbef}{initialize}} (const int ns, const int nt) const
+\begin{DoxyCompactList}\small\item\em Set the elements of the distance matrix to -\/1, except the (0,0) element set at 0. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classassistive__rehab_1_1Dtw_ab5e7ac2f9658d042c39c0801def854e7}{get\+Warping\+Path}} (const yarp\+::sig\+::\+Matrix \&dist\+Mat, std\+::vector$<$ int $>$ \&ws, std\+::vector$<$ int $>$ \&wt) const
+\begin{DoxyCompactList}\small\item\em Retrieve the optimal warping path. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classassistive__rehab_1_1Dtw_a05a9a7736a0c162303d15ff4f7936b50}{compute\+Distance}} (const std\+::vector$<$ double $>$ \&s, const std\+::vector$<$ double $>$ \&t, yarp\+::sig\+::\+Matrix \&dist\+Mat) const
+\begin{DoxyCompactList}\small\item\em Compute the DTW distance. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\label{classassistive__rehab_1_1Dtw_a136ae6493254529accbdcf73cdce4ce6}} 
+int \mbox{\hyperlink{classassistive__rehab_1_1Dtw_a136ae6493254529accbdcf73cdce4ce6}{win}}
+\begin{DoxyCompactList}\small\item\em window length where the warping path is searched \end{DoxyCompactList}\item 
+\mbox{\label{classassistive__rehab_1_1Dtw_a2931d56d23435f12a7697dde5ec605ed}} 
+double \mbox{\hyperlink{classassistive__rehab_1_1Dtw_a2931d56d23435f12a7697dde5ec605ed}{d}}
+\begin{DoxyCompactList}\small\item\em dtw distance \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Class for DTW (Dynamic Time Warping). 
+
+Definition at line 75 of file dtw.\+h.
+
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\label{classassistive__rehab_1_1Dtw_adb11d58b5482f14ade22f5f630a24843}} 
+\index{assistive\_rehab::Dtw@{assistive\_rehab::Dtw}!Dtw@{Dtw}}
+\index{Dtw@{Dtw}!assistive\_rehab::Dtw@{assistive\_rehab::Dtw}}
+\doxysubsubsection{\texorpdfstring{Dtw()}{Dtw()}}
+{\footnotesize\ttfamily Dtw\+::\+Dtw (\begin{DoxyParamCaption}\item[{const int \&}]{win\+\_\+ }\end{DoxyParamCaption})}
+
+
+
+Overloaded constructor. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em win\+\_\+} & window length where we look for the warping path. If win\+\_\+ = -\/1, the search is carried out on the whole distance matrix. \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 26 of file dtw.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{26                          : Dtw()}
+\DoxyCodeLine{27 \{}
+\DoxyCodeLine{28     win = win\_;}
+\DoxyCodeLine{29 \}}
+
+\end{DoxyCode}
+
+
+References win.
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\label{classassistive__rehab_1_1Dtw_a0e3012c72cf4c10a53b914ea7f670e10}} 
+\index{assistive\_rehab::Dtw@{assistive\_rehab::Dtw}!align@{align}}
+\index{align@{align}!assistive\_rehab::Dtw@{assistive\_rehab::Dtw}}
+\doxysubsubsection{\texorpdfstring{align()}{align()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void assistive\+\_\+rehab\+::\+Dtw\+::align (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ double $>$ \&}]{s,  }\item[{const std\+::vector$<$ double $>$ \&}]{t,  }\item[{std\+::vector$<$ double $>$ \&}]{ws,  }\item[{std\+::vector$<$ double $>$ \&}]{wt }\end{DoxyParamCaption})}
+
+
+
+Align two 1D temporal sequences s,t. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & vector containing the input signal s. \\
+\hline
+{\em t} & vector containing the input signal t. \\
+\hline
+{\em ws} & vector containing the aligned output s. \\
+\hline
+{\em wt} & vector containing the aligned output t. \\
+\hline
+\end{DoxyParams}
+\mbox{\label{classassistive__rehab_1_1Dtw_ac63edfdf11768f9e74df20a952c538d3}} 
+\index{assistive\_rehab::Dtw@{assistive\_rehab::Dtw}!align@{align}}
+\index{align@{align}!assistive\_rehab::Dtw@{assistive\_rehab::Dtw}}
+\doxysubsubsection{\texorpdfstring{align()}{align()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void assistive\+\_\+rehab\+::\+Dtw\+::align (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ std\+::vector$<$ double $>$$>$ \&}]{s,  }\item[{const std\+::vector$<$ std\+::vector$<$ double $>$$>$ \&}]{t,  }\item[{std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&}]{ws,  }\item[{std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&}]{wt }\end{DoxyParamCaption})}
+
+
+
+Align two ND temporal sequences s,t. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & vector of vectors containing the N components over time of the input signal s. \\
+\hline
+{\em t} & vector of vectors containing the N components over time of the input signal t. \\
+\hline
+{\em ws} & vector of vectors containing the N components over time of the aligned output s. \\
+\hline
+{\em wt} & vector of vectors containing the N components over time of the aligned output t. \\
+\hline
+\end{DoxyParams}
+\mbox{\label{classassistive__rehab_1_1Dtw_a05a9a7736a0c162303d15ff4f7936b50}} 
+\index{assistive\_rehab::Dtw@{assistive\_rehab::Dtw}!computeDistance@{computeDistance}}
+\index{computeDistance@{computeDistance}!assistive\_rehab::Dtw@{assistive\_rehab::Dtw}}
+\doxysubsubsection{\texorpdfstring{computeDistance()}{computeDistance()}}
+{\footnotesize\ttfamily double Dtw\+::compute\+Distance (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ double $>$ \&}]{s,  }\item[{const std\+::vector$<$ double $>$ \&}]{t,  }\item[{yarp\+::sig\+::\+Matrix \&}]{dist\+Mat }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Compute the DTW distance. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & vector containing input signal s. \\
+\hline
+{\em t} & vector containing input signal t. \\
+\hline
+{\em dist\+Mat} & matrix containing the output distance matrix. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+DTW distance. 
+\end{DoxyReturn}
+
+
+Definition at line 47 of file dtw.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{48 \{}
+\DoxyCodeLine{49     \textcolor{comment}{//compute distance matrix}}
+\DoxyCodeLine{50     \textcolor{keywordtype}{int} ns=(int)s.size();}
+\DoxyCodeLine{51     \textcolor{keywordtype}{int} nt=(int)t.size();}
+\DoxyCodeLine{52     \textcolor{keywordtype}{int} j1,j2;}
+\DoxyCodeLine{53     \textcolor{keywordtype}{double} cost,temp;}
+\DoxyCodeLine{54     \textcolor{keywordflow}{for}(\textcolor{keywordtype}{int} i=1;i<=ns;i++)}
+\DoxyCodeLine{55     \{}
+\DoxyCodeLine{56         \textcolor{keywordflow}{if}(win==-\/1)}
+\DoxyCodeLine{57         \{}
+\DoxyCodeLine{58             j1=1;}
+\DoxyCodeLine{59             j2=nt;}
+\DoxyCodeLine{60         \}}
+\DoxyCodeLine{61         \textcolor{keywordflow}{else}}
+\DoxyCodeLine{62         \{}
+\DoxyCodeLine{63             j1= i-\/win>1 ? i-\/win : 1;}
+\DoxyCodeLine{64             j2= i+win<nt ? i+win : nt;}
+\DoxyCodeLine{65         \}}
+\DoxyCodeLine{66         \textcolor{keywordflow}{for}(\textcolor{keywordtype}{int} j=j1;j<=j2;j++)}
+\DoxyCodeLine{67         \{}
+\DoxyCodeLine{68             cost=sqrt((s[i-\/1]-\/t[j-\/1])*(s[i-\/1]-\/t[j-\/1]));}
+\DoxyCodeLine{69             temp=distMat[i-\/1][j];}
+\DoxyCodeLine{70             \textcolor{keywordflow}{if}(distMat[i][j-\/1]!=-\/1)}
+\DoxyCodeLine{71             \{}
+\DoxyCodeLine{72                 \textcolor{keywordflow}{if}(temp==-\/1 || distMat[i][j-\/1]<temp)}
+\DoxyCodeLine{73                     temp=distMat[i][j-\/1];}
+\DoxyCodeLine{74             \}}
+\DoxyCodeLine{75             \textcolor{keywordflow}{if}(distMat[i-\/1][j-\/1]!=-\/1)}
+\DoxyCodeLine{76             \{}
+\DoxyCodeLine{77                 \textcolor{keywordflow}{if}(temp==-\/1 || distMat[i-\/1][j-\/1]<temp)}
+\DoxyCodeLine{78                     temp=distMat[i-\/1][j-\/1];}
+\DoxyCodeLine{79             \}}
+\DoxyCodeLine{80             distMat[i][j]=cost+temp;}
+\DoxyCodeLine{81         \}}
+\DoxyCodeLine{82     \}}
+\DoxyCodeLine{83 }
+\DoxyCodeLine{84     \textcolor{keywordflow}{return}(distMat[ns][nt]/nt);}
+\DoxyCodeLine{85 \}}
+
+\end{DoxyCode}
+
+
+References win.
+
+\mbox{\label{classassistive__rehab_1_1Dtw_ab530a2ea914ddab06899dfc511a13eed}} 
+\index{assistive\_rehab::Dtw@{assistive\_rehab::Dtw}!getDistance@{getDistance}}
+\index{getDistance@{getDistance}!assistive\_rehab::Dtw@{assistive\_rehab::Dtw}}
+\doxysubsubsection{\texorpdfstring{getDistance()}{getDistance()}}
+{\footnotesize\ttfamily double assistive\+\_\+rehab\+::\+Dtw\+::get\+Distance (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Retrieve the optimal distance. 
+
+\begin{DoxyReturn}{Returns}
+optimal distance. 
+\end{DoxyReturn}
+
+
+Definition at line 145 of file dtw.\+h.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{145 \{ \textcolor{keywordflow}{return} d; \}}
+
+\end{DoxyCode}
+
+
+References d.
+
+\mbox{\label{classassistive__rehab_1_1Dtw_ab5e7ac2f9658d042c39c0801def854e7}} 
+\index{assistive\_rehab::Dtw@{assistive\_rehab::Dtw}!getWarpingPath@{getWarpingPath}}
+\index{getWarpingPath@{getWarpingPath}!assistive\_rehab::Dtw@{assistive\_rehab::Dtw}}
+\doxysubsubsection{\texorpdfstring{getWarpingPath()}{getWarpingPath()}}
+{\footnotesize\ttfamily void Dtw\+::get\+Warping\+Path (\begin{DoxyParamCaption}\item[{const yarp\+::sig\+::\+Matrix \&}]{dist\+Mat,  }\item[{std\+::vector$<$ int $>$ \&}]{ws,  }\item[{std\+::vector$<$ int $>$ \&}]{wt }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Retrieve the optimal warping path. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em dist\+Mat} & distance matrix. \\
+\hline
+{\em ws} & vector containing the output warping path of s. \\
+\hline
+{\em wt} & vector containing the output warping path of t. \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 87 of file dtw.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{88 \{}
+\DoxyCodeLine{89     \textcolor{keywordtype}{int} m=(int)distMat.rows()-\/1;}
+\DoxyCodeLine{90     \textcolor{keywordtype}{int} n=(int)distMat.cols()-\/1;}
+\DoxyCodeLine{91     \textcolor{keywordtype}{double} temp;}
+\DoxyCodeLine{92 }
+\DoxyCodeLine{93     ws.push\_back(m);}
+\DoxyCodeLine{94     wt.push\_back(n);}
+\DoxyCodeLine{95     \textcolor{keywordflow}{while}( (n+m) != 2 )}
+\DoxyCodeLine{96     \{}
+\DoxyCodeLine{97         \textcolor{keywordflow}{if}( (n-\/1)==0 )}
+\DoxyCodeLine{98         \{}
+\DoxyCodeLine{99             m=m-\/1;}
+\DoxyCodeLine{100         \}}
+\DoxyCodeLine{101         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} ( (m-\/1)==0 )}
+\DoxyCodeLine{102         \{}
+\DoxyCodeLine{103             n=n-\/1;}
+\DoxyCodeLine{104         \}}
+\DoxyCodeLine{105         \textcolor{keywordflow}{else}}
+\DoxyCodeLine{106         \{}
+\DoxyCodeLine{107             temp=distMat[m-\/1][n];}
+\DoxyCodeLine{108             \textcolor{keywordtype}{int} c=0;}
+\DoxyCodeLine{109             \textcolor{keywordflow}{if}(distMat[m][n-\/1]<temp)}
+\DoxyCodeLine{110             \{}
+\DoxyCodeLine{111                 temp=distMat[m][n-\/1];}
+\DoxyCodeLine{112                 c=1;}
+\DoxyCodeLine{113             \}}
+\DoxyCodeLine{114             \textcolor{keywordflow}{if}(distMat[m-\/1][n-\/1]<temp)}
+\DoxyCodeLine{115             \{}
+\DoxyCodeLine{116                 temp=distMat[m-\/1][n-\/1];}
+\DoxyCodeLine{117                 c=2;}
+\DoxyCodeLine{118             \}}
+\DoxyCodeLine{119 }
+\DoxyCodeLine{120             \textcolor{keywordflow}{switch} (c)}
+\DoxyCodeLine{121             \{}
+\DoxyCodeLine{122             \textcolor{keywordflow}{case} 0:}
+\DoxyCodeLine{123                 m=m-\/1;}
+\DoxyCodeLine{124                 \textcolor{keywordflow}{break};}
+\DoxyCodeLine{125             \textcolor{keywordflow}{case} 1:}
+\DoxyCodeLine{126                 n=n-\/1;}
+\DoxyCodeLine{127                 \textcolor{keywordflow}{break};}
+\DoxyCodeLine{128             \textcolor{keywordflow}{case} 2:}
+\DoxyCodeLine{129                 m=m-\/1;}
+\DoxyCodeLine{130                 n=n-\/1;}
+\DoxyCodeLine{131                 \textcolor{keywordflow}{break};}
+\DoxyCodeLine{132             \}}
+\DoxyCodeLine{133         \}}
+\DoxyCodeLine{134 }
+\DoxyCodeLine{135         ws.push\_back(m);}
+\DoxyCodeLine{136         wt.push\_back(n);}
+\DoxyCodeLine{137     \}}
+\DoxyCodeLine{138 }
+\DoxyCodeLine{139 \}}
+
+\end{DoxyCode}
+\mbox{\label{classassistive__rehab_1_1Dtw_a9b3ce7097b8646230f2f9a918126bbef}} 
+\index{assistive\_rehab::Dtw@{assistive\_rehab::Dtw}!initialize@{initialize}}
+\index{initialize@{initialize}!assistive\_rehab::Dtw@{assistive\_rehab::Dtw}}
+\doxysubsubsection{\texorpdfstring{initialize()}{initialize()}}
+{\footnotesize\ttfamily Matrix Dtw\+::initialize (\begin{DoxyParamCaption}\item[{const int}]{ns,  }\item[{const int}]{nt }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Set the elements of the distance matrix to -\/1, except the (0,0) element set at 0. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em ns} & length of input vector s. \\
+\hline
+{\em nt} & length of input vector t. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+a ns x nt distance matrix. 
+\end{DoxyReturn}
+
+
+Definition at line 31 of file dtw.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{32 \{}
+\DoxyCodeLine{33     Matrix distMat(ns+1,nt+1);}
+\DoxyCodeLine{34 }
+\DoxyCodeLine{35     \textcolor{comment}{//initialize distance matrix}}
+\DoxyCodeLine{36     \textcolor{keywordflow}{for}(\textcolor{keywordtype}{int} i=0;i<ns+1;i++)}
+\DoxyCodeLine{37     \{}
+\DoxyCodeLine{38         \textcolor{keywordflow}{for}(\textcolor{keywordtype}{int} j=0;j<nt+1;j++)}
+\DoxyCodeLine{39         \{}
+\DoxyCodeLine{40             distMat[i][j]=-\/1;}
+\DoxyCodeLine{41         \}}
+\DoxyCodeLine{42     \}}
+\DoxyCodeLine{43     distMat[0][0]=0;}
+\DoxyCodeLine{44     \textcolor{keywordflow}{return} distMat;}
+\DoxyCodeLine{45 \}}
+
+\end{DoxyCode}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/home/runner/work/assistive-\/rehab/assistive-\/rehab/gh-\/pages/lib/include/\+Assistive\+Rehab/dtw.\+h\item 
+/home/runner/work/assistive-\/rehab/assistive-\/rehab/gh-\/pages/lib/src/\mbox{\hyperlink{dtw_8cpp}{dtw.\+cpp}}\end{DoxyCompactItemize}

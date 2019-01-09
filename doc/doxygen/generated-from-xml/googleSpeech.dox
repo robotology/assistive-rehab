@@ -1,0 +1,53 @@
+
+  /**
+  *
+  * @ingroup googleSpeech
+  * \defgroup googleSpeech googleSpeech
+  * This module is responsible for recognizing speech in various languages.
+  * Version:0.3.0
+  * \author  Vadim Tikhanoff vadim.tikhanoff@iit.it
+  * \n
+  * \copyright  Released under the terms of the BSD 3-Clause License.
+  * \section intro_sec Description
+  *
+  
+   This module retrieves raw input from the microphone port and queries google cloud speech services and provides the transcript on a port.
+  
+  * \section parameters_sec Parameters
+  
+  *- --name: Module's name; all the open ports will be tagged with the prefix /name.
+  *- --language_code: Use English US
+  *- --sample_rate_hertz: Use 16000 hertz for the sample rate
+  * \section inputports_sec Input Ports
+  * 
+  *- /googleSpeech/sound:i [Sound]  [default carrier:]: 
+            Port to receive sound from the microphone
+          
+  *
+  
+  * \section outputports_sec Output Ports
+  * 
+  *- /googleSpeech/result:o [Bottle]  [default carrier:]: 
+            Sends the transcript result of the output of google
+          
+  *
+  
+  *- /googleSpeech/commands:rpc [rpc]  [default carrier:]: 
+            Sends commands to the microphone device driver to start and stop the acquisition.
+          
+  *
+  
+  *
+  * \section services_sec Services
+  * 
+  *- /googleSpeech/rpc
+  *  [rpc-server]: 
+  * service port
+  * . This service is described in googleSpeech_IDL (idl.thrift)
+  * 
+  *
+  * 
+  *
+  *
+  **/
+

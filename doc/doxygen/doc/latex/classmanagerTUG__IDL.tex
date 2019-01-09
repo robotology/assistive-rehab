@@ -1,0 +1,112 @@
+\doxysection{manager\+TUG\+\_\+\+IDL Class Reference}
+\label{classmanagerTUG__IDL}\index{managerTUG\_IDL@{managerTUG\_IDL}}
+
+
+\mbox{\hyperlink{classmanagerTUG__IDL}{manager\+TUG\+\_\+\+IDL}} IDL Interface to Manager Tug services.  
+
+
+
+
+{\ttfamily \#include $<$manager\+TUG\+\_\+\+IDL.\+h$>$}
+
+
+
+Inherits yarp\+::os\+::\+Wire.
+
+
+
+Inherited by Manager.
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual bool \mbox{\hyperlink{classmanagerTUG__IDL_accbf9248b8f8f7688dba51a324624c0c}{start}} ()
+\begin{DoxyCompactList}\small\item\em Start the interaction. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classmanagerTUG__IDL_a4e4054e0f008e1207c08df67eb92a6ac}{stop}} ()
+\begin{DoxyCompactList}\small\item\em Stop the interaction. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classmanagerTUG__IDL_a0df471a196495dee8c7c8fbc19bd3827}{trigger}} ()
+\begin{DoxyCompactList}\small\item\em Trigger speech. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classmanagerTUG__IDL_a323b64c2ea99a5b4ab2db84a98b630c7}{set\+\_\+target}} (const double x=4.\+5, const double y=0, const double theta=0)
+\begin{DoxyCompactList}\small\item\em Set target to reach in simulation. \end{DoxyCompactList}\item 
+\mbox{\label{classmanagerTUG__IDL_ad4b8169fc41c778f6bb4d0ac75a8a455}} 
+virtual std\+::vector$<$ std\+::string $>$ {\bfseries help} (const std\+::string \&function\+Name=\char`\"{}-\/-\/all\char`\"{})
+\item 
+\mbox{\label{classmanagerTUG__IDL_aebc7f06915a0979d419c2d6b68281fa5}} 
+bool {\bfseries read} (yarp\+::os\+::\+Connection\+Reader \&connection) override
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\mbox{\hyperlink{classmanagerTUG__IDL}{manager\+TUG\+\_\+\+IDL}} IDL Interface to Manager Tug services. 
+
+Definition at line 24 of file manager\+TUG\+\_\+\+IDL.\+h.
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\label{classmanagerTUG__IDL_a323b64c2ea99a5b4ab2db84a98b630c7}} 
+\index{managerTUG\_IDL@{managerTUG\_IDL}!set\_target@{set\_target}}
+\index{set\_target@{set\_target}!managerTUG\_IDL@{managerTUG\_IDL}}
+\doxysubsubsection{\texorpdfstring{set\_target()}{set\_target()}}
+{\footnotesize\ttfamily virtual bool manager\+TUG\+\_\+\+IDL\+::set\+\_\+target (\begin{DoxyParamCaption}\item[{const double}]{x = {\ttfamily 4.5},  }\item[{const double}]{y = {\ttfamily 0},  }\item[{const double}]{theta = {\ttfamily 0} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Set target to reach in simulation. 
+
+Valid only if simulation is set to true. 
+\begin{DoxyParams}{Parameters}
+{\em x} & x-\/coordinate of the target to reach. \\
+\hline
+{\em y} & y-\/coordinate of the target to reach. \\
+\hline
+{\em theta} & theta angle of the target to reach. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classmanagerTUG__IDL_accbf9248b8f8f7688dba51a324624c0c}} 
+\index{managerTUG\_IDL@{managerTUG\_IDL}!start@{start}}
+\index{start@{start}!managerTUG\_IDL@{managerTUG\_IDL}}
+\doxysubsubsection{\texorpdfstring{start()}{start()}}
+{\footnotesize\ttfamily virtual bool manager\+TUG\+\_\+\+IDL\+::start (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Start the interaction. 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classmanagerTUG__IDL_a4e4054e0f008e1207c08df67eb92a6ac}} 
+\index{managerTUG\_IDL@{managerTUG\_IDL}!stop@{stop}}
+\index{stop@{stop}!managerTUG\_IDL@{managerTUG\_IDL}}
+\doxysubsubsection{\texorpdfstring{stop()}{stop()}}
+{\footnotesize\ttfamily virtual bool manager\+TUG\+\_\+\+IDL\+::stop (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Stop the interaction. 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classmanagerTUG__IDL_a0df471a196495dee8c7c8fbc19bd3827}} 
+\index{managerTUG\_IDL@{managerTUG\_IDL}!trigger@{trigger}}
+\index{trigger@{trigger}!managerTUG\_IDL@{managerTUG\_IDL}}
+\doxysubsubsection{\texorpdfstring{trigger()}{trigger()}}
+{\footnotesize\ttfamily virtual bool manager\+TUG\+\_\+\+IDL\+::trigger (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Trigger speech. 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+idl\+\_\+dox/manager\+TUG\+\_\+\+IDL.\+h\end{DoxyCompactItemize}

@@ -1,0 +1,1110 @@
+\doxysection{assistive\+\_\+rehab\+::Skeleton Class Reference}
+\label{classassistive__rehab_1_1Skeleton}\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+
+
+Abstract class for skeleton.  
+
+
+
+
+{\ttfamily \#include $<$skeleton.\+h$>$}
+
+Inheritance diagram for assistive\+\_\+rehab\+::Skeleton\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classassistive__rehab_1_1Skeleton}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\label{classassistive__rehab_1_1Skeleton_af01a02f1ce9ae4c801cd6e66ccf7407f}} 
+\mbox{\hyperlink{classassistive__rehab_1_1Skeleton_af01a02f1ce9ae4c801cd6e66ccf7407f}{Skeleton}} ()
+\begin{DoxyCompactList}\small\item\em Default constructor. \end{DoxyCompactList}\item 
+\mbox{\label{classassistive__rehab_1_1Skeleton_a5bd61b69a0526271e7aa5de41e62200d}} 
+\mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a5bd61b69a0526271e7aa5de41e62200d}{Skeleton}} (const \mbox{\hyperlink{classassistive__rehab_1_1Skeleton}{Skeleton}} \&)=delete
+\begin{DoxyCompactList}\small\item\em Deleted copy constructor. \end{DoxyCompactList}\item 
+\mbox{\label{classassistive__rehab_1_1Skeleton_abedc3e06f870efa7e4b445606a0c1cde}} 
+\mbox{\hyperlink{classassistive__rehab_1_1Skeleton}{Skeleton}} \& \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_abedc3e06f870efa7e4b445606a0c1cde}{operator=}} (const \mbox{\hyperlink{classassistive__rehab_1_1Skeleton}{Skeleton}} \&)=delete
+\begin{DoxyCompactList}\small\item\em Deleted copy operator. \end{DoxyCompactList}\item 
+\mbox{\label{classassistive__rehab_1_1Skeleton_aeece886a4e2f039128144f94f25efd10}} 
+virtual \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_aeece886a4e2f039128144f94f25efd10}{$\sim$\+Skeleton}} ()
+\begin{DoxyCompactList}\small\item\em Virtual destructor. \end{DoxyCompactList}\item 
+const std\+::string \& \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a4efc4844bd2b185f1080ee52ab69cb04}{get\+Type}} () const
+\begin{DoxyCompactList}\small\item\em Return a reference to the type of the skeleton. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_ae1c830e3d9a0ba692e5ae297caa52a82}{set\+Tag}} (const std\+::string \&\mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a3d1ce5280300e012826948dc4383c2cb}{tag}})
+\begin{DoxyCompactList}\small\item\em Set the tag of the skeleton. \end{DoxyCompactList}\item 
+const std\+::string \& \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a185654045d5e43b3853cdb8fdd676da6}{get\+Tag}} () const
+\begin{DoxyCompactList}\small\item\em Return a reference to the tag of the skeleton. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a3486cbd7f59e75c1d9ef26cbc05bb72f}{set\+Transformation}} (const yarp\+::sig\+::\+Matrix \&\mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a358a1c5eb23a562f8558ff8d43583ef7}{T}})
+\begin{DoxyCompactList}\small\item\em Set a new transformation matrix of the skeleton. \end{DoxyCompactList}\item 
+const yarp\+::sig\+::\+Matrix \& \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a2bdcc0d686a5a232aa2c07528cf2e647}{get\+Transformation}} () const
+\begin{DoxyCompactList}\small\item\em Retrieve the transformation matrix of the skeleton. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_ab3bd697f48ea69cfdc5ff7574c19041f}{set\+Coronal}} (const yarp\+::sig\+::\+Vector \&\mbox{\hyperlink{classassistive__rehab_1_1Skeleton_ad042a7e60e6d72cc87b06c5fb0bdfae2}{coronal}})
+\begin{DoxyCompactList}\small\item\em Set a new coronal plane to the skeleton. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_af92fdb0e3eb88a0b1dedd5038e2c6eb7}{set\+Sagittal}} (const yarp\+::sig\+::\+Vector \&\mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a72d6ccb619619e77a17258b08496a972}{sagittal}})
+\begin{DoxyCompactList}\small\item\em Set a new sagittal plane to the skeleton. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a1aeba05a17363afc08c30397d17375df}{set\+Transverse}} (const yarp\+::sig\+::\+Vector \&\mbox{\hyperlink{classassistive__rehab_1_1Skeleton_ab8a9bf9297f520e8de801248e0b8d2dd}{transverse}})
+\begin{DoxyCompactList}\small\item\em Set a new transverse plane to the skeleton. \end{DoxyCompactList}\item 
+yarp\+::sig\+::\+Vector \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_aa241a0ac93a9ead198f985073c8935eb}{get\+Coronal}} () const
+\begin{DoxyCompactList}\small\item\em Retrieve the coronal plane of the skeleton. \end{DoxyCompactList}\item 
+yarp\+::sig\+::\+Vector \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a83133fabc903ddd4e54edf59df977167}{get\+Sagittal}} () const
+\begin{DoxyCompactList}\small\item\em Retrieve the sagittal plane of the skeleton. \end{DoxyCompactList}\item 
+yarp\+::sig\+::\+Vector \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a35c3cdea575eb474a2cb8e0186011cff}{get\+Transverse}} () const
+\begin{DoxyCompactList}\small\item\em Retrieve the transverse plane of the skeleton. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_acda9030cd2ed3ad92697418a5e2cff7c}{get\+Max\+Path}} () const
+\begin{DoxyCompactList}\small\item\em Retrieve the skeleton\textquotesingle{}s maximum path. \end{DoxyCompactList}\item 
+virtual yarp\+::os\+::\+Property \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_ad58ea53a165abc3f39a3c46594f0560f}{to\+Property}} ()
+\begin{DoxyCompactList}\small\item\em Export the skeleton structure as a property. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_ac844f66503de87859833056dc33a835b}{from\+Property}} (const yarp\+::os\+::\+Property \&prop)
+\begin{DoxyCompactList}\small\item\em Import the skeleton structure from its properties. \end{DoxyCompactList}\item 
+unsigned int \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_ac5e5b98f2c9178f6e0def5033e27922f}{get\+Num\+Key\+Points}} () const
+\begin{DoxyCompactList}\small\item\em Retrieve the number of keypoints of the skeleton. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a954bfa99e0dad997ca6d93495246d3f1}{get\+Num\+From\+Key}} (const std\+::string \&\mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a3d1ce5280300e012826948dc4383c2cb}{tag}}) const
+\begin{DoxyCompactList}\small\item\em Retrieve the index of the keypoint from its tag. \end{DoxyCompactList}\item 
+const \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint}{Key\+Point}} $\ast$ \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a3ecc7418af653c88e40d41bb379b7271}{operator\mbox{[}$\,$\mbox{]}}} (const std\+::string \&\mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a3d1ce5280300e012826948dc4383c2cb}{tag}}) const
+\begin{DoxyCompactList}\small\item\em Keypoint access. \end{DoxyCompactList}\item 
+const \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint}{Key\+Point}} $\ast$ \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a0692ab89f16b0914b9ca9e0d4a07e52c}{operator\mbox{[}$\,$\mbox{]}}} (const unsigned int i) const
+\begin{DoxyCompactList}\small\item\em Keypoint access. \end{DoxyCompactList}\item 
+\mbox{\label{classassistive__rehab_1_1Skeleton_a1ba2ba229331f7966ff1bce10c776d99}} 
+virtual void \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a1ba2ba229331f7966ff1bce10c776d99}{update}} ()
+\begin{DoxyCompactList}\small\item\em Update skeleton. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_adbb387558eac21173b7c82cb43acd603}{update}} (const std\+::vector$<$ yarp\+::sig\+::\+Vector $>$ \&ordered)
+\begin{DoxyCompactList}\small\item\em Update skeleton from ordered list. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_ab9642d6621d0a2b189c020f4d7695b14}{update}} (const std\+::vector$<$ std\+::pair$<$ std\+::string, yarp\+::sig\+::\+Vector $>$$>$ \&unordered)
+\begin{DoxyCompactList}\small\item\em Update skeleton from unordered list. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a20d9eb5aecd6dccfa7e049bb932a6cef}{update\+\_\+withpixels}} (const std\+::vector$<$ std\+::pair$<$ yarp\+::sig\+::\+Vector, yarp\+::sig\+::\+Vector $>$$>$ \&ordered)
+\begin{DoxyCompactList}\small\item\em Update skeleton from ordered list. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a36e9dfd4910120025e40ccc3d03c0e01}{update\+\_\+withpixels}} (const std\+::vector$<$ std\+::pair$<$ std\+::string, std\+::pair$<$ yarp\+::sig\+::\+Vector, yarp\+::sig\+::\+Vector $>$$>$$>$ \&unordered)
+\begin{DoxyCompactList}\small\item\em Update skeleton from unordered list. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_ae3346b2f363e1812fdc88e59d1f7bf7d}{update}} (const yarp\+::os\+::\+Property \&prop)
+\begin{DoxyCompactList}\small\item\em Update skeleton from properties. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_af0ee2be195f804a9562cb184a2be0bad}{update\+\_\+planes}} ()=0
+\begin{DoxyCompactList}\small\item\em Update skeleton planes. \end{DoxyCompactList}\item 
+virtual std\+::vector$<$ yarp\+::sig\+::\+Vector $>$ \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a9c56f7f9e243ae2c4c3fef6dbb051dc2}{get\+\_\+ordered}} () const
+\begin{DoxyCompactList}\small\item\em Retrieve the ordered list of keypoints. \end{DoxyCompactList}\item 
+virtual std\+::vector$<$ std\+::pair$<$ std\+::string, yarp\+::sig\+::\+Vector $>$ $>$ \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a7b9f01b2b0f5450920335347c5861a2f}{get\+\_\+unordered}} () const
+\begin{DoxyCompactList}\small\item\em Retrieve the unordered list of keypoints. \end{DoxyCompactList}\item 
+virtual std\+::vector$<$ std\+::pair$<$ yarp\+::sig\+::\+Vector, yarp\+::sig\+::\+Vector $>$ $>$ \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a270506cde494cb4261c7892edb46ce53}{get\+\_\+ordered\+\_\+withpixels}} () const
+\begin{DoxyCompactList}\small\item\em Retrieve the ordered list of keypoints. \end{DoxyCompactList}\item 
+virtual std\+::vector$<$ std\+::pair$<$ std\+::string, std\+::pair$<$ yarp\+::sig\+::\+Vector, yarp\+::sig\+::\+Vector $>$ $>$ $>$ \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a513a3dc56d55a7b10b256378ae63c6c7}{get\+\_\+unordered\+\_\+withpixels}} () const
+\begin{DoxyCompactList}\small\item\em Retrieve the unordered list of keypoints. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a7753cc8d2b43e27eaf7bf9ef640a99cb}{normalize}} (const double n=1.\+0)
+\begin{DoxyCompactList}\small\item\em Normalize skeleton in order to have unitary/desired distance among keypoints. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a21fded128e2240e4dd507030b7386670}{scale}} (const double s)
+\begin{DoxyCompactList}\small\item\em Rescale skeleton. \end{DoxyCompactList}\item 
+\mbox{\label{classassistive__rehab_1_1Skeleton_a58289ea0ba49220afac3e8d7128493b4}} 
+void \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a58289ea0ba49220afac3e8d7128493b4}{print}} (std\+::ostream \&os=std\+::cout) const
+\begin{DoxyCompactList}\small\item\em Print skeleton information. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\label{classassistive__rehab_1_1Skeleton_ae448d21825bfd36eccb328d16fef995a}} 
+yarp\+::os\+::\+Property {\bfseries helper\+\_\+toproperty} (\mbox{\hyperlink{classassistive__rehab_1_1KeyPoint}{Key\+Point}} $\ast$k) const
+\item 
+\mbox{\label{classassistive__rehab_1_1Skeleton_a8e8fcac9b911ce9eaa0a97b81bffb357}} 
+void {\bfseries helper\+\_\+fromproperty} (yarp\+::os\+::\+Bottle $\ast$prop, \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint}{Key\+Point}} $\ast$parent)
+\item 
+\mbox{\label{classassistive__rehab_1_1Skeleton_a8b1fa988e848ef1fc06439be8eaa19a4}} 
+void {\bfseries helper\+\_\+updatefromproperty} (yarp\+::os\+::\+Bottle $\ast$prop)
+\item 
+\mbox{\label{classassistive__rehab_1_1Skeleton_a574ad07752a2a59ea765e10282998bb4}} 
+void {\bfseries helper\+\_\+normalize} (\mbox{\hyperlink{classassistive__rehab_1_1KeyPoint}{Key\+Point}} $\ast$k, const std\+::vector$<$ yarp\+::sig\+::\+Vector $>$ \&helperpoints, const double n)
+\item 
+\mbox{\label{classassistive__rehab_1_1Skeleton_aefdf8624092fcc2b5458b0be108da01a}} 
+void {\bfseries helper\+\_\+scale} (\mbox{\hyperlink{classassistive__rehab_1_1KeyPoint}{Key\+Point}} $\ast$k, const std\+::vector$<$ yarp\+::sig\+::\+Vector $>$ \&helperpoints, const double s)
+\item 
+\mbox{\label{classassistive__rehab_1_1Skeleton_a66ea19f4fbec2b654e394686180abf43}} 
+double {\bfseries helper\+\_\+getmaxpath} (\mbox{\hyperlink{classassistive__rehab_1_1KeyPoint}{Key\+Point}} $\ast$k, std\+::vector$<$ bool $>$ \&visited) const
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\label{classassistive__rehab_1_1Skeleton_a679b826030f01f307d938e583f27d23b}} 
+std\+::string \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a679b826030f01f307d938e583f27d23b}{type}}
+\begin{DoxyCompactList}\small\item\em skeleton\textquotesingle{}s type (\char`\"{}assistive\+\_\+rehab\+::\+Skeleton\+Std\char`\"{}) \end{DoxyCompactList}\item 
+\mbox{\label{classassistive__rehab_1_1Skeleton_a3d1ce5280300e012826948dc4383c2cb}} 
+std\+::string \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a3d1ce5280300e012826948dc4383c2cb}{tag}}
+\begin{DoxyCompactList}\small\item\em skeleton\textquotesingle{}s tag \end{DoxyCompactList}\item 
+\mbox{\label{classassistive__rehab_1_1Skeleton_a5f61fbdd10430985cd6754e182226787}} 
+std\+::vector$<$ \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint}{Key\+Point}} $\ast$ $>$ \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a5f61fbdd10430985cd6754e182226787}{keypoints}}
+\begin{DoxyCompactList}\small\item\em vector of pointer to \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint}{Key\+Point}} \end{DoxyCompactList}\item 
+\mbox{\label{classassistive__rehab_1_1Skeleton_ada4d4b327f1f71520e62e42db9d4c656}} 
+std\+::unordered\+\_\+map$<$ std\+::string, \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint}{Key\+Point}} $\ast$ $>$ \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_ada4d4b327f1f71520e62e42db9d4c656}{tag2key}}
+\begin{DoxyCompactList}\small\item\em map associating a tag to a pointer to a \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint}{Key\+Point}} \end{DoxyCompactList}\item 
+\mbox{\label{classassistive__rehab_1_1Skeleton_a4b1c3607cabb58053e4c367015e98e28}} 
+std\+::unordered\+\_\+map$<$ \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint}{Key\+Point}} $\ast$, unsigned int $>$ \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a4b1c3607cabb58053e4c367015e98e28}{key2id}}
+\begin{DoxyCompactList}\small\item\em map associating a pointer to a \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint}{Key\+Point}} to an index \end{DoxyCompactList}\item 
+\mbox{\label{classassistive__rehab_1_1Skeleton_a358a1c5eb23a562f8558ff8d43583ef7}} 
+yarp\+::sig\+::\+Matrix \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a358a1c5eb23a562f8558ff8d43583ef7}{T}}
+\begin{DoxyCompactList}\small\item\em transformation matrix \end{DoxyCompactList}\item 
+\mbox{\label{classassistive__rehab_1_1Skeleton_ad042a7e60e6d72cc87b06c5fb0bdfae2}} 
+yarp\+::sig\+::\+Vector \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_ad042a7e60e6d72cc87b06c5fb0bdfae2}{coronal}}
+\begin{DoxyCompactList}\small\item\em vector containing the normal to the coronal plane \end{DoxyCompactList}\item 
+\mbox{\label{classassistive__rehab_1_1Skeleton_a72d6ccb619619e77a17258b08496a972}} 
+yarp\+::sig\+::\+Vector \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_a72d6ccb619619e77a17258b08496a972}{sagittal}}
+\begin{DoxyCompactList}\small\item\em vector containing the normal to the sagittal plane \end{DoxyCompactList}\item 
+\mbox{\label{classassistive__rehab_1_1Skeleton_ab8a9bf9297f520e8de801248e0b8d2dd}} 
+yarp\+::sig\+::\+Vector \mbox{\hyperlink{classassistive__rehab_1_1Skeleton_ab8a9bf9297f520e8de801248e0b8d2dd}{transverse}}
+\begin{DoxyCompactList}\small\item\em vector containing the normal to the transverse plane \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Abstract class for skeleton. 
+
+Definition at line 220 of file skeleton.\+h.
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\label{classassistive__rehab_1_1Skeleton_ac844f66503de87859833056dc33a835b}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!fromProperty@{fromProperty}}
+\index{fromProperty@{fromProperty}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{fromProperty()}{fromProperty()}}
+{\footnotesize\ttfamily void Skeleton\+::from\+Property (\begin{DoxyParamCaption}\item[{const yarp\+::os\+::\+Property \&}]{prop }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Import the skeleton structure from its properties. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em prop} & Property object containing the properties of a skeleton.\\
+\hline
+\end{DoxyParams}
+Available properties are\+:
+\begin{DoxyItemize}
+\item type\+: string containing skeleton\textquotesingle{}s type (\char`\"{}assistive\+\_\+rehab\+::\+Skeleton\+Std\char`\"{}).
+\item tag\+: string containing skeleton\textquotesingle{}s tag.
+\item transformation\+: 4 x 4 skeleton\textquotesingle{}s roto-\/translation matrix.
+\item coronal\+: vector containing skeleton\textquotesingle{}s coronal plane.
+\item sagittal\+: vector containing skeleton\textquotesingle{}s sagittal plane.
+\item transverse\+: vector containing skeleton\textquotesingle{}s transverse plane.
+\item skeleton\+: list containing keypoints with the following subproperties\+:
+\begin{DoxyItemize}
+\item tag\+: string containing keypoint\textquotesingle{}s tag.
+\item status\+: string containing keypoint\textquotesingle{}s status (updated or stale).
+\item position\+: vector containing keypoint\textquotesingle{}s camera coordinates x,y,z.
+\item pixel\+: vector containing keypoint\textquotesingle{}s image coordinates u,v.
+\item child\+: list containing keypoint\textquotesingle{}s child, specified as position, status, tag. 
+\end{DoxyItemize}
+\end{DoxyItemize}
+
+Definition at line 400 of file skeleton.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{401 \{}
+\DoxyCodeLine{402     \textcolor{keywordflow}{for} (\textcolor{keyword}{auto} \&k:keypoints)}
+\DoxyCodeLine{403         \textcolor{keyword}{delete} k;}
+\DoxyCodeLine{404 }
+\DoxyCodeLine{405     keypoints.clear();}
+\DoxyCodeLine{406     tag2key.clear();}
+\DoxyCodeLine{407     key2id.clear();}
+\DoxyCodeLine{408 }
+\DoxyCodeLine{409     tag=prop.check(\textcolor{stringliteral}{"{}tag"{}},Value(\textcolor{stringliteral}{"{}"{}})).asString();}
+\DoxyCodeLine{410     \textcolor{keywordflow}{if} (prop.check(\textcolor{stringliteral}{"{}transformation"{}}))}
+\DoxyCodeLine{411     \{}
+\DoxyCodeLine{412         \textcolor{keywordflow}{if} (Bottle *b=prop.find(\textcolor{stringliteral}{"{}transformation"{}}).asList())}
+\DoxyCodeLine{413             b-\/>write(T);}
+\DoxyCodeLine{414     \}}
+\DoxyCodeLine{415     \textcolor{keywordflow}{else}}
+\DoxyCodeLine{416         T=eye(4,4);}
+\DoxyCodeLine{417 }
+\DoxyCodeLine{418     coronal=sagittal=transverse=zeros(3);}
+\DoxyCodeLine{419     \textcolor{keywordflow}{if} (prop.check(\textcolor{stringliteral}{"{}coronal"{}}))}
+\DoxyCodeLine{420         \textcolor{keywordflow}{if} (Bottle *b=prop.find(\textcolor{stringliteral}{"{}coronal"{}}).asList())}
+\DoxyCodeLine{421             b-\/>write(coronal);}
+\DoxyCodeLine{422     \textcolor{keywordflow}{if} (prop.check(\textcolor{stringliteral}{"{}sagittal"{}}))}
+\DoxyCodeLine{423         \textcolor{keywordflow}{if} (Bottle *b=prop.find(\textcolor{stringliteral}{"{}sagittal"{}}).asList())}
+\DoxyCodeLine{424             b-\/>write(sagittal);}
+\DoxyCodeLine{425     \textcolor{keywordflow}{if} (prop.check(\textcolor{stringliteral}{"{}transverse"{}}))}
+\DoxyCodeLine{426         \textcolor{keywordflow}{if} (Bottle *b=prop.find(\textcolor{stringliteral}{"{}transverse"{}}).asList())}
+\DoxyCodeLine{427             b-\/>write(transverse);}
+\DoxyCodeLine{428     helper\_fromproperty(prop.find(\textcolor{stringliteral}{"{}skeleton"{}}).asList(),\textcolor{keyword}{nullptr});}
+\DoxyCodeLine{429 \}}
+
+\end{DoxyCode}
+
+
+References coronal, key2id, keypoints, sagittal, T, tag, tag2key, and transverse.
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_a9c56f7f9e243ae2c4c3fef6dbb051dc2}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!get\_ordered@{get\_ordered}}
+\index{get\_ordered@{get\_ordered}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{get\_ordered()}{get\_ordered()}}
+{\footnotesize\ttfamily vector$<$ Vector $>$ Skeleton\+::get\+\_\+ordered (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Retrieve the ordered list of keypoints. 
+
+\begin{DoxyReturn}{Returns}
+vector containing the ordered list of keypoints, each specified as vector containing the x,y,z camera coordinates. 
+\end{DoxyReturn}
+
+
+Definition at line 581 of file skeleton.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{582 \{}
+\DoxyCodeLine{583     vector<Vector> ordered;}
+\DoxyCodeLine{584     \textcolor{keywordflow}{for} (\textcolor{keyword}{auto} \&k:keypoints)}
+\DoxyCodeLine{585         ordered.push\_back(k-\/>getPoint());}
+\DoxyCodeLine{586     \textcolor{keywordflow}{return} ordered;}
+\DoxyCodeLine{587 \}}
+
+\end{DoxyCode}
+
+
+References assistive\+\_\+rehab\+::\+Key\+Point\+::get\+Point(), and keypoints.
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_a270506cde494cb4261c7892edb46ce53}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!get\_ordered\_withpixels@{get\_ordered\_withpixels}}
+\index{get\_ordered\_withpixels@{get\_ordered\_withpixels}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{get\_ordered\_withpixels()}{get\_ordered\_withpixels()}}
+{\footnotesize\ttfamily vector$<$ pair$<$ Vector, Vector $>$ $>$ Skeleton\+::get\+\_\+ordered\+\_\+withpixels (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Retrieve the ordered list of keypoints. 
+
+\begin{DoxyReturn}{Returns}
+vector containing the ordered list of keypoints, each specified as a pair of vectors with x,y,z and u,v coordinates. 
+\end{DoxyReturn}
+
+
+Definition at line 597 of file skeleton.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{598 \{}
+\DoxyCodeLine{599     vector<pair<Vector,Vector>> ordered;}
+\DoxyCodeLine{600     \textcolor{keywordflow}{for} (\textcolor{keyword}{auto} \&k:keypoints)}
+\DoxyCodeLine{601         ordered.push\_back(make\_pair(k-\/>getPoint(),k-\/>getPixel()));}
+\DoxyCodeLine{602     \textcolor{keywordflow}{return} ordered;}
+\DoxyCodeLine{603 \}}
+
+\end{DoxyCode}
+
+
+References assistive\+\_\+rehab\+::\+Key\+Point\+::get\+Pixel(), assistive\+\_\+rehab\+::\+Key\+Point\+::get\+Point(), and keypoints.
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_a7b9f01b2b0f5450920335347c5861a2f}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!get\_unordered@{get\_unordered}}
+\index{get\_unordered@{get\_unordered}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{get\_unordered()}{get\_unordered()}}
+{\footnotesize\ttfamily vector$<$ pair$<$ string, Vector $>$ $>$ Skeleton\+::get\+\_\+unordered (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Retrieve the unordered list of keypoints. 
+
+\begin{DoxyReturn}{Returns}
+vector containing an unordered list of keypoints, each specified as pair which associates a string, containing the keypoint\textquotesingle{}s tag, and a vector, containing the x,y,z camera coordinates. 
+\end{DoxyReturn}
+
+
+Definition at line 589 of file skeleton.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{590 \{}
+\DoxyCodeLine{591     vector<pair<string,Vector>> unordered;}
+\DoxyCodeLine{592     \textcolor{keywordflow}{for} (\textcolor{keyword}{auto} \&it:tag2key)}
+\DoxyCodeLine{593         unordered.push\_back(make\_pair(it.first,it.second-\/>getPoint()));}
+\DoxyCodeLine{594     \textcolor{keywordflow}{return} unordered;}
+\DoxyCodeLine{595 \}}
+
+\end{DoxyCode}
+
+
+References tag2key.
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_a513a3dc56d55a7b10b256378ae63c6c7}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!get\_unordered\_withpixels@{get\_unordered\_withpixels}}
+\index{get\_unordered\_withpixels@{get\_unordered\_withpixels}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{get\_unordered\_withpixels()}{get\_unordered\_withpixels()}}
+{\footnotesize\ttfamily vector$<$ pair$<$ string, pair$<$ Vector, Vector $>$ $>$ $>$ Skeleton\+::get\+\_\+unordered\+\_\+withpixels (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Retrieve the unordered list of keypoints. 
+
+\begin{DoxyReturn}{Returns}
+vector containing an unordered list of keypoints, each specified as pair that associates a string containing the keypoint\textquotesingle{}s tag to a pair of vectors of x,y,z and u,v coordinates. 
+\end{DoxyReturn}
+
+
+Definition at line 605 of file skeleton.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{606 \{}
+\DoxyCodeLine{607     vector<pair<string,pair<Vector,Vector>>> unordered;}
+\DoxyCodeLine{608     \textcolor{keywordflow}{for} (\textcolor{keyword}{auto} \&it:tag2key)}
+\DoxyCodeLine{609         unordered.push\_back(make\_pair(it.first,make\_pair(it.second-\/>getPoint(),it.second-\/>getPixel())));}
+\DoxyCodeLine{610     \textcolor{keywordflow}{return} unordered;}
+\DoxyCodeLine{611 \}}
+
+\end{DoxyCode}
+
+
+References tag2key.
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_aa241a0ac93a9ead198f985073c8935eb}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!getCoronal@{getCoronal}}
+\index{getCoronal@{getCoronal}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{getCoronal()}{getCoronal()}}
+{\footnotesize\ttfamily Vector Skeleton\+::get\+Coronal (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Retrieve the coronal plane of the skeleton. 
+
+\begin{DoxyReturn}{Returns}
+vector containing x,y,z coordinates of the normal to skeleton\textquotesingle{}s coronal plane. 
+\end{DoxyReturn}
+
+
+Definition at line 340 of file skeleton.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{341 \{}
+\DoxyCodeLine{342     \textcolor{keywordflow}{return} coronal;}
+\DoxyCodeLine{343 \}}
+
+\end{DoxyCode}
+
+
+References coronal.
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_acda9030cd2ed3ad92697418a5e2cff7c}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!getMaxPath@{getMaxPath}}
+\index{getMaxPath@{getMaxPath}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{getMaxPath()}{getMaxPath()}}
+{\footnotesize\ttfamily double Skeleton\+::get\+Max\+Path (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Retrieve the skeleton\textquotesingle{}s maximum path. 
+
+\begin{DoxyReturn}{Returns}
+skeleton\textquotesingle{}s maximum path. 
+\end{DoxyReturn}
+
+
+Definition at line 355 of file skeleton.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{356 \{}
+\DoxyCodeLine{357     Vector paths(1,0.0);}
+\DoxyCodeLine{358     \textcolor{keywordflow}{for} (\textcolor{keyword}{auto} \&k:keypoints)}
+\DoxyCodeLine{359     \{}
+\DoxyCodeLine{360         vector<bool> visited(getNumKeyPoints(),\textcolor{keyword}{false});}
+\DoxyCodeLine{361         paths.push\_back(helper\_getmaxpath(k,visited));}
+\DoxyCodeLine{362     \}}
+\DoxyCodeLine{363     \textcolor{keywordflow}{return} findMax(paths);}
+\DoxyCodeLine{364 \}}
+
+\end{DoxyCode}
+
+
+References get\+Num\+Key\+Points(), and keypoints.
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_a954bfa99e0dad997ca6d93495246d3f1}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!getNumFromKey@{getNumFromKey}}
+\index{getNumFromKey@{getNumFromKey}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{getNumFromKey()}{getNumFromKey()}}
+{\footnotesize\ttfamily int Skeleton\+::get\+Num\+From\+Key (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{tag }\end{DoxyParamCaption}) const}
+
+
+
+Retrieve the index of the keypoint from its tag. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em tag} & string containing the keypoint\textquotesingle{}s tag. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+skeleton\textquotesingle{}s number of keypoints. 
+\end{DoxyReturn}
+
+
+Definition at line 431 of file skeleton.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{432 \{}
+\DoxyCodeLine{433     \textcolor{keyword}{auto} it1=tag2key.find(tag);}
+\DoxyCodeLine{434     \textcolor{keywordflow}{if} (it1!=tag2key.end())}
+\DoxyCodeLine{435     \{}
+\DoxyCodeLine{436         \textcolor{keyword}{auto} it2=key2id.find(it1-\/>second);}
+\DoxyCodeLine{437         \textcolor{keywordflow}{if} (it2!=key2id.end())}
+\DoxyCodeLine{438             \textcolor{keywordflow}{return} (\textcolor{keywordtype}{int})it2-\/>second;}
+\DoxyCodeLine{439     \}}
+\DoxyCodeLine{440     \textcolor{keywordflow}{return} -\/1;}
+\DoxyCodeLine{441 \}}
+
+\end{DoxyCode}
+
+
+References key2id, tag, and tag2key.
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_ac5e5b98f2c9178f6e0def5033e27922f}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!getNumKeyPoints@{getNumKeyPoints}}
+\index{getNumKeyPoints@{getNumKeyPoints}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{getNumKeyPoints()}{getNumKeyPoints()}}
+{\footnotesize\ttfamily unsigned int assistive\+\_\+rehab\+::\+Skeleton\+::get\+Num\+Key\+Points (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Retrieve the number of keypoints of the skeleton. 
+
+\begin{DoxyReturn}{Returns}
+skeleton\textquotesingle{}s number of keypoints. 
+\end{DoxyReturn}
+
+
+Definition at line 383 of file skeleton.\+h.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{383 \{ \textcolor{keywordflow}{return} (\textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int})keypoints.size(); \}}
+
+\end{DoxyCode}
+
+
+References keypoints.
+
+
+
+Referenced by get\+Max\+Path().
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_a83133fabc903ddd4e54edf59df977167}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!getSagittal@{getSagittal}}
+\index{getSagittal@{getSagittal}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{getSagittal()}{getSagittal()}}
+{\footnotesize\ttfamily Vector Skeleton\+::get\+Sagittal (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Retrieve the sagittal plane of the skeleton. 
+
+\begin{DoxyReturn}{Returns}
+vector containing the x,y,z coordinates of the normal skeleton\textquotesingle{}s sagittal plane. 
+\end{DoxyReturn}
+
+
+Definition at line 345 of file skeleton.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{346 \{}
+\DoxyCodeLine{347     \textcolor{keywordflow}{return} sagittal;}
+\DoxyCodeLine{348 \}}
+
+\end{DoxyCode}
+
+
+References sagittal.
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_a185654045d5e43b3853cdb8fdd676da6}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!getTag@{getTag}}
+\index{getTag@{getTag}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{getTag()}{getTag()}}
+{\footnotesize\ttfamily const std\+::string\& assistive\+\_\+rehab\+::\+Skeleton\+::get\+Tag (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return a reference to the tag of the skeleton. 
+
+\begin{DoxyReturn}{Returns}
+reference to a string containing the skeleton\textquotesingle{}s tag. 
+\end{DoxyReturn}
+
+
+Definition at line 278 of file skeleton.\+h.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{278 \{ \textcolor{keywordflow}{return} tag; \}}
+
+\end{DoxyCode}
+
+
+References tag.
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_a2bdcc0d686a5a232aa2c07528cf2e647}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!getTransformation@{getTransformation}}
+\index{getTransformation@{getTransformation}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{getTransformation()}{getTransformation()}}
+{\footnotesize\ttfamily const yarp\+::sig\+::\+Matrix\& assistive\+\_\+rehab\+::\+Skeleton\+::get\+Transformation (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Retrieve the transformation matrix of the skeleton. 
+
+\begin{DoxyReturn}{Returns}
+reference to the skeleton\textquotesingle{}s transformation matrix. 
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+if the transformation matrix is the identity matrix, keypoints are defined with respect to the camera. 
+\end{DoxyNote}
+
+
+Definition at line 291 of file skeleton.\+h.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{291 \{ \textcolor{keywordflow}{return} T; \}}
+
+\end{DoxyCode}
+
+
+References T.
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_a35c3cdea575eb474a2cb8e0186011cff}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!getTransverse@{getTransverse}}
+\index{getTransverse@{getTransverse}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{getTransverse()}{getTransverse()}}
+{\footnotesize\ttfamily Vector Skeleton\+::get\+Transverse (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Retrieve the transverse plane of the skeleton. 
+
+\begin{DoxyReturn}{Returns}
+vector containing the x,y,z coordinates of the normal skeleton\textquotesingle{}s sagittal plane. 
+\end{DoxyReturn}
+
+
+Definition at line 350 of file skeleton.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{351 \{}
+\DoxyCodeLine{352     \textcolor{keywordflow}{return} transverse;}
+\DoxyCodeLine{353 \}}
+
+\end{DoxyCode}
+
+
+References transverse.
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_a4efc4844bd2b185f1080ee52ab69cb04}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!getType@{getType}}
+\index{getType@{getType}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{getType()}{getType()}}
+{\footnotesize\ttfamily const std\+::string\& assistive\+\_\+rehab\+::\+Skeleton\+::get\+Type (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return a reference to the type of the skeleton. 
+
+\begin{DoxyReturn}{Returns}
+reference to the skeleton\textquotesingle{}s type. 
+\end{DoxyReturn}
+
+
+Definition at line 266 of file skeleton.\+h.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{266 \{ \textcolor{keywordflow}{return} type; \}}
+
+\end{DoxyCode}
+
+
+References type.
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_a7753cc8d2b43e27eaf7bf9ef640a99cb}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!normalize@{normalize}}
+\index{normalize@{normalize}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{normalize()}{normalize()}}
+{\footnotesize\ttfamily void Skeleton\+::normalize (\begin{DoxyParamCaption}\item[{const double}]{n = {\ttfamily 1.0} }\end{DoxyParamCaption})}
+
+
+
+Normalize skeleton in order to have unitary/desired distance among keypoints. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em n} & double containing the normalization factor. \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 613 of file skeleton.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{614 \{}
+\DoxyCodeLine{615     \textcolor{keywordflow}{if} (keypoints.size()>0)}
+\DoxyCodeLine{616     \{}
+\DoxyCodeLine{617         vector<Vector> helperpoints;}
+\DoxyCodeLine{618         \textcolor{keywordflow}{for} (\textcolor{keyword}{auto} \&k:keypoints)}
+\DoxyCodeLine{619             helperpoints.push\_back(k-\/>getPoint());}
+\DoxyCodeLine{620         helper\_normalize(keypoints[0],helperpoints,n);}
+\DoxyCodeLine{621     \}}
+\DoxyCodeLine{622 \}}
+
+\end{DoxyCode}
+
+
+References assistive\+\_\+rehab\+::\+Key\+Point\+::get\+Point(), and keypoints.
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_a3ecc7418af653c88e40d41bb379b7271}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!operator\mbox{[}\mbox{]}@{operator[]}}
+\index{operator\mbox{[}\mbox{]}@{operator[]}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{operator[]()}{operator[]()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint}{Key\+Point}}$\ast$ assistive\+\_\+rehab\+::\+Skeleton\+::operator\mbox{[}$\,$\mbox{]} (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{tag }\end{DoxyParamCaption}) const}
+
+
+
+Keypoint access. 
+
+Returns a pointer to the keypoint specified by its tag. 
+\begin{DoxyParams}{Parameters}
+{\em tag} & string containing the keypoint\textquotesingle{}s tag. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+a (const) pointer to the keypoint. 
+\end{DoxyReturn}
+\mbox{\label{classassistive__rehab_1_1Skeleton_a0692ab89f16b0914b9ca9e0d4a07e52c}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!operator\mbox{[}\mbox{]}@{operator[]}}
+\index{operator\mbox{[}\mbox{]}@{operator[]}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{operator[]()}{operator[]()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint}{Key\+Point}} $\ast$ Skeleton\+::operator\mbox{[}$\,$\mbox{]} (\begin{DoxyParamCaption}\item[{const unsigned int}]{i }\end{DoxyParamCaption}) const}
+
+
+
+Keypoint access. 
+
+Returns a pointer to the keypoint specified by its index. 
+\begin{DoxyParams}{Parameters}
+{\em i} & int containing the keypoint\textquotesingle{}s index. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+a (const) pointer to the keypoint. 
+\end{DoxyReturn}
+
+
+Definition at line 449 of file skeleton.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{450 \{}
+\DoxyCodeLine{451     \textcolor{keywordflow}{return} (i<keypoints.size())?keypoints[i]:\textcolor{keyword}{nullptr};}
+\DoxyCodeLine{452 \}}
+
+\end{DoxyCode}
+
+
+References keypoints.
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_a21fded128e2240e4dd507030b7386670}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!scale@{scale}}
+\index{scale@{scale}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{scale()}{scale()}}
+{\footnotesize\ttfamily void Skeleton\+::scale (\begin{DoxyParamCaption}\item[{const double}]{s }\end{DoxyParamCaption})}
+
+
+
+Rescale skeleton. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & double containing the scaling factor. \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 624 of file skeleton.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{625 \{}
+\DoxyCodeLine{626     \textcolor{keywordflow}{if} (keypoints.size()>0)}
+\DoxyCodeLine{627     \{}
+\DoxyCodeLine{628         vector<Vector> helperpoints;}
+\DoxyCodeLine{629         \textcolor{keywordflow}{for} (\textcolor{keyword}{auto} \&k:keypoints)}
+\DoxyCodeLine{630             helperpoints.push\_back(k-\/>getPoint());}
+\DoxyCodeLine{631         helper\_scale(keypoints[0],helperpoints,s);}
+\DoxyCodeLine{632     \}}
+\DoxyCodeLine{633 \}}
+
+\end{DoxyCode}
+
+
+References assistive\+\_\+rehab\+::\+Key\+Point\+::get\+Point(), and keypoints.
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_ab3bd697f48ea69cfdc5ff7574c19041f}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!setCoronal@{setCoronal}}
+\index{setCoronal@{setCoronal}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{setCoronal()}{setCoronal()}}
+{\footnotesize\ttfamily bool Skeleton\+::set\+Coronal (\begin{DoxyParamCaption}\item[{const yarp\+::sig\+::\+Vector \&}]{coronal }\end{DoxyParamCaption})}
+
+
+
+Set a new coronal plane to the skeleton. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em coronal} & vector containing the x,y,z coordinates of the normal to the desired plane. \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 307 of file skeleton.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{308 \{}
+\DoxyCodeLine{309     \textcolor{keywordflow}{if} (coronal.length()>=3)}
+\DoxyCodeLine{310     \{}
+\DoxyCodeLine{311         this-\/>coronal=coronal.subVector(0,2);}
+\DoxyCodeLine{312         \textcolor{keywordflow}{return} \textcolor{keyword}{true};}
+\DoxyCodeLine{313     \}}
+\DoxyCodeLine{314     \textcolor{keywordflow}{else}}
+\DoxyCodeLine{315         \textcolor{keywordflow}{return} \textcolor{keyword}{false};}
+\DoxyCodeLine{316 \}}
+
+\end{DoxyCode}
+
+
+References coronal.
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_af92fdb0e3eb88a0b1dedd5038e2c6eb7}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!setSagittal@{setSagittal}}
+\index{setSagittal@{setSagittal}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{setSagittal()}{setSagittal()}}
+{\footnotesize\ttfamily bool Skeleton\+::set\+Sagittal (\begin{DoxyParamCaption}\item[{const yarp\+::sig\+::\+Vector \&}]{sagittal }\end{DoxyParamCaption})}
+
+
+
+Set a new sagittal plane to the skeleton. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em sagittal} & vector containing the x,y,z coordinates of the normal to the desired plane. \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 318 of file skeleton.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{319 \{}
+\DoxyCodeLine{320     \textcolor{keywordflow}{if} (sagittal.length()>=3)}
+\DoxyCodeLine{321     \{}
+\DoxyCodeLine{322         this-\/>sagittal=sagittal.subVector(0,2);}
+\DoxyCodeLine{323         \textcolor{keywordflow}{return} \textcolor{keyword}{true};}
+\DoxyCodeLine{324     \}}
+\DoxyCodeLine{325     \textcolor{keywordflow}{else}}
+\DoxyCodeLine{326         \textcolor{keywordflow}{return} \textcolor{keyword}{false};}
+\DoxyCodeLine{327 \}}
+
+\end{DoxyCode}
+
+
+References sagittal.
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_ae1c830e3d9a0ba692e5ae297caa52a82}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!setTag@{setTag}}
+\index{setTag@{setTag}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{setTag()}{setTag()}}
+{\footnotesize\ttfamily void assistive\+\_\+rehab\+::\+Skeleton\+::set\+Tag (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{tag }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Set the tag of the skeleton. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em tag} & string containing the desired tag. \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 272 of file skeleton.\+h.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{272 \{ this-\/>tag=tag; \}}
+
+\end{DoxyCode}
+
+
+References tag.
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_a3486cbd7f59e75c1d9ef26cbc05bb72f}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!setTransformation@{setTransformation}}
+\index{setTransformation@{setTransformation}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{setTransformation()}{setTransformation()}}
+{\footnotesize\ttfamily bool Skeleton\+::set\+Transformation (\begin{DoxyParamCaption}\item[{const yarp\+::sig\+::\+Matrix \&}]{T }\end{DoxyParamCaption})}
+
+
+
+Set a new transformation matrix of the skeleton. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em T} & matrix containing the desired transformation. \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 296 of file skeleton.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{297 \{}
+\DoxyCodeLine{298     \textcolor{keywordflow}{if} ((T.rows()>=4) || (T.cols()>=4))}
+\DoxyCodeLine{299     \{}
+\DoxyCodeLine{300         this-\/>T=T.submatrix(0,3,0,3);}
+\DoxyCodeLine{301         \textcolor{keywordflow}{return} \textcolor{keyword}{true};}
+\DoxyCodeLine{302     \}}
+\DoxyCodeLine{303     \textcolor{keywordflow}{else}}
+\DoxyCodeLine{304         \textcolor{keywordflow}{return} \textcolor{keyword}{false};}
+\DoxyCodeLine{305 \}}
+
+\end{DoxyCode}
+
+
+References T.
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_a1aeba05a17363afc08c30397d17375df}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!setTransverse@{setTransverse}}
+\index{setTransverse@{setTransverse}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{setTransverse()}{setTransverse()}}
+{\footnotesize\ttfamily bool Skeleton\+::set\+Transverse (\begin{DoxyParamCaption}\item[{const yarp\+::sig\+::\+Vector \&}]{transverse }\end{DoxyParamCaption})}
+
+
+
+Set a new transverse plane to the skeleton. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em transverse} & vector containing the x,y,z coordinates of the normal to the desired plane. \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 329 of file skeleton.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{330 \{}
+\DoxyCodeLine{331     \textcolor{keywordflow}{if} (transverse.length()>=3)}
+\DoxyCodeLine{332     \{}
+\DoxyCodeLine{333         this-\/>transverse=transverse.subVector(0,2);}
+\DoxyCodeLine{334         \textcolor{keywordflow}{return} \textcolor{keyword}{true};}
+\DoxyCodeLine{335     \}}
+\DoxyCodeLine{336     \textcolor{keywordflow}{else}}
+\DoxyCodeLine{337         \textcolor{keywordflow}{return} \textcolor{keyword}{false};}
+\DoxyCodeLine{338 \}}
+
+\end{DoxyCode}
+
+
+References transverse.
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_ad58ea53a165abc3f39a3c46594f0560f}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!toProperty@{toProperty}}
+\index{toProperty@{toProperty}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{toProperty()}{toProperty()}}
+{\footnotesize\ttfamily Property Skeleton\+::to\+Property (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Export the skeleton structure as a property. 
+
+\begin{DoxyReturn}{Returns}
+a Property object containing the properties of a skeleton.
+\end{DoxyReturn}
+Available properties are\+:
+\begin{DoxyItemize}
+\item type\+: string containing skeleton\textquotesingle{}s type (\char`\"{}assistive\+\_\+rehab\+::\+Skeleton\+Std\char`\"{}).
+\item tag\+: string containing skeleton\textquotesingle{}s tag.
+\item transformation\+: 4 x 4 skeleton\textquotesingle{}s roto-\/translation matrix.
+\item coronal\+: vector containing skeleton\textquotesingle{}s coronal plane.
+\item sagittal\+: vector containing skeleton\textquotesingle{}s sagittal plane.
+\item transverse\+: vector containing skeleton\textquotesingle{}s transverse plane.
+\item skeleton\+: list containing keypoints with the following subproperties\+:
+\begin{DoxyItemize}
+\item tag\+: string containing keypoint\textquotesingle{}s tag.
+\item status\+: string containing keypoint\textquotesingle{}s status (updated or stale).
+\item position\+: vector containing keypoint\textquotesingle{}s camera coordinates x,y,z.
+\item pixel\+: vector containing keypoint\textquotesingle{}s image coordinates u,v.
+\item child\+: list containing keypoint\textquotesingle{}s child, specified as position, status, tag. 
+\end{DoxyItemize}
+\end{DoxyItemize}
+
+Definition at line 366 of file skeleton.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{367 \{}
+\DoxyCodeLine{368     Property prop;}
+\DoxyCodeLine{369     prop.put(\textcolor{stringliteral}{"{}type"{}},type);}
+\DoxyCodeLine{370     prop.put(\textcolor{stringliteral}{"{}tag"{}},tag);}
+\DoxyCodeLine{371 }
+\DoxyCodeLine{372     Bottle transformation;}
+\DoxyCodeLine{373     transformation.addList().read(T);}
+\DoxyCodeLine{374     prop.put(\textcolor{stringliteral}{"{}transformation"{}},transformation.get(0));}
+\DoxyCodeLine{375 }
+\DoxyCodeLine{376     Bottle plane;}
+\DoxyCodeLine{377     plane.addList().read(coronal);}
+\DoxyCodeLine{378     prop.put(\textcolor{stringliteral}{"{}coronal"{}},plane.get(0));}
+\DoxyCodeLine{379 }
+\DoxyCodeLine{380     plane.clear();}
+\DoxyCodeLine{381     plane.addList().read(sagittal);}
+\DoxyCodeLine{382     prop.put(\textcolor{stringliteral}{"{}sagittal"{}},plane.get(0));}
+\DoxyCodeLine{383 }
+\DoxyCodeLine{384     plane.clear();}
+\DoxyCodeLine{385     plane.addList().read(transverse);}
+\DoxyCodeLine{386     prop.put(\textcolor{stringliteral}{"{}transverse"{}},plane.get(0));}
+\DoxyCodeLine{387 }
+\DoxyCodeLine{388     Bottle skeleton;}
+\DoxyCodeLine{389     Bottle \&skeleton\_=skeleton.addList();}
+\DoxyCodeLine{390     \textcolor{keywordflow}{if} (keypoints.size()>0)}
+\DoxyCodeLine{391     \{}
+\DoxyCodeLine{392         Property p=helper\_toproperty(keypoints[0]);}
+\DoxyCodeLine{393         skeleton\_.addList().read(p);}
+\DoxyCodeLine{394     \}}
+\DoxyCodeLine{395     prop.put(\textcolor{stringliteral}{"{}skeleton"{}},skeleton.get(0));}
+\DoxyCodeLine{396 }
+\DoxyCodeLine{397     \textcolor{keywordflow}{return} prop;}
+\DoxyCodeLine{398 \}}
+
+\end{DoxyCode}
+
+
+References coronal, keypoints, sagittal, T, tag, transverse, and type.
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_ab9642d6621d0a2b189c020f4d7695b14}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!update@{update}}
+\index{update@{update}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{update()}{update()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily virtual void assistive\+\_\+rehab\+::\+Skeleton\+::update (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ std\+::pair$<$ std\+::string, yarp\+::sig\+::\+Vector $>$$>$ \&}]{unordered }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Update skeleton from unordered list. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em unordered} & vector containing an unordered list of keypoints. The single keypoint is specified as pair which associates a string, containing the keypoint\textquotesingle{}s tag, and a vector, containing the x,y,z coordinates. \\
+\hline
+\end{DoxyParams}
+\mbox{\label{classassistive__rehab_1_1Skeleton_adbb387558eac21173b7c82cb43acd603}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!update@{update}}
+\index{update@{update}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{update()}{update()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily virtual void assistive\+\_\+rehab\+::\+Skeleton\+::update (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ yarp\+::sig\+::\+Vector $>$ \&}]{ordered }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Update skeleton from ordered list. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em ordered} & vector containing the ordered list of keypoints. The single keypoint is specified as vector containing the x,y,z coordinates. \\
+\hline
+\end{DoxyParams}
+\mbox{\label{classassistive__rehab_1_1Skeleton_ae3346b2f363e1812fdc88e59d1f7bf7d}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!update@{update}}
+\index{update@{update}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{update()}{update()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily virtual void assistive\+\_\+rehab\+::\+Skeleton\+::update (\begin{DoxyParamCaption}\item[{const yarp\+::os\+::\+Property \&}]{prop }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Update skeleton from properties. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em prop} & a Property object containing skeleton information.\\
+\hline
+\end{DoxyParams}
+Available properties are\+:
+\begin{DoxyItemize}
+\item type\+: string containing skeleton\textquotesingle{}s type (\char`\"{}assistive\+\_\+rehab\+::\+Skeleton\+Std\char`\"{}).
+\item tag\+: string containing skeleton\textquotesingle{}s tag.
+\item transformation\+: 4 x 4 skeleton\textquotesingle{}s roto-\/translation matrix.
+\item coronal\+: vector containing skeleton\textquotesingle{}s coronal plane.
+\item sagittal\+: vector containing skeleton\textquotesingle{}s sagittal plane.
+\item transverse\+: vector containing skeleton\textquotesingle{}s transverse plane.
+\item skeleton\+: list containing keypoints with the following subproperties\+:
+\begin{DoxyItemize}
+\item tag\+: string containing keypoint\textquotesingle{}s tag.
+\item status\+: string containing keypoint\textquotesingle{}s status (updated or stale).
+\item position\+: vector containing keypoint\textquotesingle{}s camera coordinates x,y,z.
+\item pixel\+: vector containing keypoint\textquotesingle{}s image coordinates u,v.
+\item child\+: list containing keypoint\textquotesingle{}s child, specified as position, status, tag. 
+\end{DoxyItemize}
+\end{DoxyItemize}\mbox{\label{classassistive__rehab_1_1Skeleton_af0ee2be195f804a9562cb184a2be0bad}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!update\_planes@{update\_planes}}
+\index{update\_planes@{update\_planes}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{update\_planes()}{update\_planes()}}
+{\footnotesize\ttfamily virtual bool assistive\+\_\+rehab\+::\+Skeleton\+::update\+\_\+planes (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Update skeleton planes. 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure (failure occurs if not all planes are updated). 
+\end{DoxyReturn}
+
+
+Implemented in \mbox{\hyperlink{classassistive__rehab_1_1SkeletonStd_a5769bc6fd407118c866b57b869d672ca}{assistive\+\_\+rehab\+::\+Skeleton\+Std}}.
+
+
+
+Referenced by update().
+
+\mbox{\label{classassistive__rehab_1_1Skeleton_a36e9dfd4910120025e40ccc3d03c0e01}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!update\_withpixels@{update\_withpixels}}
+\index{update\_withpixels@{update\_withpixels}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{update\_withpixels()}{update\_withpixels()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily virtual void assistive\+\_\+rehab\+::\+Skeleton\+::update\+\_\+withpixels (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ std\+::pair$<$ std\+::string, std\+::pair$<$ yarp\+::sig\+::\+Vector, yarp\+::sig\+::\+Vector $>$$>$$>$ \&}]{unordered }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Update skeleton from unordered list. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em unordered} & vector containing an unordered list of keypoints. The single keypoint is specified as pair that associates a string containing the keypoint\textquotesingle{}s tag to a pair of vectors contianing x,y,z and u,v coordinates. \\
+\hline
+\end{DoxyParams}
+\mbox{\label{classassistive__rehab_1_1Skeleton_a20d9eb5aecd6dccfa7e049bb932a6cef}} 
+\index{assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}!update\_withpixels@{update\_withpixels}}
+\index{update\_withpixels@{update\_withpixels}!assistive\_rehab::Skeleton@{assistive\_rehab::Skeleton}}
+\doxysubsubsection{\texorpdfstring{update\_withpixels()}{update\_withpixels()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily virtual void assistive\+\_\+rehab\+::\+Skeleton\+::update\+\_\+withpixels (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ std\+::pair$<$ yarp\+::sig\+::\+Vector, yarp\+::sig\+::\+Vector $>$$>$ \&}]{ordered }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Update skeleton from ordered list. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em ordered} & vector containing the ordered list of keypoints. The single keypoint is specified as a pair of a vector containing the x,y,z camera coordinates and a vector containing the u,v image coordinates. \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/home/runner/work/assistive-\/rehab/assistive-\/rehab/gh-\/pages/lib/include/\+Assistive\+Rehab/skeleton.\+h\item 
+/home/runner/work/assistive-\/rehab/assistive-\/rehab/gh-\/pages/lib/src/\mbox{\hyperlink{skeleton_8cpp}{skeleton.\+cpp}}\end{DoxyCompactItemize}

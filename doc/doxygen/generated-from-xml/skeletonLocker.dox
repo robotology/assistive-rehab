@@ -1,0 +1,61 @@
+
+  /**
+  *
+  * @ingroup skeletonLocker
+  * \defgroup skeletonLocker skeletonLocker
+  * This module enforces spatiotemporal consistency on a skeleton selected by tag.
+  * Version:0.6.0
+  * \author  Valentina Vasco valentina.vasco@iit.it
+  * \n
+  * \copyright  Released under the terms of the BSD 3-Clause License.
+  * \section intro_sec Description
+  *
+  
+    This module works on the top of \ref skeletonRetriever and tracks a skeleton based on its spatiotemporal consistence,
+    identified through its tag using the provided thrift services. This skeleton has two pivots (shoulder center and hip center)
+    associated with a sphere, whose radius increases over time up to a maximum of `max-radius`, with a function of time described by an hyperbolic tangent.
+    The steepness of the function can be set by `alpha.
+    For each skeleton streamed by the \ref objectsPropertiesCollector, the module checks if one pivot belongs to the sphere and below the distance
+    defined by `radius` parameter. The module adds an additional skeleton to the \ref objectsPropertiesCollector appending the string "-locked"
+    to its current tag.
+  
+  * \section parameters_sec Parameters
+  
+  *- --name: Name of the module.
+  *- --period: Periodicity of the module (s).
+  *- --radius: Starting radius below which a skeleton is associated to the current one (m).
+  *- --alpha: Steepness of the hyperbolic function.
+  *- --max-radius: Maximum radius of the sphere associated to the locked skeleton (m).
+  * \section inputports_sec Input Ports
+  * 
+  *- /skeletonLocker/opc:i [Bottle]  [default carrier:]: 
+            Receives 3D skeletons from \ref objectsPropertiesCollector.
+          
+  *
+  
+  * \section outputports_sec Output Ports
+  * 
+  *- /skeletonLocker/opc:rpc [rpc]  [default carrier:]: 
+            Sends command to \ref objectsPropertiesCollector.
+          
+  *
+  
+  *- /skeletonLocker/viewer:o [Bottle]  [default carrier:]: 
+            Sends locked skeleton to \ref skeletonViewer.
+          
+  *
+  
+  *
+  * \section services_sec Services
+  * 
+  *- /skeletonLocker/rpc
+  *  [rpc-server]: 
+  * service port
+  * . This service is described in skeletonLocker_IDL (idl.thrift)
+  * 
+  *
+  * 
+  *
+  *
+  **/
+

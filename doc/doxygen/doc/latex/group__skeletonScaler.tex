@@ -1,0 +1,40 @@
+\doxysection{skeleton\+Scaler}
+\label{group__skeletonScaler}\index{skeletonScaler@{skeletonScaler}}
+
+
+This module superimposes a (pre-\/recorded) template skeleton on the current skeleton.  
+
+
+This module superimposes a (pre-\/recorded) template skeleton on the current skeleton. 
+
+Version\+:0.\+6.\+0 \begin{DoxyAuthor}{Author}
+Valentina Vasco \href{mailto:valentina.vasco@iit.it}{\texttt{ valentina.\+vasco@iit.\+it}} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the BSD 3-\/Clause License. 
+\end{DoxyCopyright}
+\hypertarget{group__skeletonViewer_intro_sec}{}\doxysubsection{Description}\label{group__skeletonViewer_intro_sec}
+This module superimposes a (pre-\/recorded) template skeleton on the current skeleton. It sends commands to the \mbox{\hyperlink{group__skeletonPlayer}{skeleton\+Player}} for loading the template skeleton and computes the roto-\/translation matrix which allows to align the shoulder center keypoints and the planes of both skeletons.\hypertarget{group__skeletonViewer_parameters_sec}{}\doxysubsection{Parameters}\label{group__skeletonViewer_parameters_sec}
+
+\begin{DoxyItemize}
+\item --nsessions\+: Number of repetitions the recorded skeleton is played (0 means infinite)
+\item --tbegin\+: Stream starting time computed from the time origin. 
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_inputports_sec}{}\doxysubsection{Input Ports}\label{group__skeletonViewer_inputports_sec}
+
+\begin{DoxyItemize}
+\item /skeleton\+Scaler/rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives the following commands and provides replies\+: (notation\+: \char`\"{}.\char`\"{} identifies a string)
+\begin{DoxyEnumerate}
+\item {\bfseries{load skeleton file}} {\itshape \char`\"{}load\char`\"{} \char`\"{}file\char`\"{} \char`\"{}context\char`\"{}}\+:load skeleton file. \char`\"{}file\char`\"{} name of the file containing the skeleton data. \char`\"{}context\char`\"{} context used to look for the file.
+\item {\bfseries{set camera options}} {\itshape \char`\"{}rot\char`\"{} pos\+\_\+list focal\+\_\+list }\+:set camera options to \mbox{\hyperlink{group__skeletonViewer}{skeleton\+Viewer}}. pos\+\_\+list the position of the camera in world coordinates. focal\+\_\+list the focal point of the camera in world coordinates.
+\item {\bfseries{start}} {\itshape \char`\"{}run\char`\"{} twarp }\+:start. twarp specifies the warping factor squeezing (dilating) in time the original stream if less than 1 (greater than 1).
+\item {\bfseries{set skeleton\textquotesingle{}s tag}} {\itshape \char`\"{}tags\char`\"{} \char`\"{}tag\char`\"{} }\+:set skeleton\textquotesingle{}s tag. \char`\"{}tag\char`\"{} tag of the skeleton.
+\item {\bfseries{stop}} {\itshape \char`\"{}stop\char`\"{}}\+:stop.
+\end{DoxyEnumerate}
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_outputports_sec}{}\doxysubsection{Output Ports}\label{group__skeletonViewer_outputports_sec}
+
+\begin{DoxyItemize}
+\item /skeleton\+Scaler/opc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to objects\+Properties\+Collector to retrieve template and selected skeletons.
+\item /skeleton\+Scaler/player\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to \mbox{\hyperlink{group__skeletonPlayer}{skeleton\+Player}} for playing back the trajectory of the selected skeleton.
+\item /skeleton\+Scaler/viewer\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to \mbox{\hyperlink{group__skeletonViewer}{skeleton\+Viewer}} to set camera options for visualization.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_services_sec}{}\doxysubsection{Services}\label{group__skeletonViewer_services_sec}

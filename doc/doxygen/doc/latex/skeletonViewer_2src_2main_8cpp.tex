@@ -1,0 +1,91 @@
+\doxysection{/home/runner/work/assistive-\/rehab/assistive-\/rehab/gh-\/pages/modules/skeleton\+Viewer/src/main.cpp File Reference}
+\label{skeletonViewer_2src_2main_8cpp}\index{/home/runner/work/assistive-\/rehab/assistive-\/rehab/gh-\/pages/modules/skeletonViewer/src/main.cpp@{/home/runner/work/assistive-\/rehab/assistive-\/rehab/gh-\/pages/modules/skeletonViewer/src/main.cpp}}
+{\ttfamily \#include $<$cstdlib$>$}\newline
+{\ttfamily \#include $<$mutex$>$}\newline
+{\ttfamily \#include $<$memory$>$}\newline
+{\ttfamily \#include $<$cmath$>$}\newline
+{\ttfamily \#include $<$limits$>$}\newline
+{\ttfamily \#include $<$vector$>$}\newline
+{\ttfamily \#include $<$unordered\+\_\+set$>$}\newline
+{\ttfamily \#include $<$unordered\+\_\+map$>$}\newline
+{\ttfamily \#include $<$algorithm$>$}\newline
+{\ttfamily \#include $<$iterator$>$}\newline
+{\ttfamily \#include $<$functional$>$}\newline
+{\ttfamily \#include $<$string$>$}\newline
+{\ttfamily \#include $<$yarp/os/all.\+h$>$}\newline
+{\ttfamily \#include $<$yarp/sig/all.\+h$>$}\newline
+{\ttfamily \#include $<$yarp/math/\+Math.\+h$>$}\newline
+{\ttfamily \#include $<$vtk\+Smart\+Pointer.\+h$>$}\newline
+{\ttfamily \#include $<$vtk\+Command.\+h$>$}\newline
+{\ttfamily \#include $<$vtk\+Property.\+h$>$}\newline
+{\ttfamily \#include $<$vtk\+Poly\+Data\+Mapper.\+h$>$}\newline
+{\ttfamily \#include $<$vtk\+Line\+Source.\+h$>$}\newline
+{\ttfamily \#include $<$vtk\+Quadric.\+h$>$}\newline
+{\ttfamily \#include $<$vtk\+Sphere\+Source.\+h$>$}\newline
+{\ttfamily \#include $<$vtk\+Plane\+Source.\+h$>$}\newline
+{\ttfamily \#include $<$vtk\+Transform.\+h$>$}\newline
+{\ttfamily \#include $<$vtk\+Sample\+Function.\+h$>$}\newline
+{\ttfamily \#include $<$vtk\+Contour\+Filter.\+h$>$}\newline
+{\ttfamily \#include $<$vtk\+Caption\+Actor2\+D.\+h$>$}\newline
+{\ttfamily \#include $<$vtk\+Text\+Property.\+h$>$}\newline
+{\ttfamily \#include $<$vtk\+Actor.\+h$>$}\newline
+{\ttfamily \#include $<$vtk\+Text\+Actor.\+h$>$}\newline
+{\ttfamily \#include $<$vtk\+Axes\+Actor.\+h$>$}\newline
+{\ttfamily \#include $<$vtk\+Render\+Window.\+h$>$}\newline
+{\ttfamily \#include $<$vtk\+Render\+Window\+Interactor.\+h$>$}\newline
+{\ttfamily \#include $<$vtk\+Renderer.\+h$>$}\newline
+{\ttfamily \#include $<$vtk\+Camera.\+h$>$}\newline
+{\ttfamily \#include $<$vtk\+Interactor\+Style\+Switch.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}Assistive\+Rehab/skeleton.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}src/skeleton\+Viewer\+\_\+\+IDL.\+h\char`\"{}}\newline
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\label{skeletonViewer_2src_2main_8cpp_a0ddf1224851353fc92bfbff6f499fa97}} 
+int {\bfseries main} (int argc, char $\ast$argv\mbox{[}$\,$\mbox{]})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\label{skeletonViewer_2src_2main_8cpp_a29ac681ec3efa9e30e1ab1ab251b47f9}} 
+mutex {\bfseries mtx}
+\item 
+\mbox{\label{skeletonViewer_2src_2main_8cpp_a66fa6d6fdfbf9c59e39b5dbfc3cede22}} 
+vtk\+Smart\+Pointer$<$ vtk\+Renderer $>$ {\bfseries vtk\+\_\+renderer}
+\item 
+\mbox{\label{skeletonViewer_2src_2main_8cpp_ad4950b4bf7aace03747dbbed8c1e3165}} 
+vector$<$ double $>$ {\bfseries camera\+\_\+position}
+\item 
+\mbox{\label{skeletonViewer_2src_2main_8cpp_a0e5cf6ab8e9dc97c75a45dc3182eb339}} 
+vector$<$ double $>$ {\bfseries camera\+\_\+focalpoint}
+\item 
+\mbox{\label{skeletonViewer_2src_2main_8cpp_a74c283836a5c08861a1cbabd94c3d098}} 
+vector$<$ double $>$ {\bfseries camera\+\_\+viewup}
+\item 
+\mbox{\label{skeletonViewer_2src_2main_8cpp_a9e1d9ee27043eedba939e8dc627522eb}} 
+bool {\bfseries rpc\+\_\+camera\+\_\+rx}
+\item 
+\mbox{\label{skeletonViewer_2src_2main_8cpp_abafce71f256769e470689f8794ac8664}} 
+vector$<$ Bottle $>$ {\bfseries skeletons\+\_\+rx}
+\item 
+\mbox{\label{skeletonViewer_2src_2main_8cpp_a385df234792ece64efc257852a5bc4e6}} 
+unordered\+\_\+map$<$ string, unique\+\_\+ptr$<$ VTKSkeleton $>$ $>$ {\bfseries skeletons}
+\item 
+\mbox{\label{skeletonViewer_2src_2main_8cpp_aa34bbd092f1be12c79af93c4aece927f}} 
+unordered\+\_\+set$<$ string $>$ {\bfseries skeletons\+\_\+gc\+\_\+tags}
+\item 
+\mbox{\label{skeletonViewer_2src_2main_8cpp_a757c857f2b38dad89a55632fb522a300}} 
+unordered\+\_\+set$<$ string $>$ {\bfseries lines\+\_\+rx}
+\item 
+\mbox{\label{skeletonViewer_2src_2main_8cpp_aeab185673813d01e81c28605fa3615a8}} 
+unordered\+\_\+map$<$ string, unique\+\_\+ptr$<$ VTKLine $>$ $>$ {\bfseries lines}
+\item 
+\mbox{\label{skeletonViewer_2src_2main_8cpp_a6e8a9d9abf58f2ed7ab97e8b45eeac78}} 
+unordered\+\_\+set$<$ string $>$ {\bfseries lines\+\_\+gc\+\_\+tags}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyAuthor}{Authors}
+\+: Ugo Pattacini \href{mailto:ugo.pattacini@iit.it}{\texttt{ ugo.\+pattacini@iit.\+it}} 
+\end{DoxyAuthor}

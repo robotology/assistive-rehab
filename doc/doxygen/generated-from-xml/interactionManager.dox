@@ -1,0 +1,103 @@
+
+  /**
+  *
+  * @ingroup interactionManager
+  * \defgroup interactionManager interactionManager
+  * This module is responsible for supervising the interaction among all modules involved in the assistive rehab demo.
+  * Version:0.6.0
+  * \author  Ugo Pattacini ugo.pattacini@iit.it,
+                  Valentina Vasco valentina.vasco@iit.it
+  * \n
+  * \copyright  Released under the terms of the BSD 3-Clause License.
+  * \section intro_sec Description
+  *
+  
+   This module supervises the interaction among all modules involved in the assistive rehab demo.
+   Specifically, it is responsible for:
+   - engaging/disengaging a user in front of the robot (settable with the parameters engage-distance and engage-azimuth), by interacting with \ref attentionManager;
+   - starting/stopping the real-time motion analysis, by interacting with \ref motionAnalyzer;
+   - controlling the robot's movements to physically show the exercises, by sending commands to \ref ctpService for range of motion movements and to cer_reaching-controller for reaching movements. Possible movements and commands sent to the ports are defined in the move-file bash script
+   - managing the verbal interaction.
+  
+  * \section parameters_sec Parameters
+  
+  *- --period: Periodicity of the module.
+  *- --speak-file: Configuration file name for the speak.
+  *- --move-file: Script file for robot's movements.
+  *- --engage-distance: User engaged within this distance (m).
+  *- --engage-azimuth: User engaged within this field of view (degrees).
+  *- --mirror-exercise: If true, the user has to move the opposite arm with respect to the robot.
+  *- --panel-size: Size of the panel that appears in the virtual scenario.
+  *- --panel-pose-right: Position of the panel that appears in the virtual scenario occluding the right arm.
+  *- --panel-pose-left: Position of the panel that appears in the virtual scenario occluding the left arm.
+  *- --panel-color: Color of the panel that appears in the virtual scenario.
+  *- --nrep-show: Number of repetitions of the movement during the observation phase.
+  *- --nrep-perform: Number of repetitions of the movement during the imitation phase.
+  *- --virtual-mode: Enables the virtual modality.
+  *- --engage-with-hand: Starts the interaction when the user rises the hand.
+  *- --wait-for-imitation: If true, the imitation phase starts only by providing start_imitation command.
+  *- --use-robot-template: If true, the template used for motion analysis is extracted from the robot. Otherwise, a pre-recorded template is used.
+  *- --robot-skeleton-name: Tag of the skeleton created from the robot.
+  * \section inputports_sec Input Ports
+  * 
+  *- /interactionManager/synthetizer:i [Bottle]  [default carrier:]: 
+            Receives the score associated to the performed exercise. To be connected to /feedbackSynthetizer/score:o.
+          
+  *
+  
+  *- /interactionManager/trigger:i [Bottle]  [default carrier:]: 
+            Receives triggers when the movement starts/ends.
+          
+  *
+  
+  * \section outputports_sec Output Ports
+  * 
+  *- /interactionManager/attention:rpc [rpc]  [default carrier:]: 
+            Sends commands to \ref attentionManager to redirect the robot's gaze toward the engaged user.
+          
+  *
+  
+  *- /interactionManager/analyzer:rpc [rpc]  [default carrier:]: 
+            Sends commands to \ref motionAnalyzer for starting/stopping the real-time motion analysis.
+          
+  *
+  
+  *- /interactionManager/speech:rpc [rpc]  [default carrier:]: 
+            Sends commands to \ref iSpeak to wait until the sentence is spoken.
+          
+  *
+  
+  *- /interactionManager/speech:o [Bottle]  [default carrier:]: 
+            Streams out the verbal interaction. To be connected to \ref iSpeak.
+          
+  *
+  
+  *- /interactionManager/gazebo:rpc [rpc]  [default carrier:]: 
+            Sends commands to \ref world_input_port to create/delete panel in gazebo.
+          
+  *
+  
+  *- /interactionManager/robotskeleton:rpc [rpc]  [default carrier:]: 
+            Sends commands to \ref robotSkeletonPublisher to set the tag of the robot skeleton.
+          
+  *
+  
+  *- /interactionManager/trigger:o [Bottle]  [default carrier:]: 
+            Sends triggers when the movement starts/ends.
+          
+  *
+  
+  *
+  * \section services_sec Services
+  * 
+  *- /interactionManager/cmd:rpc
+  *  [rpc-server]: 
+  * service port
+  * . This service is described in interactionManager_IDL (idl.thrift)
+  * 
+  *
+  * 
+  *
+  *
+  **/
+

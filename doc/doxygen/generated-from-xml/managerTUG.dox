@@ -1,0 +1,118 @@
+
+  /**
+  *
+  * @ingroup managerTUG
+  * \defgroup managerTUG managerTUG
+  * This module supervises the all the modules involved in the Timed Up and Go (TUG).
+  * Version:0.6.0
+  * \author  Valentina Vasco valentina.vasco@iit.it
+  * \n
+  * \copyright Released under the terms of the BSD 3-Clause License.
+  * \section intro_sec Description
+  *
+  
+
+  
+  * \section parameters_sec Parameters
+  
+  *- --module_name: Name of the module. All the open ports will be tagged with the prefix /module_name.
+  *- --period: Periodicity of the module.
+  *- --speak-file: Configuration file name for the speak.
+  *- --starting-pose: Robot initial pose (x,y,theta) wrt world frame when starting the TUG.
+  *- --pointing-time: Time ctpService takes to complete the pointing movement.
+  *- --pointing-home: List of joint positions for reaching arm home position (deg). Provided to ctpService.
+  *- --pointing-start: List of joint positions for pointing at the chair (deg). Provided to ctpService.
+  *- --pointing-finish: List of joint positions for pointing at the finish line (deg). Provided to ctpService.
+  *- --arm-thresh: Threshold on the y distance between elbow and elbow, to detect if the arm is raised (normalized).
+  *- --detect-hand-up: If true, the module detects if the hand is raised for triggering speech.
+  *- --min-timeout: Minimum time within the speech trigger can be received from the previous one [s].
+  *- --max-timeout: Maximum time within the speech trigger can be received from the previous one [s].
+  *- --simulation: If true, the module is configured to work simulation in gazebo.
+  *- --lock: If true, the skeleton is locked.
+  *- --target-sim: Sets the target the actor has to reach during the TUG (only is simulation is true).
+  *- --engage-distance: User engaged within this distance, wrt start line (m).
+  *- --engage-azimuth: User engaged within this field of view, wrt start line (degrees).
+  *- --exercise-timeout: Exercise timeout
+  * \section inputports_sec Input Ports
+  * 
+  *- /managerTUG/opc:i [Bottle]  [default carrier:]: 
+          Receives skeletons and lines from \ref objectsPropertiesCollector.
+        
+  *
+  
+  *- /managerTUG/answer:i [Bottle]  [default carrier:]: 
+          Receives the answer to the question from \ref googleSpeechProcessing.
+        
+  *
+  
+  *- /managerTUG/obstacle:i [Bottle]  [default carrier:]: 
+          Receives info (distance and which laser) about the presence of an obstacle from \ref obstacleDetector.
+        
+  *
+  
+  * \section outputports_sec Output Ports
+  * 
+  *- /managerTUG/attention:rpc [rpc]  [default carrier:]: 
+          Sends commands to \ref attentionManager to redirect the robot's gaze toward the engaged user.
+        
+  *
+  
+  *- /managerTUG/analyzer:rpc [rpc]  [default carrier:]: 
+          Sends commands to \ref motionAnalyzer for starting/stopping the real-time motion analysis.
+        
+  *
+  
+  *- /managerTUG/speech:rpc [rpc]  [default carrier:]: 
+          Sends commands to \ref iSpeak to wait until the sentence is spoken.
+        
+  *
+  
+  *- /managerTUG/speech:o [Bottle]  [default carrier:]: 
+          Streams out the verbal interaction. To be connected to \ref iSpeak.
+        
+  *
+  
+  *- /managerTUG/navigation:rpc [rpc]  [default carrier:]: 
+          Sends commands to \ref navController to let the robot navigate to fixed points.
+        
+  *
+  
+  *- /managerTUG/left_arm:rpc [rpc]  [default carrier:]: 
+          Sends commands to \ref ctpService to let the robot's left arm point at lines.
+        
+  *
+  
+  *- /managerTUG/right_arm:rpc [rpc]  [default carrier:]: 
+          Sends commands to \ref ctpService to let the robot's right arm point at lines.
+        
+  *
+  
+  *- /managerTUG/locker:rpc [rpc]  [default carrier:]: 
+          Sends commands to \ref skeletonLocker to set the skeleton to lock.
+        
+  *
+  
+  *- /managerTUG/trigger:rpc [rpc]  [default carrier:]: 
+          Sends commands to \ref googleSpeech to start/stop speech recognition.
+        
+  *
+  
+  *- /managerTUG/gazebo:rpc [rpc]  [default carrier:]: 
+          Sends commands to gazebo plugin \ref tuginterface when simulation is true.
+        
+  *
+  
+  *
+  * \section services_sec Services
+  * 
+  *- /managerTUG/cmd:rpc
+  *  [rpc-server]: 
+  * service port
+  * . This service is described in managerTUG_IDL (idl.thrift)
+  * 
+  *
+  * 
+  *
+  *
+  **/
+

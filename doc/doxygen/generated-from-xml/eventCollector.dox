@@ -1,0 +1,53 @@
+
+  /**
+  *
+  * @ingroup eventCollector
+  * \defgroup eventCollector eventCollector
+  * This module collects events from speech and navigation during a Timed Up and Go (TUG).
+  * Version:0.6.0
+  * \author  Alexandre Antunes alexandre.gomespereira@iit.it,
+                  Valentina Vasco valentina.vasco@iit.it,
+                  Mattia Fussi mattia.fussi@iit.it
+  * \n
+  * \copyright Released under the terms of the BSD 3-Clause License.
+  * \section intro_sec Description
+  *
+  
+
+  
+  * \section parameters_sec Parameters
+  
+  *- --module_name: Name of the module. All the open ports will be tagged with the prefix /module_name.
+  * \section inputports_sec Input Ports
+  * 
+  *- /eventCollector/speech:i [Bottle]  [default carrier:]: 
+          Receives skeletons and lines from \ref objectsPropertiesCollector.
+        
+  *
+  
+  *- /eventCollector/speech-process:i [Bottle]  [default carrier:]: 
+          Receives the answer to the question from \ref googleSpeechProcessing.
+        
+  *
+  
+  *- /eventCollector/obstacle:i [Bottle]  [default carrier:]: 
+          Receives info (distance and which laser) about the presence of an obstacle from \ref obstacleDetector.
+        
+  *
+  
+  * \section outputports_sec Output Ports
+  * 
+  *
+  * \section services_sec Services
+  * 
+  *- /eventCollector/cmd
+  *  [rpc-server]: 
+  * service port
+  * . This service is described in eventCollector_IDL (idl.thrift)
+  * 
+  *
+  * 
+  *
+  *
+  **/
+

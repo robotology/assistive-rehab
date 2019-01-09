@@ -1,0 +1,345 @@
+\doxysection{assistive\+\_\+rehab\+::Key\+Point Class Reference}
+\label{classassistive__rehab_1_1KeyPoint}\index{assistive\_rehab::KeyPoint@{assistive\_rehab::KeyPoint}}
+
+
+Basic class for single keypoint of a skeleton.  
+
+
+
+
+{\ttfamily \#include $<$skeleton.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\label{classassistive__rehab_1_1KeyPoint_a8b4ce35fc2c7101f1135b9c7530f053d}} 
+\mbox{\hyperlink{classassistive__rehab_1_1KeyPoint_a8b4ce35fc2c7101f1135b9c7530f053d}{Key\+Point}} ()
+\begin{DoxyCompactList}\small\item\em Default constructor. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classassistive__rehab_1_1KeyPoint_ad146e6b6fe96ae4eeaa9d4fa8eaebb40}{Key\+Point}} (const std\+::string \&tag\+\_\+, const yarp\+::sig\+::\+Vector \&point\+\_\+=yarp\+::sig\+::\+Vector(3, std\+::numeric\+\_\+limits$<$ double $>$\+::quiet\+\_\+\+NaN()), const yarp\+::sig\+::\+Vector \&pixel\+\_\+=yarp\+::sig\+::\+Vector(2, std\+::numeric\+\_\+limits$<$ double $>$\+::quiet\+\_\+\+NaN()), const bool updated\+\_\+=false)
+\begin{DoxyCompactList}\small\item\em Overloaded constructor. \end{DoxyCompactList}\item 
+\mbox{\label{classassistive__rehab_1_1KeyPoint_add33d1e673dcbae72449b6843482c6e9}} 
+\mbox{\hyperlink{classassistive__rehab_1_1KeyPoint_add33d1e673dcbae72449b6843482c6e9}{Key\+Point}} (const \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint}{Key\+Point}} \&)=delete
+\begin{DoxyCompactList}\small\item\em Deleted copy constructor. \end{DoxyCompactList}\item 
+\mbox{\label{classassistive__rehab_1_1KeyPoint_aecdf117e438bedb51734c7d2730e6d61}} 
+\mbox{\hyperlink{classassistive__rehab_1_1KeyPoint}{Key\+Point}} \& \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint_aecdf117e438bedb51734c7d2730e6d61}{operator=}} (const \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint}{Key\+Point}} \&)=delete
+\begin{DoxyCompactList}\small\item\em Deleted copy operator. \end{DoxyCompactList}\item 
+\mbox{\label{classassistive__rehab_1_1KeyPoint_a5c959f932cbdc1cd4f326aef56a8e66b}} 
+virtual \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint_a5c959f932cbdc1cd4f326aef56a8e66b}{$\sim$\+Key\+Point}} ()
+\begin{DoxyCompactList}\small\item\em Virtual destructor. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint_ab1c339fe8a6dd281534d54bb0fdb3c50}{is\+Updated}} () const
+\begin{DoxyCompactList}\small\item\em Return true if the keypoint has been updated. \end{DoxyCompactList}\item 
+const std\+::string \& \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint_ace24db46297c42bee32acd87d7450dcd}{get\+Tag}} () const
+\begin{DoxyCompactList}\small\item\em Return a reference to the tag of the keypoint. \end{DoxyCompactList}\item 
+const yarp\+::sig\+::\+Vector \& \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint_a4d68e0824d66f6f0db6dbc176eec3930}{get\+Point}} () const
+\begin{DoxyCompactList}\small\item\em Return a reference to the vector containing the keypoint\textquotesingle{}s x,y,z camera coordinates. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint_a6430d1d6b7704a85462de39b6962e48b}{set\+Point}} (const yarp\+::sig\+::\+Vector \&point)
+\begin{DoxyCompactList}\small\item\em Set keypoint\textquotesingle{}s x,y,z camera coordinates to a desired value. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint_adcb8950f2c32cdf93c3d4b2f6a9f1a70}{set\+Point}} (const yarp\+::sig\+::\+Vector \&point, const yarp\+::sig\+::\+Vector \&pixel)
+\begin{DoxyCompactList}\small\item\em Set keypoint\textquotesingle{}s x,y,z camera coordinates as well as u,v, image coordinates to a desired value. \end{DoxyCompactList}\item 
+const yarp\+::sig\+::\+Vector \& \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint_afebdf9ab021c866f00a2e8a3f9fc4c11}{get\+Pixel}} () const
+\begin{DoxyCompactList}\small\item\em Return a reference to the vector containing the keypoint\textquotesingle{}s u,v image coordinates. \end{DoxyCompactList}\item 
+unsigned int \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint_acf31a6d7e9ae1be4aa992599435564ad}{get\+Num\+Parent}} () const
+\begin{DoxyCompactList}\small\item\em Retrieve the number of parents of the keypoint. \end{DoxyCompactList}\item 
+const \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint}{Key\+Point}} $\ast$ \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint_a0aa07ed9cc05471af65622fa05329cc3}{get\+Parent}} (const unsigned int i) const
+\begin{DoxyCompactList}\small\item\em Get a pointer to the parent of the keypoint specified by index. \end{DoxyCompactList}\item 
+unsigned int \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint_aeb002852df51f7eaa5b719dc9b019863}{get\+Num\+Child}} () const
+\begin{DoxyCompactList}\small\item\em Retrieve the number of children of the keypoint. \end{DoxyCompactList}\item 
+const \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint}{Key\+Point}} $\ast$ \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint_a87aced4b21c5d5a8f67c7e1cb3936282}{get\+Child}} (const unsigned int i) const
+\begin{DoxyCompactList}\small\item\em Get a pointer to the child of the keypoint specified by index. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Friends}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\label{classassistive__rehab_1_1KeyPoint_a6a11291b70c2cbded85d321ce539c62f}} 
+class {\bfseries Skeleton}
+\item 
+\mbox{\label{classassistive__rehab_1_1KeyPoint_ad3de273c9c6dd0dc83202526523f8dd7}} 
+class {\bfseries Skeleton\+Std}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Basic class for single keypoint of a skeleton. 
+
+Definition at line 96 of file skeleton.\+h.
+
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\label{classassistive__rehab_1_1KeyPoint_ad146e6b6fe96ae4eeaa9d4fa8eaebb40}} 
+\index{assistive\_rehab::KeyPoint@{assistive\_rehab::KeyPoint}!KeyPoint@{KeyPoint}}
+\index{KeyPoint@{KeyPoint}!assistive\_rehab::KeyPoint@{assistive\_rehab::KeyPoint}}
+\doxysubsubsection{\texorpdfstring{KeyPoint()}{KeyPoint()}}
+{\footnotesize\ttfamily assistive\+\_\+rehab\+::\+Key\+Point\+::\+Key\+Point (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{tag\+\_\+,  }\item[{const yarp\+::sig\+::\+Vector \&}]{point\+\_\+ = {\ttfamily yarp\+:\+:sig\+:\+:Vector(3,~std\+:\+:numeric\+\_\+limits$<$~double~$>$\+:\+:quiet\+\_\+NaN())},  }\item[{const yarp\+::sig\+::\+Vector \&}]{pixel\+\_\+ = {\ttfamily yarp\+:\+:sig\+:\+:Vector(2,~std\+:\+:numeric\+\_\+limits$<$~double~$>$\+:\+:quiet\+\_\+NaN())},  }\item[{const bool}]{updated\+\_\+ = {\ttfamily false} }\end{DoxyParamCaption})}
+
+
+
+Overloaded constructor. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em tag\+\_\+} & string containing the keypoint\textquotesingle{}s tag. \\
+\hline
+{\em point\+\_\+} & vector containing the keypoint camera coordinates x,y,z. \\
+\hline
+{\em pixel\+\_\+} & vector containing the keypoint image coordinates u,v. \\
+\hline
+{\em updated\+\_\+} & true if the keypoint has been updated. \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\label{classassistive__rehab_1_1KeyPoint_a87aced4b21c5d5a8f67c7e1cb3936282}} 
+\index{assistive\_rehab::KeyPoint@{assistive\_rehab::KeyPoint}!getChild@{getChild}}
+\index{getChild@{getChild}!assistive\_rehab::KeyPoint@{assistive\_rehab::KeyPoint}}
+\doxysubsubsection{\texorpdfstring{getChild()}{getChild()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint}{Key\+Point}} $\ast$ Key\+Point\+::get\+Child (\begin{DoxyParamCaption}\item[{const unsigned int}]{i }\end{DoxyParamCaption}) const}
+
+
+
+Get a pointer to the child of the keypoint specified by index. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em i} & int containing the index of the desired keypoint. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+pointer to the keypoint\textquotesingle{}s child. 
+\end{DoxyReturn}
+
+
+Definition at line 101 of file skeleton.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{102 \{}
+\DoxyCodeLine{103     \textcolor{keywordflow}{return} ((i>=0) \&\& (i<child.size()))?child[i]:\textcolor{keyword}{nullptr};}
+\DoxyCodeLine{104 \}}
+
+\end{DoxyCode}
+\mbox{\label{classassistive__rehab_1_1KeyPoint_aeb002852df51f7eaa5b719dc9b019863}} 
+\index{assistive\_rehab::KeyPoint@{assistive\_rehab::KeyPoint}!getNumChild@{getNumChild}}
+\index{getNumChild@{getNumChild}!assistive\_rehab::KeyPoint@{assistive\_rehab::KeyPoint}}
+\doxysubsubsection{\texorpdfstring{getNumChild()}{getNumChild()}}
+{\footnotesize\ttfamily unsigned int assistive\+\_\+rehab\+::\+Key\+Point\+::get\+Num\+Child (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Retrieve the number of children of the keypoint. 
+
+\begin{DoxyReturn}{Returns}
+number of children of the keypoint. 
+\end{DoxyReturn}
+
+
+Definition at line 205 of file skeleton.\+h.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{205 \{ \textcolor{keywordflow}{return} (\textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int})child.size(); \}}
+
+\end{DoxyCode}
+\mbox{\label{classassistive__rehab_1_1KeyPoint_acf31a6d7e9ae1be4aa992599435564ad}} 
+\index{assistive\_rehab::KeyPoint@{assistive\_rehab::KeyPoint}!getNumParent@{getNumParent}}
+\index{getNumParent@{getNumParent}!assistive\_rehab::KeyPoint@{assistive\_rehab::KeyPoint}}
+\doxysubsubsection{\texorpdfstring{getNumParent()}{getNumParent()}}
+{\footnotesize\ttfamily unsigned int assistive\+\_\+rehab\+::\+Key\+Point\+::get\+Num\+Parent (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Retrieve the number of parents of the keypoint. 
+
+\begin{DoxyReturn}{Returns}
+number of parents of the keypoint. 
+\end{DoxyReturn}
+
+
+Definition at line 192 of file skeleton.\+h.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{192 \{ \textcolor{keywordflow}{return} (\textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int})parent.size(); \}}
+
+\end{DoxyCode}
+\mbox{\label{classassistive__rehab_1_1KeyPoint_a0aa07ed9cc05471af65622fa05329cc3}} 
+\index{assistive\_rehab::KeyPoint@{assistive\_rehab::KeyPoint}!getParent@{getParent}}
+\index{getParent@{getParent}!assistive\_rehab::KeyPoint@{assistive\_rehab::KeyPoint}}
+\doxysubsubsection{\texorpdfstring{getParent()}{getParent()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classassistive__rehab_1_1KeyPoint}{Key\+Point}} $\ast$ Key\+Point\+::get\+Parent (\begin{DoxyParamCaption}\item[{const unsigned int}]{i }\end{DoxyParamCaption}) const}
+
+
+
+Get a pointer to the parent of the keypoint specified by index. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em i} & int containing the index of the desired keypoint. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+pointer to the keypoint\textquotesingle{}s parent. 
+\end{DoxyReturn}
+
+
+Definition at line 96 of file skeleton.\+cpp.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{97 \{}
+\DoxyCodeLine{98     \textcolor{keywordflow}{return} ((i>=0) \&\& (i<parent.size()))?parent[i]:\textcolor{keyword}{nullptr};}
+\DoxyCodeLine{99 \}}
+
+\end{DoxyCode}
+\mbox{\label{classassistive__rehab_1_1KeyPoint_afebdf9ab021c866f00a2e8a3f9fc4c11}} 
+\index{assistive\_rehab::KeyPoint@{assistive\_rehab::KeyPoint}!getPixel@{getPixel}}
+\index{getPixel@{getPixel}!assistive\_rehab::KeyPoint@{assistive\_rehab::KeyPoint}}
+\doxysubsubsection{\texorpdfstring{getPixel()}{getPixel()}}
+{\footnotesize\ttfamily const yarp\+::sig\+::\+Vector\& assistive\+\_\+rehab\+::\+Key\+Point\+::get\+Pixel (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return a reference to the vector containing the keypoint\textquotesingle{}s u,v image coordinates. 
+
+\begin{DoxyReturn}{Returns}
+reference to the vector containing the keypoint\textquotesingle{}s u,v image coordinates. 
+\end{DoxyReturn}
+
+
+Definition at line 186 of file skeleton.\+h.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{186 \{ \textcolor{keywordflow}{return} pixel; \}}
+
+\end{DoxyCode}
+
+
+Referenced by assistive\+\_\+rehab\+::\+Skeleton\+::get\+\_\+ordered\+\_\+withpixels(), assistive\+\_\+rehab\+::\+Skeleton\+::print(), and assistive\+\_\+rehab\+::\+Skeleton\+::update().
+
+\mbox{\label{classassistive__rehab_1_1KeyPoint_a4d68e0824d66f6f0db6dbc176eec3930}} 
+\index{assistive\_rehab::KeyPoint@{assistive\_rehab::KeyPoint}!getPoint@{getPoint}}
+\index{getPoint@{getPoint}!assistive\_rehab::KeyPoint@{assistive\_rehab::KeyPoint}}
+\doxysubsubsection{\texorpdfstring{getPoint()}{getPoint()}}
+{\footnotesize\ttfamily const yarp\+::sig\+::\+Vector\& assistive\+\_\+rehab\+::\+Key\+Point\+::get\+Point (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return a reference to the vector containing the keypoint\textquotesingle{}s x,y,z camera coordinates. 
+
+\begin{DoxyReturn}{Returns}
+reference to the vector containing the keypoint\textquotesingle{}s x,y,z camera coordinates. 
+\end{DoxyReturn}
+
+
+Definition at line 161 of file skeleton.\+h.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{161 \{ \textcolor{keywordflow}{return} point; \}}
+
+\end{DoxyCode}
+
+
+Referenced by assistive\+\_\+rehab\+::\+Skeleton\+::get\+\_\+ordered(), assistive\+\_\+rehab\+::\+Skeleton\+::get\+\_\+ordered\+\_\+withpixels(), assistive\+\_\+rehab\+::\+Skeleton\+::normalize(), assistive\+\_\+rehab\+::\+Skeleton\+::print(), assistive\+\_\+rehab\+::\+Skeleton\+::scale(), and assistive\+\_\+rehab\+::\+Skeleton\+::update().
+
+\mbox{\label{classassistive__rehab_1_1KeyPoint_ace24db46297c42bee32acd87d7450dcd}} 
+\index{assistive\_rehab::KeyPoint@{assistive\_rehab::KeyPoint}!getTag@{getTag}}
+\index{getTag@{getTag}!assistive\_rehab::KeyPoint@{assistive\_rehab::KeyPoint}}
+\doxysubsubsection{\texorpdfstring{getTag()}{getTag()}}
+{\footnotesize\ttfamily const std\+::string\& assistive\+\_\+rehab\+::\+Key\+Point\+::get\+Tag (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return a reference to the tag of the keypoint. 
+
+\begin{DoxyReturn}{Returns}
+string containing the keypoint\textquotesingle{}s tag. 
+\end{DoxyReturn}
+
+
+Definition at line 153 of file skeleton.\+h.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{153 \{ \textcolor{keywordflow}{return} tag; \}}
+
+\end{DoxyCode}
+
+
+Referenced by assistive\+\_\+rehab\+::\+Skeleton\+::print().
+
+\mbox{\label{classassistive__rehab_1_1KeyPoint_ab1c339fe8a6dd281534d54bb0fdb3c50}} 
+\index{assistive\_rehab::KeyPoint@{assistive\_rehab::KeyPoint}!isUpdated@{isUpdated}}
+\index{isUpdated@{isUpdated}!assistive\_rehab::KeyPoint@{assistive\_rehab::KeyPoint}}
+\doxysubsubsection{\texorpdfstring{isUpdated()}{isUpdated()}}
+{\footnotesize\ttfamily bool assistive\+\_\+rehab\+::\+Key\+Point\+::is\+Updated (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return true if the keypoint has been updated. 
+
+\begin{DoxyReturn}{Returns}
+true if the keypoint has been updated. 
+\end{DoxyReturn}
+
+
+Definition at line 147 of file skeleton.\+h.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{147 \{ \textcolor{keywordflow}{return} updated; \}}
+
+\end{DoxyCode}
+
+
+Referenced by assistive\+\_\+rehab\+::\+Skeleton\+::print(), and assistive\+\_\+rehab\+::\+Skeleton\+::update().
+
+\mbox{\label{classassistive__rehab_1_1KeyPoint_a6430d1d6b7704a85462de39b6962e48b}} 
+\index{assistive\_rehab::KeyPoint@{assistive\_rehab::KeyPoint}!setPoint@{setPoint}}
+\index{setPoint@{setPoint}!assistive\_rehab::KeyPoint@{assistive\_rehab::KeyPoint}}
+\doxysubsubsection{\texorpdfstring{setPoint()}{setPoint()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily bool assistive\+\_\+rehab\+::\+Key\+Point\+::set\+Point (\begin{DoxyParamCaption}\item[{const yarp\+::sig\+::\+Vector \&}]{point }\end{DoxyParamCaption})}
+
+
+
+Set keypoint\textquotesingle{}s x,y,z camera coordinates to a desired value. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em point} & vector containing the desider point. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+
+
+Referenced by assistive\+\_\+rehab\+::\+Skeleton\+::update().
+
+\mbox{\label{classassistive__rehab_1_1KeyPoint_adcb8950f2c32cdf93c3d4b2f6a9f1a70}} 
+\index{assistive\_rehab::KeyPoint@{assistive\_rehab::KeyPoint}!setPoint@{setPoint}}
+\index{setPoint@{setPoint}!assistive\_rehab::KeyPoint@{assistive\_rehab::KeyPoint}}
+\doxysubsubsection{\texorpdfstring{setPoint()}{setPoint()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily bool assistive\+\_\+rehab\+::\+Key\+Point\+::set\+Point (\begin{DoxyParamCaption}\item[{const yarp\+::sig\+::\+Vector \&}]{point,  }\item[{const yarp\+::sig\+::\+Vector \&}]{pixel }\end{DoxyParamCaption})}
+
+
+
+Set keypoint\textquotesingle{}s x,y,z camera coordinates as well as u,v, image coordinates to a desired value. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em point} & vector containing the desider point. \\
+\hline
+{\em pixel} & vector containing the desider pixel. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/home/runner/work/assistive-\/rehab/assistive-\/rehab/gh-\/pages/lib/include/\+Assistive\+Rehab/skeleton.\+h\item 
+/home/runner/work/assistive-\/rehab/assistive-\/rehab/gh-\/pages/lib/src/\mbox{\hyperlink{skeleton_8cpp}{skeleton.\+cpp}}\end{DoxyCompactItemize}

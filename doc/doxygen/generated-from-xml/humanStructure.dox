@@ -1,0 +1,90 @@
+
+  /**
+  *
+  * @ingroup humanStructure
+  * \defgroup humanStructure humanStructure
+  * This module takes as input an image and 2D skeleton data and outputs a series of data such as skeleton tracked, bounbing box around object of interest.
+  * Version:0.6.0
+  * \author  Vadim Tikhanoff vadim.tikhanoff@iit.it
+  * \n
+  * \copyright  Released under the terms of the BSD 3-Clause License.
+  * \section intro_sec Description
+  *
+  
+   This module takes as input an image and 2D skeleton data from yarpOpenPose.
+   Skeleton data are used to get skeleton of interest (from arm lifted), send a trigger to the speech pipeline when lifting and lowering the arm. Get the bounding box of interest from the selected skeleton. 
+   Detected blobs are finally sorted from left to right to avoid confusion in case of occlusion (yarpOpenPose outputs an unsorted list of 2D skeletons).
+  
+  * \section parameters_sec Parameters
+  
+  *- --name: The module's name; all the open ports will be tagged with the prefix /name.
+  *- --minVal: Minimum value for depth.
+  *- --maxVal: Maximum value for depth.
+  * \section inputports_sec Input Ports
+  * 
+  *- /humanStructure/skeleton:i [Bottle]  [default carrier:]: 
+            Receives the 2D input skeletons. To be connected to \yarpOpenPose\target:o.
+          
+  *
+  
+  *- /humanStructure/image:i [ImageOfPixelRgb]  [default carrier:]: 
+            Receives the input image. To be connected to \yarpOpenPose\propag:o.
+          
+  *
+  
+  *- /humanStructure/float:i [ImageOfPixelFloat]  [default carrier:]: 
+            Receives the float image. To be connected to \yarpOpenPose\float:o
+          
+  *
+  
+  * \section outputports_sec Output Ports
+  * 
+  *- /humanStructure/image:o [ImageOfPixelRgb]  [default carrier:]: 
+            Streams out the input image with blobs around the detected ROI.
+          
+  *
+  
+  *- /humanStructure/depth:o [ImageOfPixelMono]  [default carrier:]: 
+            Streams out the depth image blobs around the detected ROI.
+          
+  *
+  
+  *- /humanStructure/segmented:o [ImageOfPixelMono]  [default carrier:]: 
+            Streams out the segmented ROI.
+          
+  *
+  
+  *- /humanStructure/target:o [Bottle]  [default carrier:]: 
+            Streams out the 2D input skeleton.
+          
+  *
+  
+  *- /humanStructure/blobs:o [Bottle]  [default carrier:]: 
+            Streams out blobs' coordinates around detected faces as top left and bottom right corners.
+          
+  *
+  
+  *- /humanStructure/trigger:o [Bottle]  [default carrier:]: 
+            Streams out the trigger for the speech pipeline.
+          
+  *
+  
+  *- /humanStructure/cam:rpc [rpc]  [default carrier:]: 
+            Retrieves camera parameters.
+          
+  *
+  
+  *
+  * \section services_sec Services
+  * 
+  *- /humanStructure/rpc
+  *  [rpc-server]: 
+  * service port
+  * . This service is described in humanStructure_IDLServer (humanStructure.thrift)
+  * 
+  *
+  * 
+  *
+  *
+  **/
+

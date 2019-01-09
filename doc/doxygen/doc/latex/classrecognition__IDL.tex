@@ -1,0 +1,158 @@
+\doxysection{recognition\+\_\+\+IDL Class Reference}
+\label{classrecognition__IDL}\index{recognition\_IDL@{recognition\_IDL}}
+
+
+face\+Recognizer\+\_\+\+IDL IDL Interface to human structure module.  
+
+
+
+
+{\ttfamily \#include $<$recognition\+\_\+\+IDL.\+h$>$}
+
+
+
+Inherits yarp\+::os\+::\+Wire.
+
+
+
+Inherited by Module.
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual bool \mbox{\hyperlink{classrecognition__IDL_acf63e73eba86bdffa4620aa4240ed17f}{train}} (const std\+::string \&name)
+\begin{DoxyCompactList}\small\item\em Train a face. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classrecognition__IDL_a5ddaf7e807d0bb5685ee4b87e8817bf3}{forget}} (const std\+::string \&label)
+\begin{DoxyCompactList}\small\item\em Forget a face. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classrecognition__IDL_ab4ab3c0a86b630b85e411ff39720fc3d}{set\+Confidence\+Threshold}} (const double thresh)
+\begin{DoxyCompactList}\small\item\em Set the confidence\+Threshold. \end{DoxyCompactList}\item 
+virtual double \mbox{\hyperlink{classrecognition__IDL_a5cc457fe6b185acc8a4b1f541a002cee}{get\+Confidence\+Threshold}} ()
+\begin{DoxyCompactList}\small\item\em Get the confidence\+Threshold. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classrecognition__IDL_afb70498b2cf99712cfad0e19d171dcab}{interaction\+Mode}} (const std\+::string \&mode)
+\begin{DoxyCompactList}\small\item\em Interaction Mode . \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classrecognition__IDL_a42d5f63c8461c081cf2c17311bed5375}{quit}} ()
+\begin{DoxyCompactList}\small\item\em Quit the module. \end{DoxyCompactList}\item 
+\mbox{\label{classrecognition__IDL_a4dee551f9609961d691081cd6dcd352f}} 
+bool {\bfseries read} (yarp\+::os\+::\+Connection\+Reader \&connection) override
+\item 
+\mbox{\label{classrecognition__IDL_aeb060873c369bd091441e56dcdac7964}} 
+virtual std\+::vector$<$ std\+::string $>$ {\bfseries help} (const std\+::string \&function\+Name=\char`\"{}-\/-\/all\char`\"{})
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+face\+Recognizer\+\_\+\+IDL IDL Interface to human structure module. 
+
+Definition at line 25 of file recognition\+\_\+\+IDL.\+h.
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\label{classrecognition__IDL_a5ddaf7e807d0bb5685ee4b87e8817bf3}} 
+\index{recognition\_IDL@{recognition\_IDL}!forget@{forget}}
+\index{forget@{forget}!recognition\_IDL@{recognition\_IDL}}
+\doxysubsubsection{\texorpdfstring{forget()}{forget()}}
+{\footnotesize\ttfamily virtual bool recognition\+\_\+\+IDL\+::forget (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Forget a face. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & object name to forget. Use \char`\"{}all\char`\"{} to forget all faces. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classrecognition__IDL_a5cc457fe6b185acc8a4b1f541a002cee}} 
+\index{recognition\_IDL@{recognition\_IDL}!getConfidenceThreshold@{getConfidenceThreshold}}
+\index{getConfidenceThreshold@{getConfidenceThreshold}!recognition\_IDL@{recognition\_IDL}}
+\doxysubsubsection{\texorpdfstring{getConfidenceThreshold()}{getConfidenceThreshold()}}
+{\footnotesize\ttfamily virtual double recognition\+\_\+\+IDL\+::get\+Confidence\+Threshold (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Get the confidence\+Threshold. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em thresh} & threshold of the confidence. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+value of confidence Threshold. 
+\end{DoxyReturn}
+\mbox{\label{classrecognition__IDL_afb70498b2cf99712cfad0e19d171dcab}} 
+\index{recognition\_IDL@{recognition\_IDL}!interactionMode@{interactionMode}}
+\index{interactionMode@{interactionMode}!recognition\_IDL@{recognition\_IDL}}
+\doxysubsubsection{\texorpdfstring{interactionMode()}{interactionMode()}}
+{\footnotesize\ttfamily virtual bool recognition\+\_\+\+IDL\+::interaction\+Mode (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{mode }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Interaction Mode . 
+
+
+\begin{DoxyParams}{Parameters}
+{\em mode} & use lift arm or closest face. Can be lift\+Arm or close\+Face, default is lift\+Arm. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classrecognition__IDL_a42d5f63c8461c081cf2c17311bed5375}} 
+\index{recognition\_IDL@{recognition\_IDL}!quit@{quit}}
+\index{quit@{quit}!recognition\_IDL@{recognition\_IDL}}
+\doxysubsubsection{\texorpdfstring{quit()}{quit()}}
+{\footnotesize\ttfamily virtual bool recognition\+\_\+\+IDL\+::quit (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Quit the module. 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classrecognition__IDL_ab4ab3c0a86b630b85e411ff39720fc3d}} 
+\index{recognition\_IDL@{recognition\_IDL}!setConfidenceThreshold@{setConfidenceThreshold}}
+\index{setConfidenceThreshold@{setConfidenceThreshold}!recognition\_IDL@{recognition\_IDL}}
+\doxysubsubsection{\texorpdfstring{setConfidenceThreshold()}{setConfidenceThreshold()}}
+{\footnotesize\ttfamily virtual bool recognition\+\_\+\+IDL\+::set\+Confidence\+Threshold (\begin{DoxyParamCaption}\item[{const double}]{thresh }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Set the confidence\+Threshold. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em thresh} & threshold of the confidence. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classrecognition__IDL_acf63e73eba86bdffa4620aa4240ed17f}} 
+\index{recognition\_IDL@{recognition\_IDL}!train@{train}}
+\index{train@{train}!recognition\_IDL@{recognition\_IDL}}
+\doxysubsubsection{\texorpdfstring{train()}{train()}}
+{\footnotesize\ttfamily virtual bool recognition\+\_\+\+IDL\+::train (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{name }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Train a face. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em name} & name of the label to assign. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+idl\+\_\+dox/recognition\+\_\+\+IDL.\+h\end{DoxyCompactItemize}

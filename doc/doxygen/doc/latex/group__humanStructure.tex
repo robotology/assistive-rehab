@@ -1,0 +1,44 @@
+\doxysection{human\+Structure}
+\label{group__humanStructure}\index{humanStructure@{humanStructure}}
+
+
+This module takes as input an image and 2D skeleton data and outputs a series of data such as skeleton tracked, bounbing box around object of interest.  
+
+
+This module takes as input an image and 2D skeleton data and outputs a series of data such as skeleton tracked, bounbing box around object of interest. 
+
+Version\+:0.\+6.\+0 \begin{DoxyAuthor}{Author}
+Vadim Tikhanoff \href{mailto:vadim.tikhanoff@iit.it}{\texttt{ vadim.\+tikhanoff@iit.\+it}} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the BSD 3-\/Clause License. 
+\end{DoxyCopyright}
+\hypertarget{group__skeletonViewer_intro_sec}{}\doxysubsection{Description}\label{group__skeletonViewer_intro_sec}
+This module takes as input an image and 2D skeleton data from yarp\+Open\+Pose. Skeleton data are used to get skeleton of interest (from arm lifted), send a trigger to the speech pipeline when lifting and lowering the arm. Get the bounding box of interest from the selected skeleton. Detected blobs are finally sorted from left to right to avoid confusion in case of occlusion (yarp\+Open\+Pose outputs an unsorted list of 2D skeletons).\hypertarget{group__skeletonViewer_parameters_sec}{}\doxysubsection{Parameters}\label{group__skeletonViewer_parameters_sec}
+
+\begin{DoxyItemize}
+\item --name\+: The module\textquotesingle{}s name; all the open ports will be tagged with the prefix /name.
+\item --min\+Val\+: Minimum value for depth.
+\item --max\+Val\+: Maximum value for depth. 
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_inputports_sec}{}\doxysubsection{Input Ports}\label{group__skeletonViewer_inputports_sec}
+
+\begin{DoxyItemize}
+\item /human\+Structure/skeleton\+:i \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives the 2D input skeletons. To be connected to \textbackslash{}yarp\+Open\+Pose\textbackslash{}target\+:o.
+\item /human\+Structure/image\+:i \mbox{[}Image\+Of\+Pixel\+Rgb\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives the input image. To be connected to \textbackslash{}yarp\+Open\+Pose\textbackslash{}propag\+:o.
+\item /human\+Structure/float\+:i \mbox{[}Image\+Of\+Pixel\+Float\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives the float image. To be connected to \textbackslash{}yarp\+Open\+Pose\textbackslash{}float\+:o
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_outputports_sec}{}\doxysubsection{Output Ports}\label{group__skeletonViewer_outputports_sec}
+
+\begin{DoxyItemize}
+\item /human\+Structure/image\+:o \mbox{[}Image\+Of\+Pixel\+Rgb\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Streams out the input image with blobs around the detected ROI.
+\item /human\+Structure/depth\+:o \mbox{[}Image\+Of\+Pixel\+Mono\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Streams out the depth image blobs around the detected ROI.
+\item /human\+Structure/segmented\+:o \mbox{[}Image\+Of\+Pixel\+Mono\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Streams out the segmented ROI.
+\item /human\+Structure/target\+:o \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Streams out the 2D input skeleton.
+\item /human\+Structure/blobs\+:o \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Streams out blobs\textquotesingle{} coordinates around detected faces as top left and bottom right corners.
+\item /human\+Structure/trigger\+:o \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Streams out the trigger for the speech pipeline.
+\item /human\+Structure/cam\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Retrieves camera parameters.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_services_sec}{}\doxysubsection{Services}\label{group__skeletonViewer_services_sec}
+
+\begin{DoxyItemize}
+\item /human\+Structure/rpc \mbox{[}rpc-\/server\mbox{]}\+: service port . This service is described in \mbox{\hyperlink{classhumanStructure__IDLServer}{human\+Structure\+\_\+\+IDLServer}} (human\+Structure.\+thrift) 
+\end{DoxyItemize}

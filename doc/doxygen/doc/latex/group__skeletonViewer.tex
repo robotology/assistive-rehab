@@ -1,0 +1,43 @@
+\doxysection{skeleton\+Viewer}
+\label{group__skeletonViewer}\index{skeletonViewer@{skeletonViewer}}
+
+
+This module is responsible for displaying in real-\/time multiple skeletons in 3D.  
+
+
+This module is responsible for displaying in real-\/time multiple skeletons in 3D. 
+
+Version\+:0.\+6.\+0 \begin{DoxyAuthor}{Author}
+Ugo Pattacini \href{mailto:ugo.pattacini@iit.it}{\texttt{ ugo.\+pattacini@iit.\+it}} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the BSD 3-\/Clause License. 
+\end{DoxyCopyright}
+\hypertarget{group__skeletonViewer_intro_sec}{}\doxysubsection{Description}\label{group__skeletonViewer_intro_sec}
+This module is responsible for displaying in real-\/time multiple skeletons in 3D. It makes use of VTK.\hypertarget{group__skeletonViewer_parameters_sec}{}\doxysubsection{Parameters}\label{group__skeletonViewer_parameters_sec}
+
+\begin{DoxyItemize}
+\item --x\+: Viewer\textquotesingle{}s x position in screen coordinates pixels.
+\item --y\+: Viewer\textquotesingle{}s y position in screen coordinates pixels.
+\item --w\+: Viewer\textquotesingle{}s width in screen coordinates pixels.
+\item --h\+: Viewer\textquotesingle{}s height in screen coordinates pixels.
+\item --gc-\/period\+: Periodicity of the module (s)
+\item --bg-\/color\+: Viewer\textquotesingle{}s background color using rgb color specification.
+\item --camera-\/position\+: The camera position in world coordinates.
+\item --camera-\/focalpoint\+: The camera focal point in world coordinates.
+\item --camera-\/viewup\+: The camera viewup direction in world coordinates.
+\item --show-\/floor\+: Switch it on to display the floor.
+\item --floor-\/center\+: The floor center in world coordinates.
+\item --floor-\/normal\+: The floor normal in world coordinates.
+\item --grid-\/resolution\+: Grid resolution of the floor expressed in number of squares per side. Since the floor size is 10x10 square meters, a resolution of e.\+g. (100 100) will create a grid of squares with side length 10 cm. 
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_inputports_sec}{}\doxysubsection{Input Ports}\label{group__skeletonViewer_inputports_sec}
+
+\begin{DoxyItemize}
+\item /skeleton\+Viewer\+:i \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives 3D skeletons to visualize.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_outputports_sec}{}\doxysubsection{Output Ports}\label{group__skeletonViewer_outputports_sec}
+\hypertarget{group__skeletonViewer_services_sec}{}\doxysubsection{Services}\label{group__skeletonViewer_services_sec}
+
+\begin{DoxyItemize}
+\item /skeleton\+Viewer\+:rpc \mbox{[}rpc-\/server\mbox{]}\+: service port . This service is described in \mbox{\hyperlink{classskeletonViewer__IDL}{skeleton\+Viewer\+\_\+\+IDL}} (idl.\+thrift) 
+\end{DoxyItemize}

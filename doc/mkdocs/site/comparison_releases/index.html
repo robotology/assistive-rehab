@@ -1,0 +1,1768 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A framework for developing the assistive intelligence of R1 for clinical rehabilitation.">
+      
+      
+        <meta name="author" content="Valentina vasco">
+      
+      
+        <link rel="canonical" href="https://github.com/robotology/assistive-rehab/comparison_releases/">
+      
+      
+        <link rel="prev" href="../Y1Q3/">
+      
+      
+        <link rel="next" href="../TUG/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.11">
+    
+    
+      
+        <title>Comparison between Y1Q3 and Y1M5 - assistive-rehab</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.7e359304.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#comparison-between-y1q3-and-y1m5" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="assistive-rehab" class="md-header__button md-logo" aria-label="assistive-rehab" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2M7.5 13A2.5 2.5 0 0 0 5 15.5 2.5 2.5 0 0 0 7.5 18a2.5 2.5 0 0 0 2.5-2.5A2.5 2.5 0 0 0 7.5 13m9 0a2.5 2.5 0 0 0-2.5 2.5 2.5 2.5 0 0 0 2.5 2.5 2.5 2.5 0 0 0 2.5-2.5 2.5 2.5 0 0 0-2.5-2.5Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            assistive-rehab
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Comparison between Y1Q3 and Y1M5
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/robotology/assistive-rehab" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    robotology/assistive-rehab
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../latest_news/" class="md-tabs__link">
+          
+  
+  News
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../install/" class="md-tabs__link">
+        
+  
+    
+  
+  Install
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="https://robotology.github.io/assistive-rehab/doc/doxygen/doc/html/index.html" class="md-tabs__link">
+        
+  
+    
+  
+  Documentation [v0.6.0]
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../tutorial_intro/" class="md-tabs__link">
+          
+  
+  Tutorials
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../Y1M5/" class="md-tabs__link">
+          
+  
+  Milestones
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../about/" class="md-tabs__link">
+        
+  
+    
+  
+  About
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../license/" class="md-tabs__link">
+        
+  
+    
+  
+  License
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="assistive-rehab" class="md-nav__button md-logo" aria-label="assistive-rehab" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2M7.5 13A2.5 2.5 0 0 0 5 15.5 2.5 2.5 0 0 0 7.5 18a2.5 2.5 0 0 0 2.5-2.5A2.5 2.5 0 0 0 7.5 13m9 0a2.5 2.5 0 0 0-2.5 2.5 2.5 2.5 0 0 0 2.5 2.5 2.5 2.5 0 0 0 2.5-2.5 2.5 2.5 0 0 0-2.5-2.5Z"/></svg>
+
+    </a>
+    assistive-rehab
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/robotology/assistive-rehab" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    robotology/assistive-rehab
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    News
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            News
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../latest_news/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Latest
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Install
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://robotology.github.io/assistive-rehab/doc/doxygen/doc/html/index.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Documentation [v0.6.0]
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Tutorials
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Tutorials
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorial_intro/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Getting started
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../create_new_skeleton/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to manage a skeleton object
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../replay_an_experiment/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to replay an experiment
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../disembodied/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to run the pipeline in a disembodied manner
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../align_signals/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to temporally align two signals
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../main_apps/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to run the rehabilitation demos
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../virtual_demo/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to run the virtual demo
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tug_lines/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to detect the TUG lines
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tug_demo/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to run the TUG demo
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gazebo_plugin/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to use the gazebo plugin
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../wifi_button/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to configure the wifi button
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Milestones
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Milestones
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Y1M5/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Y1M5
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Y1Q3/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Y1Q3
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Comparison between Y1Q3 and Y1M5
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Comparison between Y1Q3 and Y1M5
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#acquisition" class="md-nav__link">
+    <span class="md-ellipsis">
+      Acquisition
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Acquisition">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#filtering-the-disparity-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      Filtering the disparity map
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimizing-the-skeleton" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optimizing the skeleton
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reducing-latencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reducing latencies
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extending-the-feedback" class="md-nav__link">
+    <span class="md-ellipsis">
+      Extending the feedback
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Extending the feedback">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#y1m5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Y1M5
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#y1q3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Y1Q3
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Y1Q3">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#action-recognition" class="md-nav__link">
+    <span class="md-ellipsis">
+      Action Recognition
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#joint-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      Joint analysis
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Joint analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#range-of-motion-exercises" class="md-nav__link">
+    <span class="md-ellipsis">
+      Range of Motion exercises
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reaching" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reaching
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      Comparison
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TUG/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    TUG
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../about/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    About
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../license/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    License
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#acquisition" class="md-nav__link">
+    <span class="md-ellipsis">
+      Acquisition
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Acquisition">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#filtering-the-disparity-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      Filtering the disparity map
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimizing-the-skeleton" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optimizing the skeleton
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reducing-latencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reducing latencies
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extending-the-feedback" class="md-nav__link">
+    <span class="md-ellipsis">
+      Extending the feedback
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Extending the feedback">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#y1m5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Y1M5
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#y1q3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Y1Q3
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Y1Q3">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#action-recognition" class="md-nav__link">
+    <span class="md-ellipsis">
+      Action Recognition
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#joint-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      Joint analysis
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Joint analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#range-of-motion-exercises" class="md-nav__link">
+    <span class="md-ellipsis">
+      Range of Motion exercises
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reaching" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reaching
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      Comparison
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+    <a href="https://github.com/robotology/assistive-rehab/edit/master/doc/mkdocs/data/comparison_releases.md" title="Edit this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4v-2m10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1 2.1 2.1Z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/robotology/assistive-rehab/raw/master/doc/mkdocs/data/comparison_releases.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.15 8.15 0 0 1-1.23-2Z"/></svg>
+    </a>
+  
+
+
+<h1 id="comparison-between-y1q3-and-y1m5">Comparison between <a href="../Y1Q3/">Y1Q3</a> and <a href="../Y1M5/">Y1M5</a><a class="headerlink" href="#comparison-between-y1q3-and-y1m5" title="Permanent link">&para;</a></h1>
+<h2 id="acquisition">Acquisition<a class="headerlink" href="#acquisition" title="Permanent link">&para;</a></h2>
+<p>The improvements that Y1Q3 introduces in terms of acquisition are listed below:</p>
+<ol>
+<li><a href="#filtering-the-disparity-map">Filtering the disparity map</a>;</li>
+<li><a href="#optimizing-the-skeleton">Optimizing the skeleton</a>;</li>
+<li><a href="#reducing-latencies">Reducing latencies</a>.</li>
+</ol>
+<h3 id="filtering-the-disparity-map">Filtering the disparity map<a class="headerlink" href="#filtering-the-disparity-map" title="Permanent link">&para;</a></h3>
+<p>The disparity map provided by the camera is inaccurate around the human contour and might have holes, leading keypoints close to the contour (e.g. hands) or on an hole to be projected incorrectly. For example, the following video shows the depth map for an abduction movement, where the hand is projected to infinite:</p>
+<p align="center">
+<img src="https://user-images.githubusercontent.com/9716288/49949881-063f7780-fef7-11e8-935e-43c4d8cf9dab.gif" width="500">
+</p>
+
+<p>In Y1M5, the disparity map is used as provided by the camera, without any additional processing, and thus it is affected by the effect described. In Y1Q3, the disparity map is eroded (and thus the depth map dilated), which has the double effect of:</p>
+<ol>
+<li>increasing the probability for keypoints closer to the contour to fall within the correct depth map;</li>
+<li>filling holes in the depth.</li>
+</ol>
+<p>The following video shows the effect of filtering the depth map and keypoints falling within the correct depth:</p>
+<table>
+<thead>
+<tr>
+<th>Unprocessed depth (Y1M5)</th>
+<th>Filtered depth (Y1Q3)</th>
+<th>Keypoints inside the depth</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p align="center"> <img src=https://user-images.githubusercontent.com/9716288/50230577-31b9da80-03ad-11e9-9460-53fbf7bcef76.gif width="250"> </p></td>
+<td><p align="center">  <img src=https://user-images.githubusercontent.com/9716288/50230653-5dd55b80-03ad-11e9-84db-b0b8693659fd.gif width="250"> </p></td>
+<td><p align="center">  <img src=https://user-images.githubusercontent.com/9716288/50230688-72195880-03ad-11e9-87ed-3a981c12cbee.gif width="250"> </p></td>
+</tr>
+</tbody>
+</table>
+<h3 id="optimizing-the-skeleton">Optimizing the skeleton<a class="headerlink" href="#optimizing-the-skeleton" title="Permanent link">&para;</a></h3>
+<p>Exercises that require movements parallel to the optical axis make some keypoints ambiguous. For example, in the external and internal rotation, the elbow is not directly observable as the hand occludes it. Therefore both keypoints are projected to the same depth, as shown here:</p>
+<table>
+<thead>
+<tr>
+<th>Without optimization (Y1M5)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p align="center"> <img src=https://user-images.githubusercontent.com/9716288/49950004-3a1a9d00-fef7-11e8-8657-98e1802c2dde.gif width="750"> </p></td>
+</tr>
+</tbody>
+</table>
+<p>In Y1Q3, we introduce an optimization of the skeleton, which adjusts the depth of the keypoints such that the length of the arms is equal to that observed during an initial phase. The following image shows the result of the optimization, in which elbow and hand are projected correctly.</p>
+<table>
+<thead>
+<tr>
+<th>With optimization (Y1Q3)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p align="center"> <img src=https://user-images.githubusercontent.com/9716288/49950012-4272d800-fef7-11e8-8bbe-8ff08a453f1d.gif  width="750"> </p></td>
+</tr>
+</tbody>
+</table>
+<h3 id="reducing-latencies">Reducing latencies<a class="headerlink" href="#reducing-latencies" title="Permanent link">&para;</a></h3>
+<p><code>yarpOpenPose</code> introduces a visible latency in the depth map, as shown here:</p>
+<table>
+<thead>
+<tr>
+<th>Without <code>yarpOpenPose</code></th>
+<th>With <code>yarpOpenPose</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p align="center"> <img src=https://user-images.githubusercontent.com/9716288/49950278-ca58e200-fef7-11e8-88b1-0256162843f8.gif width="350" height=332> </p></td>
+<td><p align="center"> <img src=https://user-images.githubusercontent.com/9716288/49950123-7e0da200-fef7-11e8-8a4a-e14eb6477cd3.gif  width="340" height=332> </p></td>
+</tr>
+</tbody>
+</table>
+<p>In Y1Q3, <code>yarpOpenPose</code> propagates the depth image in sync with the output of skeleton detection, in order to equalize the delay between the two streams.</p>
+<h2 id="extending-the-feedback">Extending the feedback<a class="headerlink" href="#extending-the-feedback" title="Permanent link">&para;</a></h2>
+<h3 id="y1m5">Y1M5<a class="headerlink" href="#y1m5" title="Permanent link">&para;</a></h3>
+<p>In Y1M5, the feedback is based on the definition of <em>dynamic</em> joints (i.e. joints performing the exercise (1)) and <em>static</em> joints (i.e. joints staying in the initial position (2)):</p>
+<ol>
+<li>dynamic joints contribute to the <em>dynamic</em> score, which computes their range of motion in a predefined temporal window, by awarding joints moving within the correct range of motion;</li>
+<li>static joints contribute to the <em>static</em> score, which computes their deviation from a predefined resting position.</li>
+</ol>
+<p>Dynamic and static scores are combined to produce three levels:</p>
+<ol>
+<li>
+<p>low: both dynamic and static scores are low, producing the following feedback:</p>
+<blockquote>
+<p>"You are not moving very well!"</p>
+</blockquote>
+</li>
+<li>
+<p>medium: either dynamic or static score is medium, producing the following feedback:</p>
+<blockquote>
+<p>"You are doing the exercise correctly, but you could do it better."</p>
+</blockquote>
+</li>
+<li>
+<p>high: both dynamic and static scores are high, producing the following feedback:</p>
+<blockquote>
+<p>"You are moving very well!"</p>
+</blockquote>
+</li>
+</ol>
+<div class="admonition failure">
+<p class="admonition-title">Failure</p>
+<ul>
+<li>the feedback does not provide a real correction of the movement;</li>
+<li>the <em>speed</em> of the movement is not directly taken into account;</li>
+<li>the feedback can be positive even when a wrong movement is performed (for example, a different movement with the same moving joints as external rotation instead of internal and viceversa, or a random movement with dynamic joints moving within the range of motion and static joints not deviating enough from the resting position).</li>
+</ul>
+</div>
+<h3 id="y1q3">Y1Q3<a class="headerlink" href="#y1q3" title="Permanent link">&para;</a></h3>
+<p>To overcome the drawbacks of Y1M5, in Y1Q3 the concept of dynamic and static joints is removed and the exercise is treated in its entirety as an action. Therefore the feedback is produced based on the following two layers:</p>
+<ol>
+<li><a href="#action-recognition">Action recognition</a>: which classifies the exercise and triggers the second layer if the predicted class equals the label of the exercise to perform. Otherwise the feedback produced is negative. This layer is fundamental as it guarantees a random or a wrong movement to not produce a positive feedback.</li>
+<li><a href="#joint-analysis">Joint analysis</a>: which compares the observed skeleton with a predefined template for that movement, differently based on the exercise. The comparison with a template skeleton allows us to analyze also the speed of the movement.</li>
+</ol>
+<p>With this architecture, the feedback is extended and articulated in the following levels:</p>
+<ul>
+<li>
+<p>positive feedback:</p>
+<blockquote>
+<p>"You are moving very well!"</p>
+</blockquote>
+</li>
+<li>
+<p>feedback for range of motion exercises:</p>
+<ol>
+<li>
+<p>feedback on the speed:</p>
+<blockquote>
+<p>"Move the arm faster/slower!"</p>
+</blockquote>
+</li>
+<li>
+<p>feedback on the range of motion:</p>
+<blockquote>
+<p>"Move the arm further up/down!"</p>
+</blockquote>
+</li>
+</ol>
+</li>
+<li>
+<p>feedback for reaching exercises:</p>
+<blockquote>
+<p>"You are not reaching the target!"</p>
+</blockquote>
+</li>
+<li>
+<p>negative feedback:</p>
+<blockquote>
+<p>"You are doing the wrong exercise. Please, repeat the movements I show you."</p>
+</blockquote>
+</li>
+</ul>
+<h4 id="action-recognition">Action Recognition<a class="headerlink" href="#action-recognition" title="Permanent link">&para;</a></h4>
+<p>The action recognition is carried out using a <a href="https://github.com/stuarteiffert/RNN-for-Human-Activity-Recognition-using-2D-Pose-Input">Recurrent Neural Network (RNN) with Long Short-Term Memory (LSTM) cells</a>.</p>
+<ul>
+<li>
+<p><strong>Input to the network</strong>:
+<em>2D joints</em> of the upper body from the <code>skeletonRetriever</code>. The output of the <code>skeletonRetriever</code> is preferable to that of <code>yarpOpenPose</code>, as the <code>skeletonRetriever</code> unambiguously identifies a skeleton by tag, avoiding ambiguities due to the presence of several skeletons.</p>
+</li>
+<li>
+<p><strong>Preprocessing</strong>:
+The following operations are applied to the skeleton:</p>
+<ol>
+<li>normalization, such that the length of each segment is 1. This prevents having different results for different physiques;</li>
+<li>rototranslation, derived by the first observed skeleton;</li>
+<li>scale by a factor of 10, in order to have values between -1.0,1.0.</li>
+</ol>
+</li>
+<li>
+<p><strong>Training set</strong>:
+1 subject performs the following 6 exercises (i.e. 6 classes):</p>
+<ol>
+<li><code>abduction-left</code>;</li>
+<li><code>internal-rotation-left</code>;</li>
+<li><code>external-rotation-left</code>;</li>
+<li><code>reaching-left</code>;</li>
+<li><code>static</code> (the subject remains steady);</li>
+<li><code>random</code> (the subject moves randomly).</li>
+</ol>
+<p>The first 3 movements are repeated 10 times and the full exercise repeated 5 times.
+For the 4<sup>th</sup> movement, 4 targets to be reached are defined, distributed on the corners/center of a square, centered around the <code>shoulderLeft</code> of the subject. Each dataset was recorded from a frontal and a side view and can be found at this <a href="https://github.com/robotology/assistive-rehab-storage/tree/master/dataset-action-2">link</a>.
+Parameters used for training are the following:</p>
+<ol>
+<li><code>n_hidden</code> = 22</li>
+<li><code>n_steps</code> (temporal window) = 30</li>
+<li><code>learning_rate</code> = 0.0005</li>
+<li><code>batch_size</code> = 256</li>
+<li><code>epochs</code> = 400</li>
+</ol>
+</li>
+<li>
+<p><strong>Validation set:</strong>
+The same subject, but previously unseen data, were used for testing the network.</p>
+</li>
+<li>
+<p><strong>Accuracy:</strong>
+We get an accuracy of 92.2% with the following confusion matrix:</p>
+</li>
+</ul>
+<p align="center">
+<img src=https://user-images.githubusercontent.com/9716288/49951737-ead66b80-fefa-11e8-831e-5fe666bf2bee.png width="650">
+</p>
+
+<h4 id="joint-analysis">Joint analysis<a class="headerlink" href="#joint-analysis" title="Permanent link">&para;</a></h4>
+<p>This analysis is differentiated according to the exercises, which are classified as:</p>
+<ol>
+<li>range of motion exercises (i.e. abduction, internal and external rotation);</li>
+<li>reaching exercises.</li>
+</ol>
+<h5 id="range-of-motion-exercises">Range of Motion exercises<a class="headerlink" href="#range-of-motion-exercises" title="Permanent link">&para;</a></h5>
+<p>The joints under analysis for these movements are: <code>elbowLeft</code>, <code>handLeft</code>.
+These movements can produce two feedbacks, i.e. on the speed and on the range of motion. The feedback is provided according to a predefined hierarchy which prioritizes the speed, followed by the range of motion. Therefore, a positive feedback is produced only when both checks are fine.</p>
+<ol>
+<li><strong>Speed: Fourier analysis</strong></li>
+</ol>
+<p>We perform the Fourier transform of each component of the joints under analysis in a predefined temporal window, for both the observed and the template skeleton.
+The difference in frequency is computed as <code>df = f_skeleton - f_template</code> and thus we can have two possible cases:</p>
+<ol>
+<li><code>df &gt; 0</code> =&gt; feedback: "Move the arm faster"</li>
+<li>
+<p><code>df &lt; 0</code> =&gt; feedback: "Move the arm slower"</p>
+</li>
+<li>
+<p><strong>Range of motion: Dynamic Time Warping (DTW) plus error statistical analysis</strong></p>
+</li>
+</ol>
+<p>The DTW is applied to each component of the joints under analysis, for both the observed and the template skeleton, allowing us to temporally align the signals to compare.
+Once joints are aligned, the error between the observed and template joints under analysis is computed.       <br />
+A statistical analysis is carried out, which looks for tails in the error distribution. Tails can be identified using the skewness of the distribution.
+Three cases can be identified:</p>
+<ol>
+<li>the skeleton and the template are moving similarly. Therefore the error in position is close to 0, generating a distribution centered around 0 (i.e. with low skewness):</li>
+<li>the skeleton has an higher range of motion than the template. Therefore the error will be positive, generating a distribution with a positive tail (i.e. with a positive skewness):</li>
+<li>the skeleton has a lower range of motion than the template. Therefore the error will be negative, generating a distribution with a negative tail (i.e. with a negative skewness):</li>
+</ol>
+<h5 id="reaching">Reaching<a class="headerlink" href="#reaching" title="Permanent link">&para;</a></h5>
+<p>The joint under analysis for this movement is <code>handLeft</code>.
+This movement produces a feedback related to how well a predefined target is reached.</p>
+<ol>
+<li><strong>Statistical analysis of the reached target</strong></li>
+</ol>
+<p>We define a sphere around the predefined target and consider the points of the template which fall within the sphere. Statistics of the distribution of the template points are extracted to describe how the points should be distributed around the target. We then compute the number of points of the observed skeleton which fall within the template distribution. If the number of inliers is above a predefined threshold, the target is considered reached and a positive feedback is produced, otherwise the target is considered not reached.</p>
+<h3 id="comparison">Comparison<a class="headerlink" href="#comparison" title="Permanent link">&para;</a></h3>
+<p>The following tables compare feedbacks produced by the two pipelines developed in Y1M5 and in Y1Q3 respectively, in response to the same movement.
+Corrrect feedbacks are highlighted.</p>
+<ul>
+<li><code>abduction-left</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Y1M5</th>
+<th>Y1Q3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Correct</strong></td>
+<td><strong>1. You are moving very well!</strong><br> <strong>2. You are moving very well!</strong></td>
+<td><strong>1. You are moving very well!</strong><br> <strong>2. You are moving very well!</strong></td>
+</tr>
+<tr>
+<td><strong>Fast</strong></td>
+<td>1.You are moving very well!<br> 2.You are moving very well!</td>
+<td><strong>1. Move the left arm slower!</strong> <br> <strong>2. Move the left arm slower!</strong></td>
+</tr>
+<tr>
+<td><strong>Slow</strong></td>
+<td>1.You are moving very well!<br> 2.You are moving very well!</td>
+<td>1. Move the left arm further up! <br> 2. Move the left arm further up!</td>
+</tr>
+<tr>
+<td><strong>Low ROM</strong></td>
+<td>1.You are moving very well!<br> 2.You are moving very well!</td>
+<td><strong>1. Move the left arm further up!</strong> <br> <strong>2. Move the left arm further up!</strong></td>
+</tr>
+<tr>
+<td><strong>Wrong</strong></td>
+<td>1. You are doing the exercise correctly, but you could do it better. <br> 2. You are doing the exercise correctly, but you could do it better.</td>
+<td><strong>1. You are doing the wrong exercise.</strong> <br> <strong>2. You are doing the wrong exercise.</strong></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><code>external-rotation-left</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Y1M5</th>
+<th>Y1Q3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Correct</strong></td>
+<td>1. You are doing the exercise correctly, but you could do it better. <br> 2. You are doing the exercise correctly, but you could do it better.</td>
+<td>1. Move the left arm slower! <br> <strong>2.You are moving very well!</strong></td>
+</tr>
+<tr>
+<td><strong>Fast</strong></td>
+<td>1.You are moving very well! <br> 2.You are moving very well!</td>
+<td><strong>1.Move the left arm slower!</strong> <br> <strong>2.Move the left arm slower!</strong></td>
+</tr>
+<tr>
+<td><strong>Slow</strong></td>
+<td><strong>1. You are doing the exercise correctly, but you could do it better.</strong> <br> 2. You are moving very well!</td>
+<td>1. You are moving very well! <br> <strong>2. Move the left arm faster!</strong></td>
+</tr>
+<tr>
+<td><strong>Low ROM</strong></td>
+<td>1.You are moving very well! <br> <strong>2. You are doing the exercise correctly, but you could do it better.</strong></td>
+<td>1.You are moving very well! <br> 2.Move the left arm slower!</td>
+</tr>
+<tr>
+<td><strong>Wrong</strong></td>
+<td>1. You are doing the exercise correctly, but you could do it better. <br> 2. You are doing the exercise correctly, but you could do it better.</td>
+<td><strong>1. You are doing the wrong exercise.</strong><br> <strong>2. You are doing the wrong exercise.</strong></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><code>internal-rotation-left</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Y1M5</th>
+<th>Y1Q3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Correct</strong></td>
+<td><strong>1.You are moving very well!</strong> <br> <strong>2.You are moving very well!</strong></td>
+<td><strong>1.You are moving very well!</strong> <br> <strong>2.You are moving very well!</strong></td>
+</tr>
+<tr>
+<td><strong>Fast</strong></td>
+<td>1.You are moving very well! <br> 2.You are moving very well!</td>
+<td><strong>1.Move the left arm slower!</strong> <br> <strong>2.Move the left arm slower!</strong></td>
+</tr>
+<tr>
+<td><strong>Slow</strong></td>
+<td>1.You are moving very well! <br> 2.You are moving very well!</td>
+<td>1.You are moving very well! <br> <strong>2.Move the left arm faster!</strong></td>
+</tr>
+<tr>
+<td><strong>Low ROM</strong></td>
+<td><strong>1.You are not moving very well!</strong> <br> <strong>2.You are not moving very well!</strong></td>
+<td><strong>1. Move the left arm backwards!</strong> <br> <strong>2. Move the left arm backwards!</strong></td>
+</tr>
+<tr>
+<td><strong>Wrong</strong></td>
+<td><strong>1.You are not moving very well!</strong> <br> <strong>2.You are not moving very well!</strong></td>
+<td><strong>1. You are doing the wrong exercise.</strong> <br>  <strong>2. You are doing the wrong exercise.</strong></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition success">
+<p class="admonition-title">Success</p>
+<ul>
+<li>in Y1Q3 the correct feedback is provided for <strong><em>fast</em></strong> movements, while in Y1M5 the feedback is always positive, regardless the speed;</li>
+<li>in Y1Q3 the correct feedback is provided for <strong><em>low ROM</em></strong> movements, while in Y1M5 the feedback is always positive (except for the external rotation, which generates a medium score since there are time instants where the range of motion is below the minimum one);</li>
+<li>in Y1Q3 a negative feedback is provided for <strong><em>wrong</em></strong> movements, while in Y1M5 the feedback is generated by a medium score, (except for the internal rotation, due to the static score, which is low as static joints deviate a lot from the resting position).</li>
+</ul>
+</div>
+<div class="admonition failure">
+<p class="admonition-title">Failure</p>
+<ul>
+<li>in Y1Q3 a positive feedback is provided for <strong><em>slow</em></strong> movements. This occurs as the template skeleton moves slowly to emulate the movement shown by the robot and the feedback on the speed is triggered only by a very slow execution of the exercise;</li>
+<li>in Y1Q3 a feedback on the speed is provided for an <strong><em>external rotation with low ROM</em></strong>, as the threshold on the frequency is set low to trigger also a feedback on slow movements.</li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2019 Istituto Italiano di Tecnologia - iCub Tech
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["content.action.edit", "content.action.view", "tabs", "navigation.tabs", "navigation.tabs.sticky", "navigation.tracking", "navigation.sections", "navigation.top"], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.8fd75fb4.min.js"></script>
+      
+    
+  </body>
+</html>

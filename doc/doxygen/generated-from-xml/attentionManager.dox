@@ -1,0 +1,60 @@
+
+  /**
+  *
+  * @ingroup attentionManager
+  * \defgroup attentionManager attentionManager
+  * This module controls the gaze of the robot toward the salient part of the scene.
+  * Version:0.6.0
+  * \author  Ugo Pattacini ugo.pattacini@iit.it
+  * \n
+  * \copyright  Released under the terms of the BSD 3-Clause License.
+  * \section intro_sec Description
+  *
+  
+   This module redirects the robot's gaze toward a keypoint of the skeleton in the scene. By default the skeleton keypoint is the head.
+   It sends commands to cer_gaze-controller.
+  
+  * \section parameters_sec Parameters
+  
+  *- --auto-start: Enable autonomous mode.
+  *- --period: Periodicity of the module (s).
+  *- --gaze-follow-T: Time constant of the gaze controller used while tracking skeletons (s).
+  *- --gaze-seek-T: Time constant of the gaze controller used while looking around (s).
+  *- --inactivity-thres: Threshold for detecting inactivity of the skeleton.
+  *- --virtual-mode: Enable virtual modality.
+  *- --robot-skeleton-name: Tag of the robot's skeleton.
+  *- --line-filter-order: Order of the median filter applied to the estimates of the end-line.
+  *- --frame: Frame wrt which the skeleton is transformed (camera or world).
+  * \section inputports_sec Input Ports
+  * 
+  *- /attentionManager/opc:i [Bottle]  [default carrier:]: 
+            Retrieves 3D skeletons from \ref objectsPropertiesCollector.
+          
+  *
+  
+  *- /attentionManager/gaze/state:i [Property]  [default carrier:]: 
+            Retrieves the current pose of the camera.
+          
+  *
+  
+  * \section outputports_sec Output Ports
+  * 
+  *- /attentionManager/gaze/cmd:rpc [rpc]  [default carrier:]: 
+            Sends commands to cer_gaze-controller.
+          
+  *
+  
+  *
+  * \section services_sec Services
+  * 
+  *- /attentionManager/cmd:rpc
+  *  [rpc-server]: 
+  * service port
+  * . This service is described in attentionManager_IDL (idl.thrift)
+  * 
+  *
+  * 
+  *
+  *
+  **/
+

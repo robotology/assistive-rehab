@@ -1,0 +1,8 @@
+var searchData=
+[
+  ['update_181',['update',['../classassistive__rehab_1_1Skeleton.html#a1ba2ba229331f7966ff1bce10c776d99',1,'assistive_rehab::Skeleton::update()'],['../classassistive__rehab_1_1Skeleton.html#adbb387558eac21173b7c82cb43acd603',1,'assistive_rehab::Skeleton::update(const std::vector&lt; yarp::sig::Vector &gt; &amp;ordered)'],['../classassistive__rehab_1_1Skeleton.html#ab9642d6621d0a2b189c020f4d7695b14',1,'assistive_rehab::Skeleton::update(const std::vector&lt; std::pair&lt; std::string, yarp::sig::Vector &gt;&gt; &amp;unordered)'],['../classassistive__rehab_1_1Skeleton.html#ae3346b2f363e1812fdc88e59d1f7bf7d',1,'assistive_rehab::Skeleton::update(const yarp::os::Property &amp;prop)']]],
+  ['update_5fodometry_182',['update_odometry',['../classlineDetector__IDL.html#ad4a235bdfaed101e3dd2435902347df3',1,'lineDetector_IDL']]],
+  ['update_5fplanes_183',['update_planes',['../classassistive__rehab_1_1Skeleton.html#af0ee2be195f804a9562cb184a2be0bad',1,'assistive_rehab::Skeleton::update_planes()'],['../classassistive__rehab_1_1SkeletonStd.html#a5769bc6fd407118c866b57b869d672ca',1,'assistive_rehab::SkeletonStd::update_planes()']]],
+  ['update_5fwithpixels_184',['update_withpixels',['../classassistive__rehab_1_1Skeleton.html#a20d9eb5aecd6dccfa7e049bb932a6cef',1,'assistive_rehab::Skeleton::update_withpixels(const std::vector&lt; std::pair&lt; yarp::sig::Vector, yarp::sig::Vector &gt;&gt; &amp;ordered)'],['../classassistive__rehab_1_1Skeleton.html#a36e9dfd4910120025e40ccc3d03c0e01',1,'assistive_rehab::Skeleton::update_withpixels(const std::vector&lt; std::pair&lt; std::string, std::pair&lt; yarp::sig::Vector, yarp::sig::Vector &gt;&gt;&gt; &amp;unordered)']]],
+  ['utils_2eh_185',['utils.h',['../utils_8h.html',1,'']]]
+];

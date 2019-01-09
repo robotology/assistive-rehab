@@ -1,0 +1,39 @@
+\doxysection{skeleton\+Locker}
+\label{group__skeletonLocker}\index{skeletonLocker@{skeletonLocker}}
+
+
+This module enforces spatiotemporal consistency on a skeleton selected by tag.  
+
+
+This module enforces spatiotemporal consistency on a skeleton selected by tag. 
+
+Version\+:0.\+6.\+0 \begin{DoxyAuthor}{Author}
+Valentina Vasco \href{mailto:valentina.vasco@iit.it}{\texttt{ valentina.\+vasco@iit.\+it}} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the BSD 3-\/Clause License. 
+\end{DoxyCopyright}
+\hypertarget{group__skeletonViewer_intro_sec}{}\doxysubsection{Description}\label{group__skeletonViewer_intro_sec}
+This module works on the top of \mbox{\hyperlink{group__skeletonRetriever}{skeleton\+Retriever}} and tracks a skeleton based on its spatiotemporal consistence, identified through its tag using the provided thrift services. This skeleton has two pivots (shoulder center and hip center) associated with a sphere, whose radius increases over time up to a maximum of {\ttfamily max-\/radius}, with a function of time described by an hyperbolic tangent. The steepness of the function can be set by \`{}alpha. For each skeleton streamed by the objects\+Properties\+Collector, the module checks if one pivot belongs to the sphere and below the distance defined by {\ttfamily radius} parameter. The module adds an additional skeleton to the objects\+Properties\+Collector appending the string \char`\"{}-\/locked\char`\"{} to its current tag.\hypertarget{group__skeletonViewer_parameters_sec}{}\doxysubsection{Parameters}\label{group__skeletonViewer_parameters_sec}
+
+\begin{DoxyItemize}
+\item --name\+: Name of the module.
+\item --period\+: Periodicity of the module (s).
+\item --radius\+: Starting radius below which a skeleton is associated to the current one (m).
+\item --alpha\+: Steepness of the hyperbolic function.
+\item --max-\/radius\+: Maximum radius of the sphere associated to the locked skeleton (m). 
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_inputports_sec}{}\doxysubsection{Input Ports}\label{group__skeletonViewer_inputports_sec}
+
+\begin{DoxyItemize}
+\item /skeleton\+Locker/opc\+:i \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives 3D skeletons from objects\+Properties\+Collector.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_outputports_sec}{}\doxysubsection{Output Ports}\label{group__skeletonViewer_outputports_sec}
+
+\begin{DoxyItemize}
+\item /skeleton\+Locker/opc\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends command to objects\+Properties\+Collector.
+\item /skeleton\+Locker/viewer\+:o \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends locked skeleton to \mbox{\hyperlink{group__skeletonViewer}{skeleton\+Viewer}}.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_services_sec}{}\doxysubsection{Services}\label{group__skeletonViewer_services_sec}
+
+\begin{DoxyItemize}
+\item /skeleton\+Locker/rpc \mbox{[}rpc-\/server\mbox{]}\+: service port . This service is described in \mbox{\hyperlink{classskeletonLocker__IDL}{skeleton\+Locker\+\_\+\+IDL}} (idl.\+thrift) 
+\end{DoxyItemize}

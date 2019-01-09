@@ -1,0 +1,62 @@
+\doxysection{manager\+TUG}
+\label{group__managerTUG}\index{managerTUG@{managerTUG}}
+
+
+This module supervises the all the modules involved in the Timed Up and Go (TUG).  
+
+
+This module supervises the all the modules involved in the Timed Up and Go (TUG). 
+
+Version\+:0.\+6.\+0 \begin{DoxyAuthor}{Author}
+Valentina Vasco \href{mailto:valentina.vasco@iit.it}{\texttt{ valentina.\+vasco@iit.\+it}} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the BSD 3-\/Clause License. 
+\end{DoxyCopyright}
+\hypertarget{group__skeletonViewer_intro_sec}{}\doxysubsection{Description}\label{group__skeletonViewer_intro_sec}
+\hypertarget{group__skeletonViewer_parameters_sec}{}\doxysubsection{Parameters}\label{group__skeletonViewer_parameters_sec}
+
+\begin{DoxyItemize}
+\item --module\+\_\+name\+: Name of the module. All the open ports will be tagged with the prefix /module\+\_\+name.
+\item --period\+: Periodicity of the module.
+\item --speak-\/file\+: Configuration file name for the speak.
+\item --starting-\/pose\+: Robot initial pose (x,y,theta) wrt world frame when starting the TUG.
+\item --pointing-\/time\+: Time ctp\+Service takes to complete the pointing movement.
+\item --pointing-\/home\+: List of joint positions for reaching arm home position (deg). Provided to ctp\+Service.
+\item --pointing-\/start\+: List of joint positions for pointing at the chair (deg). Provided to ctp\+Service.
+\item --pointing-\/finish\+: List of joint positions for pointing at the finish line (deg). Provided to ctp\+Service.
+\item --arm-\/thresh\+: Threshold on the y distance between elbow and elbow, to detect if the arm is raised (normalized).
+\item --detect-\/hand-\/up\+: If true, the module detects if the hand is raised for triggering speech.
+\item --min-\/timeout\+: Minimum time within the speech trigger can be received from the previous one \mbox{[}s\mbox{]}.
+\item --max-\/timeout\+: Maximum time within the speech trigger can be received from the previous one \mbox{[}s\mbox{]}.
+\item --simulation\+: If true, the module is configured to work simulation in gazebo.
+\item --lock\+: If true, the skeleton is locked.
+\item --target-\/sim\+: Sets the target the actor has to reach during the TUG (only is simulation is true).
+\item --engage-\/distance\+: User engaged within this distance, wrt start line (m).
+\item --engage-\/azimuth\+: User engaged within this field of view, wrt start line (degrees).
+\item --exercise-\/timeout\+: Exercise timeout 
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_inputports_sec}{}\doxysubsection{Input Ports}\label{group__skeletonViewer_inputports_sec}
+
+\begin{DoxyItemize}
+\item /manager\+TUG/opc\+:i \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives skeletons and lines from objects\+Properties\+Collector.
+\item /manager\+TUG/answer\+:i \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives the answer to the question from google\+Speech\+Processing.
+\item /manager\+TUG/obstacle\+:i \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives info (distance and which laser) about the presence of an obstacle from \mbox{\hyperlink{group__obstacleDetector}{obstacle\+Detector}}.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_outputports_sec}{}\doxysubsection{Output Ports}\label{group__skeletonViewer_outputports_sec}
+
+\begin{DoxyItemize}
+\item /manager\+TUG/attention\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to \mbox{\hyperlink{group__attentionManager}{attention\+Manager}} to redirect the robot\textquotesingle{}s gaze toward the engaged user.
+\item /manager\+TUG/analyzer\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to \mbox{\hyperlink{group__motionAnalyzer}{motion\+Analyzer}} for starting/stopping the real-\/time motion analysis.
+\item /manager\+TUG/speech\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to i\+Speak to wait until the sentence is spoken.
+\item /manager\+TUG/speech\+:o \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Streams out the verbal interaction. To be connected to i\+Speak.
+\item /manager\+TUG/navigation\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to \mbox{\hyperlink{group__navController}{nav\+Controller}} to let the robot navigate to fixed points.
+\item /manager\+TUG/left\+\_\+arm\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to ctp\+Service to let the robot\textquotesingle{}s left arm point at lines.
+\item /manager\+TUG/right\+\_\+arm\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to ctp\+Service to let the robot\textquotesingle{}s right arm point at lines.
+\item /manager\+TUG/locker\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to \mbox{\hyperlink{group__skeletonLocker}{skeleton\+Locker}} to set the skeleton to lock.
+\item /manager\+TUG/trigger\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to \mbox{\hyperlink{group__googleSpeech}{google\+Speech}} to start/stop speech recognition.
+\item /manager\+TUG/gazebo\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to gazebo plugin tuginterface when simulation is true.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_services_sec}{}\doxysubsection{Services}\label{group__skeletonViewer_services_sec}
+
+\begin{DoxyItemize}
+\item /manager\+TUG/cmd\+:rpc \mbox{[}rpc-\/server\mbox{]}\+: service port . This service is described in \mbox{\hyperlink{classmanagerTUG__IDL}{manager\+TUG\+\_\+\+IDL}} (idl.\+thrift) 
+\end{DoxyItemize}

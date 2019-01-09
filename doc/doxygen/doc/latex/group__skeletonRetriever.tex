@@ -1,0 +1,51 @@
+\doxysection{skeleton\+Retriever}
+\label{group__skeletonRetriever}\index{skeletonRetriever@{skeletonRetriever}}
+
+
+This module merges 2D skeleton data with the depth information.  
+
+
+This module merges 2D skeleton data with the depth information. 
+
+Version\+:0.\+6.\+0 \begin{DoxyAuthor}{Author}
+Ugo Pattacini \href{mailto:ugo.pattacini@iit.it}{\texttt{ ugo.\+pattacini@iit.\+it}} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the BSD 3-\/Clause License. 
+\end{DoxyCopyright}
+\hypertarget{group__skeletonViewer_intro_sec}{}\doxysubsection{Description}\label{group__skeletonViewer_intro_sec}
+This module merges 2D skeleton data as acquired by yarp\+Open\+Pose along with the depth information provided by the camera. The module communicates with the camera to retrieve its field of view. Given the keypoint depth and the camera\textquotesingle{}s focal length, 3D camera coordinates of the keypoints can be computed. The module can be also run offline (no real camera is available) by specifying the camera\textquotesingle{}s FOV, using the command camera\+::fov (54 42) (adjust the FOV according to the camera you want to simulate). Erosion is applied to the depth map (true by default, can be disabled using the command depth\+::enable false). Median filtering is applied to the keypoints in order to make the acquisition more robust. Optimization is applied to the skeleton such that the length of the limbs is equal to that observed during an initial phase (true by default, can be disabled using the command filtering\+::optimize-\/limblength false). It makes use of ipopt library.\hypertarget{group__skeletonViewer_parameters_sec}{}\doxysubsection{Parameters}\label{group__skeletonViewer_parameters_sec}
+
+\begin{DoxyItemize}
+\item --general\+::period\+: Periodicity of the module (s).
+\item --skeleton\+::keys-\/recognition-\/confidence\+: Keypoints whose confidence is lower than this threshold are discarded.
+\item --skeleton\+::keys-\/recognition-\/percentage\+: Minimum percentage of keypoints to consider a skeleton valid.
+\item --skeleton\+::keys-\/acceptable-\/misses\+: Number of consecutive times a keypoint can get lost before it becomes stale.
+\item --skeleton\+::min-\/acceptable-\/path\+: Minimum acceptable max path to consider a skeleton valid.
+\item --skeleton\+::tracking-\/threshold\+: Maximum distance a skeleton can move before erasing it.
+\item --skeleton\+::time-\/to-\/live\+: Life span of a skeleton.
+\item --depth\+::enable\+: Enable depth filtering.
+\item --depth\+::kernel-\/size\+: Size of the applied kernel.
+\item --depth\+::iterations\+: Number of times erosion is applied.
+\item --depth\+::min-\/distance\+: Threshold on the minimum distance (m).
+\item --depth\+::max-\/distance\+: Threshold on the maximum distance (m).
+\item --filtering\+::filter-\/keypoint-\/order\+: Order of the median filter applied to keypoints\textquotesingle{} position.
+\item --filtering\+::filter-\/limblength-\/order\+: Order of the filter for optimizing limbs\textquotesingle{} lengths.
+\item --filtering\+::optimize-\/limblength\+: Enable optimization of limbs\textquotesingle{} lengths.
+\item --camera\+::fov\+: Camera\textquotesingle{}s field of view.
+\item --camera\+::remote\+: Camera\textquotesingle{}s remote to connect to 
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_inputports_sec}{}\doxysubsection{Input Ports}\label{group__skeletonViewer_inputports_sec}
+
+\begin{DoxyItemize}
+\item /skeleton\+Retriever/skeletons\+:i \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives 2D skeletons from yarp\+Open\+Pose.
+\item /skeleton\+Retriever/depth\+:i \mbox{[}Image\+Of\+Pixel\+Float\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives stream of camera depth images.
+\item /skeleton\+Retriever/nav\+:i \mbox{[}Property\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives the navigation status broadcast.
+\item /skeleton\+Retriever/gaze\+:i \mbox{[}Property\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives the gaze status broadcast.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_outputports_sec}{}\doxysubsection{Output Ports}\label{group__skeletonViewer_outputports_sec}
+
+\begin{DoxyItemize}
+\item /skeleton\+Retriever/opc\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to objects\+Properties\+Collector to add 3D skeletons to the database.
+\item /skeleton\+Retriever/cam\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to the depth sensor to retrieve camera\textquotesingle{}s field of view.
+\item /skeleton\+Retriever/viewer\+:o \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Outputs 3D skeletons to send to \mbox{\hyperlink{group__skeletonViewer}{skeleton\+Viewer}} for visualization.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_services_sec}{}\doxysubsection{Services}\label{group__skeletonViewer_services_sec}

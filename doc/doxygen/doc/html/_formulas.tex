@@ -1,0 +1,51 @@
+\documentclass{article}
+\usepackage{ifthen}
+\usepackage{epsfig}
+\usepackage[utf8]{inputenc}
+\usepackage{newunicodechar}
+  \newunicodechar{⁻}{${}^{-}$}% Superscript minus
+  \newunicodechar{²}{${}^{2}$}% Superscript two
+  \newunicodechar{³}{${}^{3}$}% Superscript three
+
+\pagestyle{empty}
+\begin{document}
+$s$
+\pagebreak
+
+$t$
+\pagebreak
+
+$n_s$
+\pagebreak
+
+$n_t$
+\pagebreak
+
+$n_s x n_t$
+\pagebreak
+
+$D$
+\pagebreak
+
+$D_{(i,j)} = d(s_i,t_j) + \min{(d(i-1,j-1),d(i-1,j),d(i,j-1))}$
+\pagebreak
+
+$d(i,j) = \sqrt{(s_i-t_i)^2}$
+\pagebreak
+
+$w*$
+\pagebreak
+
+$k$
+\pagebreak
+
+\[d_{DTW} = \min_{i=1}^k D(w_i)\]
+\pagebreak
+
+$n$
+\pagebreak
+
+$m$
+\pagebreak
+
+\end{document}

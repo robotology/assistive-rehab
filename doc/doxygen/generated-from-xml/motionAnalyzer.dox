@@ -1,0 +1,212 @@
+
+  /**
+  *
+  * @ingroup motionAnalyzer
+  * \defgroup motionAnalyzer motionAnalyzer
+  * This module is responsible for analyzing the performed exercise in real-time.
+  * Version:0.6.0
+  * \author  Valentina Vasco valentina.vasco@iit.it
+  * \n
+  * \copyright  Released under the terms of the BSD 3-Clause License.
+  * \section intro_sec Description
+  *
+  
+   This module is responsible for analyzing the performed exercise in real-time.
+   A single exercise has its own metrics and feedback, defined in the related config file, for example abduction left is described in `abduction_left.ini` file.
+   All the available exercises with related config files are included in the config file `motion-repertoire.ini`.
+   The available metrics are the range of motion (ROM), end-point (EP) parameters (trajectory, speed and smoothness) and step parameters (step length, step width, cadence and speed),
+   which can be visualized on a yarpscope through the provided API.
+   The module is also responsible for generating matio files in order to produce an offline report.
+   It makes use of matio and hdf5 libraries.
+
+   @subsection sec-conf Configuration files
+   Each exercise has its configuration file which is included in the general config file motion-repertoire.ini.
+   Configuration files are described in the following sections.
+
+   @subsubsection sec-motion-rep motion-repertoire.ini
+   This section describes the conf file motion-repertoire.ini.
+   This file includes all the configuration files of the single exercises, which are defined by `exercises`.
+   The labels of the `rehabilitation` exercises have to match the names of the files loaded by \ref skeletonPlayer and the labels of the classed predicted by \ref actionRecognizer.
+
+   Each specific file inlcudes the following sections:
+
+   \code
+   [general]
+   type                           rehabilitation
+
+   [metrics]
+   tag                            (ROM)
+   nmetrics                       (1)
+   \endcode
+
+   The `[general]` section describes the kind of exercise (test or rehabilitation).
+   The `[metrics]` section defines the metrics to be computed for the specific exercise.
+   Exercises tagged as `rehabilitation` also include an additional `[feedback]` section, which defines the parameters sent to \ref feedbackProducer for providing a feedback to the user.
+
+   @subsubsection sec-abduction abduction_left.ini, internal_rotation_left.ini, external_rotation_left.ini
+   This section describes the conf file abduction-left.ini, internal_rotation_left.ini, external_rotation_left.ini.
+   For this exercises we compute the range of motion, as angle between the vector formed by the reference joint (`tag_joint`) and its child (projected onto the projection plane defined by `tag_plane`) and the reference direction `ref_dir`, described as following:
+
+   \code
+   [ROM_0]
+   tag_joint                      shoulderLeft
+   ref_dir                        (0.0 0.0 -1.0)
+   tag_plane                      coronal
+   min                            0.0
+   max                            100.0
+   \endcode
+
+   The `[feedback]` section contains the thresholds required for producing the feedback:
+
+   \code
+   [feedback]
+   duration                       30
+   twarp                          0.9
+   joint_list                     (elbowLeft handLeft)
+   sx_thresh                      (0.5 0.5)
+   sy_thresh                      (0.5 0.5)
+   sz_thresh                      (0.2 0.3)
+   range_freq                     (2 2)
+   psd_thresh                     (10000.0 10000.0)
+   \endcode
+
+    The joints of the skeleton under analysis are defined by `joint_list`.
+    They are compared to those of a template skeleton, which is reproduced by the \ref skeletonPlayer with a warping factor of `twarp`.
+    The skeleton is also analyzed by the \ref actionRecognizer, which predicts a label for the exercise every `duration` frames.
+    Such exercises can produce two feedbacks, i.e. on the speed and on the range of motion:
+
+    - range of motion: the error between the observed and template joints under analysis is computed.
+    A statistical analysis is carried out, which looks for tails in the error distribution.
+    `sx_thresh`, `sy_thresh` and `sz_thresh` define, for each joint in `joint_list`, the thresholds on the standard deviation of the error in position along x, y and z respectively.
+    - speed: we compute the Fourier transform of each component of the joints under analysis in a predefined temporal window, for both the observed and the template skeleton. The difference in speed is proportional to the difference in frequency.
+    `range_freq` and `psd_thresh` define, for each joint in `joint_list`, the thresholds on the difference in frequency and on the power spectrum density between template and observed joints respectively.
+
+   @subsubsection sec-reaching reaching-left.ini
+   This section describes the conf file reaching-left.ini.
+   For this exercise we compute the end point parameters, specifically trajectory, speed and smoothness.
+   The section describing the metric includes the same parameters defined in \ref sec-abduction, plus an additional `target`, which defines the target to reach in the skeleton reference system.
+
+   \code
+   [EP_0]
+   tag_joint                      handLeft
+   ref_dir                        (0.0 0.0 -1.0)
+   tag_plane                      sagittal
+   min                            0.0
+   max                            5.0
+   target                         (2.0 1.0 0.0)
+   \endcode
+
+   The feedback section differs from the one defined in \ref sec-abduction:
+
+   \code
+   [feedback]
+   duration                       30
+   twarp                          1.0
+   joint_list                     (handLeft)
+   radius                         (1.0)
+   zscore_thresh                  (2)
+   inliers_thresh                 (0.3)
+   \endcode
+
+   As in \ref sec-abduction, the joints under analysis are defined by `joint_list` and compared to those of a template skeleton, which is reproduced by the \ref skeletonPlayer with a warping factor of `twarp`.
+   The skeleton is also analyzed by the \ref actionRecognizer, which predicts a label for the exercise every `duration` frames.
+
+   Differently than \ref sec-abduction, such exercise produces a single feedback, related to how well a predefined target is reached.
+   The target distribution is statistically described by the template points falling inside a sphere around the `target`, defined by `radius`.
+   Statistics of the distribution of the observed points are extracted and points whose score is below the `zscore_thresh` are considered inliers.
+   Finally, if the number of inliers have to be higher than `inliers_thresh`, the target is considered reached.
+
+   @subsubsection sec-tug tug.ini
+   This section describes the conf file tug.ini.
+   The `general` section includes the following parameters:
+
+   \code
+   [general]
+   type                           test
+   finish-line-thresh             0.3
+   standing-thresh                0.025
+   distance                       3.0
+   time-high                      10.0
+   time-medium                    20.0
+   vel_estimator_N                100
+   vel_estimator_D                5.0
+   max-finish-line-overrun        0.3
+   \endcode
+
+   with:
+   - `finish-line-thresh`: threshold on the distance between foot and finish line [m];
+   - `standing-thresh`: threshold on the speed of the shoulder center height [m/s];
+   - `distance`: the distance to travel [m];
+   - `time-high`: the time the user should take to travel `distance` and get a high score [s];
+   - `time-high`: the time the user should take to travel `distance` and get a medium score [s];
+   - `vel_estimator_N`: maximum length of the window used to estimate the shoulder height speed;
+   - `vel_estimator_D`: threshold applied to the linear estimator.
+   - `max-finish-line-overrun`: maximum allowed overrun with respect to the finish line [m];
+
+   For this exercise we compute the range of motion of six joints and the step parameters, specifically step length, step width, cadence and speed.
+   The sections describing the range of motion metrics are the same defined in \ref sec-abduction.
+   There is an additional section for extracting the step parameters:
+
+   \code
+   [step_0]
+   median_filter_window           4
+   step_thresh                    0.25
+   step_window                    3
+   time_window                    3.0
+   enable_plane_projection        false
+   \endcode
+
+   `median_filter_window` defines the filter parameter applied to the distance between feet for computing the step parameters.
+   A step is identified as occurring between two consecutive maximum values of the distance between the feet.
+   The average step length is evaluated by first computing such distance along the sagittal plane and extracting the last
+   `step_window` maximum values exceeding `step_thresh`. Only the maximum values occurring within the last `time_window` seconds from the last detected step are considered.
+   `enable_plane_projection` is a flag that enables the projection of the difference between the two ankles on the sagittal and coronal planes of the skeleton.
+  
+  * \section parameters_sec Parameters
+  
+  *- --name: The module's name; all the open ports will be tagged with the prefix /name
+  *- --from: Configuration file name with the list of exercises that can be analyzed.
+  *- --general::exercises: List of exercises that can be analyzed.
+  * \section inputports_sec Input Ports
+  * 
+  * \section outputports_sec Output Ports
+  * 
+  *- /motionAnalyzer/opc [rpc]  [default carrier:]: 
+            Sends commands to \ref objectsPropertiesCollector to retrieve 3D skeletons.
+          
+  *
+  
+  *- /motionAnalyzer/scaler:cmd [rpc]  [default carrier:]: 
+            Sends commands to \ref skeletonScaler to load and move the template skeleton.
+          
+  *
+  
+  *- /motionAnalyzer/dtw:cmd [rpc]  [default carrier:]: 
+            Sends commands to \ref feedbackProducer to start the analysis for producing feeback.
+          
+  *
+  
+  *- /motionAnalyzer/action:cmd [rpc]  [default carrier:]: 
+            Sends commands to \ref actionRecognizer to start the action recognition.
+          
+  *
+  
+  *- /motionAnalyzer/scope [Bottle]  [default carrier:]: 
+            Outputs a yarp bottle containing the result of the computation along with the ideal value.
+          
+  *
+  
+  *
+  * \section services_sec Services
+  * 
+  *- /motionAnalyzer/cmd
+  *  [rpc-server]: 
+  * service port
+  * . This service is described in motionAnalyzer_IDL (idl.thrift)
+  * 
+  *
+  * 
+  *
+  *
+  **/
+

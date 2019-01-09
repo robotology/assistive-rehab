@@ -1,0 +1,43 @@
+\doxysection{feedback\+Producer}
+\label{group__feedbackProducer}\index{feedbackProducer@{feedbackProducer}}
+
+
+This module is responsible for analyzing the performed movement and producing a feedback.  
+
+
+This module is responsible for analyzing the performed movement and producing a feedback. 
+
+Version\+:0.\+6.\+0 \begin{DoxyAuthor}{Author}
+Valentina Vasco \href{mailto:valentina.vasco@iit.it}{\texttt{ valentina.\+vasco@iit.\+it}} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the BSD 3-\/Clause License. 
+\end{DoxyCopyright}
+\hypertarget{group__skeletonViewer_intro_sec}{}\doxysubsection{Description}\label{group__skeletonViewer_intro_sec}
+This module is responsible for analyzing the performed movement and producing a feedback, by comparing the selected skeleton with a predefined template for that movement. The analysis is carried out only if the label of the performed exercise and the label of the predicted action (provided by \mbox{\hyperlink{group__actionRecognizer}{action\+Recognizer}}) are the same. The analysis is differentiated depending on the kind of exercise to perform\+: for range of motion exercises, a Fourier analysis (for detecting differences in speed) followed by a statistical analysis of the error between joints\textquotesingle{} positions are carried out; for a reaching exercise, a statistical analysis of the target reached is performed. The output feedback is in the form \char`\"{}joint\+\_\+tag\char`\"{} \char`\"{}feedback\+\_\+key\char`\"{} \char`\"{}feedback\+\_\+value\char`\"{}, where \char`\"{}feedback\+\_\+key\char`\"{} and \char`\"{}feedback\+\_\+value\char`\"{} can be (respectively)\+:
+\begin{DoxyItemize}
+\item \char`\"{}speed\char`\"{} \char`\"{}pos\char`\"{} (/\char`\"{}neg\char`\"{})\+: if a positive (/negative) error in speed is detected for range of motion exercises;
+\item \char`\"{}position-\/rom\char`\"{} \char`\"{}pos x\char`\"{} (/\char`\"{}neg x\char`\"{}) \char`\"{}pos y\char`\"{} (/\char`\"{}neg y\char`\"{}) \char`\"{}pos z\char`\"{} (/\char`\"{}neg z\char`\"{})\+: if a positive (/negative) error in position (along x, y and z directions) is detected for range of motion exercises;
+\item \char`\"{}position-\/ep\char`\"{}\+: if the target is not reached for reaching exercises;
+\item \char`\"{}wrong\char`\"{}\+: if the label of the predicted action does not correspond to the exercise to perform;
+\item \char`\"{}perfect\char`\"{}\+: if none of the previous scenarios occurs. It makes use of gsl and fftw3 libraries.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_parameters_sec}{}\doxysubsection{Parameters}\label{group__skeletonViewer_parameters_sec}
+
+\begin{DoxyItemize}
+\item --win\+: Window length for the alignment (through DTW), where the warping path is searched
+\item --period\+: Periodicity of the module (s). 
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_inputports_sec}{}\doxysubsection{Input Ports}\label{group__skeletonViewer_inputports_sec}
+
+\begin{DoxyItemize}
+\item /feedback\+Producer/action\+:i \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives a yarp bottle containing the label of the action to perform, the label of the predicted action and the confidence score. To be connected to /action\+Recognizer/target\+:o.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_outputports_sec}{}\doxysubsection{Output Ports}\label{group__skeletonViewer_outputports_sec}
+
+\begin{DoxyItemize}
+\item /feedback\+Producer/opc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to objects\+Properties\+Collector to retrieve 3D skeletons.
+\item /feedback\+Producer\+:o \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Streams out a bottle containing the numerical feedback.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_services_sec}{}\doxysubsection{Services}\label{group__skeletonViewer_services_sec}
+
+\begin{DoxyItemize}
+\item /feedback\+Producer/rpc \mbox{[}rpc-\/server\mbox{]}\+: service port . This service is described in \mbox{\hyperlink{classfeedbackProducer__IDL}{feedback\+Producer\+\_\+\+IDL}} (idl.\+thrift) 
+\end{DoxyItemize}

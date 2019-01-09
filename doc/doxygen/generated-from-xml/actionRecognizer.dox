@@ -1,0 +1,56 @@
+
+  /**
+  *
+  * @ingroup actionRecognizer
+  * \defgroup actionRecognizer actionRecognizer
+  * This module is responsible for recognizing actions.
+  * Version:0.6.0
+  * \author  Valentina Vasco valentina.vasco@iit.it
+  * \n
+  * \copyright  Released under the terms of the BSD 3-Clause License.
+  * \section intro_sec Description
+  *
+  
+   This module retrieves the selected 3D skeleton from \ref objectsPropertiesCollector and sends the upper body 2D keypoints (x,y) (ankles and knees discarded), observed in a predefined window, to a pretrained LSTM.
+   The retrieved skeleton is normalized and keypoints are transformed and rescaled by a factor of 10 (same operations were performed during training). When the window is full, the network outputs the label of the predicted action.
+   Predicted actions are accumulated for a (settable) number of times, and the label of the most voted action is provided as output.
+   The adopted classes are defined in the config.ini file.
+   It makes use of TensorFlowCC.
+  
+  * \section parameters_sec Parameters
+  
+  *- --name: Module's name; all the open ports will be tagged with the prefix /name.
+  *- --predict: To enable prediction.
+  *- --general::num-classes: Number of classes. This has to be the same as defined during training.
+  *- --general::num-features: Number of features (upper body 2D keypoints' coordinates) provided to the network. This has to be the same as defined during training.
+  *- --general::num-steps: Number of times predicted actions are accumulated. Only the most voted action is provided as output.
+  *- --class-i::label: Label of the class.
+  *- --class-i::value: Class number as provided by the network.
+  * \section inputports_sec Input Ports
+  * 
+  * \section outputports_sec Output Ports
+  * 
+  *- /actionRecognizer/target:o [Bottle]  [default carrier:]: 
+            Outputs a yarp bottle containing the label of the action to perform, the label of the predicted action and the confidence score.
+          
+  *
+  
+  *- /actionRecognizer/opc [rpc]  [default carrier:]: 
+            Sends commands to \ref objectsPropertiesCollector to retrieve 3D skeletons. (Note: only 2D keypoints are used).
+          
+  *
+  
+  *
+  * \section services_sec Services
+  * 
+  *- /actionRecognizer/rpc
+  *  [rpc-server]: 
+  * service port
+  * . This service is described in actionRecognizer_IDL (idl.thrift)
+  * 
+  *
+  * 
+  *
+  *
+  **/
+

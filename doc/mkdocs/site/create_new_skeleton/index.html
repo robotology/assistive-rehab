@@ -1,0 +1,1677 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A framework for developing the assistive intelligence of R1 for clinical rehabilitation.">
+      
+      
+        <meta name="author" content="Valentina vasco">
+      
+      
+        <link rel="canonical" href="https://github.com/robotology/assistive-rehab/create_new_skeleton/">
+      
+      
+        <link rel="prev" href="../tutorial_intro/">
+      
+      
+        <link rel="next" href="../replay_an_experiment/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.11">
+    
+    
+      
+        <title>How to manage a skeleton object - assistive-rehab</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.7e359304.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#how-to-manage-a-skeleton-object" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="assistive-rehab" class="md-header__button md-logo" aria-label="assistive-rehab" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2M7.5 13A2.5 2.5 0 0 0 5 15.5 2.5 2.5 0 0 0 7.5 18a2.5 2.5 0 0 0 2.5-2.5A2.5 2.5 0 0 0 7.5 13m9 0a2.5 2.5 0 0 0-2.5 2.5 2.5 2.5 0 0 0 2.5 2.5 2.5 2.5 0 0 0 2.5-2.5 2.5 2.5 0 0 0-2.5-2.5Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            assistive-rehab
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              How to manage a skeleton object
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/robotology/assistive-rehab" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    robotology/assistive-rehab
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../latest_news/" class="md-tabs__link">
+          
+  
+  News
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../install/" class="md-tabs__link">
+        
+  
+    
+  
+  Install
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="https://robotology.github.io/assistive-rehab/doc/doxygen/doc/html/index.html" class="md-tabs__link">
+        
+  
+    
+  
+  Documentation [v0.6.0]
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../tutorial_intro/" class="md-tabs__link">
+          
+  
+  Tutorials
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../Y1M5/" class="md-tabs__link">
+          
+  
+  Milestones
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../about/" class="md-tabs__link">
+        
+  
+    
+  
+  About
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../license/" class="md-tabs__link">
+        
+  
+    
+  
+  License
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="assistive-rehab" class="md-nav__button md-logo" aria-label="assistive-rehab" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2M7.5 13A2.5 2.5 0 0 0 5 15.5 2.5 2.5 0 0 0 7.5 18a2.5 2.5 0 0 0 2.5-2.5A2.5 2.5 0 0 0 7.5 13m9 0a2.5 2.5 0 0 0-2.5 2.5 2.5 2.5 0 0 0 2.5 2.5 2.5 2.5 0 0 0 2.5-2.5 2.5 2.5 0 0 0-2.5-2.5Z"/></svg>
+
+    </a>
+    assistive-rehab
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/robotology/assistive-rehab" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    robotology/assistive-rehab
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    News
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            News
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../latest_news/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Latest
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Install
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://robotology.github.io/assistive-rehab/doc/doxygen/doc/html/index.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Documentation [v0.6.0]
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Tutorials
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Tutorials
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorial_intro/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Getting started
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    How to manage a skeleton object
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    How to manage a skeleton object
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#defining-a-skeleton" class="md-nav__link">
+    <span class="md-ellipsis">
+      Defining a skeleton
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Defining a skeleton">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#from-an-unordered-list-of-keypoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      From an unordered list of keypoints
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-an-ordered-list-of-keypoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      From an ordered list of keypoints
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-a-property-like-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      From a property-like structure
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#retrieving-a-skeleton" class="md-nav__link">
+    <span class="md-ellipsis">
+      Retrieving a skeleton
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#accessing-single-keypoints-of-a-skeleton" class="md-nav__link">
+    <span class="md-ellipsis">
+      Accessing single keypoints of a skeleton
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dealing-with-pixels" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dealing with pixels
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-functionalities" class="md-nav__link">
+    <span class="md-ellipsis">
+      Additional functionalities
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Additional functionalities">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Normalization
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keypoints-reference-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      Keypoints' reference system
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../replay_an_experiment/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to replay an experiment
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../disembodied/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to run the pipeline in a disembodied manner
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../align_signals/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to temporally align two signals
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../main_apps/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to run the rehabilitation demos
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../virtual_demo/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to run the virtual demo
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tug_lines/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to detect the TUG lines
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tug_demo/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to run the TUG demo
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gazebo_plugin/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to use the gazebo plugin
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../wifi_button/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to configure the wifi button
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Milestones
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Milestones
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Y1M5/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Y1M5
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Y1Q3/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Y1Q3
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../comparison_releases/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Comparison between Y1Q3 and Y1M5
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TUG/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    TUG
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../about/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    About
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../license/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    License
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#defining-a-skeleton" class="md-nav__link">
+    <span class="md-ellipsis">
+      Defining a skeleton
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Defining a skeleton">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#from-an-unordered-list-of-keypoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      From an unordered list of keypoints
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-an-ordered-list-of-keypoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      From an ordered list of keypoints
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-a-property-like-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      From a property-like structure
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#retrieving-a-skeleton" class="md-nav__link">
+    <span class="md-ellipsis">
+      Retrieving a skeleton
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#accessing-single-keypoints-of-a-skeleton" class="md-nav__link">
+    <span class="md-ellipsis">
+      Accessing single keypoints of a skeleton
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dealing-with-pixels" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dealing with pixels
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-functionalities" class="md-nav__link">
+    <span class="md-ellipsis">
+      Additional functionalities
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Additional functionalities">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Normalization
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keypoints-reference-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      Keypoints' reference system
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+    <a href="https://github.com/robotology/assistive-rehab/edit/master/doc/mkdocs/data/create_new_skeleton.md" title="Edit this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4v-2m10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1 2.1 2.1Z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/robotology/assistive-rehab/raw/master/doc/mkdocs/data/create_new_skeleton.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.15 8.15 0 0 1-1.23-2Z"/></svg>
+    </a>
+  
+
+
+<h1 id="how-to-manage-a-skeleton-object">How to manage a skeleton object<a class="headerlink" href="#how-to-manage-a-skeleton-object" title="Permanent link">&para;</a></h1>
+<p>This tutorial will explain you the main functionalities to manage a skeleton object for:</p>
+<ul>
+<li>defining a skeleton;</li>
+<li>retrieving a skeleton;</li>
+<li>accessing single keypoints of a skeleton;</li>
+<li>dealing with pixels;</li>
+<li>additional functionalities.</li>
+</ul>
+<h2 id="defining-a-skeleton">Defining a skeleton<a class="headerlink" href="#defining-a-skeleton" title="Permanent link">&para;</a></h2>
+<p>A skeleton can be defined as:</p>
+<ul>
+<li><a href="#from-an-unordered-list-of-keypoints">unordered list of keypoints</a>: the list defines the keypoints as pairs of points associated to the keypoint tag;</li>
+<li>
+<p><a href="#from-an-ordered-list-of-keypoints">ordered list of keypoints</a>: the list defines the keypoints according to the following order:</p>
+<ul>
+<li>0: <code>shoulder_center</code></li>
+<li>1: <code>head</code></li>
+<li>2: <code>shoulder_left</code></li>
+<li>3: <code>elbow_left</code></li>
+<li>4: <code>hand_left</code></li>
+<li>5: <code>shoulder_right</code></li>
+<li>6: <code>elbow_right</code></li>
+<li>7: <code>hand_right</code></li>
+<li>8: <code>hip_center</code></li>
+<li>9: <code>hip_left</code></li>
+<li>10: <code>knee_left</code></li>
+<li>11: <code>ankle_left</code></li>
+<li>12: <code>foot_left</code></li>
+<li>13: <code>hip_right</code></li>
+<li>14: <code>knee_right</code></li>
+<li>15: <code>ankle_right</code></li>
+<li>16: <code>foot_right</code></li>
+</ul>
+</li>
+<li>
+<p><a href="#from-a-property-like-structure">property-like structure</a>: the available properties are the following:</p>
+<ul>
+<li>type: string containing skeleton's type ("assistive_rehab::SkeletonStd").</li>
+<li>tag: string containing skeleton's tag.</li>
+<li>transformation: 4 x 4 skeleton's roto-translation matrix.</li>
+<li>coronal: vector containing skeleton's coronal plane.</li>
+<li>sagittal: vector containing skeleton's sagittal plane.</li>
+<li>transverse: vector containing skeleton's transverse plane.</li>
+<li>skeleton: list containing keypoints with the following subproperties:<ul>
+<li>tag: string containing keypoint's tag.</li>
+<li>status: string containing keypoint's status (updated or stale).</li>
+<li>position: vector containing keypoint's camera coordinates x,y,z.</li>
+<li>pixel: vector containing keypoint's image coordinates u,v.</li>
+<li>child: list containing keypoint's child, specified as position, status, tag.</li>
+</ul>
+</li>
+</ul>
+<p>An example is the following:</p>
+<div class="highlight"><pre><span></span><code>(coronal (-0.0171187190241832 0.168776145353523 -0.984581522687332)) (sagittal (0.999852451902468 0.0040979367701588 -0.0166817666585492)) (skeleton (((child (((pixel (143.0 18.0)) (position (-0.0958624515848492 -0.655793450456223 2.01140785217285)) (status updated) (tag head)) ((child (((child (((pixel (182.0 106.0)) (position (0.132475296984726 -0.0970469850595488 2.24838447570801)) (status updated) (tag handLeft)))) (pixel (179.0 77.0)) (position (0.126047049721491 -0.301864959631551 2.20449256896973)) (status updated) (tag elbowLeft)))) (pixel (173.0 40.0)) (position (0.0829495294433831 -0.549497736338085 2.17046546936035)) (status updated) (tag shoulderLeft)) ((child (((child (((pixel (117.0 102.0)) (position (-0.318757589652556 -0.129758383247854 2.30834770202637)) (status updated) (tag handRight)))) (pixel (124.0 75.0)) (position (-0.265819393982889 -0.319631634579399 2.22591972351074)) (status updated) (tag elbowRight)))) (pixel (132.0 42.0)) (position (-0.194277581569445 -0.550633963158095 2.17509078979492)) (status updated) (tag shoulderRight)) ((child (((child (((child (((child (((pixel (153.0 200.0)) (position (-0.0305329581785242 0.615750619982796 2.40194511413574)) (status updated) (tag footLeft)))) (pixel (156.0 187.0)) (position (-0.0161527965668162 0.538963623868779 2.52594947814941)) (status updated) (tag ankleLeft)))) (pixel (158.0 148.0)) (position (-0.00361483866030924 0.218990793550177 2.42797660827637)) (status updated) (tag kneeLeft)))) (pixel (164.0 105.0)) (position (0.0249104292284522 -0.102991968370345 2.2304573059082)) (status updated) (tag hipLeft)) ((child (((child (((child (((pixel (138.0 194.0)) (position (-0.170998545149134 0.592533010093213 2.49751472473145)) (status updated) (tag footRight)))) (pixel (144.0 182.0)) (position (-0.130142124436922 0.509498389750101 2.55434036254883)) (status updated) (tag ankleRight)))) (pixel (142.0 147.0)) (position (-0.133305882322194 0.209480672220591 2.39202308654785)) (status updated) (tag kneeRight)))) (pixel (138.0 103.0)) (position (-0.158599348153779 -0.109193487775799 2.21346664428711)) (status updated) (tag hipRight)))) (pixel (151.0 103.0)) (position (-0.0738603465810386 -0.102184160595443 2.20890045166016)) (status updated) (tag hipCenter)))) (pixel (153.0 41.0)) (position (-0.054339762871519 -0.540136057902244 2.13348770141602)) (status updated) (tag shoulderCenter)))) (tag &quot;#7&quot;) (transformation (4 4 (1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0))) (transverse (0.0438836580749896 -0.984546958261919 -0.169533216601232)) (type &quot;assistive_rehab::SkeletonStd&quot;)
+</code></pre></div>
+</li>
+</ul>
+<h3 id="from-an-unordered-list-of-keypoints">From an unordered list of keypoints<a class="headerlink" href="#from-an-unordered-list-of-keypoints" title="Permanent link">&para;</a></h3>
+<p>The following code snippet creates a <code>SkeletonStd</code> object from an unordered list of keypoints:</p>
+<div class="highlight"><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;yarp/sig/Vector.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;AssistiveRehab/skeleton.h&quot;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">assistive_rehab</span><span class="o">::</span><span class="n">SkeletonStd</span><span class="w"> </span><span class="n">skeleton</span><span class="p">;</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">unordered</span><span class="p">;</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">unordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_pair</span><span class="p">(</span><span class="n">KeyPointTag</span><span class="o">::</span><span class="n">shoulder_center</span><span class="p">,</span><span class="n">p</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">-0.1</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">unordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_pair</span><span class="p">(</span><span class="n">KeyPointTag</span><span class="o">::</span><span class="n">head</span><span class="p">,</span><span class="n">p</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">0.1</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">unordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_pair</span><span class="p">(</span><span class="n">KeyPointTag</span><span class="o">::</span><span class="n">shoulder_left</span><span class="p">,</span><span class="n">p</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">0.2</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">unordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_pair</span><span class="p">(</span><span class="n">KeyPointTag</span><span class="o">::</span><span class="n">elbow_left</span><span class="p">,</span><span class="n">p</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">0.3</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">unordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_pair</span><span class="p">(</span><span class="n">KeyPointTag</span><span class="o">::</span><span class="n">hand_left</span><span class="p">,</span><span class="n">p</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">-0.1</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">unordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_pair</span><span class="p">(</span><span class="n">KeyPointTag</span><span class="o">::</span><span class="n">shoulder_right</span><span class="p">,</span><span class="n">p</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">-0.2</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">unordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_pair</span><span class="p">(</span><span class="n">KeyPointTag</span><span class="o">::</span><span class="n">elbow_right</span><span class="p">,</span><span class="n">p</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">-0.3</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">unordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_pair</span><span class="p">(</span><span class="n">KeyPointTag</span><span class="o">::</span><span class="n">hand_right</span><span class="p">,</span><span class="n">p</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">0.1</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">unordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_pair</span><span class="p">(</span><span class="n">KeyPointTag</span><span class="o">::</span><span class="n">hip_center</span><span class="p">,</span><span class="n">p</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">0.1</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">0.1</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">unordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_pair</span><span class="p">(</span><span class="n">KeyPointTag</span><span class="o">::</span><span class="n">hip_left</span><span class="p">,</span><span class="n">p</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">0.1</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">0.2</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">unordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_pair</span><span class="p">(</span><span class="n">KeyPointTag</span><span class="o">::</span><span class="n">knee_left</span><span class="p">,</span><span class="n">p</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">-0.1</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">0.1</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">unordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_pair</span><span class="p">(</span><span class="n">KeyPointTag</span><span class="o">::</span><span class="n">hip_right</span><span class="p">,</span><span class="n">p</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">-0.1</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">0.2</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">unordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_pair</span><span class="p">(</span><span class="n">KeyPointTag</span><span class="o">::</span><span class="n">knee_right</span><span class="p">,</span><span class="n">p</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">skeleton</span><span class="p">.</span><span class="n">setTag</span><span class="p">(</span><span class="s">&quot;unordered&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">skeleton</span><span class="p">.</span><span class="n">update</span><span class="p">(</span><span class="n">unordered</span><span class="p">);</span>
+<span class="w">    </span><span class="n">skeleton</span><span class="p">.</span><span class="n">print</span><span class="p">();</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">EXIT_SUCCESS</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>The result is:</p>
+<div class="highlight"><pre><span></span><code>tag = &quot;unordered&quot;
+transformation =
+-1.000  0.000  0.000  0.000
+ 0.000  1.000  0.000  0.000
+-0.000  0.000 -1.000  0.000
+ 0.000  0.000  0.000  1.000
+coronal = (-0.000  0.000  1.000)
+sagittal = (-1.000  0.000 -0.000)
+transverse = ( 0.000 -1.000  0.000)
+keypoint[&quot;shoulderCenter&quot;] = ( 0.000  0.000  0.000); pixel=( nan  nan); status=updated; parent={}; child={&quot;head&quot; &quot;shoulderLeft&quot; &quot;shoulderRight&quot; &quot;hipCenter&quot; }
+keypoint[&quot;head&quot;] = ( 0.000 -0.100  0.000); pixel=( nan  nan); status=updated; parent={&quot;shoulderCenter&quot; }; child={}
+keypoint[&quot;shoulderLeft&quot;] = (-0.100  0.000 -0.000); pixel=( nan  nan); status=updated; parent={&quot;shoulderCenter&quot; }; child={&quot;elbowLeft&quot; }
+keypoint[&quot;elbowLeft&quot;] = (-0.200  0.000 -0.000); pixel=( nan  nan); status=updated; parent={&quot;shoulderLeft&quot; }; child={&quot;handLeft&quot; }
+keypoint[&quot;handLeft&quot;] = (-0.300  0.000 -0.000); pixel=( nan  nan); status=updated; parent={&quot;elbowLeft&quot; }; child={}
+keypoint[&quot;shoulderRight&quot;] = ( 0.100  0.000  0.000); pixel=( nan  nan); status=updated; parent={&quot;shoulderCenter&quot; }; child={&quot;elbowRight&quot; }
+keypoint[&quot;elbowRight&quot;] = ( 0.200  0.000  0.000); pixel=( nan  nan); status=updated; parent={&quot;shoulderRight&quot; }; child={&quot;handRight&quot; }
+keypoint[&quot;handRight&quot;] = ( 0.300  0.000  0.000); pixel=( nan  nan); status=updated; parent={&quot;elbowRight&quot; }; child={}
+keypoint[&quot;hipCenter&quot;] = ( 0.000  0.100  0.000); pixel=( nan  nan); status=updated; parent={&quot;shoulderCenter&quot; }; child={&quot;hipLeft&quot; &quot;hipRight&quot; }
+keypoint[&quot;hipLeft&quot;] = (-0.100  0.100 -0.000); pixel=( nan  nan); status=updated; parent={&quot;hipCenter&quot; }; child={&quot;kneeLeft&quot; }
+keypoint[&quot;kneeLeft&quot;] = (-0.100  0.200 -0.000); pixel=( nan  nan); status=updated; parent={&quot;hipLeft&quot; }; child={&quot;ankleLeft&quot; }
+keypoint[&quot;ankleLeft&quot;] = ( nan  nan  nan); pixel=( nan  nan); status=stale; parent={&quot;kneeLeft&quot; }; child={&quot;footLeft&quot; }
+keypoint[&quot;footLeft&quot;] = ( nan  nan  nan); pixel=( nan  nan); status=stale; parent={&quot;ankleLeft&quot; }; child={}
+keypoint[&quot;hipRight&quot;] = ( 0.100  0.100  0.000); pixel=( nan  nan); status=updated; parent={&quot;hipCenter&quot; }; child={&quot;kneeRight&quot; }
+keypoint[&quot;kneeRight&quot;] = ( 0.100  0.200  0.000); pixel=( nan  nan); status=updated; parent={&quot;hipRight&quot; }; child={&quot;ankleRight&quot; }
+keypoint[&quot;ankleRight&quot;] = ( nan  nan  nan); pixel=( nan  nan); status=stale; parent={&quot;kneeRight&quot; }; child={&quot;footRight&quot; }
+keypoint[&quot;footRight&quot;] = ( nan  nan  nan); pixel=( nan  nan); status=stale; parent={&quot;ankleRight&quot; }; child={}
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Don't get worried about <code>nan</code> in the <code>pixel</code> fields: it's correct since we didn't set them up yet. Uninitialized points and/or pixels take <code>nan</code> values.</p>
+</div>
+<h3 id="from-an-ordered-list-of-keypoints">From an ordered list of keypoints<a class="headerlink" href="#from-an-ordered-list-of-keypoints" title="Permanent link">&para;</a></h3>
+<p>The following code snippet creates a <code>SkeletonStd</code> object from an ordered list of keypoints:</p>
+<div class="highlight"><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;yarp/sig/Vector.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;AssistiveRehab/skeleton.h&quot;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">assistive_rehab</span><span class="o">::</span><span class="n">SkeletonStd</span><span class="w"> </span><span class="n">skeleton</span><span class="p">;</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ordered</span><span class="p">;</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">ordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">-0.1</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">ordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">0.1</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">ordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">0.2</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">ordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">0.3</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">ordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">-0.1</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">ordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">-0.2</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">ordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">-0.3</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">ordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">0.1</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">0.1</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">ordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">0.1</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">0.2</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">ordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">-0.1</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">0.1</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">ordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">-0.1</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mf">0.2</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">ordered</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">skeleton</span><span class="p">.</span><span class="n">setTag</span><span class="p">(</span><span class="s">&quot;ordered&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">skeleton</span><span class="p">.</span><span class="n">update</span><span class="p">(</span><span class="n">ordered</span><span class="p">);</span>
+<span class="w">    </span><span class="n">skeleton</span><span class="p">.</span><span class="n">print</span><span class="p">();</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">EXIT_SUCCESS</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>The result is:</p>
+<div class="highlight"><pre><span></span><code>tag = &quot;ordered&quot;
+transformation =
+-1.000  0.000  0.000  0.000
+ 0.000  1.000  0.000  0.000
+-0.000  0.000 -1.000  0.000
+ 0.000  0.000  0.000  1.000
+coronal = (-0.000  0.000  0.707)
+sagittal = (-1.000  0.000 -0.000)
+transverse = ( 0.707 -0.707  0.000)
+keypoint[&quot;shoulderCenter&quot;] = ( 0.000  0.000  0.000); pixel=( nan  nan); status=updated; parent={}; child={&quot;head&quot; &quot;shoulderLeft&quot; &quot;shoulderRight&quot; &quot;hipCenter&quot; }
+keypoint[&quot;head&quot;] = ( 0.000 -0.100  0.000); pixel=( nan  nan); status=updated; parent={&quot;shoulderCenter&quot; }; child={}
+keypoint[&quot;shoulderLeft&quot;] = (-0.100  0.000 -0.000); pixel=( nan  nan); status=updated; parent={&quot;shoulderCenter&quot; }; child={&quot;elbowLeft&quot; }
+keypoint[&quot;elbowLeft&quot;] = (-0.200  0.000 -0.000); pixel=( nan  nan); status=updated; parent={&quot;shoulderLeft&quot; }; child={&quot;handLeft&quot; }
+keypoint[&quot;handLeft&quot;] = (-0.300  0.000 -0.000); pixel=( nan  nan); status=updated; parent={&quot;elbowLeft&quot; }; child={}
+keypoint[&quot;shoulderRight&quot;] = ( 0.100  0.000  0.000); pixel=( nan  nan); status=updated; parent={&quot;shoulderCenter&quot; }; child={&quot;elbowRight&quot; }
+keypoint[&quot;elbowRight&quot;] = ( 0.200  0.000  0.000); pixel=( nan  nan); status=updated; parent={&quot;shoulderRight&quot; }; child={&quot;handRight&quot; }
+keypoint[&quot;handRight&quot;] = ( 0.300  0.000  0.000); pixel=( nan  nan); status=updated; parent={&quot;elbowRight&quot; }; child={}
+keypoint[&quot;hipCenter&quot;] = (-0.100  0.100 -0.000); pixel=( nan  nan); status=updated; parent={&quot;shoulderCenter&quot; }; child={&quot;hipLeft&quot; &quot;hipRight&quot; }
+keypoint[&quot;hipLeft&quot;] = (-0.100  0.200 -0.000); pixel=( nan  nan); status=updated; parent={&quot;hipCenter&quot; }; child={&quot;kneeLeft&quot; }
+keypoint[&quot;kneeLeft&quot;] = ( 0.100  0.100  0.000); pixel=( nan  nan); status=updated; parent={&quot;hipLeft&quot; }; child={&quot;ankleLeft&quot; }
+keypoint[&quot;ankleLeft&quot;] = ( 0.100  0.200  0.000); pixel=( nan  nan); status=updated; parent={&quot;kneeLeft&quot; }; child={&quot;footLeft&quot; }
+keypoint[&quot;footLeft&quot;] = ( nan  nan  nan); pixel=( nan  nan); status=stale; parent={&quot;ankleLeft&quot; }; child={}
+keypoint[&quot;hipRight&quot;] = ( nan  nan  nan); pixel=( nan  nan); status=stale; parent={&quot;hipCenter&quot; }; child={&quot;kneeRight&quot; }
+keypoint[&quot;kneeRight&quot;] = ( nan  nan  nan); pixel=( nan  nan); status=stale; parent={&quot;hipRight&quot; }; child={&quot;ankleRight&quot; }
+keypoint[&quot;ankleRight&quot;] = ( nan  nan  nan); pixel=( nan  nan); status=stale; parent={&quot;kneeRight&quot; }; child={&quot;footRight&quot; }
+keypoint[&quot;footRight&quot;] = ( nan  nan  nan); pixel=( nan  nan); status=stale; parent={&quot;ankleRight&quot; }; child={}
+</code></pre></div>
+<h3 id="from-a-property-like-structure">From a property-like structure<a class="headerlink" href="#from-a-property-like-structure" title="Permanent link">&para;</a></h3>
+<p>Assuming that the object <code>skeleton1</code> has been previously defined using one of the instructions above, a new <code>Skeleton</code> object can be defined as following:</p>
+<div class="highlight"><pre><span></span><code><span class="w">    </span><span class="n">yarp</span><span class="o">::</span><span class="n">os</span><span class="o">::</span><span class="n">Property</span><span class="w"> </span><span class="n">prop</span><span class="o">=</span><span class="n">skeleton1</span><span class="p">.</span><span class="n">toProperty</span><span class="p">();</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">assistive_rehab</span><span class="o">::</span><span class="n">Skeleton</span><span class="o">&gt;</span><span class="w"> </span><span class="n">skeleton2</span><span class="p">(</span><span class="n">assistive_rehab</span><span class="o">::</span><span class="n">skeleton_factory</span><span class="p">(</span><span class="n">prop</span><span class="p">));</span>
+<span class="w">    </span><span class="n">skeleton2</span><span class="o">-&gt;</span><span class="n">setTag</span><span class="p">(</span><span class="s">&quot;properties&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">skeleton2</span><span class="o">-&gt;</span><span class="n">print</span><span class="p">();</span>
+</code></pre></div>
+<h2 id="retrieving-a-skeleton">Retrieving a skeleton<a class="headerlink" href="#retrieving-a-skeleton" title="Permanent link">&para;</a></h2>
+<p>A skeleton can be retrieved as a property-like structure from a yarp port:</p>
+<div class="highlight"><pre><span></span><code><span class="w">    </span><span class="n">assistive_rehab</span><span class="o">::</span><span class="n">SkeletonStd</span><span class="w"> </span><span class="n">skeleton</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">yarp</span><span class="o">::</span><span class="n">os</span><span class="o">::</span><span class="n">Bottle</span><span class="o">*</span><span class="w"> </span><span class="n">b</span><span class="o">=</span><span class="n">opcPort</span><span class="p">.</span><span class="n">read</span><span class="p">(</span><span class="nb">false</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">yarp</span><span class="o">::</span><span class="n">os</span><span class="o">::</span><span class="n">Property</span><span class="w"> </span><span class="n">prop</span><span class="p">;</span>
+<span class="w">        </span><span class="n">prop</span><span class="p">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">b</span><span class="o">-&gt;</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">asList</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">toString</span><span class="p">());</span>
+<span class="w">        </span><span class="n">skeleton</span><span class="p">.</span><span class="n">update</span><span class="p">(</span><span class="n">assistive_rehab</span><span class="o">::</span><span class="n">skeleton_factory</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">toProperty</span><span class="p">());</span>
+<span class="w">    </span><span class="p">}</span>
+</code></pre></div>
+<p>or from the OPC as following:</p>
+<div class="highlight"><pre><span></span><code><span class="w">    </span><span class="n">assistive_rehab</span><span class="o">::</span><span class="n">SkeletonStd</span><span class="w"> </span><span class="n">skeleton</span><span class="p">;</span>
+<span class="w">    </span><span class="n">yarp</span><span class="o">::</span><span class="n">os</span><span class="o">::</span><span class="n">Bottle</span><span class="w"> </span><span class="n">cmd</span><span class="p">,</span><span class="n">reply</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cmd</span><span class="p">.</span><span class="n">addVocab</span><span class="p">(</span><span class="n">yarp</span><span class="o">::</span><span class="n">os</span><span class="o">::</span><span class="n">Vocab</span><span class="o">::</span><span class="n">encode</span><span class="p">(</span><span class="s">&quot;ask&quot;</span><span class="p">));</span>
+<span class="w">    </span><span class="n">yarp</span><span class="o">::</span><span class="n">os</span><span class="o">::</span><span class="n">Bottle</span><span class="w"> </span><span class="o">&amp;</span><span class="n">content</span><span class="o">=</span><span class="n">cmd</span><span class="p">.</span><span class="n">addList</span><span class="p">().</span><span class="n">addList</span><span class="p">();</span>
+<span class="w">    </span><span class="n">content</span><span class="p">.</span><span class="n">addString</span><span class="p">(</span><span class="s">&quot;skeleton&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">opcPort</span><span class="p">.</span><span class="n">write</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span><span class="n">reply</span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">reply</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">reply</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">asVocab</span><span class="p">()</span><span class="o">==</span><span class="n">Vocab</span><span class="o">::</span><span class="n">encode</span><span class="p">(</span><span class="s">&quot;ack&quot;</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">yarp</span><span class="o">::</span><span class="n">os</span><span class="o">::</span><span class="n">Bottle</span><span class="w"> </span><span class="o">*</span><span class="n">idField</span><span class="o">=</span><span class="n">reply</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="n">asList</span><span class="p">())</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="k">if</span><span class="p">(</span><span class="n">yarp</span><span class="o">::</span><span class="n">os</span><span class="o">::</span><span class="n">Bottle</span><span class="w"> </span><span class="o">*</span><span class="n">idValues</span><span class="o">=</span><span class="n">idField</span><span class="o">-&gt;</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="n">asList</span><span class="p">())</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="kt">int</span><span class="w"> </span><span class="n">id</span><span class="o">=</span><span class="n">idValues</span><span class="o">-&gt;</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">asInt</span><span class="p">();</span>
+<span class="w">                    </span><span class="n">cmd</span><span class="p">.</span><span class="n">clear</span><span class="p">();</span>
+<span class="w">                    </span><span class="n">cmd</span><span class="p">.</span><span class="n">addVocab</span><span class="p">(</span><span class="n">Vocab</span><span class="o">::</span><span class="n">encode</span><span class="p">(</span><span class="s">&quot;get&quot;</span><span class="p">));</span>
+<span class="w">                    </span><span class="n">yarp</span><span class="o">::</span><span class="n">os</span><span class="o">::</span><span class="n">Bottle</span><span class="w"> </span><span class="o">&amp;</span><span class="n">content</span><span class="o">=</span><span class="n">cmd</span><span class="p">.</span><span class="n">addList</span><span class="p">().</span><span class="n">addList</span><span class="p">();</span>
+<span class="w">                    </span><span class="n">yarp</span><span class="o">::</span><span class="n">os</span><span class="o">::</span><span class="n">Bottle</span><span class="w"> </span><span class="n">replyProp</span><span class="p">;</span>
+<span class="w">                    </span><span class="n">content</span><span class="p">.</span><span class="n">addString</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">);</span>
+<span class="w">                    </span><span class="n">content</span><span class="p">.</span><span class="n">addInt</span><span class="p">(</span><span class="n">id</span><span class="p">);</span>
+<span class="w">                    </span><span class="n">opcPort</span><span class="p">.</span><span class="n">write</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span><span class="n">replyProp</span><span class="p">);</span>
+<span class="w">                    </span><span class="k">if</span><span class="p">(</span><span class="n">replyProp</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">asVocab</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">yarp</span><span class="o">::</span><span class="n">os</span><span class="o">::</span><span class="n">Vocab</span><span class="o">::</span><span class="n">encode</span><span class="p">(</span><span class="s">&quot;ack&quot;</span><span class="p">))</span>
+<span class="w">                    </span><span class="p">{</span>
+<span class="w">                        </span><span class="k">if</span><span class="p">(</span><span class="n">yarp</span><span class="o">::</span><span class="n">os</span><span class="o">::</span><span class="n">Bottle</span><span class="w"> </span><span class="o">*</span><span class="n">propField</span><span class="o">=</span><span class="n">replyProp</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="n">asList</span><span class="p">())</span>
+<span class="w">                        </span><span class="p">{</span>
+<span class="w">                            </span><span class="n">yarp</span><span class="o">::</span><span class="n">os</span><span class="o">::</span><span class="n">Property</span><span class="w"> </span><span class="nf">prop</span><span class="p">(</span><span class="n">propField</span><span class="o">-&gt;</span><span class="n">toString</span><span class="p">().</span><span class="n">c_str</span><span class="p">());</span>
+<span class="w">                            </span><span class="n">skeleton</span><span class="p">.</span><span class="n">update</span><span class="p">(</span><span class="n">assistive_rehab</span><span class="o">::</span><span class="n">skeleton_factory</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">toProperty</span><span class="p">());</span>
+<span class="w">                        </span><span class="p">}</span>
+<span class="w">                    </span><span class="p">}</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+</code></pre></div>
+<h2 id="accessing-single-keypoints-of-a-skeleton">Accessing single keypoints of a skeleton<a class="headerlink" href="#accessing-single-keypoints-of-a-skeleton" title="Permanent link">&para;</a></h2>
+<p>If you want to access to a keypoint of the skeleton, you can use the <code>operator[]</code> of the class <code>Skeleton</code>, by passing as parameter the keypoint's tag.
+For example, the following snippet allows you to get the <code>shoulder_center</code> 3D coordinates:</p>
+<div class="highlight"><pre><span></span><code><span class="w">   </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">sc</span><span class="o">=</span><span class="n">skeleton</span><span class="p">[</span><span class="n">assistive_rehab</span><span class="o">::</span><span class="n">KeyPointTag</span><span class="o">::</span><span class="n">shoulder_center</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">getPoint</span><span class="p">();</span>
+</code></pre></div>
+<h2 id="dealing-with-pixels">Dealing with pixels<a class="headerlink" href="#dealing-with-pixels" title="Permanent link">&para;</a></h2>
+<p>Occasionally, it might be worth storing also the pixels alongside the points, which are used by the algorithm to reconstruct the 3D skeleton.
+This is particularly useful when the skeleton is employed to enable gaze tracking, for example. In this context, the 3D information of the keypoints
+needs normally to be transformed from the camera frame to the root frame of the robot. Instead, having the pixels would ease this process. </p>
+<p>The updating methods described above do have their pixel-wise counterparts:</p>
+<div class="highlight"><pre><span></span><code><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="p">,</span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">ordered_withpixels</span><span class="p">;</span>
+<span class="w">    </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="nf">p</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mf">0.1</span><span class="p">);</span><span class="w"> </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="nf">px</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mf">10.0</span><span class="p">);</span>
+<span class="w">    </span><span class="n">ordered_withpixels</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_pair</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">px</span><span class="p">));</span>
+<span class="w">    </span><span class="n">skeleton</span><span class="p">.</span><span class="n">update_withpixels</span><span class="p">(</span><span class="n">ordered_withpixels</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="p">,</span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">unordered_withpixels</span><span class="p">;</span>
+<span class="w">    </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="nf">p</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mf">0.1</span><span class="p">);</span><span class="w"> </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="nf">px</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mf">10.0</span><span class="p">);</span>
+<span class="w">    </span><span class="n">unordered_withpixels</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_pair</span><span class="p">(</span><span class="n">assistive_rehab</span><span class="o">::</span><span class="n">KeyPointTag</span><span class="o">::</span><span class="n">shoulder_center</span><span class="p">,</span><span class="n">std</span><span class="o">::</span><span class="n">make_pair</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">px</span><span class="p">)));</span>
+<span class="w">    </span><span class="n">skeleton</span><span class="p">.</span><span class="n">update_withpixels</span><span class="p">(</span><span class="n">unordered_withpixels</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">pixel</span><span class="o">=</span><span class="n">skeleton</span><span class="p">[</span><span class="n">assistive_rehab</span><span class="o">::</span><span class="n">KeyPointTag</span><span class="o">::</span><span class="n">shoulder_center</span><span class="p">].</span><span class="n">getPixel</span><span class="p">();</span>
+</code></pre></div>
+<h2 id="additional-functionalities">Additional functionalities<a class="headerlink" href="#additional-functionalities" title="Permanent link">&para;</a></h2>
+<h3 id="normalization">Normalization<a class="headerlink" href="#normalization" title="Permanent link">&para;</a></h3>
+<p>Some applications might require a normalized skeleton, to avoid having different results for different human physiques.
+The normalization provided in the library makes the length of the observed human segments always equal to 1 and can be applied as following:</p>
+<div class="highlight"><pre><span></span><code><span class="w">   </span><span class="n">skeleton</span><span class="p">.</span><span class="n">normalize</span><span class="p">();</span>
+</code></pre></div>
+<h3 id="keypoints-reference-system">Keypoints' reference system<a class="headerlink" href="#keypoints-reference-system" title="Permanent link">&para;</a></h3>
+<p>Keypoints in the skeleton are defined with respect to the camera. To change the reference system, given a transformation matrix <em>T</em>, you can use the method <code>setTransformation</code>, as following:</p>
+<div class="highlight"><pre><span></span><code><span class="w">   </span><span class="n">skeleton</span><span class="p">.</span><span class="n">setTransformation</span><span class="p">(</span><span class="n">T</span><span class="p">);</span>
+</code></pre></div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>If you want to use the skeleton as reference system, you can create the transformation matrix <em>T</em> from the skeleton's planes:
+<div class="highlight"><pre><span></span><code><span class="w">   </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">coronal</span><span class="o">=</span><span class="n">skeleton</span><span class="p">.</span><span class="n">getCoronal</span><span class="p">();</span>
+<span class="w">   </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">sagittal</span><span class="o">=</span><span class="n">skeleton</span><span class="p">.</span><span class="n">getSagittal</span><span class="p">();</span>
+<span class="w">   </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">transverse</span><span class="o">=</span><span class="n">skeleton</span><span class="p">.</span><span class="n">getTransverse</span><span class="p">();</span>
+<span class="w">   </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Vector</span><span class="w"> </span><span class="n">p</span><span class="o">=</span><span class="n">skeleton</span><span class="p">[</span><span class="n">assistive_rehab</span><span class="o">::</span><span class="n">KeyPointTag</span><span class="o">::</span><span class="n">shoulder_center</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">getPoint</span><span class="p">();</span>
+<span class="w">   </span><span class="n">yarp</span><span class="o">::</span><span class="n">sig</span><span class="o">::</span><span class="n">Matrix</span><span class="w"> </span><span class="nf">T1</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">);</span>
+<span class="w">   </span><span class="n">T1</span><span class="p">.</span><span class="n">setSubcol</span><span class="p">(</span><span class="n">coronal</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span>
+<span class="w">   </span><span class="n">T1</span><span class="p">.</span><span class="n">setSubcol</span><span class="p">(</span><span class="n">sagittal</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
+<span class="w">   </span><span class="n">T1</span><span class="p">.</span><span class="n">setSubcol</span><span class="p">(</span><span class="n">transverse</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span>
+<span class="w">   </span><span class="n">T1</span><span class="p">.</span><span class="n">setSubcol</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">);</span>
+<span class="w">   </span><span class="n">T1</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span><span class="o">=</span><span class="mf">1.0</span><span class="p">;</span>
+<span class="w">   </span><span class="n">T</span><span class="o">=</span><span class="n">yarp</span><span class="o">::</span><span class="n">math</span><span class="o">::</span><span class="n">SE3inv</span><span class="p">(</span><span class="n">T1</span><span class="p">);</span>
+<span class="w">   </span><span class="n">skeleton</span><span class="p">.</span><span class="n">setTransformation</span><span class="p">(</span><span class="n">T</span><span class="p">);</span>
+</code></pre></div></p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2019 Istituto Italiano di Tecnologia - iCub Tech
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["content.action.edit", "content.action.view", "tabs", "navigation.tabs", "navigation.tabs.sticky", "navigation.tracking", "navigation.sections", "navigation.top"], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.8fd75fb4.min.js"></script>
+      
+    
+  </body>
+</html>

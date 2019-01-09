@@ -1,0 +1,61 @@
+
+  /**
+  *
+  * @ingroup navController
+  * \defgroup navController navController
+  * This module is responsible for interfacing with the robot's base to implement the navigation part.
+  * Version:0.6.0
+  * \author  Ugo Pattacini ugo.pattacini@iit.it
+  * \n
+  * \copyright Released under the terms of the BSD 3-Clause License.
+  * \section intro_sec Description
+  *
+  
+   This moudule aims to keep the distance from a specified skeleton fixed. To this end, the robot will be navigating along an imaginary straight track.
+  
+  * \section parameters_sec Parameters
+  
+  *- --period: Periodicity of the module (s).
+  *- --velocity-linear-magnitude: The magnitude of the linear velocity used in the bang-bang controller (m/s).
+  *- --velocity-angular-saturation: The maximum angular velocity used in the PID controller (deg/s).
+  *- --angular-tolerance: Angular tolerance for rotating (deg/s).
+  *- --distance-target: The target distance from the skeleton that the controller will attempt to keep (m).
+  *- --distance-hysteresis-low: The low threshold of the hsyteresis on the distance error (m).
+  *- --distance-hysteresis-high: The high threshold of the hsyteresis on the distance error (m).
+  *- --base-stop-threshold: The maximum velocity to consider the robot steady (deg/s).
+  *- --offline_mode: Run module without connection to baseControl, useful for offline replay of experiments.
+  *- --no_odom_data: Stream odometry data as (x: 0, y: 0, theta: 0) if enabled. Useful offline.
+  *- --force_odom_reset: Uses the first odometry value acquired will for resetting.
+  * \section inputports_sec Input Ports
+  * 
+  *- /navController/opc:i [Bottle]  [default carrier:]: 
+            Receives the OPC broadcast.
+          
+  *
+  
+  *- /navController/base_state:i [Bottle]  [default carrier:]: 
+            Receives information about the robot base.
+          
+  *
+  
+  * \section outputports_sec Output Ports
+  * 
+  *- /navController/state:o [Bottle]  [default carrier:]: 
+            Outputs the internal state as (robot-state {idle|track|nav}) (robot-location (x y theta)) (robot-velocity (v_x v_theta)) [(target-location (x y theta heading))] [(skeleton-tag tag) (skeleton-location (x y))]
+          
+  *
+  
+  *
+  * \section services_sec Services
+  * 
+  *- /navController/rpc
+  *  [rpc-server]: 
+  * service port
+  * . This service is described in navController_IDL (idl.thrift)
+  * 
+  *
+  * 
+  *
+  *
+  **/
+

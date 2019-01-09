@@ -1,0 +1,58 @@
+\label{index_md_data_index}%
+\Hypertarget{index_md_data_index}%
+ $\vert$ Back to the \href{https://robotology.github.io/assistive-rehab/doc/mkdocs/site/index.html}{\texttt{ website}} $\vert$
+
+\doxysection*{The assistive-\/rehab project}
+
+Assistive-\/rehab is a framework for developing the assistive intelligence of \href{https://www.youtube.com/watch?v=TBphNGW6m4o}{\texttt{ R1 robot}} for clinical rehabilitation and tests. The project is being developed within the Joint Lab between \href{https://www.iit.it}{\texttt{ IIT}} and \href{https://www.dongnocchi.it}{\texttt{ Fondazionce Don Carlo Gnocchi Onlus}}.
+
+\doxysubsection*{Library}
+
+\href{https://robotology.github.io/assistive-rehab/doc/doxygen/doc/html/group__skeleton.html}{\texttt{ {\bfseries{{\ttfamily Assistive-\/rehab library}}}}} provides basic functionalities for handling skeletons. The library has definitions for\+:
+
+
+\begin{DoxyItemize}
+\item creating a skeleton as series of keypoints linked together with a predefined structure;
+\item importing/exporting a skeleton\textquotesingle{}s structure from/into a yarp Property;
+\item normalizing and scaling a skeleton;
+\item optimize skeletons to deal with keypoints that cannot be observed;
+\item transform skeleton\textquotesingle{}s keypoints to the desired reference system.
+\end{DoxyItemize}
+
+Additional functionalities are also included for filtering depth images and aligning two mono or multidimensional time-\/series.
+
+\doxysubsection*{Modules}
+
+Assistive-\/rehab modules allow the user to\+:
+
+
+\begin{DoxyItemize}
+\item {\bfseries{retrieve 3D skeletons}}\+: given depth image from the camera and 2D skeleton data from \href{https://github.com/robotology/human-sensing}{\texttt{ {\bfseries{{\ttfamily yarp\+Open\+Pose}}}}}, {\bfseries{{\ttfamily skeleton\+Retriever}}} produces 3D skeletons and adds them in a yarp oriented database through \href{http://www.icub.org/doc/icub-main/group__objectsPropertiesCollector.html}{\texttt{ {\bfseries{{\ttfamily objects\+Properties\+Collector}}}}};
+\item {\bfseries{lock a 3D skeleton}}\+: given a 3D skeleton along with its tag, retrieved by means of {\bfseries{{\ttfamily skeleton\+Retriever}}}, {\bfseries{{\ttfamily skeleton\+Locker}}} allows the user to track the selected skeleton based on its spatiotemporal consistence;
+\item {\bfseries{visualize 3D skeletons}}\+: the output of {\bfseries{{\ttfamily skeleton\+Retriever}}} can be visualized in real-\/time on the {\bfseries{{\ttfamily skeleton\+Viewer}}};
+\item {\bfseries{analyze human motion}}\+: the quality of the movement can be evaluated in real-\/time through {\bfseries{{\ttfamily motion\+Analyzer}}}, by specifying the tag of the metric under analysis. Metrics as the range of motion, the speed of the end-\/point and walking parameters (step length and width, speed and number of steps) are currently implemented;
+\item {\bfseries{recognize human actions}}\+: 2D skeleton\textquotesingle{}s keypoints can feed the {\bfseries{{\ttfamily action\+Recognizer}}} for predicting the label of the exercise being performed;
+\item {\bfseries{produce a verbal feedback}}\+: a feedback can be produced by {\bfseries{{\ttfamily feedback\+Producer}}} and translated to verbal through {\bfseries{{\ttfamily feedback\+Synthetizer}}};
+\item {\bfseries{replay and manipulate a recorded skeleton}}\+: a skeleton recorded by means of {\bfseries{{\ttfamily yarpdatadumper}}} can be played back through {\bfseries{{\ttfamily skeleton\+Player}}}; ~\newline
+
+\item {\bfseries{detect Ar\+Uco lines}}\+: lines composed of Ar\+Uco boards can be visually detected by means of {\bfseries{{\ttfamily line\+Detector}}};
+\item {\bfseries{navigate the environment free from obstacles}}\+: a reactive navigation system is provided by {\bfseries{{\ttfamily nav\+Controller}}}, which allows the robot to reach fixed points in the environment and follow users;
+\item {\bfseries{recognize and interpret a set of questions}}\+: exploiting Google services API, a question asked through an external microphone is translated by means of {\bfseries{{\ttfamily google\+Speech}}} into speech transcript, which is in turn analyzed to retrieve the sentence structure and meaning by means of {\bfseries{{\ttfamily google\+Speech\+Process}}}.
+\end{DoxyItemize}
+
+Additional details can be found in the related \href{https://robotology.github.io/assistive-rehab/doc/doxygen/doc/html/modules.html}{\texttt{ Modules}} section.
+
+\doxysubsection*{Applications for the robot R1}
+
+Assistive-\/rehab applications are listed below\+:
+
+
+\begin{DoxyItemize}
+\item {\itshape Assistive\+Rehab.\+xml} and {\itshape Assistive\+Rehab-\/faces.\+xml}\+: for running the upper limbs demo without and with the face recognition pipeline. Tutorial for these applications can be found \href{https://robotology.github.io/assistive-rehab/doc/mkdocs/site/main_apps/}{\texttt{ here}};
+\item {\itshape Assistive\+Rehab-\/\+TUG.\+xml} and {\itshape Assistive\+Rehab-\/\+TUG\+\_\+\+SIM.\+xml}\+: for running the TUG demo with the real robot and within the simulation environment {\ttfamily gazebo}. Tutorial for these applications can be found \href{https://robotology.github.io/assistive-rehab/doc/mkdocs/site/tug_sim_demo/}{\texttt{ here}};
+\item {\itshape skeleton\+Dumper.\+xml}, {\itshape skeleton\+Dumper-\/faces.\+xml}, {\itshape Assistive\+Rehab-\/replay.\+xml}\+: for saving data without and with faces and replaying a saved experiment. Tutorial for these applications can be found \href{https://robotology.github.io/assistive-rehab/doc/mkdocs/site/replay_an_experiment/}{\texttt{ here}}.
+\end{DoxyItemize}
+
+\doxysubsection*{Datasets}
+
+Datasets used to train an LSTM for the action recognition pipeline used in the upper limbs demo can be found \href{https://github.com/robotology/assistive-rehab-storage}{\texttt{ here}}. 

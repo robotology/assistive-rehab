@@ -1,0 +1,144 @@
+\doxysection{line\+Detector\+\_\+\+IDL Class Reference}
+\label{classlineDetector__IDL}\index{lineDetector\_IDL@{lineDetector\_IDL}}
+
+
+\mbox{\hyperlink{classlineDetector__IDL}{line\+Detector\+\_\+\+IDL}} IDL Interface to line\+Detector services.  
+
+
+
+
+{\ttfamily \#include $<$line\+Detector\+\_\+\+IDL.\+h$>$}
+
+
+
+Inherits yarp\+::os\+::\+Wire.
+
+
+
+Inherited by Detector, and Detector.
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual bool \mbox{\hyperlink{classlineDetector__IDL_a393124f2e4ea02a0ef2d4ba4df5d73c0}{detect}} (const std\+::string \&line, const std\+::int32\+\_\+t timeout=0)
+\begin{DoxyCompactList}\small\item\em Start detection of start/finish line. \end{DoxyCompactList}\item 
+virtual yarp\+::os\+::\+Property \mbox{\hyperlink{classlineDetector__IDL_ae617a7505a800d086c201e047f32918b}{get\+\_\+line}} (const std\+::string \&line)
+\begin{DoxyCompactList}\small\item\em Retrieve line. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classlineDetector__IDL_a665153eb57fa761fe6dd9ae741169f7b}{reset}} ()
+\begin{DoxyCompactList}\small\item\em Delete lines from opc and skeleton\+Viewer. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classlineDetector__IDL_ad4a235bdfaed101e3dd2435902347df3}{update\+\_\+odometry}} (const std\+::string \&line\+\_\+tag, const double theta)
+\begin{DoxyCompactList}\small\item\em Update robot\textquotesingle{}s odometry with respect to specified line. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classlineDetector__IDL_af8af05e2ad1ad143c42d5229242bc7f3}{go\+\_\+to\+\_\+line}} (const std\+::string \&line\+\_\+tag, const double theta)
+\begin{DoxyCompactList}\small\item\em Navigate to the specified line. \end{DoxyCompactList}\item 
+\mbox{\label{classlineDetector__IDL_ac0e08d7eaab969b6d38519abd4118923}} 
+virtual std\+::vector$<$ std\+::string $>$ {\bfseries help} (const std\+::string \&function\+Name=\char`\"{}-\/-\/all\char`\"{})
+\item 
+\mbox{\label{classlineDetector__IDL_a0ae07f2cb8270fc30b5358f4ba1e9796}} 
+bool {\bfseries read} (yarp\+::os\+::\+Connection\+Reader \&connection) override
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\mbox{\hyperlink{classlineDetector__IDL}{line\+Detector\+\_\+\+IDL}} IDL Interface to line\+Detector services. 
+
+Definition at line 25 of file line\+Detector\+\_\+\+IDL.\+h.
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\label{classlineDetector__IDL_a393124f2e4ea02a0ef2d4ba4df5d73c0}} 
+\index{lineDetector\_IDL@{lineDetector\_IDL}!detect@{detect}}
+\index{detect@{detect}!lineDetector\_IDL@{lineDetector\_IDL}}
+\doxysubsubsection{\texorpdfstring{detect()}{detect()}}
+{\footnotesize\ttfamily virtual bool line\+Detector\+\_\+\+IDL\+::detect (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{line,  }\item[{const std\+::int32\+\_\+t}]{timeout = {\ttfamily 0} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Start detection of start/finish line. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em line} & string indicating the line to detect, start-\/line or finish-\/line. \\
+\hline
+{\em timeout} & optional timeout in seconds, if $>$ 0. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classlineDetector__IDL_ae617a7505a800d086c201e047f32918b}} 
+\index{lineDetector\_IDL@{lineDetector\_IDL}!get\_line@{get\_line}}
+\index{get\_line@{get\_line}!lineDetector\_IDL@{lineDetector\_IDL}}
+\doxysubsubsection{\texorpdfstring{get\_line()}{get\_line()}}
+{\footnotesize\ttfamily virtual yarp\+::os\+::\+Property line\+Detector\+\_\+\+IDL\+::get\+\_\+line (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{line }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Retrieve line. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em line} & string indicating the line to detect, start-\/line or finish-\/line. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+a property-\/like object in the form (pose\+\_\+world (x y z ax ay az theta)) (line\+\_\+size (lenght width)). 
+\end{DoxyReturn}
+\mbox{\label{classlineDetector__IDL_af8af05e2ad1ad143c42d5229242bc7f3}} 
+\index{lineDetector\_IDL@{lineDetector\_IDL}!go\_to\_line@{go\_to\_line}}
+\index{go\_to\_line@{go\_to\_line}!lineDetector\_IDL@{lineDetector\_IDL}}
+\doxysubsubsection{\texorpdfstring{go\_to\_line()}{go\_to\_line()}}
+{\footnotesize\ttfamily virtual bool line\+Detector\+\_\+\+IDL\+::go\+\_\+to\+\_\+line (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{line\+\_\+tag,  }\item[{const double}]{theta }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Navigate to the specified line. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em line\+\_\+tag} & string indicating line with respect to calibrate, start-\/line or finish-\/line. \\
+\hline
+{\em theta} & angle-\/coordinate to reach the specified line (degrees). \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classlineDetector__IDL_a665153eb57fa761fe6dd9ae741169f7b}} 
+\index{lineDetector\_IDL@{lineDetector\_IDL}!reset@{reset}}
+\index{reset@{reset}!lineDetector\_IDL@{lineDetector\_IDL}}
+\doxysubsubsection{\texorpdfstring{reset()}{reset()}}
+{\footnotesize\ttfamily virtual bool line\+Detector\+\_\+\+IDL\+::reset (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Delete lines from opc and skeleton\+Viewer. 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classlineDetector__IDL_ad4a235bdfaed101e3dd2435902347df3}} 
+\index{lineDetector\_IDL@{lineDetector\_IDL}!update\_odometry@{update\_odometry}}
+\index{update\_odometry@{update\_odometry}!lineDetector\_IDL@{lineDetector\_IDL}}
+\doxysubsubsection{\texorpdfstring{update\_odometry()}{update\_odometry()}}
+{\footnotesize\ttfamily virtual bool line\+Detector\+\_\+\+IDL\+::update\+\_\+odometry (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{line\+\_\+tag,  }\item[{const double}]{theta }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Update robot\textquotesingle{}s odometry with respect to specified line. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em line\+\_\+tag} & string indicating line with respect to calibrate, start-\/line or finish-\/line. \\
+\hline
+{\em theta} & angle-\/coordinate to reach the specified line (degrees). \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+idl\+\_\+dox/line\+Detector\+\_\+\+IDL.\+h\end{DoxyCompactItemize}

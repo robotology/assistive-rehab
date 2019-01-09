@@ -1,0 +1,54 @@
+
+  /**
+  *
+  * @ingroup skeletonViewer
+  * \defgroup skeletonViewer skeletonViewer
+  * This module is responsible for displaying in real-time multiple skeletons in 3D.
+  * Version:0.6.0
+  * \author  Ugo Pattacini ugo.pattacini@iit.it
+  * \n
+  * \copyright  Released under the terms of the BSD 3-Clause License.
+  * \section intro_sec Description
+  *
+  
+   This module is responsible for displaying in real-time multiple skeletons in 3D.
+   It makes use of VTK.
+  
+  * \section parameters_sec Parameters
+  
+  *- --x: Viewer's x position in screen coordinates pixels.
+  *- --y: Viewer's y position in screen coordinates pixels.
+  *- --w: Viewer's width in screen coordinates pixels.
+  *- --h: Viewer's height in screen coordinates pixels.
+  *- --gc-period: Periodicity of the module (s)
+  *- --bg-color: Viewer's background color using rgb color specification.
+  *- --camera-position: The camera position in world coordinates.
+  *- --camera-focalpoint: The camera focal point in world coordinates.
+  *- --camera-viewup: The camera viewup direction in world coordinates.
+  *- --show-floor: Switch it on to display the floor.
+  *- --floor-center: The floor center in world coordinates.
+  *- --floor-normal: The floor normal in world coordinates.
+  *- --grid-resolution: Grid resolution of the floor expressed in number of squares per side. Since the floor size is 10x10 square meters, a resolution of e.g. (100 100) will create a grid of squares with side length 10 cm.
+  * \section inputports_sec Input Ports
+  * 
+  *- /skeletonViewer:i [Bottle]  [default carrier:]: 
+            Receives 3D skeletons to visualize.
+          
+  *
+  
+  * \section outputports_sec Output Ports
+  * 
+  *
+  * \section services_sec Services
+  * 
+  *- /skeletonViewer:rpc
+  *  [rpc-server]: 
+  * service port
+  * . This service is described in skeletonViewer_IDL (idl.thrift)
+  * 
+  *
+  * 
+  *
+  *
+  **/
+

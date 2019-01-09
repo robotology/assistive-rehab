@@ -1,0 +1,138 @@
+\doxysection{action\+Recognizer\+\_\+\+IDL Class Reference}
+\label{classactionRecognizer__IDL}\index{actionRecognizer\_IDL@{actionRecognizer\_IDL}}
+
+
+\mbox{\hyperlink{classactionRecognizer__IDL}{action\+Recognizer\+\_\+\+IDL}} IDL Interface to Action Recognizer services.  
+
+
+
+
+{\ttfamily \#include $<$action\+Recognizer\+\_\+\+IDL.\+h$>$}
+
+
+
+Inherits yarp\+::os\+::\+Wire.
+
+
+
+Inherited by Recognizer.
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual bool \mbox{\hyperlink{classactionRecognizer__IDL_a6e56afcbbc3a7c79deb5a7253b1d0b81}{run}} (const std\+::int32\+\_\+t nframes\+\_\+)
+\begin{DoxyCompactList}\small\item\em Start the interaction. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classactionRecognizer__IDL_ad36ae79c77c3f38322202013ea418d84}{tags}} (const std\+::string \&skel\+\_\+tag\+\_\+)
+\begin{DoxyCompactList}\small\item\em Start the interaction. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classactionRecognizer__IDL_a59683b66e727607a3e12c0ab22d2d069}{load}} (const std\+::string \&exercise)
+\begin{DoxyCompactList}\small\item\em Load the name of the exercise to perform. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classactionRecognizer__IDL_a6fab377e711dc0334dec6442dfdfec5d}{set\+Transformation}} (const yarp\+::sig\+::\+Matrix \&T\+\_\+)
+\begin{DoxyCompactList}\small\item\em Set the transformation matrix of the skeleton. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classactionRecognizer__IDL_ad1f380a935e15eece41825108b7c1e0e}{stop}} ()
+\begin{DoxyCompactList}\small\item\em Stop the interaction. \end{DoxyCompactList}\item 
+\mbox{\label{classactionRecognizer__IDL_a2463d7355fa63dcd24c38f094da78f55}} 
+bool {\bfseries read} (yarp\+::os\+::\+Connection\+Reader \&connection) override
+\item 
+\mbox{\label{classactionRecognizer__IDL_a7c4f8453a315988f5b8fa862dc768100}} 
+virtual std\+::vector$<$ std\+::string $>$ {\bfseries help} (const std\+::string \&function\+Name=\char`\"{}-\/-\/all\char`\"{})
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\mbox{\hyperlink{classactionRecognizer__IDL}{action\+Recognizer\+\_\+\+IDL}} IDL Interface to Action Recognizer services. 
+
+Definition at line 26 of file action\+Recognizer\+\_\+\+IDL.\+h.
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\label{classactionRecognizer__IDL_a59683b66e727607a3e12c0ab22d2d069}} 
+\index{actionRecognizer\_IDL@{actionRecognizer\_IDL}!load@{load}}
+\index{load@{load}!actionRecognizer\_IDL@{actionRecognizer\_IDL}}
+\doxysubsubsection{\texorpdfstring{load()}{load()}}
+{\footnotesize\ttfamily virtual bool action\+Recognizer\+\_\+\+IDL\+::load (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{exercise }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Load the name of the exercise to perform. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em exercise} & name of the exercise to perform. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classactionRecognizer__IDL_a6e56afcbbc3a7c79deb5a7253b1d0b81}} 
+\index{actionRecognizer\_IDL@{actionRecognizer\_IDL}!run@{run}}
+\index{run@{run}!actionRecognizer\_IDL@{actionRecognizer\_IDL}}
+\doxysubsubsection{\texorpdfstring{run()}{run()}}
+{\footnotesize\ttfamily virtual bool action\+Recognizer\+\_\+\+IDL\+::run (\begin{DoxyParamCaption}\item[{const std\+::int32\+\_\+t}]{nframes\+\_\+ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Start the interaction. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em number} & of frames used to train the model \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classactionRecognizer__IDL_a6fab377e711dc0334dec6442dfdfec5d}} 
+\index{actionRecognizer\_IDL@{actionRecognizer\_IDL}!setTransformation@{setTransformation}}
+\index{setTransformation@{setTransformation}!actionRecognizer\_IDL@{actionRecognizer\_IDL}}
+\doxysubsubsection{\texorpdfstring{setTransformation()}{setTransformation()}}
+{\footnotesize\ttfamily virtual bool action\+Recognizer\+\_\+\+IDL\+::set\+Transformation (\begin{DoxyParamCaption}\item[{const yarp\+::sig\+::\+Matrix \&}]{T\+\_\+ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Set the transformation matrix of the skeleton. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em T\+\_\+} & is the transformation matrix. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classactionRecognizer__IDL_ad1f380a935e15eece41825108b7c1e0e}} 
+\index{actionRecognizer\_IDL@{actionRecognizer\_IDL}!stop@{stop}}
+\index{stop@{stop}!actionRecognizer\_IDL@{actionRecognizer\_IDL}}
+\doxysubsubsection{\texorpdfstring{stop()}{stop()}}
+{\footnotesize\ttfamily virtual bool action\+Recognizer\+\_\+\+IDL\+::stop (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Stop the interaction. 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classactionRecognizer__IDL_ad36ae79c77c3f38322202013ea418d84}} 
+\index{actionRecognizer\_IDL@{actionRecognizer\_IDL}!tags@{tags}}
+\index{tags@{tags}!actionRecognizer\_IDL@{actionRecognizer\_IDL}}
+\doxysubsubsection{\texorpdfstring{tags()}{tags()}}
+{\footnotesize\ttfamily virtual bool action\+Recognizer\+\_\+\+IDL\+::tags (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{skel\+\_\+tag\+\_\+ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Start the interaction. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em tag} & of the current skeleton \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+idl\+\_\+dox/action\+Recognizer\+\_\+\+IDL.\+h\end{DoxyCompactItemize}

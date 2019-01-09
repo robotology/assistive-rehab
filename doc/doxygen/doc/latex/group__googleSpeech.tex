@@ -1,0 +1,67 @@
+\doxysection{google\+Speech}
+\label{group__googleSpeech}\index{googleSpeech@{googleSpeech}}
+
+
+This module is responsible for recognizing speech in various languages.  
+
+
+This module is responsible for recognizing speech in various languages. 
+
+Version\+:0.\+3.\+0 \begin{DoxyAuthor}{Author}
+Vadim Tikhanoff \href{mailto:vadim.tikhanoff@iit.it}{\texttt{ vadim.\+tikhanoff@iit.\+it}} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the BSD 3-\/Clause License. 
+\end{DoxyCopyright}
+\hypertarget{group__skeletonViewer_intro_sec}{}\doxysubsection{Description}\label{group__skeletonViewer_intro_sec}
+This module retrieves raw input from the microphone port and queries google cloud speech services and provides the transcript on a port.\hypertarget{group__skeletonViewer_parameters_sec}{}\doxysubsection{Parameters}\label{group__skeletonViewer_parameters_sec}
+
+\begin{DoxyItemize}
+\item --name\+: Module\textquotesingle{}s name; all the open ports will be tagged with the prefix /name.
+\item --language\+\_\+code\+: Use English US
+\item --sample\+\_\+rate\+\_\+hertz\+: Use 16000 hertz for the sample rate
+\item --offline\+: Runs the module without connecting to Google Services. Does not process the speech 
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_inputports_sec}{}\doxysubsection{Input Ports}\label{group__skeletonViewer_inputports_sec}
+
+\begin{DoxyItemize}
+\item /google\+Speech/sound\+:i \mbox{[}Sound\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Port to receive sound from the microphone
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_outputports_sec}{}\doxysubsection{Output Ports}\label{group__skeletonViewer_outputports_sec}
+
+\begin{DoxyItemize}
+\item /google\+Speech/result\+:o \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends the transcript result of the output of google
+\item /google\+Speech/commands\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to the microphone device driver to start and stop the acquisition.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_services_sec}{}\doxysubsection{Services}\label{group__skeletonViewer_services_sec}
+
+\begin{DoxyItemize}
+\item /google\+Speech/rpc \mbox{[}rpc-\/server\mbox{]}\+: service port . This service is described in google\+Speech\+\_\+\+IDL (idl.\+thrift)
+
+Version\+:0.\+3.\+0 \begin{DoxyAuthor}{Author}
+Vadim Tikhanoff \href{mailto:vadim.tikhanoff@iit.it}{\texttt{ vadim.\+tikhanoff@iit.\+it}} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the BSD 3-\/Clause License. 
+\end{DoxyCopyright}
+
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_intro_sec}{}\doxysubsection{Description}\label{group__skeletonViewer_intro_sec}
+This module retrieves raw input from the microphone port and queries google cloud speech services and provides the transcript on a port.\hypertarget{group__skeletonViewer_parameters_sec}{}\doxysubsection{Parameters}\label{group__skeletonViewer_parameters_sec}
+
+\begin{DoxyItemize}
+\item --name\+: Module\textquotesingle{}s name; all the open ports will be tagged with the prefix /name.
+\item --language\+\_\+code\+: Use English US
+\item --sample\+\_\+rate\+\_\+hertz\+: Use 16000 hertz for the sample rate 
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_inputports_sec}{}\doxysubsection{Input Ports}\label{group__skeletonViewer_inputports_sec}
+
+\begin{DoxyItemize}
+\item /google\+Speech/sound\+:i \mbox{[}Sound\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Port to receive sound from the microphone
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_outputports_sec}{}\doxysubsection{Output Ports}\label{group__skeletonViewer_outputports_sec}
+
+\begin{DoxyItemize}
+\item /google\+Speech/result\+:o \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends the transcript result of the output of google
+\item /google\+Speech/commands\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to the microphone device driver to start and stop the acquisition.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_services_sec}{}\doxysubsection{Services}\label{group__skeletonViewer_services_sec}
+
+\begin{DoxyItemize}
+\item /google\+Speech/rpc \mbox{[}rpc-\/server\mbox{]}\+: service port . This service is described in google\+Speech\+\_\+\+IDL (idl.\+thrift) 
+\end{DoxyItemize}

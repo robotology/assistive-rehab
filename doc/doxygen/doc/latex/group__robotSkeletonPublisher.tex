@@ -1,0 +1,39 @@
+\doxysection{robot\+Skeleton\+Publisher}
+\label{group__robotSkeletonPublisher}\index{robotSkeletonPublisher@{robotSkeletonPublisher}}
+
+
+This module publish the skeleton representing the robot.  
+
+
+This module publish the skeleton representing the robot. 
+
+Version\+:0.\+6.\+0 \begin{DoxyAuthor}{Author}
+Ugo Pattacini \href{mailto:ugo.pattacini@iit.it}{\texttt{ ugo.\+pattacini@iit.\+it}} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the BSD 3-\/Clause License. 
+\end{DoxyCopyright}
+\hypertarget{group__skeletonViewer_intro_sec}{}\doxysubsection{Description}\label{group__skeletonViewer_intro_sec}
+This module connects to robot\textquotesingle{}s state ports to retrieve the joints and then uses such information to compute the 3D configuration of the limbs. The resulting skeleton is sent to the viewer and to the OPC. The 3D info are expressed in the world frame if the navigation state is provided; the root becomes the depth\+\_\+center frame otherwise.\hypertarget{group__skeletonViewer_parameters_sec}{}\doxysubsection{Parameters}\label{group__skeletonViewer_parameters_sec}
+
+\begin{DoxyItemize}
+\item --skeleton-\/name\+: Name of the skeleton to be displayed.
+\item --skeleton-\/color\+: Skeleton\textquotesingle{}s color using rgb color specification.
+\item --period\+: Periodicity of the module (s).
+\item --robot\+: Name of the robot to connect to.
+\item --visibility\+: Flag to set/unset visibility in the viewer. 
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_inputports_sec}{}\doxysubsection{Input Ports}\label{group__skeletonViewer_inputports_sec}
+
+\begin{DoxyItemize}
+\item /robot\+Skeleton\+Publisher/nav\+:i \mbox{[}Property\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives the navigation status broadcast.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_outputports_sec}{}\doxysubsection{Output Ports}\label{group__skeletonViewer_outputports_sec}
+
+\begin{DoxyItemize}
+\item /robot\+Skeleton\+Publisher/viewer\+:o \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Outputs 3D skeletons to send to \mbox{\hyperlink{group__skeletonViewer}{skeleton\+Viewer}} for visualization.
+\item /robot\+Skeleton\+Publisher/opc\+:rpc \mbox{[}rpc\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends commands to objects\+Properties\+Collector to add the skeleton to the database.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_services_sec}{}\doxysubsection{Services}\label{group__skeletonViewer_services_sec}
+
+\begin{DoxyItemize}
+\item /robot\+Skeleton\+Publisher/cmd\+:rpc \mbox{[}rpc-\/server\mbox{]}\+: service port . This service is described in \mbox{\hyperlink{classrobotSkeletonPublisher__IDL}{robot\+Skeleton\+Publisher\+\_\+\+IDL}} (idl.\+thrift) 
+\end{DoxyItemize}

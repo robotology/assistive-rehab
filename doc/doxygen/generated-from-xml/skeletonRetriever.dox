@@ -1,0 +1,88 @@
+
+  /**
+  *
+  * @ingroup skeletonRetriever
+  * \defgroup skeletonRetriever skeletonRetriever
+  * This module merges 2D skeleton data with the depth information.
+  * Version:0.6.0
+  * \author  Ugo Pattacini ugo.pattacini@iit.it
+  * \n
+  * \copyright  Released under the terms of the BSD 3-Clause License.
+  * \section intro_sec Description
+  *
+  
+   This module merges 2D skeleton data as acquired by yarpOpenPose along with the depth information provided by the camera.
+   The module communicates with the camera to retrieve its field of view. Given the keypoint depth and the camera's focal length, 3D camera coordinates of the keypoints can be computed.
+   The module can be also run offline (no real camera is available) by specifying the camera's FOV, using the command camera::fov (54 42) (adjust the FOV according to the camera you want to simulate).
+   Erosion is applied to the depth map (true by default, can be disabled using the command depth::enable false).
+   Median filtering is applied to the keypoints in order to make the acquisition more robust.
+   Optimization is applied to the skeleton such that the length of the limbs is equal to that observed during an initial phase (true by default, can be disabled using the command filtering::optimize-limblength false).
+   It makes use of ipopt library.
+  
+  * \section parameters_sec Parameters
+  
+  *- --general::period: Periodicity of the module (s).
+  *- --skeleton::keys-recognition-confidence: Keypoints whose confidence is lower than this threshold are discarded.
+  *- --skeleton::keys-recognition-percentage: Minimum percentage of keypoints to consider a skeleton valid.
+  *- --skeleton::keys-acceptable-misses: Number of consecutive times a keypoint can get lost before it becomes stale.
+  *- --skeleton::min-acceptable-path: Minimum acceptable max path to consider a skeleton valid.
+  *- --skeleton::tracking-threshold: Maximum distance a skeleton can move before erasing it.
+  *- --skeleton::time-to-live: Life span of a skeleton.
+  *- --depth::enable: Enable depth filtering.
+  *- --depth::kernel-size: Size of the applied kernel.
+  *- --depth::iterations: Number of times erosion is applied.
+  *- --depth::min-distance: Threshold on the minimum distance (m).
+  *- --depth::max-distance: Threshold on the maximum distance (m).
+  *- --filtering::filter-keypoint-order: Order of the median filter applied to keypoints' position.
+  *- --filtering::filter-limblength-order: Order of the filter for optimizing limbs' lengths.
+  *- --filtering::optimize-limblength: Enable optimization of limbs' lengths.
+  *- --camera::fov: Camera's field of view.
+  *- --camera::remote: Camera's remote to connect to
+  * \section inputports_sec Input Ports
+  * 
+  *- /skeletonRetriever/skeletons:i [Bottle]  [default carrier:]: 
+            Receives 2D skeletons from yarpOpenPose.
+          
+  *
+  
+  *- /skeletonRetriever/depth:i [ImageOfPixelFloat]  [default carrier:]: 
+            Receives stream of camera depth images.
+          
+  *
+  
+  *- /skeletonRetriever/nav:i [Property]  [default carrier:]: 
+            Receives the navigation status broadcast.
+          
+  *
+  
+  *- /skeletonRetriever/gaze:i [Property]  [default carrier:]: 
+            Receives the gaze status broadcast.
+          
+  *
+  
+  * \section outputports_sec Output Ports
+  * 
+  *- /skeletonRetriever/opc:rpc [rpc]  [default carrier:]: 
+            Sends commands to \ref objectsPropertiesCollector to add 3D skeletons to the database.
+          
+  *
+  
+  *- /skeletonRetriever/cam:rpc [rpc]  [default carrier:]: 
+            Sends commands to the depth sensor to retrieve camera's field of view.
+          
+  *
+  
+  *- /skeletonRetriever/viewer:o [Bottle]  [default carrier:]: 
+            Outputs 3D skeletons to send to \ref skeletonViewer for visualization.
+          
+  *
+  
+  *
+  * \section services_sec Services
+  * 
+  *
+  * 
+  *
+  *
+  **/
+

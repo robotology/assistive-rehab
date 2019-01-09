@@ -1,0 +1,86 @@
+
+  /**
+  *
+  * @ingroup faceRecognizer
+  * \defgroup faceRecognizer faceRecognizer
+  * This module is responsible for recognizing human faces from an image, where faces have been detected.
+  * Version:0.6.0
+  * \author  Vadim Tikhanoff vadim.tikhanoff@iit.it
+  * \n
+  * \copyright  Released under the terms of the BSD 3-Clause License.
+  * \section intro_sec Description
+  *
+  
+   This module is responsible for recognizing human faces from an image, where faces have been detected.
+   The module receives blobs around faces from \ref humanStructure and sends the cropped image to \ref caffeCoder,
+   which extracts a vectorial representation of the input image using a previously trained network.
+   The extracted features are finally classified by \ref icub_linearClassifier.
+   Training can be carried out in real-time using the provided API.
+   The module outputs the image with labelled blobs around the recognized faces, and 2D skeletons with the option "Name" followed by the label of the face ("?" for empty label) and the size of the blob.
+   The name is used by \ref skeletonRetriever to set a unique tag to the 3D skeleton.
+  
+  * \section parameters_sec Parameters
+  
+  *- --name: The module's name; all the open ports will be tagged with the prefix /name.
+  *- --blobs_detection_timeout: Life span of detected blobs (s).
+  *- --training_time: Time used for training a face (s).
+  *- --skip_frames: Number of frames skipped for sending the cropped image.
+  *- --confidence_threhold: Default value of the confidence threshold.
+  * \section inputports_sec Input Ports
+  * 
+  *- /faceRecognizer/blobs:i [Bottle]  [default carrier:]: 
+            Receives blobs' coordinates around detected faces, as top left and bottom right corners.
+          
+  *
+  
+  *- /faceRecognizer/image:i [ImageOfPixelRgb]  [default carrier:]: 
+            Receives the input image.
+          
+  *
+  
+  *- /faceRecognizer/target:i [Bottle]  [default carrier:]: 
+            Receives input skeletons.
+          
+  *
+  
+  *- /faceRecognizer/scores:i [Bottle]  [default carrier:]: 
+            Receives the scores associated to each class.
+          
+  *
+  
+  * \section outputports_sec Output Ports
+  * 
+  *- /faceRecognizer/classifier:io [rpc]  [default carrier:]: 
+            Sends commands to the classifier for training and classifying.
+          
+  *
+  
+  *- /faceRecognizer/image:o [ImageOfPixelRgb]  [default carrier:]: 
+            Streams out the image with labelled blobs around the recognized faces.
+          
+  *
+  
+  *- /faceRecognizer/target:o [Bottle]  [default carrier:]: 
+            Streams out 2D skeletons.
+          
+  *
+  
+  *- /faceRecognizer/crop:o [ImageOfPixelRgb]  [default carrier:]: 
+            Streams out the region of interest with the recognized face (the closest or the one with a lifted hand).
+          
+  *
+  
+  *
+  * \section services_sec Services
+  * 
+  *- /faceRecognizer/rpc
+  *  [rpc-server]: 
+  * service port
+  * . This service is described in recognition_IDL (faceRecognizer.thrift)
+  * 
+  *
+  * 
+  *
+  *
+  **/
+

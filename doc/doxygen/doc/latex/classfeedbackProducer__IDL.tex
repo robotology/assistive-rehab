@@ -1,0 +1,213 @@
+\doxysection{feedback\+Producer\+\_\+\+IDL Class Reference}
+\label{classfeedbackProducer__IDL}\index{feedbackProducer\_IDL@{feedbackProducer\_IDL}}
+
+
+\mbox{\hyperlink{classfeedbackProducer__IDL}{feedback\+Producer\+\_\+\+IDL}} IDL Interface to alignment Manager services.  
+
+
+
+
+{\ttfamily \#include $<$feedback\+Producer\+\_\+\+IDL.\+h$>$}
+
+
+
+Inherits yarp\+::os\+::\+Wire.
+
+
+
+Inherited by Feedback.
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual bool \mbox{\hyperlink{classfeedbackProducer__IDL_a9d73388746fdad03567b1930c964c61d}{set\+Template\+Tag}} (const std\+::string \&template\+\_\+tag\+\_\+)
+\begin{DoxyCompactList}\small\item\em Set the tag of the template skeleton. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classfeedbackProducer__IDL_a415d86e692f8bb4987229f17ca0d90a5}{set\+Skel\+Tag}} (const std\+::string \&skel\+\_\+tag\+\_\+)
+\begin{DoxyCompactList}\small\item\em Set the tag of the skeleton. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classfeedbackProducer__IDL_a364738f5e3477e52c76d2a22672d840b}{set\+Metric}} (const std\+::string \&metric\+\_\+tag\+\_\+)
+\begin{DoxyCompactList}\small\item\em Set the tag of the metric being analyzed. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classfeedbackProducer__IDL_a13778ed7bd818fb0093565ff99d936a6}{set\+Joints}} (const std\+::vector$<$ std\+::string $>$ \&joint\+\_\+list\+\_\+)
+\begin{DoxyCompactList}\small\item\em Set joints under analysis. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classfeedbackProducer__IDL_a509606998529f964664fa22b4457cee2}{set\+Feedback\+Thresh}} (const yarp\+::sig\+::\+Matrix \&feedback\+\_\+thresholds\+\_\+)
+\begin{DoxyCompactList}\small\item\em Set the thresholds for the feedback. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classfeedbackProducer__IDL_a029ad9dc9918e229624d0dac6f6ca42e}{set\+Target}} (const std\+::vector$<$ double $>$ \&target\+\_\+)
+\begin{DoxyCompactList}\small\item\em Set the target to reach. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classfeedbackProducer__IDL_a0faabb9844bf01590a85e67bd857d7ac}{set\+Transformation}} (const yarp\+::sig\+::\+Matrix \&T\+\_\+)
+\begin{DoxyCompactList}\small\item\em Set the transformation matrix of the skeleton. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classfeedbackProducer__IDL_a50c492862766e36f730439a3a8f0d910}{start}} ()
+\begin{DoxyCompactList}\small\item\em Start analysis. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classfeedbackProducer__IDL_afdfffd0edb784e0a9906ed33e164027b}{stop}} ()
+\begin{DoxyCompactList}\small\item\em Stop analysis. \end{DoxyCompactList}\item 
+\mbox{\label{classfeedbackProducer__IDL_a6b15cd2302f577f6285099ec7f0bc043}} 
+bool {\bfseries read} (yarp\+::os\+::\+Connection\+Reader \&connection) override
+\item 
+\mbox{\label{classfeedbackProducer__IDL_ab5c65785efc4edbc2d605511f4028c9f}} 
+virtual std\+::vector$<$ std\+::string $>$ {\bfseries help} (const std\+::string \&function\+Name=\char`\"{}-\/-\/all\char`\"{})
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\mbox{\hyperlink{classfeedbackProducer__IDL}{feedback\+Producer\+\_\+\+IDL}} IDL Interface to alignment Manager services. 
+
+Definition at line 26 of file feedback\+Producer\+\_\+\+IDL.\+h.
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\label{classfeedbackProducer__IDL_a509606998529f964664fa22b4457cee2}} 
+\index{feedbackProducer\_IDL@{feedbackProducer\_IDL}!setFeedbackThresh@{setFeedbackThresh}}
+\index{setFeedbackThresh@{setFeedbackThresh}!feedbackProducer\_IDL@{feedbackProducer\_IDL}}
+\doxysubsubsection{\texorpdfstring{setFeedbackThresh()}{setFeedbackThresh()}}
+{\footnotesize\ttfamily virtual bool feedback\+Producer\+\_\+\+IDL\+::set\+Feedback\+Thresh (\begin{DoxyParamCaption}\item[{const yarp\+::sig\+::\+Matrix \&}]{feedback\+\_\+thresholds\+\_\+ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Set the thresholds for the feedback. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em feedback\+\_\+thresholds\+\_\+} & is the matrix containing all the thresholds. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classfeedbackProducer__IDL_a13778ed7bd818fb0093565ff99d936a6}} 
+\index{feedbackProducer\_IDL@{feedbackProducer\_IDL}!setJoints@{setJoints}}
+\index{setJoints@{setJoints}!feedbackProducer\_IDL@{feedbackProducer\_IDL}}
+\doxysubsubsection{\texorpdfstring{setJoints()}{setJoints()}}
+{\footnotesize\ttfamily virtual bool feedback\+Producer\+\_\+\+IDL\+::set\+Joints (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ std\+::string $>$ \&}]{joint\+\_\+list\+\_\+ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Set joints under analysis. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em joint\+\_\+list\+\_\+} & is the list of the joints under analysis. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classfeedbackProducer__IDL_a364738f5e3477e52c76d2a22672d840b}} 
+\index{feedbackProducer\_IDL@{feedbackProducer\_IDL}!setMetric@{setMetric}}
+\index{setMetric@{setMetric}!feedbackProducer\_IDL@{feedbackProducer\_IDL}}
+\doxysubsubsection{\texorpdfstring{setMetric()}{setMetric()}}
+{\footnotesize\ttfamily virtual bool feedback\+Producer\+\_\+\+IDL\+::set\+Metric (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{metric\+\_\+tag\+\_\+ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Set the tag of the metric being analyzed. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em metric\+\_\+tag\+\_\+} & is the tag of the metric. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classfeedbackProducer__IDL_a415d86e692f8bb4987229f17ca0d90a5}} 
+\index{feedbackProducer\_IDL@{feedbackProducer\_IDL}!setSkelTag@{setSkelTag}}
+\index{setSkelTag@{setSkelTag}!feedbackProducer\_IDL@{feedbackProducer\_IDL}}
+\doxysubsubsection{\texorpdfstring{setSkelTag()}{setSkelTag()}}
+{\footnotesize\ttfamily virtual bool feedback\+Producer\+\_\+\+IDL\+::set\+Skel\+Tag (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{skel\+\_\+tag\+\_\+ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Set the tag of the skeleton. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em skel\+\_\+tag\+\_\+} & is the tag of the skeleton. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classfeedbackProducer__IDL_a029ad9dc9918e229624d0dac6f6ca42e}} 
+\index{feedbackProducer\_IDL@{feedbackProducer\_IDL}!setTarget@{setTarget}}
+\index{setTarget@{setTarget}!feedbackProducer\_IDL@{feedbackProducer\_IDL}}
+\doxysubsubsection{\texorpdfstring{setTarget()}{setTarget()}}
+{\footnotesize\ttfamily virtual bool feedback\+Producer\+\_\+\+IDL\+::set\+Target (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ double $>$ \&}]{target\+\_\+ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Set the target to reach. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em target\+\_\+} & is the vector containing target to reach. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classfeedbackProducer__IDL_a9d73388746fdad03567b1930c964c61d}} 
+\index{feedbackProducer\_IDL@{feedbackProducer\_IDL}!setTemplateTag@{setTemplateTag}}
+\index{setTemplateTag@{setTemplateTag}!feedbackProducer\_IDL@{feedbackProducer\_IDL}}
+\doxysubsubsection{\texorpdfstring{setTemplateTag()}{setTemplateTag()}}
+{\footnotesize\ttfamily virtual bool feedback\+Producer\+\_\+\+IDL\+::set\+Template\+Tag (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{template\+\_\+tag\+\_\+ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Set the tag of the template skeleton. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em template\+\_\+tag\+\_\+} & is the tag of the template. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classfeedbackProducer__IDL_a0faabb9844bf01590a85e67bd857d7ac}} 
+\index{feedbackProducer\_IDL@{feedbackProducer\_IDL}!setTransformation@{setTransformation}}
+\index{setTransformation@{setTransformation}!feedbackProducer\_IDL@{feedbackProducer\_IDL}}
+\doxysubsubsection{\texorpdfstring{setTransformation()}{setTransformation()}}
+{\footnotesize\ttfamily virtual bool feedback\+Producer\+\_\+\+IDL\+::set\+Transformation (\begin{DoxyParamCaption}\item[{const yarp\+::sig\+::\+Matrix \&}]{T\+\_\+ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Set the transformation matrix of the skeleton. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em T\+\_\+} & is the transformation matrix. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classfeedbackProducer__IDL_a50c492862766e36f730439a3a8f0d910}} 
+\index{feedbackProducer\_IDL@{feedbackProducer\_IDL}!start@{start}}
+\index{start@{start}!feedbackProducer\_IDL@{feedbackProducer\_IDL}}
+\doxysubsubsection{\texorpdfstring{start()}{start()}}
+{\footnotesize\ttfamily virtual bool feedback\+Producer\+\_\+\+IDL\+::start (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Start analysis. 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classfeedbackProducer__IDL_afdfffd0edb784e0a9906ed33e164027b}} 
+\index{feedbackProducer\_IDL@{feedbackProducer\_IDL}!stop@{stop}}
+\index{stop@{stop}!feedbackProducer\_IDL@{feedbackProducer\_IDL}}
+\doxysubsubsection{\texorpdfstring{stop()}{stop()}}
+{\footnotesize\ttfamily virtual bool feedback\+Producer\+\_\+\+IDL\+::stop (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Stop analysis. 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+idl\+\_\+dox/feedback\+Producer\+\_\+\+IDL.\+h\end{DoxyCompactItemize}

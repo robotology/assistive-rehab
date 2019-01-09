@@ -1,0 +1,1491 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A framework for developing the assistive intelligence of R1 for clinical rehabilitation.">
+      
+      
+        <meta name="author" content="Valentina vasco">
+      
+      
+        <link rel="canonical" href="https://github.com/robotology/assistive-rehab/tug_lines/">
+      
+      
+        <link rel="prev" href="../virtual_demo/">
+      
+      
+        <link rel="next" href="../tug_demo/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.11">
+    
+    
+      
+        <title>How to detect the TUG lines - assistive-rehab</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.7e359304.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#how-to-detect-tug-start-and-finish-lines" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="assistive-rehab" class="md-header__button md-logo" aria-label="assistive-rehab" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2M7.5 13A2.5 2.5 0 0 0 5 15.5 2.5 2.5 0 0 0 7.5 18a2.5 2.5 0 0 0 2.5-2.5A2.5 2.5 0 0 0 7.5 13m9 0a2.5 2.5 0 0 0-2.5 2.5 2.5 2.5 0 0 0 2.5 2.5 2.5 2.5 0 0 0 2.5-2.5 2.5 2.5 0 0 0-2.5-2.5Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            assistive-rehab
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              How to detect the TUG lines
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/robotology/assistive-rehab" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    robotology/assistive-rehab
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../latest_news/" class="md-tabs__link">
+          
+  
+  News
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../install/" class="md-tabs__link">
+        
+  
+    
+  
+  Install
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="https://robotology.github.io/assistive-rehab/doc/doxygen/doc/html/index.html" class="md-tabs__link">
+        
+  
+    
+  
+  Documentation [v0.6.0]
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../tutorial_intro/" class="md-tabs__link">
+          
+  
+  Tutorials
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../Y1M5/" class="md-tabs__link">
+          
+  
+  Milestones
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../about/" class="md-tabs__link">
+        
+  
+    
+  
+  About
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../license/" class="md-tabs__link">
+        
+  
+    
+  
+  License
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="assistive-rehab" class="md-nav__button md-logo" aria-label="assistive-rehab" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2M7.5 13A2.5 2.5 0 0 0 5 15.5 2.5 2.5 0 0 0 7.5 18a2.5 2.5 0 0 0 2.5-2.5A2.5 2.5 0 0 0 7.5 13m9 0a2.5 2.5 0 0 0-2.5 2.5 2.5 2.5 0 0 0 2.5 2.5 2.5 2.5 0 0 0 2.5-2.5 2.5 2.5 0 0 0-2.5-2.5Z"/></svg>
+
+    </a>
+    assistive-rehab
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/robotology/assistive-rehab" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    robotology/assistive-rehab
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    News
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            News
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../latest_news/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Latest
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Install
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://robotology.github.io/assistive-rehab/doc/doxygen/doc/html/index.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Documentation [v0.6.0]
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Tutorials
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Tutorials
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorial_intro/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Getting started
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../create_new_skeleton/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to manage a skeleton object
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../replay_an_experiment/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to replay an experiment
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../disembodied/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to run the pipeline in a disembodied manner
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../align_signals/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to temporally align two signals
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../main_apps/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to run the rehabilitation demos
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../virtual_demo/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to run the virtual demo
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    How to detect the TUG lines
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    How to detect the TUG lines
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#using-aruco-boards" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using ArUco boards
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rationale-a-world-made-of-lines-robots-and-skeletons" class="md-nav__link">
+    <span class="md-ellipsis">
+      Rationale: a world made of lines, robots and skeletons
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detecting-lines-on-the-robot" class="md-nav__link">
+    <span class="md-ellipsis">
+      Detecting lines on the robot
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detecting-lines-in-gazebo" class="md-nav__link">
+    <span class="md-ellipsis">
+      Detecting lines in gazebo
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Detecting lines in gazebo">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dependencies
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preparing-your-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Preparing your environment
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-the-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      Running the application
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tug_demo/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to run the TUG demo
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gazebo_plugin/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to use the gazebo plugin
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../wifi_button/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    How to configure the wifi button
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Milestones
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Milestones
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Y1M5/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Y1M5
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Y1Q3/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Y1Q3
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../comparison_releases/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Comparison between Y1Q3 and Y1M5
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TUG/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    TUG
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../about/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    About
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../license/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    License
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#using-aruco-boards" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using ArUco boards
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rationale-a-world-made-of-lines-robots-and-skeletons" class="md-nav__link">
+    <span class="md-ellipsis">
+      Rationale: a world made of lines, robots and skeletons
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detecting-lines-on-the-robot" class="md-nav__link">
+    <span class="md-ellipsis">
+      Detecting lines on the robot
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detecting-lines-in-gazebo" class="md-nav__link">
+    <span class="md-ellipsis">
+      Detecting lines in gazebo
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Detecting lines in gazebo">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dependencies
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preparing-your-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Preparing your environment
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-the-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      Running the application
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+    <a href="https://github.com/robotology/assistive-rehab/edit/master/doc/mkdocs/data/tug_lines.md" title="Edit this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4v-2m10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1 2.1 2.1Z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/robotology/assistive-rehab/raw/master/doc/mkdocs/data/tug_lines.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.15 8.15 0 0 1-1.23-2Z"/></svg>
+    </a>
+  
+
+
+<h1 id="how-to-detect-tug-start-and-finish-lines">How to detect TUG start and finish lines<a class="headerlink" href="#how-to-detect-tug-start-and-finish-lines" title="Permanent link">&para;</a></h1>
+<p>This tutorial will show you how to detect start and finish lines defined for the TUG on <a href="#detecting-lines-on-the-robot">the robot</a> and <a href="#detecting-lines-in-gazebo">in <code>gazebo</code></a>.</p>
+<h2 id="using-aruco-boards">Using ArUco boards<a class="headerlink" href="#using-aruco-boards" title="Permanent link">&para;</a></h2>
+<p>In order to identify a line, we rely on <a href="https://docs.opencv.org/master/db/da9/tutorial_aruco_board_detection.html">ArUco boards</a> provided by <code>OpenCV</code>, which are sets of <a href="https://docs.opencv.org/trunk/d5/dae/tutorial_aruco_detection.html">markers</a> whose relative position is known a-priori.
+<code>OpenCV</code> provides the API to easily create and detect such boards.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>A board compared to a set of independent markers has the advantage of providing an estimated pose usually more accurate, which can be computed even in presence of occlusions or partial views (not all markers are required to perform pose estimation).</p>
+</div>
+<p>For the TUG, we define two lines, which are ArUco boards with a single line of 6 markers, belonging to two different marker dictionaries and thus uniquely identified.</p>
+<p>Specifically:</p>
+<ul>
+<li>the <code>start-line</code>: where the user's chair is placed;</li>
+<li>
+<p>the <code>finish-line</code>: which the user has to cross;</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>Check out more on markers and dictionaries <a href="https://docs.opencv.org/trunk/d5/dae/tutorial_aruco_detection.html">here</a>.</p>
+</div>
+</li>
+</ul>
+<p>The lines we use can be found <a href="https://github.com/robotology/assistive-rehab/tree/master/modules/lineDetector/app/conf">here</a>.
+Each line is composed of two images, ending with <code>_0</code> and <code>_1</code>. You will need to print them separately and then stick them together as following:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>start-line</code></td>
+<td><p align="center"> <img src="https://user-images.githubusercontent.com/9716288/89393692-7376d080-d70b-11ea-968b-0ec9a48fad9f.png"> </p></td>
+</tr>
+<tr>
+<td><code>finish-line</code></td>
+<td><p align="center"> <img src="https://user-images.githubusercontent.com/9716288/89393708-7671c100-d70b-11ea-812a-5ff552f2dff7.png"> </p></td>
+</tr>
+<tr>
+<td></td>
+<td>origin in the bottom left corner <br> <code>x</code> (red) pointing along the line's length <br> <code>y</code> (green) pointing along the width <br> <code>z</code> (blue) pointing out of the line</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>This is required to have a board big enough to be robustly detected in the image, given we use a camera resolution of <code>320x240 px</code>.</p>
+</div>
+<h2 id="rationale-a-world-made-of-lines-robots-and-skeletons">Rationale: a world made of lines, robots and skeletons<a class="headerlink" href="#rationale-a-world-made-of-lines-robots-and-skeletons" title="Permanent link">&para;</a></h2>
+<p>Why do we need such lines?</p>
+<p>The <a href="../TUG/">TUG</a> itself requires a finish line indicating the end of the path to cross before going back to the chair.
+We decided to rely on robot's perception and visually identify such line only once before starting the exercise.
+Such information feeds our <a href="https://robotology.github.io/robotology-documentation/doc/html/group__objectsPropertiesCollector.html">database</a> and thus the information is kept even if / when the line is not visible.  </p>
+<p>When the odometry starts, the robot is assumed to be in the origin, which is however a random point in the world.
+In order to have a starting reference point for the odometry, we further introduced an additional line, the <code>start-line</code>: when such line is detected, the line frame becomes the
+world, with <code>x</code> pointing along the line length, <code>y</code> along its width and <code>z</code> out of the line, and robot and skeletons are referred to it.</p>
+<p>The following shows an example of our world:</p>
+<p align="center"> <img src="https://user-images.githubusercontent.com/9716288/89395227-52af7a80-d70d-11ea-8359-6d8da36014e7.png" width=550> </p>
+
+<h2 id="detecting-lines-on-the-robot">Detecting lines on the robot<a class="headerlink" href="#detecting-lines-on-the-robot" title="Permanent link">&para;</a></h2>
+<div class="admonition warning">
+<p class="admonition-title">Assumptions</p>
+<p>We assume the robot is running, with the motors on.</p>
+<p>On the robot <code>assistive-rehab</code> and its dependencies are already set, with the required applications in the <code>yarpmanager</code>. However, you can check requirements and installation instructions <a href="../install/">here</a>.</p>
+</div>
+<p>We will need to move the robot around and for doing so we can use the joystick to control it.
+Turn on the joystick, open <code>yarpmanager</code> and click <code>R1_joystick_mobile_base_control</code>. Hit run and connect.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>The required app can be found <a href="https://github.com/robotology/cer/blob/devel/app/R1navigation/scripts/joystickBaseControl.xml">here</a>.</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Alternatively</p>
+<p>Open <code>yarpmotorgui --robot cer --parts "(mobile_base)"</code> and click on the yellow pause icon to idle the wheels. Now you will be able to manually move the robot around.</p>
+</div>
+<p>In the <code>yarpmanager</code>, click on <a href="https://github.com/robotology/assistive-rehab/blob/master/modules/lineDetector/app/scripts/lineDetector.xml.template"><code>Assistive Rehabilitation lineDetector App</code></a> , hit run and connect.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you are already running the demo, you can skip this last step: all the required modules are running already.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p><code>navController</code> and <code>cer_gaze_controller</code> are required from <code>lineDetector</code> to estimate the robot position with respect to the start line.</p>
+</div>
+</div>
+<p>Next step is to adjust the robot's head to have the lines in the field of view. Therefore, open a terminal and type:</p>
+<div class="highlight"><pre><span></span><code>yarpmotorgui --robot cer --parts &quot;(head)&quot;
+</code></pre></div>
+<p>This will open the GUI where you will be able to directly control the head of the robot.
+Move the first joint (pitch) until the line is visible in <code>yarpview</code> (up to ~<code>20 degree</code>).</p>
+<p>Now use the joystick to move the robot in front of the <code>start-line</code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Mind the order</p>
+<p>The order of detection is important: since the <code>start-line</code> is used as reference frame, this has to be detected first.</p>
+</div>
+<p>Open a terminal and type:</p>
+<p>````tab="Terminal 1"
+yarp rpc /lineDetector/cmd:rpc
+detect start-line
+<div class="highlight"><pre><span></span><code>&lt;p align=&quot;center&quot;&gt; &lt;img src=&quot;https://user-images.githubusercontent.com/9716288/89505153-7506ce00-d7c9-11ea-8b36-30582220810f.gif&quot; width=700&gt; &lt;/p&gt;
+
+Before starting the detection, the robot is in a random position:
+
+- when the detection starts, the estimated pose appears on the `yarp` viewer;
+- when the `ack` is provided, the detection is complete: the pose is estimated and the line appears on the `skeletonViewer`, with the robot position recalculated with respect to the line.
+From now on, the start line is the origin of the world and robot and skeletons positions are referred to it.  
+
+!!! note
+    The estimated pose is filtered by means of a median filter, thus the detection takes few seconds.
+
+We need now to detect the `finish-line`. As before, move the robot in front of the line and in `Terminal 1`, type:
+
+````tab=&quot;Terminal 1&quot;
+detect finish-line
+</code></pre></div></p>
+<div class="admonition success">
+<p class="admonition-title">Success</p>
+<p>When the command provides an <code>ack</code>, the detection is complete and the finish line appears on <code>skeletonViewer</code>.</p>
+<p><p align="center"> <img src="https://user-images.githubusercontent.com/9716288/89506865-0c6d2080-d7cc-11ea-8ad8-41b7dc5d520f.gif" width=700> </p></p>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The robot navigates the environment, reaching the desired targets with errors accepted within some tolerances (defined in <code>navController</code>). Such errors accumulate over time and after a while it might be necessary to update the robot position (the real robot position drifts from what you see on <code>skeletonViewer</code>).</p>
+<p>For doing so, you can physically move the robot to one of the lines and run the command <code>update_odometry</code>, specifying the line's tag and the robot orientation with respect to the <code>start-line</code>: <code>skeletonViewer</code> will show the updated position.</p>
+</div>
+<h2 id="detecting-lines-in-gazebo">Detecting lines in <code>gazebo</code><a class="headerlink" href="#detecting-lines-in-gazebo" title="Permanent link">&para;</a></h2>
+<p>Now we are going to see how to detect these lines in <code>gazebo</code>.</p>
+<h3 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h3>
+<p>After <a href="https://robotology.github.io/assistive-rehab/doc/mkdocs/site/install/">installing</a> <code>assistive-rehab</code> and its requirements, you will need the following dependencies:</p>
+<ul>
+<li><a href="http://gazebosim.org/tutorials?cat=install">gazebo</a>: for running the virtual environment;</li>
+<li><a href="https://github.com/robotology/gazebo-yarp-plugins">gazebo-yarp-plugins</a>: for exposing <code>YARP</code> interfaces in <code>gazebo</code>;</li>
+<li><a href="https://github.com/robotology/cer-sim">cer-sim</a>: which includes the robot model loaded by <code>gazebo</code> in <code>AssistiveRehab-TUG_SIM.xml.template</code>;</li>
+<li><a href="https://github.com/robotology/cer">cer</a>: for running the <code>cer_gaze-controller</code>;</li>
+<li><a href="https://github.com/robotology/navigation">navigation</a>: for running <code>baseControl</code>.</li>
+</ul>
+<h3 id="preparing-your-environment">Preparing your environment<a class="headerlink" href="#preparing-your-environment" title="Permanent link">&para;</a></h3>
+<p>The first step you need to take is to prepare your environment.</p>
+<p>The folder <a href="https://github.com/robotology/assistive-rehab/tree/master/app/gazebo/tug"><code>assistive-rehab/app/gazebo/tug</code></a> includes the <code>sdf</code> models of the Aruco boards (namely <code>aruco_board_start</code> and <code>aruco_board_finish</code>) and the world including the robot and the lines (namely <code>tug-scenario.world</code>).</p>
+<p>Following <a href="http://gazebosim.org/tutorials?tut=components&amp;cat=get_started">this</a> gazebo tutorial, you need to let <code>gazebo</code> know where <em>models</em> and <em>worlds</em> are located. For doing this, you will need to set the following environment variables:</p>
+<ul>
+<li><code>GAZEBO_MODEL_PATH</code>: has to point to the folder including the models (<code>assistive-rehab/app/gazebo/tug</code>);</li>
+<li><code>GAZEBO_RESOURCE_PATH</code>: has to point to the folder including the world application (<code>assistive-rehab/app/gazebo/tug</code>);</li>
+</ul>
+<h3 id="running-the-application">Running the application<a class="headerlink" href="#running-the-application" title="Permanent link">&para;</a></h3>
+<p>In <code>assistive-rehab/app/scripts</code> you will find the application <a href="https://github.com/robotology/assistive-rehab/blob/master/app/scripts/AssistiveRehab-TUG_SIM.xml.template"><code>AssistiveRehab-TUG_SIM.xml.template</code></a> to run the TUG demo in <code>gazebo</code>.</p>
+<p>First, you need to run <code>yarpserver</code>, opening a terminal and typing:</p>
+<div class="highlight"><pre><span></span><code>yarpserver
+</code></pre></div>
+<p>Open <code>yarpmanager</code>, run the <code>AssistiveRehab-TUG_SIM.xml</code> and hit connect.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The <code>xml</code> is conceived for the complete TUG demo, therefore not all modules are required for this specific application.
+In the complete application, <code>lineDetector</code> takes the RGB input propagated from <code>yarpOpenPose</code>. For this specific application, you don't need to run <code>yarpOpenPose</code> and can simply connect <code>/SIM_CER_ROBOT/depthCamera/rgbImage:o</code> to <code>/lineDetector/img:i</code>.</p>
+</div>
+<p>You will need to run the following modules:</p>
+<ul>
+<li><code>gazebo</code>: to run <code>gazebo</code> and load the world;</li>
+<li><code>objectsPropertiesCollector</code>: to store the robot skeleton and the lines within a yarp-oriented database;</li>
+<li><code>robotSkeletonPublisher</code>: to publish the skeleton representing the robot;</li>
+<li><code>baseControl</code>: to control the robot's base;</li>
+<li><code>navController</code>: to send commands to <code>baseControl</code>;</li>
+<li><code>cer_gaze-controller</code>: to control the robot's gaze;</li>
+<li><code>lineDetector</code>: to detect the lines;</li>
+<li><code>yarpview --name /viewer/line</code>: to visualize the detected lines in the RGB image;</li>
+<li><code>skeletonViewer</code>: to visualize the detected lines and the robot skeleton in the world.</li>
+</ul>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You can customize the app by removing unnecessary modules. You can save the app in your folder <code>$HOME/.local/share/yarp</code>and exploit the <a href="http://www.yarp.it/yarp_data_dirs.html#datafiles_shadow">shadowing mechanism</a>. In this way, when you open <code>yarpmanager</code>, your customized app will be automatically loaded.</p>
+</div>
+<p>You should now see the <code>gazebo</code> GUI with the robot and the two Aruco boards loaded, as following:</p>
+<p><img alt="gazebo" src="https://user-images.githubusercontent.com/9716288/77070435-81d97f80-69ea-11ea-9301-6978e95617c2.png" /></p>
+<p>You can see there are two Aruco boards: we identify the closer to the robot as <code>finish-line</code> and the further as <code>start-line</code>.
+Let's detect these lines!
+You will need to move the robot's head to have the lines in the field of view. Therefore, open a terminal and type:</p>
+<div class="highlight"><pre><span></span><code>yarpmotorgui --robot SIM_CER_ROBOT --parts &quot;(head)&quot;
+</code></pre></div>
+<p>As with the real robot, move the first joint (pitch) until the line is visible in <code>yarpview</code> (up to ~<code>20 degree</code>).</p>
+<p>Since we don't have a joystick to control the robot in <code>gazebo</code>, we can rely on <code>navController</code> for moving it.
+You will then need to send commands to <code>navController</code> (<code>Terminal 1</code>) for moving the robot and <code>lineDetector</code> (<code>Terminal 2</code>) for detecting the lines. Therefore, open two terminals and type:</p>
+<p>````tab="Terminal 1"
+yarp rpc /navController/rpc
+<div class="highlight"><pre><span></span><code>````tab=&quot;Terminal 2&quot;
+yarp rpc /lineDetector/cmd:rpc
+</code></pre></div></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>From now on, I will refer to <code>Terminal 1</code> for commands provided to <code>navController</code> and <code>Terminal 2</code> for commands to <code>lineDetector</code>.</p>
+</div>
+<p>Let's start to detect the <code>start-line</code>.
+When the application starts, the start line is out of the robot's field of view.
+Therefore you have to move the robot to a point of the world where the line is visible. For doing so, you can use the <code>go_to</code> service provided by <code>navController</code>, typing the command shown in <code>Terminal 1</code>. This will move the robot <code>2.5 meters</code> forward keeping its current orientation and you will see the robot approaching the line. When the robot stops, the line will be in the robot's field of view and you can detect it through the <code>detect</code> service provided by <code>lineDetector</code>, typing the command shown in <code>Terminal 2</code>:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When the application starts, the robot reference frame follows the following convention: <code>X</code> pointing forward, <code>Y</code> pointing left, <code>Z</code> pointing up.</p>
+</div>
+<p>````tab="Terminal 1 (navController)"
+go_to 2.5 0.0 0.0
+<div class="highlight"><pre><span></span><code>````tab=&quot;Terminal 2 (lineDetector)&quot;
+detect start-line
+</code></pre></div></p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p><code>navController</code> and <code>lineDetector</code> provide services through <code>thrift</code>. Therefore, you can check what's required by the specific service typing <code>help</code> followed by the name of the service (for example <code>help go_to</code>).</p>
+</div>
+<p>This is what you should see:</p>
+<p><img alt="start-line" src="https://user-images.githubusercontent.com/9716288/77072524-1db8ba80-69ee-11ea-963d-8e99b87f4392.gif" /></p>
+<p>As with the real robot, when the start line is estimated it appears in the <code>skeletonViewer</code> and becomes the origin of the world: the robot position in the <code>skeletonViewer</code> is recalculated with respect to the line.</p>
+<p>Let's now detect the <code>finish-line</code>.
+The procedure is the same as before, therefore you will have to move to robot to a point of the world where the finish line is visible.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Keep in mind that the robot position is now referred to the start line.
+Therefore the robot reference frame is: <code>X</code> pointing right, <code>Y</code> pointing forward, <code>Z</code> pointing up.</p>
+</div>
+<p>Again, use the <code>go_to</code> service provided by <code>navController</code>, typing the command shown in <code>Terminal 1</code>.
+The robot will start approaching the line. When the robot stops, you can detect the finish line through the <code>detect</code> service provided by <code>lineDetector</code>, typing the command shown in <code>Terminal 2</code>:</p>
+<p>````tab="Terminal 1 (navController)"
+go_to 0.0 -5.5 90.0 true
+<div class="highlight"><pre><span></span><code>````tab=&quot;Terminal 2 (lineDetector)&quot;
+detect finish-line
+</code></pre></div></p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>The <code>true</code> flag in <code>Terminal 1</code> allows the robot to move backward.</p>
+</div>
+<p>This is what you should see:</p>
+<p><img alt="finish-line" src="https://user-images.githubusercontent.com/9716288/77072911-b2bbb380-69ee-11ea-9251-6c746298a284.gif" /></p>
+<p>Finally, to check that the line is estimated correctly, you can use the <code>go_to_line</code> service provided by <code>lineDetector</code>, as shown in <code>Terminal 2</code>:</p>
+<p><code>tab="Terminal 2 (lineDetector)"
+go_to_line finish-line</code></p>
+<p>You will see the robot going to the finish line origin:</p>
+<p><img alt="go_to-real" src="https://user-images.githubusercontent.com/9716288/77073155-1c3bc200-69ef-11ea-8769-7377d9d071d0.gif" /></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2019 Istituto Italiano di Tecnologia - iCub Tech
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["content.action.edit", "content.action.view", "tabs", "navigation.tabs", "navigation.tabs.sticky", "navigation.tracking", "navigation.sections", "navigation.top"], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.8fd75fb4.min.js"></script>
+      
+    
+  </body>
+</html>
