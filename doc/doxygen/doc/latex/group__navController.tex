@@ -1,0 +1,40 @@
+\section{nav\+Controller}
+\label{group__navController}\index{nav\+Controller@{nav\+Controller}}
+
+
+This module is responsible for interfacing with the robot\textquotesingle{}s base to implement the navigation part.  
+
+
+This module is responsible for interfacing with the robot\textquotesingle{}s base to implement the navigation part. 
+
+Version\+:0.\+5.\+0 \begin{DoxyAuthor}{Author}
+Ugo Pattacini \href{mailto:ugo.pattacini@iit.it}{\tt ugo.\+pattacini@iit.\+it} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the B\+SD 3-\/\+Clause License. 
+\end{DoxyCopyright}
+\hypertarget{group__skeletonViewer_intro_sec}{}\subsection{Description}\label{group__skeletonViewer_intro_sec}
+This moudule aims to keep the distance from a specified skeleton fixed. To this end, the robot will be navigating along an imaginary straight track.\hypertarget{group__skeletonViewer_parameters_sec}{}\subsection{Parameters}\label{group__skeletonViewer_parameters_sec}
+
+\begin{DoxyItemize}
+\item --period\+: Periodicity of the module (s).
+\item --velocity-\/linear-\/magnitude\+: The magnitude of the linear velocity used in the bang-\/bang controller (m/s).
+\item --velocity-\/angular-\/saturation\+: The maximum angular velocity used in the P\+ID controller (deg/s).
+\item --angular-\/tolerance\+: Angular tolerance for rotating (deg/s).
+\item --distance-\/target\+: The target distance from the skeleton that the controller will attempt to keep (m).
+\item --distance-\/hysteresis-\/low\+: The low threshold of the hsyteresis on the distance error (m).
+\item --distance-\/hysteresis-\/high\+: The high threshold of the hsyteresis on the distance error (m). 
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_inputports_sec}{}\subsection{Input Ports}\label{group__skeletonViewer_inputports_sec}
+
+\begin{DoxyItemize}
+\item /nav\+Controller/opc\+:i \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Receives the O\+PC broadcast.
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_outputports_sec}{}\subsection{Output Ports}\label{group__skeletonViewer_outputports_sec}
+
+\begin{DoxyItemize}
+\item /nav\+Controller/state\+:o \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Outputs the internal state as (robot-\/state \{idle$\vert$track$\vert$nav\}) (robot-\/location (x y theta)) (robot-\/velocity (v\+\_\+x v\+\_\+theta)) \mbox{[}(target-\/location (x y theta heading))\mbox{]} \mbox{[}(skeleton-\/tag tag) (skeleton-\/location (x y))\mbox{]}
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_services_sec}{}\subsection{Services}\label{group__skeletonViewer_services_sec}
+
+\begin{DoxyItemize}
+\item /nav\+Controller/rpc \mbox{[}rpc-\/server\mbox{]}\+: service port . This service is described in \hyperlink{classnavController__IDL}{nav\+Controller\+\_\+\+I\+DL} (idl.\+thrift) 
+\end{DoxyItemize}

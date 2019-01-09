@@ -1,0 +1,88 @@
+\section{human\+Structure\+\_\+\+I\+D\+L\+Server Class Reference}
+\label{classhumanStructure__IDLServer}\index{human\+Structure\+\_\+\+I\+D\+L\+Server@{human\+Structure\+\_\+\+I\+D\+L\+Server}}
+
+
+\hyperlink{classhumanStructure__IDLServer}{human\+Structure\+\_\+\+I\+D\+L\+Server} I\+DL Interface to human structure module.  
+
+
+
+
+{\ttfamily \#include $<$human\+Structure\+\_\+\+I\+D\+L\+Server.\+h$>$}
+
+
+
+Inherits Wire.
+
+
+
+Inherited by Module.
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual bool \hyperlink{classhumanStructure__IDLServer_aaae9e95ab2098cd58c97eadeb21f509d}{set\+Arm\+Thresh} (const std\+::int32\+\_\+t threshold)
+\begin{DoxyCompactList}\small\item\em Set the threshold number for finding the arm. \end{DoxyCompactList}\item 
+virtual std\+::int32\+\_\+t \hyperlink{classhumanStructure__IDLServer_ad369af528fab47cf8ae4f14c0ab5e0ce}{get\+Arm\+Thresh} ()
+\begin{DoxyCompactList}\small\item\em Get threshold value for finding the arm. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classhumanStructure__IDLServer_a3573f22d04a104ee0052bb162190845f}{quit} ()
+\begin{DoxyCompactList}\small\item\em Quit the module. \end{DoxyCompactList}\item 
+\mbox{\label{classhumanStructure__IDLServer_afa87b42d8d1963def5d490c6110a70e7}} 
+virtual std\+::vector$<$ std\+::string $>$ {\bfseries help} (const std\+::string \&function\+Name=\char`\"{}-\/-\/all\char`\"{})
+\item 
+\mbox{\label{classhumanStructure__IDLServer_a11d874f87cfe2baeb2a6008acf51b024}} 
+bool {\bfseries read} (yarp\+::os\+::\+Connection\+Reader \&connection) override
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hyperlink{classhumanStructure__IDLServer}{human\+Structure\+\_\+\+I\+D\+L\+Server} I\+DL Interface to human structure module. 
+
+Definition at line 24 of file human\+Structure\+\_\+\+I\+D\+L\+Server.\+h.
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\label{classhumanStructure__IDLServer_ad369af528fab47cf8ae4f14c0ab5e0ce}} 
+\index{human\+Structure\+\_\+\+I\+D\+L\+Server@{human\+Structure\+\_\+\+I\+D\+L\+Server}!get\+Arm\+Thresh@{get\+Arm\+Thresh}}
+\index{get\+Arm\+Thresh@{get\+Arm\+Thresh}!human\+Structure\+\_\+\+I\+D\+L\+Server@{human\+Structure\+\_\+\+I\+D\+L\+Server}}
+\subsubsection{\texorpdfstring{get\+Arm\+Thresh()}{getArmThresh()}}
+{\footnotesize\ttfamily virtual std\+::int32\+\_\+t human\+Structure\+\_\+\+I\+D\+L\+Server\+::get\+Arm\+Thresh (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Get threshold value for finding the arm. 
+
+\begin{DoxyReturn}{Returns}
+number of frames 
+\end{DoxyReturn}
+\mbox{\label{classhumanStructure__IDLServer_a3573f22d04a104ee0052bb162190845f}} 
+\index{human\+Structure\+\_\+\+I\+D\+L\+Server@{human\+Structure\+\_\+\+I\+D\+L\+Server}!quit@{quit}}
+\index{quit@{quit}!human\+Structure\+\_\+\+I\+D\+L\+Server@{human\+Structure\+\_\+\+I\+D\+L\+Server}}
+\subsubsection{\texorpdfstring{quit()}{quit()}}
+{\footnotesize\ttfamily virtual bool human\+Structure\+\_\+\+I\+D\+L\+Server\+::quit (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Quit the module. 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classhumanStructure__IDLServer_aaae9e95ab2098cd58c97eadeb21f509d}} 
+\index{human\+Structure\+\_\+\+I\+D\+L\+Server@{human\+Structure\+\_\+\+I\+D\+L\+Server}!set\+Arm\+Thresh@{set\+Arm\+Thresh}}
+\index{set\+Arm\+Thresh@{set\+Arm\+Thresh}!human\+Structure\+\_\+\+I\+D\+L\+Server@{human\+Structure\+\_\+\+I\+D\+L\+Server}}
+\subsubsection{\texorpdfstring{set\+Arm\+Thresh()}{setArmThresh()}}
+{\footnotesize\ttfamily virtual bool human\+Structure\+\_\+\+I\+D\+L\+Server\+::set\+Arm\+Thresh (\begin{DoxyParamCaption}\item[{const std\+::int32\+\_\+t}]{threshold }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Set the threshold number for finding the arm. 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+idl\+\_\+dox/human\+Structure\+\_\+\+I\+D\+L\+Server.\+h\end{DoxyCompactItemize}

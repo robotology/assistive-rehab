@@ -1,0 +1,296 @@
+\section{skeleton\+Player\+\_\+\+I\+DL Class Reference}
+\label{classskeletonPlayer__IDL}\index{skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}}
+
+
+\hyperlink{classskeletonPlayer__IDL}{skeleton\+Player\+\_\+\+I\+DL} I\+DL Interface to Skeleton Player services.  
+
+
+
+
+{\ttfamily \#include $<$skeleton\+Player\+\_\+\+I\+D\+L.\+h$>$}
+
+
+
+Inherits Wire.
+
+
+
+Inherited by Player.
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual bool \hyperlink{classskeletonPlayer__IDL_ac34bafdeb8df497435c9c3da9d8dee5b}{load} (const std\+::string \&file=\char`\"{}skeleton.\+log\char`\"{}, const std\+::string \&context=\char`\"{}skeleton\+Player\char`\"{})
+\begin{DoxyCompactList}\small\item\em Load skeleton file. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classskeletonPlayer__IDL_a272d9b148696b9ed727c0e6d21894428}{start} (const std\+::int32\+\_\+t n\+\_\+sessions=1, const double t\+\_\+warp=1, const double t\+\_\+begin=0, const double t\+\_\+end=0)
+\begin{DoxyCompactList}\small\item\em Start streaming skeleton data. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classskeletonPlayer__IDL_a2214a63ff7aa12a79de5be488afc036a}{stop} ()
+\begin{DoxyCompactList}\small\item\em Stop any ongoing streaming. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classskeletonPlayer__IDL_abd0b1247e03f88d2169b0ed943ef91b7}{is\+\_\+running} ()
+\begin{DoxyCompactList}\small\item\em Check if the skeleton is being streamed out. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classskeletonPlayer__IDL_a9b02f3ee360ef27a1ec1b3f321fa5ed7}{put\+\_\+in\+\_\+opc} (const double t\+\_\+begin=0)
+\begin{DoxyCompactList}\small\item\em Put in opc a specified skeleton frame. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classskeletonPlayer__IDL_a5a8cedc7e51fc4129d1dadef1a7fec64}{remove\+\_\+from\+\_\+opc} ()
+\begin{DoxyCompactList}\small\item\em Remove from opc any skeleton frame. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classskeletonPlayer__IDL_a3a4632867441416e3606b814b5a99fba}{set\+\_\+tag} (const std\+::string \&new\+\_\+tag)
+\begin{DoxyCompactList}\small\item\em Rename skeleton. \end{DoxyCompactList}\item 
+virtual double \hyperlink{classskeletonPlayer__IDL_adf73eb4c86d9d8a19149b29db4284538}{get\+\_\+maxpath} (const double t\+\_\+begin=-\/1)
+\item 
+virtual bool \hyperlink{classskeletonPlayer__IDL_ab77b1ce1855a8fbdc352ac22ed9a6cf4}{normalize} ()
+\begin{DoxyCompactList}\small\item\em Normalize skeleton. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classskeletonPlayer__IDL_ac70d533dc6ed1e642e0e03e639b6658c}{scale} (const double s)
+\begin{DoxyCompactList}\small\item\em Rescale skeleton. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classskeletonPlayer__IDL_a0419e3b52e359f4b1fe9c8efba2db38e}{move} (const yarp\+::sig\+::\+Matrix \&T)
+\begin{DoxyCompactList}\small\item\em Apply homogeneous transformation to the skeleton. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classskeletonPlayer__IDL_ad25203e961712205d87429065935c195}{set\+\_\+opacity} (const double new\+\_\+opacity)
+\begin{DoxyCompactList}\small\item\em Set opacity. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classskeletonPlayer__IDL_aceb3db0756cc78fd54088bfb2a8b9c39}{set\+\_\+color} (const double new\+\_\+r, const double new\+\_\+g, const double new\+\_\+b)
+\begin{DoxyCompactList}\small\item\em Set color. \end{DoxyCompactList}\item 
+\mbox{\label{classskeletonPlayer__IDL_a5ef1b1ea76e8641c56ce9866b6a0e5bc}} 
+bool {\bfseries read} (yarp\+::os\+::\+Connection\+Reader \&connection) override
+\item 
+\mbox{\label{classskeletonPlayer__IDL_a1425684521df6a0b5591f9284aea9d65}} 
+virtual std\+::vector$<$ std\+::string $>$ {\bfseries help} (const std\+::string \&function\+Name=\char`\"{}-\/-\/all\char`\"{})
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hyperlink{classskeletonPlayer__IDL}{skeleton\+Player\+\_\+\+I\+DL} I\+DL Interface to Skeleton Player services. 
+
+Definition at line 26 of file skeleton\+Player\+\_\+\+I\+D\+L.\+h.
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\label{classskeletonPlayer__IDL_adf73eb4c86d9d8a19149b29db4284538}} 
+\index{skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}!get\+\_\+maxpath@{get\+\_\+maxpath}}
+\index{get\+\_\+maxpath@{get\+\_\+maxpath}!skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{get\+\_\+maxpath()}{get\_maxpath()}}
+{\footnotesize\ttfamily virtual double skeleton\+Player\+\_\+\+I\+D\+L\+::get\+\_\+maxpath (\begin{DoxyParamCaption}\item[{const double}]{t\+\_\+begin = {\ttfamily -\/1} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyItemize}
+\item Retrieve skeleton maximum path.
+\item 
+\begin{DoxyParams}{Parameters}
+{\em t\+\_\+begin} & specifies the time computed from the origin whose frame will be used to compute the maxium path. If t\+\_\+begin$<$0, then an average is performed over the whole set of skeletons.\\
+\hline
+\end{DoxyParams}
+
+\item \begin{DoxyReturn}{Returns}
+the path. 
+\end{DoxyReturn}
+
+\end{DoxyItemize}\mbox{\label{classskeletonPlayer__IDL_abd0b1247e03f88d2169b0ed943ef91b7}} 
+\index{skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}!is\+\_\+running@{is\+\_\+running}}
+\index{is\+\_\+running@{is\+\_\+running}!skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{is\+\_\+running()}{is\_running()}}
+{\footnotesize\ttfamily virtual bool skeleton\+Player\+\_\+\+I\+D\+L\+::is\+\_\+running (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Check if the skeleton is being streamed out. 
+
+\begin{DoxyReturn}{Returns}
+true/false on running/stationary. 
+\end{DoxyReturn}
+\mbox{\label{classskeletonPlayer__IDL_ac34bafdeb8df497435c9c3da9d8dee5b}} 
+\index{skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}!load@{load}}
+\index{load@{load}!skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{load()}{load()}}
+{\footnotesize\ttfamily virtual bool skeleton\+Player\+\_\+\+I\+D\+L\+::load (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{file = {\ttfamily \char`\"{}skeleton.log\char`\"{}},  }\item[{const std\+::string \&}]{context = {\ttfamily \char`\"{}skeletonPlayer\char`\"{}} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Load skeleton file. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em file} & the name of the file containing the skeleton data. \\
+\hline
+{\em context} & the context used to search for the file. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classskeletonPlayer__IDL_a0419e3b52e359f4b1fe9c8efba2db38e}} 
+\index{skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}!move@{move}}
+\index{move@{move}!skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{move()}{move()}}
+{\footnotesize\ttfamily virtual bool skeleton\+Player\+\_\+\+I\+D\+L\+::move (\begin{DoxyParamCaption}\item[{const yarp\+::sig\+::\+Matrix \&}]{T }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Apply homogeneous transformation to the skeleton. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em T} & is the 4x4 homogeneous matrix. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classskeletonPlayer__IDL_ab77b1ce1855a8fbdc352ac22ed9a6cf4}} 
+\index{skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}!normalize@{normalize}}
+\index{normalize@{normalize}!skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{normalize()}{normalize()}}
+{\footnotesize\ttfamily virtual bool skeleton\+Player\+\_\+\+I\+D\+L\+::normalize (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Normalize skeleton. 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classskeletonPlayer__IDL_a9b02f3ee360ef27a1ec1b3f321fa5ed7}} 
+\index{skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}!put\+\_\+in\+\_\+opc@{put\+\_\+in\+\_\+opc}}
+\index{put\+\_\+in\+\_\+opc@{put\+\_\+in\+\_\+opc}!skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{put\+\_\+in\+\_\+opc()}{put\_in\_opc()}}
+{\footnotesize\ttfamily virtual bool skeleton\+Player\+\_\+\+I\+D\+L\+::put\+\_\+in\+\_\+opc (\begin{DoxyParamCaption}\item[{const double}]{t\+\_\+begin = {\ttfamily 0} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Put in opc a specified skeleton frame. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em t\+\_\+begin} & specifies the time computed from the origin whose frame is to be put in opc. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classskeletonPlayer__IDL_a5a8cedc7e51fc4129d1dadef1a7fec64}} 
+\index{skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}!remove\+\_\+from\+\_\+opc@{remove\+\_\+from\+\_\+opc}}
+\index{remove\+\_\+from\+\_\+opc@{remove\+\_\+from\+\_\+opc}!skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{remove\+\_\+from\+\_\+opc()}{remove\_from\_opc()}}
+{\footnotesize\ttfamily virtual bool skeleton\+Player\+\_\+\+I\+D\+L\+::remove\+\_\+from\+\_\+opc (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Remove from opc any skeleton frame. 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classskeletonPlayer__IDL_ac70d533dc6ed1e642e0e03e639b6658c}} 
+\index{skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}!scale@{scale}}
+\index{scale@{scale}!skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{scale()}{scale()}}
+{\footnotesize\ttfamily virtual bool skeleton\+Player\+\_\+\+I\+D\+L\+::scale (\begin{DoxyParamCaption}\item[{const double}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Rescale skeleton. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & the scale. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classskeletonPlayer__IDL_aceb3db0756cc78fd54088bfb2a8b9c39}} 
+\index{skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}!set\+\_\+color@{set\+\_\+color}}
+\index{set\+\_\+color@{set\+\_\+color}!skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{set\+\_\+color()}{set\_color()}}
+{\footnotesize\ttfamily virtual bool skeleton\+Player\+\_\+\+I\+D\+L\+::set\+\_\+color (\begin{DoxyParamCaption}\item[{const double}]{new\+\_\+r,  }\item[{const double}]{new\+\_\+g,  }\item[{const double}]{new\+\_\+b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Set color. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em new\+\_\+r} & the red channel in \mbox{[}0,1\mbox{]}. \\
+\hline
+{\em new\+\_\+g} & the green channel in \mbox{[}0,1\mbox{]}. \\
+\hline
+{\em new\+\_\+b} & the blue channel in \mbox{[}0,1\mbox{]}. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classskeletonPlayer__IDL_ad25203e961712205d87429065935c195}} 
+\index{skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}!set\+\_\+opacity@{set\+\_\+opacity}}
+\index{set\+\_\+opacity@{set\+\_\+opacity}!skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{set\+\_\+opacity()}{set\_opacity()}}
+{\footnotesize\ttfamily virtual bool skeleton\+Player\+\_\+\+I\+D\+L\+::set\+\_\+opacity (\begin{DoxyParamCaption}\item[{const double}]{new\+\_\+opacity }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Set opacity. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em new\+\_\+opacity} & the new opacity of the skeleton. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classskeletonPlayer__IDL_a3a4632867441416e3606b814b5a99fba}} 
+\index{skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}!set\+\_\+tag@{set\+\_\+tag}}
+\index{set\+\_\+tag@{set\+\_\+tag}!skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{set\+\_\+tag()}{set\_tag()}}
+{\footnotesize\ttfamily virtual bool skeleton\+Player\+\_\+\+I\+D\+L\+::set\+\_\+tag (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{new\+\_\+tag }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Rename skeleton. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em new\+\_\+tag} & the new tag of the skeleton. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classskeletonPlayer__IDL_a272d9b148696b9ed727c0e6d21894428}} 
+\index{skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}!start@{start}}
+\index{start@{start}!skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{start()}{start()}}
+{\footnotesize\ttfamily virtual bool skeleton\+Player\+\_\+\+I\+D\+L\+::start (\begin{DoxyParamCaption}\item[{const std\+::int32\+\_\+t}]{n\+\_\+sessions = {\ttfamily 1},  }\item[{const double}]{t\+\_\+warp = {\ttfamily 1},  }\item[{const double}]{t\+\_\+begin = {\ttfamily 0},  }\item[{const double}]{t\+\_\+end = {\ttfamily 0} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Start streaming skeleton data. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em n\+\_\+sessions} & number of repetitions (0 means infinite). \\
+\hline
+{\em t\+\_\+warp} & specifies the warping factor squeezing (dilating) in time the original stream if $<$1 ($>$1). \\
+\hline
+{\em t\+\_\+begin} & specifies the stream starting time computed from the time origin. \\
+\hline
+{\em t\+\_\+end} & specifies the stream ending time computed from the stream end. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classskeletonPlayer__IDL_a2214a63ff7aa12a79de5be488afc036a}} 
+\index{skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}!stop@{stop}}
+\index{stop@{stop}!skeleton\+Player\+\_\+\+I\+DL@{skeleton\+Player\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{stop()}{stop()}}
+{\footnotesize\ttfamily virtual bool skeleton\+Player\+\_\+\+I\+D\+L\+::stop (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Stop any ongoing streaming. 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+idl\+\_\+dox/skeleton\+Player\+\_\+\+I\+D\+L.\+h\end{DoxyCompactItemize}

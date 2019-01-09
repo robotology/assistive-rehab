@@ -1,0 +1,201 @@
+\section{nav\+Controller\+\_\+\+I\+DL Class Reference}
+\label{classnavController__IDL}\index{nav\+Controller\+\_\+\+I\+DL@{nav\+Controller\+\_\+\+I\+DL}}
+
+
+\hyperlink{classnavController__IDL}{nav\+Controller\+\_\+\+I\+DL} I\+DL Interface to Navigation Controller services.  
+
+
+
+
+{\ttfamily \#include $<$nav\+Controller\+\_\+\+I\+D\+L.\+h$>$}
+
+
+
+Inherits Wire.
+
+
+
+Inherited by Navigator.
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual bool \hyperlink{classnavController__IDL_aa2b9b90e9d2ef2fd8d557e8c99a8ca7d}{go\+\_\+to} (const double x, const double y, const double theta, const bool heading\+\_\+rear=0)
+\begin{DoxyCompactList}\small\item\em Reach for a target location. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classnavController__IDL_aec1be2f92b59c4669dff3766b519a971}{go\+\_\+to\+\_\+wait} (const double x, const double y, const double theta, const bool heading\+\_\+rear=0, const std\+::int32\+\_\+t timeout=0)
+\begin{DoxyCompactList}\small\item\em Blocking version of reach for a target location. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classnavController__IDL_a09b17abbbfc5129f86de9f9bb2c5e230}{track\+\_\+skeleton} (const std\+::string \&skeleton\+\_\+tag)
+\begin{DoxyCompactList}\small\item\em Start navigation while controlling distance from the specified skeleton. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classnavController__IDL_a2c935f193a150936dfc2cc7482744dbb}{is\+\_\+navigating} ()
+\begin{DoxyCompactList}\small\item\em Query if navigation is underway. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classnavController__IDL_a813f076a8130f03c4930ed7659b37e7e}{stop} ()
+\begin{DoxyCompactList}\small\item\em Stop navigation. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classnavController__IDL_a3b1f0d0434d00620c82cc844e88f74d9}{reset\+\_\+odometry} (const double x\+\_\+0=0, const double y\+\_\+0=0, const double theta\+\_\+0=0)
+\begin{DoxyCompactList}\small\item\em Reset odometry. \end{DoxyCompactList}\item 
+virtual std\+::string \hyperlink{classnavController__IDL_ae7a1cd7d5d35831bf7851a9cf15577c8}{which\+\_\+skeleton} ()
+\begin{DoxyCompactList}\small\item\em Query which skeleton is currently under control. \end{DoxyCompactList}\item 
+virtual yarp\+::os\+::\+Property \hyperlink{classnavController__IDL_a24e454dd1fa72ebcd6f18d4213487106}{get\+\_\+state} ()
+\begin{DoxyCompactList}\small\item\em Retrieve internal state. \end{DoxyCompactList}\item 
+\mbox{\label{classnavController__IDL_ad653d3057cb43837b61939d92db9ac6e}} 
+virtual std\+::vector$<$ std\+::string $>$ {\bfseries help} (const std\+::string \&function\+Name=\char`\"{}-\/-\/all\char`\"{})
+\item 
+\mbox{\label{classnavController__IDL_a332b70512a6e8a6a90b83077ee470558}} 
+bool {\bfseries read} (yarp\+::os\+::\+Connection\+Reader \&connection) override
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hyperlink{classnavController__IDL}{nav\+Controller\+\_\+\+I\+DL} I\+DL Interface to Navigation Controller services. 
+
+Definition at line 25 of file nav\+Controller\+\_\+\+I\+D\+L.\+h.
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\label{classnavController__IDL_a24e454dd1fa72ebcd6f18d4213487106}} 
+\index{nav\+Controller\+\_\+\+I\+DL@{nav\+Controller\+\_\+\+I\+DL}!get\+\_\+state@{get\+\_\+state}}
+\index{get\+\_\+state@{get\+\_\+state}!nav\+Controller\+\_\+\+I\+DL@{nav\+Controller\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{get\+\_\+state()}{get\_state()}}
+{\footnotesize\ttfamily virtual yarp\+::os\+::\+Property nav\+Controller\+\_\+\+I\+D\+L\+::get\+\_\+state (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Retrieve internal state. 
+
+\begin{DoxyReturn}{Returns}
+a property-\/like object containing the state in the form (robot-\/state \{idle$\vert$track$\vert$nav\}) (robot-\/location (x y theta)) (robot-\/velocity (v\+\_\+x v\+\_\+theta)) \mbox{[}(target-\/location (x y theta heading))\mbox{]} \mbox{[}(skeleton-\/tag tag) (skeleton-\/location (x y))\mbox{]}. 
+\end{DoxyReturn}
+\mbox{\label{classnavController__IDL_aa2b9b90e9d2ef2fd8d557e8c99a8ca7d}} 
+\index{nav\+Controller\+\_\+\+I\+DL@{nav\+Controller\+\_\+\+I\+DL}!go\+\_\+to@{go\+\_\+to}}
+\index{go\+\_\+to@{go\+\_\+to}!nav\+Controller\+\_\+\+I\+DL@{nav\+Controller\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{go\+\_\+to()}{go\_to()}}
+{\footnotesize\ttfamily virtual bool nav\+Controller\+\_\+\+I\+D\+L\+::go\+\_\+to (\begin{DoxyParamCaption}\item[{const double}]{x,  }\item[{const double}]{y,  }\item[{const double}]{theta,  }\item[{const bool}]{heading\+\_\+rear = {\ttfamily 0} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Reach for a target location. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & is the x-\/coordinate of the target location (meters). \\
+\hline
+{\em y} & is the y-\/coordinate of the target location (meters). \\
+\hline
+{\em theta} & is the theta-\/coordinate of the target location (degrees). \\
+\hline
+{\em heading\+\_\+rear} & is true to specify if the robot has to drive backward. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classnavController__IDL_aec1be2f92b59c4669dff3766b519a971}} 
+\index{nav\+Controller\+\_\+\+I\+DL@{nav\+Controller\+\_\+\+I\+DL}!go\+\_\+to\+\_\+wait@{go\+\_\+to\+\_\+wait}}
+\index{go\+\_\+to\+\_\+wait@{go\+\_\+to\+\_\+wait}!nav\+Controller\+\_\+\+I\+DL@{nav\+Controller\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{go\+\_\+to\+\_\+wait()}{go\_to\_wait()}}
+{\footnotesize\ttfamily virtual bool nav\+Controller\+\_\+\+I\+D\+L\+::go\+\_\+to\+\_\+wait (\begin{DoxyParamCaption}\item[{const double}]{x,  }\item[{const double}]{y,  }\item[{const double}]{theta,  }\item[{const bool}]{heading\+\_\+rear = {\ttfamily 0},  }\item[{const std\+::int32\+\_\+t}]{timeout = {\ttfamily 0} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Blocking version of reach for a target location. 
+
+The service returns ack only when navigation is done. 
+\begin{DoxyParams}{Parameters}
+{\em x} & is the x-\/coordinate of the target location (meters). \\
+\hline
+{\em y} & is the y-\/coordinate of the target location (meters). \\
+\hline
+{\em theta} & is the theta-\/coordinate of the target location (degrees). \\
+\hline
+{\em heading\+\_\+rear} & is true to specify if the robot has to drive backward. \\
+\hline
+{\em timeout} & sets up optionally a timeout given in seconds, if $>$ 0. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/\mbox{[}failure $\vert$ timeout occurred\mbox{]}. 
+\end{DoxyReturn}
+\mbox{\label{classnavController__IDL_a2c935f193a150936dfc2cc7482744dbb}} 
+\index{nav\+Controller\+\_\+\+I\+DL@{nav\+Controller\+\_\+\+I\+DL}!is\+\_\+navigating@{is\+\_\+navigating}}
+\index{is\+\_\+navigating@{is\+\_\+navigating}!nav\+Controller\+\_\+\+I\+DL@{nav\+Controller\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{is\+\_\+navigating()}{is\_navigating()}}
+{\footnotesize\ttfamily virtual bool nav\+Controller\+\_\+\+I\+D\+L\+::is\+\_\+navigating (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Query if navigation is underway. 
+
+\begin{DoxyReturn}{Returns}
+true if navigation is being currently performed. 
+\end{DoxyReturn}
+\mbox{\label{classnavController__IDL_a3b1f0d0434d00620c82cc844e88f74d9}} 
+\index{nav\+Controller\+\_\+\+I\+DL@{nav\+Controller\+\_\+\+I\+DL}!reset\+\_\+odometry@{reset\+\_\+odometry}}
+\index{reset\+\_\+odometry@{reset\+\_\+odometry}!nav\+Controller\+\_\+\+I\+DL@{nav\+Controller\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{reset\+\_\+odometry()}{reset\_odometry()}}
+{\footnotesize\ttfamily virtual bool nav\+Controller\+\_\+\+I\+D\+L\+::reset\+\_\+odometry (\begin{DoxyParamCaption}\item[{const double}]{x\+\_\+0 = {\ttfamily 0},  }\item[{const double}]{y\+\_\+0 = {\ttfamily 0},  }\item[{const double}]{theta\+\_\+0 = {\ttfamily 0} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Reset odometry. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em x\+\_\+0} & can optionally become the current x-\/coordinate (meters). \\
+\hline
+{\em y\+\_\+0} & can optionally become the current y-\/coordinate (meters). \\
+\hline
+{\em theta\+\_\+0} & can optionally become the current theta-\/coordinate (degrees). \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classnavController__IDL_a813f076a8130f03c4930ed7659b37e7e}} 
+\index{nav\+Controller\+\_\+\+I\+DL@{nav\+Controller\+\_\+\+I\+DL}!stop@{stop}}
+\index{stop@{stop}!nav\+Controller\+\_\+\+I\+DL@{nav\+Controller\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{stop()}{stop()}}
+{\footnotesize\ttfamily virtual bool nav\+Controller\+\_\+\+I\+D\+L\+::stop (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Stop navigation. 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classnavController__IDL_a09b17abbbfc5129f86de9f9bb2c5e230}} 
+\index{nav\+Controller\+\_\+\+I\+DL@{nav\+Controller\+\_\+\+I\+DL}!track\+\_\+skeleton@{track\+\_\+skeleton}}
+\index{track\+\_\+skeleton@{track\+\_\+skeleton}!nav\+Controller\+\_\+\+I\+DL@{nav\+Controller\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{track\+\_\+skeleton()}{track\_skeleton()}}
+{\footnotesize\ttfamily virtual bool nav\+Controller\+\_\+\+I\+D\+L\+::track\+\_\+skeleton (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{skeleton\+\_\+tag }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Start navigation while controlling distance from the specified skeleton. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em skeleton\+\_\+tag} & is the skeleton\textquotesingle{}s tag. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classnavController__IDL_ae7a1cd7d5d35831bf7851a9cf15577c8}} 
+\index{nav\+Controller\+\_\+\+I\+DL@{nav\+Controller\+\_\+\+I\+DL}!which\+\_\+skeleton@{which\+\_\+skeleton}}
+\index{which\+\_\+skeleton@{which\+\_\+skeleton}!nav\+Controller\+\_\+\+I\+DL@{nav\+Controller\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{which\+\_\+skeleton()}{which\_skeleton()}}
+{\footnotesize\ttfamily virtual std\+::string nav\+Controller\+\_\+\+I\+D\+L\+::which\+\_\+skeleton (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Query which skeleton is currently under control. 
+
+\begin{DoxyReturn}{Returns}
+the name of the skeleton; empty otherwise. 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+idl\+\_\+dox/nav\+Controller\+\_\+\+I\+D\+L.\+h\end{DoxyCompactItemize}

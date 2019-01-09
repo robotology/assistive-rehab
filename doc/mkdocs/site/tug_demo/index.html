@@ -1,0 +1,1122 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A framework for developing the assistive intelligence of R1 for clinical rehabilitation.">
+      
+      
+      
+        <meta name="author" content="Valentina vasco">
+      
+      
+        <link rel="canonical" href="https://github.com/robotology/assistive-rehab/tug_demo/">
+      
+      <link rel="shortcut icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.2">
+    
+    
+      
+        <title>How to run the TUG demo - assistive-rehab</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.73f7c429.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.39b8e14a.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
+      
+    
+    
+    
+    
+      
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="" data-md-color-accent="amber">
+      
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#how-to-run-the-tug-demo" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid" aria-label="Header">
+    <a href="https://github.com/robotology/assistive-rehab" title="assistive-rehab" class="md-header-nav__button md-logo" aria-label="assistive-rehab">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1v1a2 2 0 01-2 2H5a2 2 0 01-2-2v-1H2a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2M7.5 13A2.5 2.5 0 005 15.5 2.5 2.5 0 007.5 18a2.5 2.5 0 002.5-2.5A2.5 2.5 0 007.5 13m9 0a2.5 2.5 0 00-2.5 2.5 2.5 2.5 0 002.5 2.5 2.5 2.5 0 002.5-2.5 2.5 2.5 0 00-2.5-2.5z"/></svg>
+
+    </a>
+    <label class="md-header-nav__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header-nav__title" data-md-component="header-title">
+      <div class="md-header-nav__ellipsis">
+        <div class="md-header-nav__topic">
+          <span class="md-ellipsis">
+            assistive-rehab
+          </span>
+        </div>
+        <div class="md-header-nav__topic">
+          <span class="md-ellipsis">
+            
+              How to run the TUG demo
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      <label class="md-header-nav__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header-nav__source">
+        
+<a href="https://github.com/robotology/assistive-rehab/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 00-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 01-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 000 40.81l195.61 195.6a28.86 28.86 0 0040.8 0l194.69-194.69a28.86 28.86 0 000-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    robotology/assistive-rehab
+  </div>
+</a>
+      </div>
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="https://github.com/robotology/assistive-rehab" title="assistive-rehab" class="md-nav__button md-logo" aria-label="assistive-rehab">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1v1a2 2 0 01-2 2H5a2 2 0 01-2-2v-1H2a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2M7.5 13A2.5 2.5 0 005 15.5 2.5 2.5 0 007.5 18a2.5 2.5 0 002.5-2.5A2.5 2.5 0 007.5 13m9 0a2.5 2.5 0 00-2.5 2.5 2.5 2.5 0 002.5 2.5 2.5 2.5 0 002.5-2.5 2.5 2.5 0 00-2.5-2.5z"/></svg>
+
+    </a>
+    assistive-rehab
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://github.com/robotology/assistive-rehab/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 00-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 01-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 000 40.81l195.61 195.6a28.86 28.86 0 0040.8 0l194.69-194.69a28.86 28.86 0 000-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    robotology/assistive-rehab
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+
+  <li class="md-nav__item">
+    <a href=".." class="md-nav__link">
+      Home
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  
+  <li class="md-nav__item md-nav__item--nested">
+    
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2" >
+    
+    <label class="md-nav__link" for="nav-2">
+      News
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="News" data-md-level="1">
+      <label class="md-nav__title" for="nav-2">
+        <span class="md-nav__icon md-icon"></span>
+        News
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../latest_news/" class="md-nav__link">
+      Latest
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  <li class="md-nav__item">
+    <a href="../install/" class="md-nav__link">
+      Install
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  <li class="md-nav__item">
+    <a href="https://robotology.github.io/assistive-rehab/doc/doxygen/doc/html/index.html" class="md-nav__link">
+      Documentation [v0.5.0]
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  
+
+
+  
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5" checked>
+    
+    <label class="md-nav__link" for="nav-5">
+      Tutorials
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Tutorials" data-md-level="1">
+      <label class="md-nav__title" for="nav-5">
+        <span class="md-nav__icon md-icon"></span>
+        Tutorials
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../tutorial_intro/" class="md-nav__link">
+      Getting started
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../create_new_skeleton/" class="md-nav__link">
+      How to manage a skeleton object
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../replay_an_experiment/" class="md-nav__link">
+      How to replay an experiment
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../disembodied/" class="md-nav__link">
+      How to run the pipeline in a disembodied manner
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../align_signals/" class="md-nav__link">
+      How to temporally align two signals
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../main_apps/" class="md-nav__link">
+      How to run the rehabilitation demos
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../virtual_demo/" class="md-nav__link">
+      How to run the virtual demo
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../tug_lines/" class="md-nav__link">
+      How to detect the TUG lines
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        How to run the TUG demo
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+    
+    <a href="./" class="md-nav__link md-nav__link--active">
+      How to run the TUG demo
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#running-the-tug-demo-on-the-robot" class="md-nav__link">
+    Running the TUG demo on the robot
+  </a>
+  
+    <nav class="md-nav" aria-label="Running the TUG demo on the robot">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#requirements" class="md-nav__link">
+    Requirements
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setting-up-the-robot" class="md-nav__link">
+    Setting up the robot
+  </a>
+  
+    <nav class="md-nav" aria-label="Setting up the robot">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#virtual-machine-for-speech-interaction" class="md-nav__link">
+    Virtual Machine for speech interaction
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-the-demo" class="md-nav__link">
+    Running the demo
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-the-tug-demo-on-gazebo" class="md-nav__link">
+    Running the TUG demo on gazebo
+  </a>
+  
+    <nav class="md-nav" aria-label="Running the TUG demo on gazebo">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dependencies" class="md-nav__link">
+    Dependencies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requirements_1" class="md-nav__link">
+    Requirements
+  </a>
+  
+    <nav class="md-nav" aria-label="Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#optional" class="md-nav__link">
+    Optional
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-the-demo_1" class="md-nav__link">
+    Running the demo
+  </a>
+  
+    <nav class="md-nav" aria-label="Running the demo">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#simulating-the-verbal-interaction" class="md-nav__link">
+    Simulating the verbal interaction
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#simulating-failures" class="md-nav__link">
+    Simulating failures
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+    
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../gazebo_plugin/" class="md-nav__link">
+      How to use the gazebo plugin
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../wifi_button/" class="md-nav__link">
+      How to configure the wifi button
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  
+  <li class="md-nav__item md-nav__item--nested">
+    
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6" type="checkbox" id="nav-6" >
+    
+    <label class="md-nav__link" for="nav-6">
+      Milestones
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Milestones" data-md-level="1">
+      <label class="md-nav__title" for="nav-6">
+        <span class="md-nav__icon md-icon"></span>
+        Milestones
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../Y1M5/" class="md-nav__link">
+      Y1M5
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../Y1Q3/" class="md-nav__link">
+      Y1Q3
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../comparison_releases/" class="md-nav__link">
+      Comparison between Y1Q3 and Y1M5
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../TUG/" class="md-nav__link">
+      TUG
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  <li class="md-nav__item">
+    <a href="../about/" class="md-nav__link">
+      About
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  <li class="md-nav__item">
+    <a href="../license/" class="md-nav__link">
+      License
+    </a>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#running-the-tug-demo-on-the-robot" class="md-nav__link">
+    Running the TUG demo on the robot
+  </a>
+  
+    <nav class="md-nav" aria-label="Running the TUG demo on the robot">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#requirements" class="md-nav__link">
+    Requirements
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setting-up-the-robot" class="md-nav__link">
+    Setting up the robot
+  </a>
+  
+    <nav class="md-nav" aria-label="Setting up the robot">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#virtual-machine-for-speech-interaction" class="md-nav__link">
+    Virtual Machine for speech interaction
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-the-demo" class="md-nav__link">
+    Running the demo
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-the-tug-demo-on-gazebo" class="md-nav__link">
+    Running the TUG demo on gazebo
+  </a>
+  
+    <nav class="md-nav" aria-label="Running the TUG demo on gazebo">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dependencies" class="md-nav__link">
+    Dependencies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requirements_1" class="md-nav__link">
+    Requirements
+  </a>
+  
+    <nav class="md-nav" aria-label="Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#optional" class="md-nav__link">
+    Optional
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-the-demo_1" class="md-nav__link">
+    Running the demo
+  </a>
+  
+    <nav class="md-nav" aria-label="Running the demo">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#simulating-the-verbal-interaction" class="md-nav__link">
+    Simulating the verbal interaction
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#simulating-failures" class="md-nav__link">
+    Simulating failures
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/robotology/assistive-rehab/edit/master/doc/mkdocs/data/tug_demo.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                <h1 id="how-to-run-the-tug-demo">How to run the TUG demo<a class="headerlink" href="#how-to-run-the-tug-demo" title="Permanent link">&para;</a></h1>
+<p>This tutorial will show you how to run the TUG demo on the <a href="#running-the-tug-demo-on-the-robot">real robot</a> and within the <a href="#running-the-tug-demo-on-gazebo">simulation environment <code>gazebo</code></a>.</p>
+<h2 id="running-the-tug-demo-on-the-robot">Running the TUG demo on the robot<a class="headerlink" href="#running-the-tug-demo-on-the-robot" title="Permanent link">&para;</a></h2>
+<p>The related application can be found <a href="https://github.com/robotology/assistive-rehab/blob/master/app/scripts/AssistiveRehab-TUG.xml.template">here</a>.</p>
+<h3 id="requirements">Requirements<a class="headerlink" href="#requirements" title="Permanent link">&para;</a></h3>
+<p>The following hardware is required:</p>
+<ul>
+<li><strong>NVIDIA graphics card</strong>: for running <code>yarpOpenPose</code>;</li>
+<li>
+<p><strong><a href="https://mystrom.ch/wifi-button/">Mystrom wifi button</a></strong>: for triggering the speech pipeline;</p>
+<div class="admonition tip">
+<p class="admonition-title">Alternatively</p>
+<p>The speech pipeline can be alternatively triggered by the hand up / down option (see <a href="#running-the-demo">below</a>)</p>
+</div>
+</li>
+<li>
+<p><strong>Setup for external microphone</strong></p>
+</li>
+</ul>
+<h3 id="setting-up-the-robot">Setting up the robot<a class="headerlink" href="#setting-up-the-robot" title="Permanent link">&para;</a></h3>
+<p>Turn on the robot, by switching on cpu and motors.</p>
+<p>Open <code>yarpmanager</code>, click on the <code>Cluster</code> tab on the left. Click on the play icon below the <code>nameserver node</code>, then select the systems in the window underneath and click on play.</p>
+<div class="admonition tip">
+<p class="admonition-title">R1-mk2</p>
+<p>Specifically, R1-mk2 has the following systems available:</p>
+<ul>
+<li><code>r1-base</code>: where <code>yarpserver</code> runs;</li>
+<li><code>r1-console-linux</code>: where the main modules and visualizers run;</li>
+<li><code>r1-console-cuda</code>: connected to an external Cuda box, where <code>yarpOpenPose</code> runs. Here we also deployed the <a href="#virtual-machine-for-speech-interaction">Virtual Machine</a> for the speech pipeline;</li>
+<li><code>r1-torso1</code>: where the camera runs;</li>
+<li><code>r1-face</code>: where the speak and the face expression modules run;</li>
+</ul>
+</div>
+<p>Now that all systems are running, open a terminal and type:</p>
+<div class="highlight"><pre><span></span><code>ssh -X r1-base
+yarprobotinterface
+</code></pre></div>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<p>The robot is going to move around during the demo.
+Therefore, after running the <code>yarprobotinterface</code>, be sure to unplug it from the power supply.</p>
+</div>
+<h4 id="virtual-machine-for-speech-interaction">Virtual Machine for speech interaction<a class="headerlink" href="#virtual-machine-for-speech-interaction" title="Permanent link">&para;</a></h4>
+<p>For running the <a href="https://github.com/robotology/assistive-rehab/tree/master/modules/speechInteraction"><code>speechInteraction</code></a> modules, you will need access to <a href="https://cloud.google.com/natural-language/"><strong>Google Cloud API</strong></a>, which is currently deployed on the <code>Ubuntu 18 Virtual Machine (VM)</code> installed on <code>r1-console-cuda</code>.</p>
+<p>On this system, open the <code>VM</code> and start <code>Ubuntu18-VM</code>.</p>
+<p>When the system is on, open <code>yarpmanager</code> and run the <code>Google_Speech_Processing</code> app. Hit play and then connect.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Be sure that the external microphone is connected to the system.</p>
+</div>
+<h3 id="running-the-demo">Running the demo<a class="headerlink" href="#running-the-demo" title="Permanent link">&para;</a></h3>
+<p>Now we are ready to run the demo!</p>
+<p>In <code>yarpmanager</code>, click on <code>Applications</code> and then <code>Assistive Rehabilitation TUG App</code> app, hit run and then connect.
+The demo is now running!</p>
+<p>Before starting the TUG, we need to define our world made of lines, robots and skeletons!
+For doing so, you can follow <a href="../tug_lines/#detecting-lines-on-the-robot">this tutorial</a>.</p>
+<p>Let's run a TUG session!</p>
+<div class="admonition question">
+<p class="admonition-title">Want to ask questions to the robot?</p>
+<p>Remember to be equipped the WiFi button, the external microphone and the Virtual Machine running.</p>
+<div class="admonition tip">
+<p class="admonition-title">Alternative to WiFi button</p>
+<p>The speech pipeline can be alternatively triggered by the hand up / down option: the 3D skeleton is analyzed to detect if the hand is raised up / dropped down and consequently a start / stop is sent to the speech pipeline (the hand has to stay up during the question). This can be achieved by running <code>managerTUG</code> with the option <code>--detect-hand-up true</code>.
+However, such approach is less robust than using the button for two reasons:</p>
+<ol>
+<li>the person is assumed to be always in the FOV, which cannot be guaranteed in a HRI scenario;</li>
+<li>it may lead to false detection and thus trigger the speech when not required.</li>
+</ol>
+</div>
+</div>
+<p>Open a terminal and type:</p>
+<p>```tab="Terminal 1"
+yarp rpc /managerTUG/cmd:rpc
+start
+<div class="highlight"><pre><span></span><code>The robot will move to the starting position defined by `starting-pose` [here](https://github.com/robotology/assistive-rehab/blob/master/modules/managerTUG/app/conf/config-it.ini).
+When the robot has reached this point, the interaction starts!
+
+The interaction keeps going on, with the robot keeping engaging the user.
+You can stop it by typing in `Terminal 1`:
+
+```tab=&quot;Terminal 1&quot;
+stop
+</code></pre></div></p>
+<h2 id="running-the-tug-demo-on-gazebo">Running the TUG demo on <code>gazebo</code><a class="headerlink" href="#running-the-tug-demo-on-gazebo" title="Permanent link">&para;</a></h2>
+<p>The related application can be found <a href="https://github.com/robotology/assistive-rehab/blob/master/app/scripts/AssistiveRehab-TUG_SIM.xml.template">here</a>.</p>
+<h3 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h3>
+<p>After <a href="https://robotology.github.io/assistive-rehab/doc/mkdocs/site/install/">installing</a> <code>assistive-rehab</code>, you will need the following dependencies:</p>
+<ul>
+<li><a href="https://github.com/robotology/cer/tree/devel">cer</a>: for running the gaze-controller and face expressions;</li>
+<li><a href="https://github.com/robotology/navigation">navigation</a>: for controlling the robot wheels;</li>
+<li><a href="https://github.com/vvasco/gazebo">gazebo</a>: for running the virtual environment;</li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Work in progress</p>
+<p>This is a fork of <code>gazebo</code> which contains the required changes to the <code>Actor</code> class. We are working to open a pull request on the upstream repository.</p>
+</div>
+<ul>
+<li><a href="https://github.com/robotology/gazebo-yarp-plugins">gazebo-yarp-plugins</a>: for exposing YARP interfaces in <code>gazebo</code>;</li>
+<li><a href="https://github.com/robotology/cer-sim">cer-sim</a>: which includes the model loaded by <code>gazebo</code> in <code>tug-scenario.world</code>;</li>
+<li><a href="https://github.com/robotology/speech">speech</a>: for running the <code>iSpeak</code> module;</li>
+<li><a href="https://nodejs.org/en/download/package-manager/">nodejs</a>: for handling triggers from the wifi button.</li>
+</ul>
+<h3 id="requirements_1">Requirements<a class="headerlink" href="#requirements_1" title="Permanent link">&para;</a></h3>
+<p>The following hardware is required:</p>
+<ul>
+<li><strong>NVIDIA graphics card</strong>: for running <code>yarpOpenPose</code>;</li>
+</ul>
+<h4 id="optional">Optional<a class="headerlink" href="#optional" title="Permanent link">&para;</a></h4>
+<p>If you want to simulate the speech interaction, you will need:</p>
+<ul>
+<li>access to <a href="https://cloud.google.com/natural-language/"><strong>Google Cloud API</strong></a>: for running the <a href="https://github.com/robotology/assistive-rehab/tree/master/modules/speechInteraction"><code>speechInteraction</code></a> modules;</li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>You will need to have an account to access Google Cloud API.</p>
+</div>
+<ul>
+<li>a <a href="https://mystrom.ch/wifi-button/">Mystrom wifi button</a>.</li>
+</ul>
+<div class="admonition info">
+<p class="admonition-title">How to configure the button</p>
+<p>On the robot, the WiFi button is already configured to send triggers within the robot network. To configure your own button to run within your network, follow <a href="../wifi_button/">this tutorial</a>.</p>
+</div>
+<h3 id="running-the-demo_1">Running the demo<a class="headerlink" href="#running-the-demo_1" title="Permanent link">&para;</a></h3>
+<p>Now that all dependencies and requirements are met, you are ready to run the demo in <code>gazebo</code>!</p>
+<p>The first step is to open a terminal and run <code>yarpserver</code>.
+Open <code>yarpmanager</code>, run the <code>AssistiveRehab-TUG_SIM App</code> and hit connect.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>If you wish to simulate the speech interaction, be sure to run <code>node-button.js</code> on the machine you used to configure the wifi button, as explained <a href="../wifi_button/">here</a>.
+This script is in charge of getting the <code>POST</code> request from the button and sending a trigger to <code>managerTUG</code>.</p>
+</div>
+<p>The TUG scenario appears within the simulation environment, including the robot, a human model standing in front of it, a chair and two ArUco lines:</p>
+<p><img alt="default_gzclient_camera(1)-2020-05-15T18_01_58 893982" src="https://user-images.githubusercontent.com/9716288/82071312-3b488e80-96d6-11ea-8cee-d9119a396060.jpg" /></p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>The loaded scenario is described in <a href="https://github.com/robotology/assistive-rehab/blob/master/app/gazebo/tug/tug-scenario.world"><code>tug-scenario.world</code></a>.</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>By default, <code>gazebo</code> has the origin and the external gui visible. To remove the origin, you can click on <code>View</code> and deselect <code>Origin</code>. To remove the gui, you can click on <code>Window</code> and <code>Full screen</code>.</p>
+</div>
+<p>When the demo is launched, <code>managerTUG</code> waits for the command <code>start</code> to run the TUG session, which can be sent to the rpc port <code>/managerTUG/cmd:rpc</code>.
+Once this is provided, the interaction starts and the simulated user successfully completes the test, while its step length is computed in real-time.
+The following video shows a successful test:</p>
+<p><a href="https://youtu.be/qbAJ97jQw_c"><img alt="normal" src="https://user-images.githubusercontent.com/9716288/82469666-a2928400-9ac4-11ea-8f1f-170f7349fdc5.png" /></a></p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>The demo keeps going on even after the TUG is completed, with the robot engaging the human model, which executes the TUG.</p>
+<p>If you want to stop the demo, you will need to provide a <code>stop</code> command to  the rpc port <code>/managerTUG/cmd:rpc</code>.</p>
+</div>
+<h4 id="simulating-the-verbal-interaction">Simulating the verbal interaction<a class="headerlink" href="#simulating-the-verbal-interaction" title="Permanent link">&para;</a></h4>
+<p>The verbal interaction between the robot and the human model is simulated through the following steps:</p>
+<ul>
+<li>the <a href="https://mystrom.ch/wifi-button/">Mystrom wifi button</a> is integrated within the simulated demo: when the button is pressed, the human model / the robot (depending which one is moving) stops and a question can be "asked";</li>
+<li>a question is simulated through the <a href="https://github.com/robotology/assistive-rehab/blob/master/app/scripts/question-simulator.sh"><code>question-simulator.sh</code></a> script. The user can choose 4 keywords, specifically <code>speed</code>, <code>repetition</code>, <code>aid</code>, <code>feedback</code>, each associated to a set of questions. The script randomly selects a question associated to the chosen keyword and sends it to <code>googleSpeechProcess</code> which analyses the sentence; when <code>googleSpeechProcess</code> provides the output to <code>managerTUG</code>, the human model / the robot starts walking / navigating from where it stopped.</li>
+</ul>
+<p>The following video shows how the verbal interaction is integrated within the demo:</p>
+<p><a href="https://youtu.be/b7_848Rt98E"><img alt="questions" src="https://user-images.githubusercontent.com/9716288/82469863-e5ecf280-9ac4-11ea-900e-53e96ee3267d.png" /></a></p>
+<h4 id="simulating-failures">Simulating failures<a class="headerlink" href="#simulating-failures" title="Permanent link">&para;</a></h4>
+<p>Thrift services are provided in order to simulate the human model failing the TUG.
+Two possible failures are implemented:</p>
+<ul>
+<li><strong>the human model does not reach the target</strong>: the robot says that the test was not passed. This can be achieved providing the command <code>set_target</code> to <code>/managerTUG/cmd:rpc</code>, as shown in the following video:</li>
+</ul>
+<p><a href="https://youtu.be/OZFbunThnVE"><img alt="not-reached" src="https://user-images.githubusercontent.com/9716288/82470125-395f4080-9ac5-11ea-8aca-09fb4916de20.png" /></a></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The target is defined with respect to the gazebo world frame, thus <code>X</code> pointing forward (with respect to the human model), <code>Y</code> pointing left, <code>Z</code> pointing up.</p>
+</div>
+<ul>
+<li><strong>the human model stops</strong>:  the robot encourages the user to finish the test, reminding to push the button to ask questions. If the human model does not complete the test, the test is not passed. This can be achieved providing the command <code>pause</code> to <code>/tug_input_port</code>, as shown in the following video:</li>
+</ul>
+<p><a href="https://youtu.be/ehFkVaHG8tA"><img alt="pause" src="https://user-images.githubusercontent.com/9716288/82470264-6875b200-9ac5-11ea-8889-3f06eca99877.png" /></a></p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You can also set the time during which the human model has to be paused, by specifying the seconds after <code>pause</code>. For example, to pause it for <code>2 s</code>, you can provide <code>pause 2.0</code> to <code>tug_input_port</code>: after the <code>2 s</code>, the human model starts walking again.</p>
+</div>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
+        
+          <a href="../tug_lines/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+            </div>
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                How to detect the TUG lines
+              </div>
+            </div>
+          </a>
+        
+        
+          <a href="../gazebo_plugin/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                How to use the gazebo plugin
+              </div>
+            </div>
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+          <div class="md-footer-copyright__highlight">
+            Copyright &copy; 2019 Istituto Italiano di Tecnologia - iCub Tech
+          </div>
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../assets/javascripts/vendor.08c56446.min.js"></script>
+      <script src="../assets/javascripts/bundle.6ced434e.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
+      
+      <script>
+        app = initialize({
+          base: "..",
+          features: ['tabs'],
+          search: Object.assign({
+            worker: "../assets/javascripts/worker/search.8c7e0a7e.min.js"
+          }, typeof search !== "undefined" && search)
+        })
+      </script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,78 @@
+\section{skeleton\+Locker\+\_\+\+I\+DL Class Reference}
+\label{classskeletonLocker__IDL}\index{skeleton\+Locker\+\_\+\+I\+DL@{skeleton\+Locker\+\_\+\+I\+DL}}
+
+
+\hyperlink{classskeletonLocker__IDL}{skeleton\+Locker\+\_\+\+I\+DL} I\+DL Interface to Skeleton Locker services.  
+
+
+
+
+{\ttfamily \#include $<$skeleton\+Locker\+\_\+\+I\+D\+L.\+h$>$}
+
+
+
+Inherits Wire.
+
+
+
+Inherited by Locker.
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual bool \hyperlink{classskeletonLocker__IDL_aae7859cb991b4c0202529731a92ec088}{set\+\_\+skeleton\+\_\+tag} (const std\+::string \&tag)
+\begin{DoxyCompactList}\small\item\em Set the tag of the skeleton to lock. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classskeletonLocker__IDL_a04c6d47ceeba5f4caac0695d173661f5}{remove\+\_\+locked} ()
+\begin{DoxyCompactList}\small\item\em Remove locked skeleton. \end{DoxyCompactList}\item 
+\mbox{\label{classskeletonLocker__IDL_a808faf435f8591d88a05ab71a733a782}} 
+virtual std\+::vector$<$ std\+::string $>$ {\bfseries help} (const std\+::string \&function\+Name=\char`\"{}-\/-\/all\char`\"{})
+\item 
+\mbox{\label{classskeletonLocker__IDL_a6fdcef028359598c359975f075b8b67b}} 
+bool {\bfseries read} (yarp\+::os\+::\+Connection\+Reader \&connection) override
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hyperlink{classskeletonLocker__IDL}{skeleton\+Locker\+\_\+\+I\+DL} I\+DL Interface to Skeleton Locker services. 
+
+Definition at line 24 of file skeleton\+Locker\+\_\+\+I\+D\+L.\+h.
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\label{classskeletonLocker__IDL_a04c6d47ceeba5f4caac0695d173661f5}} 
+\index{skeleton\+Locker\+\_\+\+I\+DL@{skeleton\+Locker\+\_\+\+I\+DL}!remove\+\_\+locked@{remove\+\_\+locked}}
+\index{remove\+\_\+locked@{remove\+\_\+locked}!skeleton\+Locker\+\_\+\+I\+DL@{skeleton\+Locker\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{remove\+\_\+locked()}{remove\_locked()}}
+{\footnotesize\ttfamily virtual bool skeleton\+Locker\+\_\+\+I\+D\+L\+::remove\+\_\+locked (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Remove locked skeleton. 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classskeletonLocker__IDL_aae7859cb991b4c0202529731a92ec088}} 
+\index{skeleton\+Locker\+\_\+\+I\+DL@{skeleton\+Locker\+\_\+\+I\+DL}!set\+\_\+skeleton\+\_\+tag@{set\+\_\+skeleton\+\_\+tag}}
+\index{set\+\_\+skeleton\+\_\+tag@{set\+\_\+skeleton\+\_\+tag}!skeleton\+Locker\+\_\+\+I\+DL@{skeleton\+Locker\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{set\+\_\+skeleton\+\_\+tag()}{set\_skeleton\_tag()}}
+{\footnotesize\ttfamily virtual bool skeleton\+Locker\+\_\+\+I\+D\+L\+::set\+\_\+skeleton\+\_\+tag (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{tag }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Set the tag of the skeleton to lock. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em tag} & of the skeleton to lock. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+idl\+\_\+dox/skeleton\+Locker\+\_\+\+I\+D\+L.\+h\end{DoxyCompactItemize}

@@ -1,0 +1,173 @@
+\section{skeleton\+Viewer\+\_\+\+I\+DL Class Reference}
+\label{classskeletonViewer__IDL}\index{skeleton\+Viewer\+\_\+\+I\+DL@{skeleton\+Viewer\+\_\+\+I\+DL}}
+
+
+\hyperlink{classskeletonViewer__IDL}{skeleton\+Viewer\+\_\+\+I\+DL} I\+DL Interface to skeleton\+Viewer R\+PC services.  
+
+
+
+
+{\ttfamily \#include $<$skeleton\+Viewer\+\_\+\+I\+D\+L.\+h$>$}
+
+
+
+Inherits Wire.
+
+
+
+Inherited by Viewer.
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual bool \hyperlink{classskeletonViewer__IDL_afdff1c47b3874a112c5fe601b2b9fac6}{set\+\_\+camera\+\_\+position} (const double x, const double y, const double z)
+\begin{DoxyCompactList}\small\item\em Set the camera position in world coordinates. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classskeletonViewer__IDL_a6b603079ea6fd21663de28091b9a1719}{set\+\_\+camera\+\_\+focalpoint} (const double x, const double y, const double z)
+\begin{DoxyCompactList}\small\item\em Set the camera focal point in world coordinates. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classskeletonViewer__IDL_addc168b73a8279fa6c146e4a7365cd77}{set\+\_\+camera\+\_\+viewup} (const double x, const double y, const double z)
+\begin{DoxyCompactList}\small\item\em Set the camera view up direction in world coordinates. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classskeletonViewer__IDL_ae893be656a21bfd75682fd4efb20a2d8}{create\+\_\+line} (const std\+::string \&name, const double x0, const double y0, const double z0, const double x1, const double y1, const double z1, const double r, const double g, const double b)
+\begin{DoxyCompactList}\small\item\em Create a line. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classskeletonViewer__IDL_a3a1f90f10689c4411e522d41d5d19908}{delete\+\_\+line} (const std\+::string \&name)
+\begin{DoxyCompactList}\small\item\em Delete a line. \end{DoxyCompactList}\item 
+\mbox{\label{classskeletonViewer__IDL_a970ce92704e75f8f8a4e663aace17436}} 
+virtual std\+::vector$<$ std\+::string $>$ {\bfseries help} (const std\+::string \&function\+Name=\char`\"{}-\/-\/all\char`\"{})
+\item 
+\mbox{\label{classskeletonViewer__IDL_ae6e019ed8b536029c204defd60c7d63b}} 
+bool {\bfseries read} (yarp\+::os\+::\+Connection\+Reader \&connection) override
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hyperlink{classskeletonViewer__IDL}{skeleton\+Viewer\+\_\+\+I\+DL} I\+DL Interface to skeleton\+Viewer R\+PC services. 
+
+Definition at line 24 of file skeleton\+Viewer\+\_\+\+I\+D\+L.\+h.
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\label{classskeletonViewer__IDL_ae893be656a21bfd75682fd4efb20a2d8}} 
+\index{skeleton\+Viewer\+\_\+\+I\+DL@{skeleton\+Viewer\+\_\+\+I\+DL}!create\+\_\+line@{create\+\_\+line}}
+\index{create\+\_\+line@{create\+\_\+line}!skeleton\+Viewer\+\_\+\+I\+DL@{skeleton\+Viewer\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{create\+\_\+line()}{create\_line()}}
+{\footnotesize\ttfamily virtual bool skeleton\+Viewer\+\_\+\+I\+D\+L\+::create\+\_\+line (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{name,  }\item[{const double}]{x0,  }\item[{const double}]{y0,  }\item[{const double}]{z0,  }\item[{const double}]{x1,  }\item[{const double}]{y1,  }\item[{const double}]{z1,  }\item[{const double}]{r,  }\item[{const double}]{g,  }\item[{const double}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Create a line. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em name} & is the name of the line. \\
+\hline
+{\em x0} & the x-\/coordinate of the line origin (meters). \\
+\hline
+{\em y0} & the y-\/coordinate of the line origin (meters). \\
+\hline
+{\em z0} & the z-\/coordinate of the line origin (meters). \\
+\hline
+{\em x1} & the x-\/coordinate of the line end (meters). \\
+\hline
+{\em y1} & the y-\/coordinate of the line end (meters). \\
+\hline
+{\em z1} & the z-\/coordinate of the line end (meters). \\
+\hline
+{\em r} & is the red channel of the line color \mbox{[}0,1\mbox{]}. \\
+\hline
+{\em g} & is the green channel of the line color \mbox{[}0,1\mbox{]}. \\
+\hline
+{\em b} & is the blue channel of the line color \mbox{[}0,1\mbox{]}. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classskeletonViewer__IDL_a3a1f90f10689c4411e522d41d5d19908}} 
+\index{skeleton\+Viewer\+\_\+\+I\+DL@{skeleton\+Viewer\+\_\+\+I\+DL}!delete\+\_\+line@{delete\+\_\+line}}
+\index{delete\+\_\+line@{delete\+\_\+line}!skeleton\+Viewer\+\_\+\+I\+DL@{skeleton\+Viewer\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{delete\+\_\+line()}{delete\_line()}}
+{\footnotesize\ttfamily virtual bool skeleton\+Viewer\+\_\+\+I\+D\+L\+::delete\+\_\+line (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{name }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Delete a line. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em name} & is the name of the line to delete. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classskeletonViewer__IDL_a6b603079ea6fd21663de28091b9a1719}} 
+\index{skeleton\+Viewer\+\_\+\+I\+DL@{skeleton\+Viewer\+\_\+\+I\+DL}!set\+\_\+camera\+\_\+focalpoint@{set\+\_\+camera\+\_\+focalpoint}}
+\index{set\+\_\+camera\+\_\+focalpoint@{set\+\_\+camera\+\_\+focalpoint}!skeleton\+Viewer\+\_\+\+I\+DL@{skeleton\+Viewer\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{set\+\_\+camera\+\_\+focalpoint()}{set\_camera\_focalpoint()}}
+{\footnotesize\ttfamily virtual bool skeleton\+Viewer\+\_\+\+I\+D\+L\+::set\+\_\+camera\+\_\+focalpoint (\begin{DoxyParamCaption}\item[{const double}]{x,  }\item[{const double}]{y,  }\item[{const double}]{z }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Set the camera focal point in world coordinates. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & is the x-\/coordinate (meters). \\
+\hline
+{\em y} & is the y-\/coordinate (meters). \\
+\hline
+{\em z} & is the z-\/coordinate (meters). \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classskeletonViewer__IDL_afdff1c47b3874a112c5fe601b2b9fac6}} 
+\index{skeleton\+Viewer\+\_\+\+I\+DL@{skeleton\+Viewer\+\_\+\+I\+DL}!set\+\_\+camera\+\_\+position@{set\+\_\+camera\+\_\+position}}
+\index{set\+\_\+camera\+\_\+position@{set\+\_\+camera\+\_\+position}!skeleton\+Viewer\+\_\+\+I\+DL@{skeleton\+Viewer\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{set\+\_\+camera\+\_\+position()}{set\_camera\_position()}}
+{\footnotesize\ttfamily virtual bool skeleton\+Viewer\+\_\+\+I\+D\+L\+::set\+\_\+camera\+\_\+position (\begin{DoxyParamCaption}\item[{const double}]{x,  }\item[{const double}]{y,  }\item[{const double}]{z }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Set the camera position in world coordinates. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & is the x-\/coordinate (meters). \\
+\hline
+{\em y} & is the y-\/coordinate (meters). \\
+\hline
+{\em z} & is the z-\/coordinate (meters). \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classskeletonViewer__IDL_addc168b73a8279fa6c146e4a7365cd77}} 
+\index{skeleton\+Viewer\+\_\+\+I\+DL@{skeleton\+Viewer\+\_\+\+I\+DL}!set\+\_\+camera\+\_\+viewup@{set\+\_\+camera\+\_\+viewup}}
+\index{set\+\_\+camera\+\_\+viewup@{set\+\_\+camera\+\_\+viewup}!skeleton\+Viewer\+\_\+\+I\+DL@{skeleton\+Viewer\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{set\+\_\+camera\+\_\+viewup()}{set\_camera\_viewup()}}
+{\footnotesize\ttfamily virtual bool skeleton\+Viewer\+\_\+\+I\+D\+L\+::set\+\_\+camera\+\_\+viewup (\begin{DoxyParamCaption}\item[{const double}]{x,  }\item[{const double}]{y,  }\item[{const double}]{z }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Set the camera view up direction in world coordinates. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & is the x-\/coordinate (meters). \\
+\hline
+{\em y} & is the y-\/coordinate (meters). \\
+\hline
+{\em z} & is the z-\/coordinate (meters). \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+idl\+\_\+dox/skeleton\+Viewer\+\_\+\+I\+D\+L.\+h\end{DoxyCompactItemize}

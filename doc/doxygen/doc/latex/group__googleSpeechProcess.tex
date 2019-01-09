@@ -1,0 +1,36 @@
+\section{google\+Speech\+Process}
+\label{group__googleSpeechProcess}\index{google\+Speech\+Process@{google\+Speech\+Process}}
+
+
+This module is responsible for analysing the speech transcript and send out the correct meaning of the phrase Version\+:0.\+3.\+0.  
+
+
+This module is responsible for analysing the speech transcript and send out the correct meaning of the phrase Version\+:0.\+3.\+0. 
+
+\begin{DoxyAuthor}{Author}
+Vadim Tikhanoff \href{mailto:vadim.tikhanoff@iit.it}{\tt vadim.\+tikhanoff@iit.\+it} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the B\+SD 3-\/\+Clause License. 
+\end{DoxyCopyright}
+\hypertarget{group__skeletonViewer_intro_sec}{}\subsection{Description}\label{group__skeletonViewer_intro_sec}
+This module retrieves the transcript output from speech transcript and queries google cloud language services and provides the output on a port.\hypertarget{group__skeletonViewer_parameters_sec}{}\subsection{Parameters}\label{group__skeletonViewer_parameters_sec}
+
+\begin{DoxyItemize}
+\item --name\+: Module\textquotesingle{}s name; all the open ports will be tagged with the prefix /name.
+\item --language\+\_\+code\+: Use English US
+\item --sample\+\_\+rate\+\_\+hertz\+: Use 16000 hertz for the sample rate 
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_inputports_sec}{}\subsection{Input Ports}\label{group__skeletonViewer_inputports_sec}
+
+\begin{DoxyItemize}
+\item /google\+Speech\+Process/text\+:i \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Port to receive speech transcript to analyse
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_outputports_sec}{}\subsection{Output Ports}\label{group__skeletonViewer_outputports_sec}
+
+\begin{DoxyItemize}
+\item /google\+Speech\+Process/result\+:o \mbox{[}Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Sends the phrase analysis result of the output of google language query
+\end{DoxyItemize}\hypertarget{group__skeletonViewer_services_sec}{}\subsection{Services}\label{group__skeletonViewer_services_sec}
+
+\begin{DoxyItemize}
+\item /google\+Speech/rpc \mbox{[}rpc-\/server\mbox{]}\+: service port . This service is described in google\+Speech\+\_\+\+I\+DL (idl.\+thrift) 
+\end{DoxyItemize}

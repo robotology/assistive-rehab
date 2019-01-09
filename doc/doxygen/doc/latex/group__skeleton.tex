@@ -1,0 +1,97 @@
+\section{skeleton}
+\label{group__skeleton}\index{skeleton@{skeleton}}
+
+
+Classes for skeleton.  
+
+
+\subsection*{Data Structures}
+\begin{DoxyCompactItemize}
+\item 
+class \hyperlink{classassistive__rehab_1_1Skeleton}{assistive\+\_\+rehab\+::\+Skeleton}
+\begin{DoxyCompactList}\small\item\em Abstract class for skeleton. \end{DoxyCompactList}\item 
+class \hyperlink{classassistive__rehab_1_1SkeletonStd}{assistive\+\_\+rehab\+::\+Skeleton\+Std}
+\begin{DoxyCompactList}\small\item\em Basic class for skeleton standard. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classassistive__rehab_1_1Skeleton}{Skeleton} $\ast$ \hyperlink{group__skeleton_gafe9fe27bb8b50a0843b93dfbb5c571b1}{assistive\+\_\+rehab\+::skeleton\+\_\+factory} (const yarp\+::os\+::\+Property \&prop)
+\begin{DoxyCompactList}\small\item\em Populate skeleton from a Property object. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Classes for skeleton. 
+
+\hypertarget{group__skeletonViewer_intro_sec}{}\subsection{Description}\label{group__skeletonViewer_intro_sec}
+The class Skeleton can be used to deal with skeletons, defined as series of keypoints linked together with a predefined structure. The class Keypoint can be used to deal with single keypoints of the skeleton.
+
+A skeleton can be defined from\+:
+\begin{DoxyItemize}
+\item an ordered list of keypoints, according to the following order\+:
+\begin{DoxyItemize}
+\item 0\+: shoulder\+\_\+center
+\item 1\+: head
+\item 2\+: shoulder\+\_\+left
+\item 3\+: elbow\+\_\+left
+\item 4\+: hand\+\_\+left
+\item 5\+: shoulder\+\_\+right
+\item 6\+: elbow\+\_\+right
+\item 7\+: hand\+\_\+right
+\item 8\+: hip\+\_\+center
+\item 9\+: hip\+\_\+left
+\item 10\+: knee\+\_\+left
+\item 11\+: ankle\+\_\+left
+\item 12\+: foot\+\_\+left
+\item 13\+: hip\+\_\+right
+\item 14\+: knee\+\_\+right
+\item 15\+: ankle\+\_\+right
+\item 16\+: foot\+\_\+right
+\end{DoxyItemize}
+\item an unordered list of keypoints, where each keypoint is identified by its tag;
+\item its properties.
+\end{DoxyItemize}
+
+\begin{DoxyAuthor}{Author}
+Ugo Pattacini \href{mailto:ugo.pattacini@iit.it}{\tt ugo.\+pattacini@iit.\+it} 
+\end{DoxyAuthor}
+
+
+\subsection{Function Documentation}
+\mbox{\label{group__skeleton_gafe9fe27bb8b50a0843b93dfbb5c571b1}} 
+\index{skeleton@{skeleton}!skeleton\+\_\+factory@{skeleton\+\_\+factory}}
+\index{skeleton\+\_\+factory@{skeleton\+\_\+factory}!skeleton@{skeleton}}
+\subsubsection{\texorpdfstring{skeleton\+\_\+factory()}{skeleton\_factory()}}
+{\footnotesize\ttfamily \hyperlink{classassistive__rehab_1_1Skeleton}{Skeleton}$\ast$ assistive\+\_\+rehab\+::skeleton\+\_\+factory (\begin{DoxyParamCaption}\item[{const yarp\+::os\+::\+Property \&}]{prop }\end{DoxyParamCaption})}
+
+
+
+Populate skeleton from a Property object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em prop} & reference to a Property object. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+a pointer to a \hyperlink{classassistive__rehab_1_1Skeleton}{Skeleton} object.
+\end{DoxyReturn}
+Available properties are\+:
+\begin{DoxyItemize}
+\item type\+: string containing skeleton\textquotesingle{}s type (\char`\"{}assistive\+\_\+rehab\+::\+Skeleton\+Std\char`\"{}).
+\item tag\+: string containing skeleton\textquotesingle{}s tag.
+\item transformation\+: 4 x 4 skeleton\textquotesingle{}s roto-\/translation matrix.
+\item coronal\+: vector containing skeleton\textquotesingle{}s coronal plane.
+\item sagittal\+: vector containing skeleton\textquotesingle{}s sagittal plane.
+\item transverse\+: vector containing skeleton\textquotesingle{}s transverse plane.
+\item skeleton\+: list containing keypoints with the following subproperties\+:
+\begin{DoxyItemize}
+\item tag\+: string containing keypoint\textquotesingle{}s tag.
+\item status\+: string containing keypoint\textquotesingle{}s status (updated or stale).
+\item position\+: vector containing keypoint\textquotesingle{}s camera coordinates x,y,z.
+\item pixel\+: vector containing keypoint\textquotesingle{}s image coordinates u,v.
+\item child\+: list containing keypoint\textquotesingle{}s child, specified as position, status, tag. 
+\end{DoxyItemize}
+\end{DoxyItemize}
+
+Referenced by assistive\+\_\+rehab\+::\+Skeleton\+Std\+::update\+\_\+planes().
+

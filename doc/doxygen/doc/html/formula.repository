@@ -1,0 +1,13 @@
+\form#0:$s$
+\form#1:$t$
+\form#2:$n_s$
+\form#3:$n_t$
+\form#4:$n_s x n_t$
+\form#5:$D$
+\form#6:$D_{(i,j)} = d(s_i,t_j) + \min{(d(i-1,j-1),d(i-1,j),d(i,j-1))}$
+\form#7:$d(i,j) = \sqrt{(s_i-t_i)^2}$
+\form#8:$w*$
+\form#9:$k$
+\form#10:\[d_{DTW} = \min_{i=1}^k D(w_i)\]
+\form#11:$n$
+\form#12:$m$

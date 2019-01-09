@@ -1,0 +1,45 @@
+\section{dtw}
+\label{group__dtw}\index{dtw@{dtw}}
+
+
+Class for temporal alignment based on Dynamic Time Warping (D\+TW).  
+
+
+Class for temporal alignment based on Dynamic Time Warping (D\+TW). 
+
+\hypertarget{group__skeletonViewer_intro_sec}{}\subsection{Description}\label{group__skeletonViewer_intro_sec}
+The class Dtw can be used for aligning two temporal sequences using the Dynamic Time Warping (D\+TW). D\+TW calculates the optimal path which minimizes the distance between the two signals to be aligned. Given two signals $s$ and $t$, with $n_s$ and $n_t$ samples respectively, D\+TW constructs the $n_s x n_t$ distance matrix $D$, where $D_{(i,j)} = d(s_i,t_j) + \min{(d(i-1,j-1),d(i-1,j),d(i,j-1))}$, and $d(i,j) = \sqrt{(s_i-t_i)^2}$. A warping path has to satisfy the following conditions\+:
+\begin{DoxyItemize}
+\item monotonic condition\+: the path monotonically increases;
+\item continuity condition\+: the path advances one step at a time;
+\item boundary condition\+: the path starts at bottom left and ends at top right. The optimal warping path $w*$ with length $k$ is the one that minimizes the total distance among all possible warping paths\+: \[d_{DTW} = \min_{i=1}^k D(w_i)\] The D\+TW distance is the total distance of the optimal warping path.
+\end{DoxyItemize}
+
+D\+TW can be also applied to multidimensional temporal sequences, by applying the same procedure independently to the corresponding components of the two signals. The D\+TW distance is the sum of the D\+TW distances of each component.
+
+Additional constraints can be used to restrict the space of search of the warping path. The library includes the adjustment window condition, which enforces the search of the warping path inside a window around the distance matrix diagonal.\hypertarget{group__dtw_code_example_sec}{}\subsection{Example}\label{group__dtw_code_example_sec}
+Given two vectors v1,v2, the following piece of code can be used to align them and get the D\+TW distance\+:
+
+
+\begin{DoxyCode}
+Dtw dtw(-1);
+vector<double> w\_v1,w\_v2; \textcolor{comment}{//aligned signals}
+dtw.align(v1,v2,w\_v1,w\_v2);
+\textcolor{keywordtype}{double} d = dtw.getDistance();
+\end{DoxyCode}
+
+
+For the multidimensional case, given two signals with $n$ samples over time and $m$ components, v1 and v2 have to be defined as $n$ vector of $m$ vectors. The following piece of code can be used to align them and get the D\+TW distance\+:
+
+
+\begin{DoxyCode}
+Dtw dtw(-1);
+vector<vector<double>> w\_v1,w\_v2; \textcolor{comment}{//aligned signals are now defined as vector of vectors}
+dtw.align(v1,v2,w\_v1,w\_v2);
+\textcolor{keywordtype}{double} d = dtw.getDistance();
+\end{DoxyCode}
+
+
+\begin{DoxyAuthor}{Author}
+Valentina Vasco \href{mailto:valentina.vasco@iit.it}{\tt valentina.\+vasco@iit.\+it} 
+\end{DoxyAuthor}

@@ -1,0 +1,73 @@
+\section{interaction\+Manager\+\_\+\+I\+DL Class Reference}
+\label{classinteractionManager__IDL}\index{interaction\+Manager\+\_\+\+I\+DL@{interaction\+Manager\+\_\+\+I\+DL}}
+
+
+\hyperlink{classinteractionManager__IDL}{interaction\+Manager\+\_\+\+I\+DL} I\+DL Interface to Interaction Manager services.  
+
+
+
+
+{\ttfamily \#include $<$interaction\+Manager\+\_\+\+I\+D\+L.\+h$>$}
+
+
+
+Inherits Wire.
+
+
+
+Inherited by Interaction.
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual bool \hyperlink{classinteractionManager__IDL_ad6c8ab9126614fd7e07968e4c430be25}{start} ()
+\begin{DoxyCompactList}\small\item\em Start the interaction. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classinteractionManager__IDL_a0a3e324a4ab82896e627e83803137595}{stop} ()
+\begin{DoxyCompactList}\small\item\em Stop the interaction. \end{DoxyCompactList}\item 
+\mbox{\label{classinteractionManager__IDL_ab3d4dbd821243f67cdbc2140f57932b5}} 
+bool {\bfseries read} (yarp\+::os\+::\+Connection\+Reader \&connection) override
+\item 
+\mbox{\label{classinteractionManager__IDL_aae35412842de23ee93849813d7e4b2e7}} 
+virtual std\+::vector$<$ std\+::string $>$ {\bfseries help} (const std\+::string \&function\+Name=\char`\"{}-\/-\/all\char`\"{})
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hyperlink{classinteractionManager__IDL}{interaction\+Manager\+\_\+\+I\+DL} I\+DL Interface to Interaction Manager services. 
+
+Definition at line 25 of file interaction\+Manager\+\_\+\+I\+D\+L.\+h.
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\label{classinteractionManager__IDL_ad6c8ab9126614fd7e07968e4c430be25}} 
+\index{interaction\+Manager\+\_\+\+I\+DL@{interaction\+Manager\+\_\+\+I\+DL}!start@{start}}
+\index{start@{start}!interaction\+Manager\+\_\+\+I\+DL@{interaction\+Manager\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{start()}{start()}}
+{\footnotesize\ttfamily virtual bool interaction\+Manager\+\_\+\+I\+D\+L\+::start (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Start the interaction. 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+\mbox{\label{classinteractionManager__IDL_a0a3e324a4ab82896e627e83803137595}} 
+\index{interaction\+Manager\+\_\+\+I\+DL@{interaction\+Manager\+\_\+\+I\+DL}!stop@{stop}}
+\index{stop@{stop}!interaction\+Manager\+\_\+\+I\+DL@{interaction\+Manager\+\_\+\+I\+DL}}
+\subsubsection{\texorpdfstring{stop()}{stop()}}
+{\footnotesize\ttfamily virtual bool interaction\+Manager\+\_\+\+I\+D\+L\+::stop (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Stop the interaction. 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure. 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+idl\+\_\+dox/interaction\+Manager\+\_\+\+I\+D\+L.\+h\end{DoxyCompactItemize}

@@ -1,0 +1,1005 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A framework for developing the assistive intelligence of R1 for clinical rehabilitation.">
+      
+      
+      
+        <meta name="author" content="Valentina vasco">
+      
+      
+        <link rel="canonical" href="https://github.com/robotology/assistive-rehab/gazebo_plugin/">
+      
+      <link rel="shortcut icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.2">
+    
+    
+      
+        <title>How to use the gazebo plugin - assistive-rehab</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.73f7c429.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.39b8e14a.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
+      
+    
+    
+    
+    
+      
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="" data-md-color-accent="amber">
+      
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#how-to-use-the-gazebo-plugin" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid" aria-label="Header">
+    <a href="https://github.com/robotology/assistive-rehab" title="assistive-rehab" class="md-header-nav__button md-logo" aria-label="assistive-rehab">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1v1a2 2 0 01-2 2H5a2 2 0 01-2-2v-1H2a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2M7.5 13A2.5 2.5 0 005 15.5 2.5 2.5 0 007.5 18a2.5 2.5 0 002.5-2.5A2.5 2.5 0 007.5 13m9 0a2.5 2.5 0 00-2.5 2.5 2.5 2.5 0 002.5 2.5 2.5 2.5 0 002.5-2.5 2.5 2.5 0 00-2.5-2.5z"/></svg>
+
+    </a>
+    <label class="md-header-nav__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header-nav__title" data-md-component="header-title">
+      <div class="md-header-nav__ellipsis">
+        <div class="md-header-nav__topic">
+          <span class="md-ellipsis">
+            assistive-rehab
+          </span>
+        </div>
+        <div class="md-header-nav__topic">
+          <span class="md-ellipsis">
+            
+              How to use the gazebo plugin
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      <label class="md-header-nav__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header-nav__source">
+        
+<a href="https://github.com/robotology/assistive-rehab/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 00-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 01-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 000 40.81l195.61 195.6a28.86 28.86 0 0040.8 0l194.69-194.69a28.86 28.86 0 000-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    robotology/assistive-rehab
+  </div>
+</a>
+      </div>
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="https://github.com/robotology/assistive-rehab" title="assistive-rehab" class="md-nav__button md-logo" aria-label="assistive-rehab">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1v1a2 2 0 01-2 2H5a2 2 0 01-2-2v-1H2a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2M7.5 13A2.5 2.5 0 005 15.5 2.5 2.5 0 007.5 18a2.5 2.5 0 002.5-2.5A2.5 2.5 0 007.5 13m9 0a2.5 2.5 0 00-2.5 2.5 2.5 2.5 0 002.5 2.5 2.5 2.5 0 002.5-2.5 2.5 2.5 0 00-2.5-2.5z"/></svg>
+
+    </a>
+    assistive-rehab
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://github.com/robotology/assistive-rehab/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 00-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 01-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 000 40.81l195.61 195.6a28.86 28.86 0 0040.8 0l194.69-194.69a28.86 28.86 0 000-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    robotology/assistive-rehab
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+
+  <li class="md-nav__item">
+    <a href=".." class="md-nav__link">
+      Home
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  
+  <li class="md-nav__item md-nav__item--nested">
+    
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2" >
+    
+    <label class="md-nav__link" for="nav-2">
+      News
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="News" data-md-level="1">
+      <label class="md-nav__title" for="nav-2">
+        <span class="md-nav__icon md-icon"></span>
+        News
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../latest_news/" class="md-nav__link">
+      Latest
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  <li class="md-nav__item">
+    <a href="../install/" class="md-nav__link">
+      Install
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  <li class="md-nav__item">
+    <a href="https://robotology.github.io/assistive-rehab/doc/doxygen/doc/html/index.html" class="md-nav__link">
+      Documentation [v0.5.0]
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  
+
+
+  
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5" checked>
+    
+    <label class="md-nav__link" for="nav-5">
+      Tutorials
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Tutorials" data-md-level="1">
+      <label class="md-nav__title" for="nav-5">
+        <span class="md-nav__icon md-icon"></span>
+        Tutorials
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../tutorial_intro/" class="md-nav__link">
+      Getting started
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../create_new_skeleton/" class="md-nav__link">
+      How to manage a skeleton object
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../replay_an_experiment/" class="md-nav__link">
+      How to replay an experiment
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../disembodied/" class="md-nav__link">
+      How to run the pipeline in a disembodied manner
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../align_signals/" class="md-nav__link">
+      How to temporally align two signals
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../main_apps/" class="md-nav__link">
+      How to run the rehabilitation demos
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../virtual_demo/" class="md-nav__link">
+      How to run the virtual demo
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../tug_lines/" class="md-nav__link">
+      How to detect the TUG lines
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../tug_demo/" class="md-nav__link">
+      How to run the TUG demo
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        How to use the gazebo plugin
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+    
+    <a href="./" class="md-nav__link md-nav__link--active">
+      How to use the gazebo plugin
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#dependencies" class="md-nav__link">
+    Dependencies
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#preparing-your-environment" class="md-nav__link">
+    Preparing your environment
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-include-the-plugin-in-your-world" class="md-nav__link">
+    How to include the plugin in your world
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-the-plugin" class="md-nav__link">
+    Using the plugin
+  </a>
+  
+    <nav class="md-nav" aria-label="Using the plugin">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#playing-the-animations" class="md-nav__link">
+    Playing the animations
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changing-walking-parameters" class="md-nav__link">
+    Changing walking parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-services" class="md-nav__link">
+    Additional services
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+    
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../wifi_button/" class="md-nav__link">
+      How to configure the wifi button
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  
+  <li class="md-nav__item md-nav__item--nested">
+    
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6" type="checkbox" id="nav-6" >
+    
+    <label class="md-nav__link" for="nav-6">
+      Milestones
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Milestones" data-md-level="1">
+      <label class="md-nav__title" for="nav-6">
+        <span class="md-nav__icon md-icon"></span>
+        Milestones
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../Y1M5/" class="md-nav__link">
+      Y1M5
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../Y1Q3/" class="md-nav__link">
+      Y1Q3
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../comparison_releases/" class="md-nav__link">
+      Comparison between Y1Q3 and Y1M5
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../TUG/" class="md-nav__link">
+      TUG
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  <li class="md-nav__item">
+    <a href="../about/" class="md-nav__link">
+      About
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  <li class="md-nav__item">
+    <a href="../license/" class="md-nav__link">
+      License
+    </a>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#dependencies" class="md-nav__link">
+    Dependencies
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#preparing-your-environment" class="md-nav__link">
+    Preparing your environment
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-include-the-plugin-in-your-world" class="md-nav__link">
+    How to include the plugin in your world
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-the-plugin" class="md-nav__link">
+    Using the plugin
+  </a>
+  
+    <nav class="md-nav" aria-label="Using the plugin">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#playing-the-animations" class="md-nav__link">
+    Playing the animations
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changing-walking-parameters" class="md-nav__link">
+    Changing walking parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-services" class="md-nav__link">
+    Additional services
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/robotology/assistive-rehab/edit/master/doc/mkdocs/data/gazebo_plugin.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                <h1 id="how-to-use-the-gazebo-plugin">How to use the gazebo plugin<a class="headerlink" href="#how-to-use-the-gazebo-plugin" title="Permanent link">&para;</a></h1>
+<p>This tutorial will show you how to use the <code>gazebo</code> plugin we developed for an animated model, which is called <code>actor</code> in <code>gazebo</code>.</p>
+<p>As shown in this <a href="http://gazebosim.org/tutorials?tut=actor&amp;cat=build_robot">gazebo tutorial</a>, an <code>actor</code> in <code>gazebo</code> is a model which can be animated using <a href="http://gazebosim.org/tutorials?tut=actor&amp;cat=build_robot#Skeleton"><code>.dae</code></a> files and <a href="http://gazebosim.org/tutorials?tut=actor&amp;cat=build_robot#Scriptedtrajectories">scripted trajectories</a>.<br />
+Our plugin extends the <code>actor</code> class, allowing the user to play and stop single animations or the whole script, to change the speed on the fly, to reach targets in the environment.</p>
+<h2 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h2>
+<p>After <a href="https://robotology.github.io/assistive-rehab/doc/mkdocs/site/install/">installing</a> <code>assistive-rehab</code>, you will need the following dependencies:</p>
+<ul>
+<li><a href="https://github.com/vvasco/gazebo">gazebo</a>: for running the virtual environment;</li>
+<li><a href="https://github.com/robotology/gazebo-yarp-plugins">gazebo-yarp-plugins</a>: for exposing YARP interfaces in <code>gazebo</code>;</li>
+</ul>
+<h2 id="preparing-your-environment">Preparing your environment<a class="headerlink" href="#preparing-your-environment" title="Permanent link">&para;</a></h2>
+<p>The first step you need to take is to prepare your environment.</p>
+<p>Installing <code>assistive-rehab</code> will result in the shared library <code>libgazebo_assistiverehab_tuginterface.so</code>, which can be included in a <code>gazebo</code> simulation.</p>
+<p>Following <a href="http://gazebosim.org/tutorials?tut=components&amp;cat=get_started">this</a> gazebo tutorial, you need to let <code>gazebo</code> know where the plugin shared library is located. For doing this, you will need to set the following environment variables:</p>
+<ul>
+<li><code>GAZEBO_PLUGIN_PATH</code>: has to point to the folder where you installed the shared library;</li>
+<li><code>GAZEBO_MODEL_PATH</code>: has to point to the folder including the actor <code>.dae</code> files;</li>
+</ul>
+<div class="admonition info">
+<p class="admonition-title">gazebo models</p>
+<p><code>gazebo</code> currently provides several <code>.dae</code> animations, which can be found <a href="https://github.com/osrf/gazebo/tree/gazebo11/media/models">here</a>.</p>
+</div>
+<ul>
+<li><code>GAZEBO_RESOURCE_PATH</code>: has to point to the folder including your world application.</li>
+</ul>
+<h2 id="how-to-include-the-plugin-in-your-world">How to include the plugin in your world<a class="headerlink" href="#how-to-include-the-plugin-in-your-world" title="Permanent link">&para;</a></h2>
+<p>To include the plugin in your world, you can add the highlighted lines to the actor tag:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&lt;actor</span> <span class="na">name=</span><span class="s">&quot;actor&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;skin&gt;</span>
+    <span class="nt">&lt;filename&gt;</span>stand.dae<span class="nt">&lt;/filename&gt;</span>
+  <span class="nt">&lt;/skin&gt;</span>
+  <span class="nt">&lt;animation</span> <span class="na">name=</span><span class="s">&quot;stand&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;filename&gt;</span>stand.dae<span class="nt">&lt;/filename&gt;</span>
+  <span class="nt">&lt;/animation&gt;</span>
+  <span class="nt">&lt;animation</span> <span class="na">name=</span><span class="s">&quot;sit_down&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;filename&gt;</span>sit_down.dae<span class="nt">&lt;/filename&gt;</span>
+  <span class="nt">&lt;/animation&gt;</span>
+  <span class="nt">&lt;animation</span> <span class="na">name=</span><span class="s">&quot;stand_up&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;filename&gt;</span>stand_up.dae<span class="nt">&lt;/filename&gt;</span>
+  <span class="nt">&lt;/animation&gt;</span>
+  <span class="nt">&lt;animation</span> <span class="na">name=</span><span class="s">&quot;walk&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;filename&gt;</span>walk.dae<span class="nt">&lt;/filename&gt;</span>
+    <span class="nt">&lt;interpolate_x&gt;</span>true<span class="nt">&lt;/interpolate_x&gt;</span>
+  <span class="nt">&lt;/animation&gt;</span>
+  <span class="nt">&lt;script&gt;</span>
+    <span class="nt">&lt;loop&gt;</span>false<span class="nt">&lt;/loop&gt;</span>
+    <span class="nt">&lt;auto_start&gt;</span>false<span class="nt">&lt;/auto_start&gt;</span>
+    <span class="nt">&lt;trajectory</span> <span class="na">id=</span><span class="s">&quot;0&quot;</span> <span class="na">type=</span><span class="s">&quot;stand&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;trajectory</span> <span class="na">id=</span><span class="s">&quot;1&quot;</span> <span class="na">type=</span><span class="s">&quot;sit_down&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;trajectory</span> <span class="na">id=</span><span class="s">&quot;2&quot;</span> <span class="na">type=</span><span class="s">&quot;stand_up&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;trajectory</span> <span class="na">id=</span><span class="s">&quot;3&quot;</span> <span class="na">type=</span><span class="s">&quot;walk&quot;</span><span class="nt">/&gt;</span>
+  <span class="nt">&lt;/script&gt;</span>
+<span class="hll">  <span class="nt">&lt;plugin</span> <span class="na">name=</span><span class="s">&#39;tug_interface&#39;</span> <span class="na">filename=</span><span class="s">&#39;libgazebo_assistiverehab_tuginterface.so&#39;</span><span class="nt">&gt;</span>
+</span><span class="hll">    <span class="nt">&lt;yarpConfigurationFile&gt;</span>model://tugInterface.ini<span class="nt">&lt;/yarpConfigurationFile&gt;</span>
+</span><span class="hll">  <span class="nt">&lt;/plugin&gt;</span>
+</span><span class="nt">&lt;/actor&gt;</span>
+</code></pre></div>
+<p>This example snippet generates an actor associated to three animations, <code>stand.dae</code>, <code>sit_down.dae</code>, <code>stand_up.dae</code> and <code>walk.dae</code>.
+The plugin loads the <a href="https://github.com/robotology/assistive-rehab/blob/feat/doc-v0.5.0/app/gazebo/tug/tugInterface.ini"><code>tugInterface.ini</code></a> configuration file and opens a rpc port named by default <code>/tug_input_port</code>, which gives you access to a set of thrift services, described in the next section.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>To use the plugin you will need to have an actor with at least one animation associated.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>We are going to refer to this snippet in next section to see the plugin functionalities, but you can personalize the actor according to your needs.</p>
+</div>
+<h2 id="using-the-plugin">Using the plugin<a class="headerlink" href="#using-the-plugin" title="Permanent link">&para;</a></h2>
+<p>To start using the plugin, first open a terminal and run <code>yarpserver</code>.
+Open a new terminal and type <code>gazebo</code> followed by the name of your scenario.</p>
+<div class="admonition important">
+<p class="admonition-title">Remember</p>
+<p><code>gazebo</code> looks for world files in the <code>$GAZEBO_RESOURCE_PATH</code> environment variable, as described at the <a href="#preparing-your-environment">beginning</a> of this tutorial.</p>
+</div>
+<p>Now you should see an actor standing on your screen:</p>
+<p><img alt="default_gzclient_camera(1)-2020-05-18T15_36_11 353681" src="https://user-images.githubusercontent.com/9716288/82219308-6244d180-991d-11ea-9caa-ab07f382b74e.jpg" /></p>
+<p>You can start playing with the plugin!</p>
+<p>Open a terminal and type <code>yarp rpc /tug_input_port</code>.</p>
+<h3 id="playing-the-animations">Playing the animations<a class="headerlink" href="#playing-the-animations" title="Permanent link">&para;</a></h3>
+<p>Type <code>play</code> on the terminal. All the animations are going to be played in a row, following the sequence defined by the ids in the trajectories as defined <a href="#how-to-include-the-plugin-in-your-world">here</a>:</p>
+<p><img alt="actor" src="https://user-images.githubusercontent.com/9716288/82221362-337c2a80-9920-11ea-9d24-7999e39af9ff.gif" /></p>
+<p>Additionally, you can play the single animations associated to the actor or play the whole script from the specified animation:</p>
+<table>
+<thead>
+<tr>
+<th><p align="center"> <strong>PLAY SINGLE ANIMATION</strong>  </p></th>
+<th><p align="center"> <strong>PLAY FROM ANIMATION</strong>  </p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>play stand</code> <p align="center"> <img src="https://user-images.githubusercontent.com/9716288/82222196-3d525d80-9921-11ea-8e8f-5248243062ed.gif"> </p></td>
+<td><code>play stand -1 true</code> <p align="center"> <img src="https://user-images.githubusercontent.com/9716288/82225129-1007ae80-9925-11ea-9d9d-0f55a0e4a5c9.gif"> </p></td>
+</tr>
+<tr>
+<td><code>play sit_down</code> <p align="center"> <img src="https://user-images.githubusercontent.com/9716288/82223329-cddd6d80-9922-11ea-8ada-f6b7d7b19e70.gif"> </p></td>
+<td><code>play sit_down -1 true</code> <p align="center"> <img src="https://user-images.githubusercontent.com/9716288/82225178-23b31500-9925-11ea-8165-ce3b8ec0bcfe.gif"> </p></td>
+</tr>
+<tr>
+<td><code>play stand_up</code> <p align="center"> <img src="https://user-images.githubusercontent.com/9716288/82223561-1a28ad80-9923-11ea-8632-9ea133b16570.gif"> </p></td>
+<td><code>play stand_up -1 true</code> <p align="center"> <img src="https://user-images.githubusercontent.com/9716288/82225209-3299c780-9925-11ea-968c-cfd4d427b593.gif"> </p></td>
+</tr>
+<tr>
+<td><code>play walk</code> <p align="center"> <img src="https://user-images.githubusercontent.com/9716288/82223615-2a408d00-9923-11ea-92af-dc77471237ed.gif"> </p></td>
+<td><code>play walk  -1 true</code> <p align="center"> <img src="https://user-images.githubusercontent.com/9716288/82223615-2a408d00-9923-11ea-92af-dc77471237ed.gif"> </p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Retrieving animations</p>
+<p>You can retrieve the list of animations associated to your actor using the rpc command <code>getAnimationList</code>.</p>
+</div>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<p>Playing a single animation of the script is useful when you need a condition to be accomplished before the specific animation is played.
+For example, in the TUG scenario, we want the actor to sit or to start walking only when the robot gives the related command.
+You can check it out <a href="../tug_demo/">here</a>.</p>
+</div>
+<h3 id="changing-walking-parameters">Changing walking parameters<a class="headerlink" href="#changing-walking-parameters" title="Permanent link">&para;</a></h3>
+<p>The path followed during the <code>walk</code> animation is specified by <code>targets</code> in the <a href="https://github.com/robotology/assistive-rehab/blob/feat/doc-v0.5.0/app/gazebo/tug/tugInterface.ini"><code>tugInterface.ini</code></a> configuration file: this is a matrix containing the poses to reach in the form <code>x y theta</code>.</p>
+<div class="admonition important">
+<p class="admonition-title">Reference frame</p>
+<p>The targets are defined with respect to the gazebo world frame, thus <code>X</code> pointing forward (with respect to the human model), <code>Y</code> pointing left, <code>Z</code> pointing up.</p>
+</div>
+<p>For <a href="../TUG/">our application</a>, we need the human model to reach the target and go back to the initial position. You can control the trajectory through the following rpc commands:</p>
+<table>
+<thead>
+<tr>
+<th><p align="center"> <strong>DESCRIPTION</strong>  </p></th>
+<th><p align="center"> <strong>OUTPUT</strong>  </p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p align="center">  <strong><code>setTarget x y theta</code></strong>: <br> providing <code>x y theta</code>, when playing the <code>walk</code> animation, the human model will reach the new specified target and go back. </p></td>
+<td>- <code>setTarget 3.5 2.0 10.0</code> <br> - <code>play walk</code> <p align="center"> <img src="https://user-images.githubusercontent.com/9716288/82234677-0173c400-9932-11ea-8836-a2767157430f.gif"> </p></td>
+</tr>
+<tr>
+<td><p align="center">  <strong><code>goToSeq (x1 y1 theta1 ... xN yN thetaN)</code></strong>: <br> providing the list of <code>xi yi thetai</code>, the human model reaches the specified waypoints. </p></td>
+<td>- <code>goToSeq (3.0 2.0 20.0 5.0 0.0 -20.0)</code> <p align="center"> <img src="https://user-images.githubusercontent.com/9716288/82229490-cc17a800-992a-11ea-867f-efc40e2e13e6.gif"> </p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code>goToSeq</code> is a blocking service: only when the last target is reached, an ack is returned.</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>The interface provides two additional services, <code>goTo</code> and <code>goToWait</code> which are the punctual versions of <code>goToSeq</code>, respectively non blocking and blocking.</p>
+</div>
+<p>Finally, you can set the speed of the walking animation through the command <code>setSpeed</code>:</p>
+<table>
+<thead>
+<tr>
+<th><p align="center"> <strong>WALKING SLOWER</strong>  </p></th>
+<th><p align="center"> <strong>WALKING FASTER</strong>  </p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>- <code>setSpeed 0.5</code> <br> - <code>play walk</code> <p align="center"> <img src="https://user-images.githubusercontent.com/9716288/82234799-249e7380-9932-11ea-9978-81601d8ad1ac.gif"> </p></td>
+<td>- <code>setSpeed 2.0</code> <br> - <code>play walk</code> <p align="center"> <img src="https://user-images.githubusercontent.com/9716288/82234837-3253f900-9932-11ea-9311-ba319070bdea.gif"> </p></td>
+</tr>
+</tbody>
+</table>
+<h3 id="additional-services">Additional services<a class="headerlink" href="#additional-services" title="Permanent link">&para;</a></h3>
+<p>The additional services provided are the following:</p>
+<ul>
+<li><code>playFromLast</code>: to play the animation from the last stop. A stop can be provided while an animation is being played. With this command, you will be able to start the script exactly from where you stopped.</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The whole script is played by default. The command <code>playFromLast false</code> plays only the animation coming after last stop.</p>
+</div>
+<ul>
+<li><code>getState</code>: to know the current animation being played;</li>
+<li><code>pause</code>: to pause the actor for a specified time or for an unlimited time (if not specified and until the <code>play</code> command is provided).</li>
+</ul>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
+        
+          <a href="../tug_demo/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+            </div>
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                How to run the TUG demo
+              </div>
+            </div>
+          </a>
+        
+        
+          <a href="../wifi_button/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                How to configure the wifi button
+              </div>
+            </div>
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+          <div class="md-footer-copyright__highlight">
+            Copyright &copy; 2019 Istituto Italiano di Tecnologia - iCub Tech
+          </div>
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../assets/javascripts/vendor.08c56446.min.js"></script>
+      <script src="../assets/javascripts/bundle.6ced434e.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
+      
+      <script>
+        app = initialize({
+          base: "..",
+          features: ['tabs'],
+          search: Object.assign({
+            worker: "../assets/javascripts/worker/search.8c7e0a7e.min.js"
+          }, typeof search !== "undefined" && search)
+        })
+      </script>
+      
+    
+  </body>
+</html>

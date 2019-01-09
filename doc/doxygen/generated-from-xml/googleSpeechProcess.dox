@@ -1,0 +1,48 @@
+
+  /**
+  *
+  * @ingroup googleSpeechProcess
+  * \defgroup googleSpeechProcess googleSpeechProcess
+  * This module is responsible for analysing the speech transcript and send out the correct meaning of the phrase
+  * Version:0.3.0
+  * \author  Vadim Tikhanoff vadim.tikhanoff@iit.it
+  * \n
+  * \copyright  Released under the terms of the BSD 3-Clause License.
+  * \section intro_sec Description
+  *
+  
+   This module retrieves the transcript output from speech transcript and queries google cloud language services and provides the output on a port.
+  
+  * \section parameters_sec Parameters
+  
+  *- --name: Module's name; all the open ports will be tagged with the prefix /name.
+  *- --language_code: Use English US
+  *- --sample_rate_hertz: Use 16000 hertz for the sample rate
+  * \section inputports_sec Input Ports
+  * 
+  *- /googleSpeechProcess/text:i [Bottle]  [default carrier:]: 
+            Port to receive speech transcript to analyse
+          
+  *
+  
+  * \section outputports_sec Output Ports
+  * 
+  *- /googleSpeechProcess/result:o [Bottle]  [default carrier:]: 
+            Sends the phrase analysis result of the output of google language query
+          
+  *
+  
+  *
+  * \section services_sec Services
+  * 
+  *- /googleSpeech/rpc
+  *  [rpc-server]: 
+  * service port
+  * . This service is described in googleSpeech_IDL (idl.thrift)
+  * 
+  *
+  * 
+  *
+  *
+  **/
+
