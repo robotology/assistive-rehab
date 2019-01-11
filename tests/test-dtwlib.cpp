@@ -11,6 +11,7 @@
  */
 
 #include <cstdlib>
+#include <cmath>
 #include <iostream>
 #include <vector>
 #include <algorithm>

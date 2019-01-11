@@ -4,8 +4,8 @@
 
 project(feedbackSynthetizer)
 
-add_definitions(-D_USE_MATH_DEFINES)
 add_executable(${PROJECT_NAME} src/main.cpp)
+target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} AssistiveRehab ${FFTW3_LIBRARIES} ${GSL_LIBRARIES})
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 

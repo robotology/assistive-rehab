@@ -20,9 +20,9 @@ if(MATIO_FOUND AND HDF5_FOUND)
     message(STATUS "HDF5_INCLUDE_DIR: " ${HDF5_INCLUDE_DIR})
     message(STATUS "HDF5_LIBRARIES: " ${HDF5_LIBRARIES})
 
-    add_definitions(-D_USE_MATH_DEFINES)
     include_directories(${PROJECT_SOURCE_DIR}/include ${MATIO_INCLUDE_DIR} ${HDF5_INCLUDE_DIR})
     add_executable(${PROJECT_NAME} ${source} ${header} src/idl.thrift ${IDL_GEN_FILES})
+    target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
     target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} ${HDF5_LIBRARIES} ${MATIO_LIBRARIES} ctrlLib AssistiveRehab)
     install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
