@@ -7,6 +7,8 @@ find_package(HDF5 QUIET)
 if(MATIO_FOUND AND HDF5_FOUND)
     project(motionAnalyzer)
 
+    set(doc_files ${PROJECT_NAME}.xml)
+
     yarp_add_idl(IDL_GEN_FILES src/idl.thrift)
 
     file(GLOB source src/*.cpp)
@@ -15,13 +17,13 @@ if(MATIO_FOUND AND HDF5_FOUND)
     source_group("Source Files" FILES ${source})
     source_group("Header Files" FILES ${header})
     source_group("IDL Files" FILES src/idl.thrift)
-    source_group("DOC Files" FILES ${PROJECT_NAME}.xml)
+    source_group("DOC Files" FILES ${doc_files})
 
     message(STATUS "HDF5_INCLUDE_DIR: " ${HDF5_INCLUDE_DIR})
     message(STATUS "HDF5_LIBRARIES: " ${HDF5_LIBRARIES})
 
     include_directories(${PROJECT_SOURCE_DIR}/include ${MATIO_INCLUDE_DIR} ${HDF5_INCLUDE_DIR})
-    add_executable(${PROJECT_NAME} ${source} ${header} src/idl.thrift ${IDL_GEN_FILES})
+    add_executable(${PROJECT_NAME} ${source} ${header} src/idl.thrift ${IDL_GEN_FILES} ${doc_files})
     target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
     target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} ${HDF5_LIBRARIES} ${MATIO_LIBRARIES} ctrlLib AssistiveRehab)
     install(TARGETS ${PROJECT_NAME} DESTINATION bin)

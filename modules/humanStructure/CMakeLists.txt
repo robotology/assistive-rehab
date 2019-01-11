@@ -4,7 +4,10 @@
 
 project(humanStructure)
 
-add_executable(${PROJECT_NAME} main.cpp)
+set(doc_files ${PROJECT_NAME}.xml)
+source_group("DOC Files" FILES ${doc_files})
+
+add_executable(${PROJECT_NAME} main.cpp ${doc_files})
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} ${OpenCV_LIBRARIES})
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="yarpmanifest.xsl"?>
+
+<module>
+  <name>skeletonViewer</name>
+  <doxygen-group></doxygen-group>
+  <description>This module .</description>
+  <copypolicy> Released under the terms of the GNU GPL v2.0 .</copypolicy>
+  <version>0.2.0</version>
+
+  <description-long>
+   Here you can provide a detailed description of what your module does, how it is structured, how it works, how to use it and so on.
+  </description-long>
+
+  <arguments>
+    <param default="default-value-0" desc="Describe the meaning and effect of parameter no. 0">parameter-0</param>
+    <param default="default-value-1" desc="Describe the meaning and effect of parameter no. 1">parameter-1</param>
+  </arguments>
+
+  <authors>
+    <author email="ugo.pattacini@iit.it"> Ugo Pattacini </author>
+  </authors>
+
+  <data>
+      <input>
+          <type>data type</type>
+          <port carrier="tcp/udp/..">/skeletonRetriever/skeletons:i</port>
+          <description>
+            Short description of your port behaviour.
+          </description>
+      </input>
+      <input>
+          <type>data type</type>
+          <port carrier="tcp/udp/..">/skeletonRetriever/depth:i</port>
+          <description>
+            Short description of your port behaviour.
+          </description>
+      </input>
+      <output>
+          <type>data type</type>
+          <port carrier="tcp/udp/..">/skeletonRetriever/viewer:o</port>
+          <description>
+            Short description of your port behaviour.
+          </description>
+      </output>
+  </data>
+
+</module>

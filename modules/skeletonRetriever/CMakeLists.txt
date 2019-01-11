@@ -5,9 +5,12 @@
 find_package(IPOPT QUIET)
 if(IPOPT_FOUND)
   project(skeletonRetriever)
+  set(doc_files ${PROJECT_NAME}.xml)
+
+  source_group("DOC Files" FILES ${doc_files})
 
   include_directories(${IPOPT_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/src)
-  add_executable(${PROJECT_NAME} src/utils.h src/main.cpp src/nlp.h src/nlp.cpp)
+  add_executable(${PROJECT_NAME} src/utils.h src/main.cpp src/nlp.h src/nlp.cpp ${doc_files})
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${IPOPT_DEFINITIONS} _USE_MATH_DEFINES)
   set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS " ${IPOPT_LINK_FLAGS}")
   target_link_libraries(${PROJECT_NAME} ${IPOPT_LIBRARIES} ${YARP_LIBRARIES} ctrlLib AssistiveRehab)
