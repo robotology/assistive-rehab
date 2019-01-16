@@ -85,7 +85,7 @@ class Overlayer : public RFModule
                             {
                                 int u=(int)k->get(1).asDouble();
                                 int v=(int)k->get(2).asDouble();
-                                cv::circle(img,cv::Point(u,v),2,cv::Scalar(255,0,0));
+                                cv::circle(img,cv::Point(u,v),2,cv::Scalar(0,0,255));
                             }
                         }
                     }
@@ -152,6 +152,7 @@ class Overlayer : public RFModule
             cv::addWeighted(src1,alpha,src2,beta,0.0,dst);
             addKeys(dst);
 
+            ovl=fromCvMat<PixelRgb>(dst);
             ovlPort.writeStrict();
         }
         return true;
