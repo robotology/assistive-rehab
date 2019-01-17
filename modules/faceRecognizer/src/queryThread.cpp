@@ -119,11 +119,9 @@ void QueryThread::run()
         if (cropValid)
         {
             cv::Rect img_ROI = cv::Rect(cv::Point( tlx, tly ), cv::Point( brx, bry ));
-            yarp::sig::ImageOf<yarp::sig::PixelRgb> img_crop;
-            img_crop.resize(img_ROI.width, img_ROI.height);
-            cv::Mat img_crop_mat = yarp::cv::toCvMat(img_crop);
+            cv::Mat img_crop_mat;
             img_mat(img_ROI).copyTo(img_crop_mat);
-            
+
             if (frame_counter<skip_frames)
             {
                 frame_counter++;
@@ -131,6 +129,7 @@ void QueryThread::run()
             else
             {
                 port_out_crop.setEnvelope(stamp);
+                auto img_crop = yarp::cv::fromCvMat<yarp::sig::PixelRgb>(img_crop_mat);
                 port_out_crop.write(img_crop);
                 frame_counter = 0;
             }
@@ -183,10 +182,9 @@ yarp::os::Bottle QueryThread::classify(yarp::os::Bottle &persons)
             bry = img_mat.rows-5;
         
         cv::Rect img_ROI = cv::Rect(cv::Point( tlx, tly ), cv::Point( brx, bry ));
-        yarp::sig::ImageOf<yarp::sig::PixelRgb> img_crop;
-        img_crop.resize(img_ROI.width, img_ROI.height);
-        cv::Mat img_crop_mat = yarp::cv::toCvMat(img_crop);
+        cv::Mat img_crop_mat;
         img_mat(img_ROI).copyTo(img_crop_mat);
+        auto img_crop = yarp::cv::fromCvMat<yarp::sig::PixelRgb>(img_crop_mat);
         port_out_crop.write(img_crop);
         
         yarp::os::Bottle &Obj_score=reply.addList();

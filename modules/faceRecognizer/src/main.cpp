@@ -425,19 +425,18 @@ public:
                                      const int i, const yarp::os::Bottle &labels)
     {
         yarp::os::Bottle winners;
-        yarp::sig::ImageOf<yarp::sig::PixelRgb> imgOut = img;
         cv::Mat imgMat=yarp::cv::toCvMat(img);
 
-        cv::Scalar highlight(14,198,8);
+        cv::Scalar highlight(8,198,14);
 
         if (allowedTrain)
         {
-            highlight[0] = 204;
+            highlight[0] = 0;
             highlight[1] = 0;
-            highlight[2] = 0;
+            highlight[2] = 204;
         }
 
-        cv::Scalar lowlight(0, 102, 204);
+        cv::Scalar lowlight(204, 102, 0);
 
         winners.clear();
 
@@ -494,6 +493,7 @@ public:
             cv::rectangle(imgMat,tl,br,(j==i)?highlight:lowlight,2);
         }
 
+        img=yarp::cv::fromCvMat<yarp::sig::PixelRgb>(imgMat);
         imageOutPort.prepare()=img;
         imageOutPort.writeStrict();
 
