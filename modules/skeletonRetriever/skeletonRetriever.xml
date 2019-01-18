@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="yarpmanifest.xsl"?>
+
+<module>
+  <name>skeletonRetriever</name>
+  <doxygen-group>skeletonRetriever</doxygen-group>
+  <description>This module merges 2D skeleton data with the depth information.</description>
+  <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
+  <version>0.2.0</version>
+
+  <description-long>
+   This module merges 2D skeleton data as acquired by yarpOpenPose along with the depth information provided by the camera.
+   The module communicates with the camera to retrieve its field of view. Given the keypoint depth and the camera's focal length, 3D world coordinates of the keypoints can be computed.
+   The module can be also run offline (no real camera is available) by specifying the camera's FOV, using the command camera::fov (54 42) (adjust the FOV according to the camera you want to simulate).
+   Erosion is applied to the depth map (true by default, can be disabled using the command depth::enable false).
+   Median filtering is applied to the keypoints in order to make the acquisition more robust.
+   Optimization is applied to the skeleton such that the length of the limbs is equal to that observed during an initial phase (true by default, can be disabled using the command filtering::optimize-limblength false).
+   It makes use of ipopt library.
+  </description-long>
+
+  <arguments>
+    <param default="0.01" desc="Periodicity of the module (s).">general::period</param>
+    <param default="0.3" desc="Keypoints whose confidence is lower than this threshold are discarded.">skeleton::keys-recognition-confidence</param>
+    <param default="0.3" desc="Minimum percentage of keypoints to consider a skeleton valid.">skeleton::keys-recognition-percentage</param>
+    <param default="5" desc="Number of consecutive times a keypoint can get lost before it becomes stale.">skeleton::keys-acceptable-misses</param>
+    <param default="50" desc="Maximum distance a skeleton can move before erasing it.">skeleton::tracking-threshold</param>
+    <param default="1.0" desc="Life span of a skeleton.">skeleton::time-to-live</param>
+    <param default="true" desc="Enable depth filtering.">depth::enable</param>
+    <param default="6" desc="Size of the applied kernel.">depth::kernel-size</param>
+    <param default="4" desc="Number of times erosion is applied.">depth::iterations</param>
+    <param default="1.0" desc="Threshold on the minimum distance (m).">depth::min-distance</param>
+    <param default="4.0" desc="Threshold on the maximum distance (m).">depth::max-distance</param>
+    <param default="3" desc="Order of the median filter applied to keypoints' position.">filtering::filter-keypoint-order</param>
+    <param default="40" desc="Order of the filter for optimizing limbs' lengths.">filtering::filter-limblength-order</param>
+    <param default="true" desc="Enable optimization of limbs' lengths.">filtering::optimize-limblength</param>
+    <param default="(54 42)" desc="Camera's field of view.">camera::fov</param>
+  </arguments>
+
+  <authors>
+    <author email="ugo.pattacini@iit.it"> Ugo Pattacini </author>
+  </authors>
+
+  <data>
+      <input>
+          <type>Bottle</type>
+          <port>/skeletonRetriever/skeletons:i</port>
+          <description>
+            Receives 2D skeletons from yarpOpenPose.
+          </description>
+      </input>
+      <input>
+          <type>ImageOfPixelFloat</type>
+          <port>/skeletonRetriever/depth:i</port>
+          <description>
+            Receives stream of camera depth images.
+          </description>
+      </input>
+      <output>
+          <type>rpc</type>
+          <port>/skeletonRetriever/opc:rpc</port>
+          <description>
+            Sends commands to \ref objectsPropertiesCollector to add 3D skeletons to the database.
+          </description>
+      </output>
+      <output>
+          <type>rpc</type>
+          <port>/skeletonRetriever/cam:rpc</port>
+          <description>
+            Sends commands to the depth sensor to retrieve camera's field of view.
+          </description>
+      </output>
+      <output>
+          <type>Bottle</type>
+          <port>/skeletonRetriever/viewer:o</port>
+          <description>
+            Outputs 3D skeletons to send to \ref skeletonViewer for visualization.
+          </description>
+      </output>
+  </data>
+
+</module>

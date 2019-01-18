@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="yarpmanifest.xsl"?>
+
+<module>
+  <name>motionAnalyzer</name>
+  <doxygen-group>motionAnalyzer</doxygen-group>
+  <description>This module is responsible for analyzing the performed movement in real-time.</description>
+  <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
+  <version>0.2.0</version>
+
+  <description-long>
+   This module is responsible for analyzing the performed movement in real-time.
+   It computes the range of motion (ROM) for range of motion movements and the speed of the end-point for reaching movements, which can be visualized on a yarpscope.
+   Each movement is identified by a group (ROM for range of motion and EP for end-point) and a tag, and described through a reference joint, a reference direction and a plane.
+   The ROM is computed as angle between the vector formed by the reference joint and its child (projected onto the projection plane) and the reference direction.
+   These information are avaliable in the config file motion-repertoire.ini, which contains relevant information for \ref skeletonScaler, \ref actionRecognizer and \feedbackProducer.
+   The tag of the movment has to match the name of the file loaded by \ref skeletonPlayer and the label of the classed predicted by \ref actionRecognizer.
+   The module is also responsible for generating matio files in order to produce an offline report.
+   It makes use of matio and hdf5 libraries.
+  </description-long>
+
+  <arguments>
+    <param default="motionAnalyzer" desc="The module's name; all the open ports will be tagged with the prefix /name">name</param>
+    <param default="motion-repertoire.ini" desc="Configuration file name with the list of movements that can be analyzed.">from</param>
+    <param default="(ROM EP)" desc="List of the groups specifying the movements (range of motion and end-point).">GENERAL::metric_tag</param>
+    <param default="(14 2)" desc="List containing how many movements are available for the corresponding group (corresponding to metric_tag).">GENERAL::number_metrics</param>
+    <param default="(0.0 0.0 -2.0)" desc="Position of the camera in world coordinates sent to \ref skeletonViewer.">GENERAL::cameraposinit</param>
+    <param default="(0.0 0.0 0.0)" desc="Focal point of the camera in world coordinates sent to \ref skeletonViewer.">GENERAL::focalpointinit</param>
+    <param default="abduction_right" desc="Tag of the movement.">ROM_0::motion_type</param>
+    <param default="shoulderRight" desc="Tag of the reference joint.">ROM_0::tag_joint</param>
+    <param default="(0.0 0.0 -1.0)" desc="Reference direction for computing the ROM in skeleton coordinates.">ROM_0::ref_dir</param>
+    <param default="coronal" desc="Tag of the plane for projecting the vector for computing the ROM.">ROM_0::tag_plane</param>
+    <param default="0.0" desc="Minimum value acceptable for the movement (degrees).">ROM_0::min</param>
+    <param default="100.0" desc="Maximum value acceptable for the movement (degrees).">ROM_0::max</param>
+    <param default="30" desc="Number of frames used in the action recognition for this movement. Sent to \ref actionRecognizer.">ROM_0::duration</param>
+    <param default="1.0" desc="Warping factor for squeezing (dilating) in time the template skeleton if less than 1 (greater than 1). Sent to \ref skeletonScaler.">ROM_0::twarp</param>
+    <param default="(elbowRight handRight)" desc="List of joints under analysis for producing final feedback, provided to \feedbackProducer.">ROM_0::joint_list</param>
+    <param default="(0.5 0.5)" desc="List of thresholds (corresponding to joint_list) on the standard deviation of the error in position along x direction. Sent to \feedbackProducer.">ROM_0::sx_thresh</param>
+    <param default="(0.5 0.5)" desc="List of thresholds (corresponding to joint_list) on the standard deviation of the error in position along y direction. Sent to \feedbackProducer.">ROM_0::sy_thresh</param>
+    <param default="(0.2 0.3)" desc="List of thresholds (corresponding to joint_list) on the standard deviation of the error in position along z direction. Sent to to \feedbackProducer.">ROM_0::sz_thresh</param>
+    <param default="(1 1)" desc="List of thresholds (corresponding to joint_list) on the difference in frequency between template and observed joints. Sent to to \feedbackProducer.">ROM_0::range_freq</param>
+    <param default="(10000.0 10000.0)" desc="List of thresholds (corresponding to joint_list) on the power spectrum density of the observed joints. Sent to to \feedbackProducer.">ROM_0::psd_thresh</param>
+    <param default="(2.0 -1.0 0.0)" desc="Target to reach in skeleton coordinates.">EP_0::target</param>
+    <param default="1.0" desc="Radius of the sphere defined around the template target.">EP_0::radius</param>
+    <param default="2" desc="Threshold on the statistics of the distribution of the observed points. Points whose score is below this threshold are considered inliers.">EP_0::zscore_thresh</param>
+    <param default="0.3" desc="Threshold on the number of inliers which fall within the template distribution.">EP_0::inliers_thresh</param>
+  </arguments>
+
+  <authors>
+    <author email="valentina.vasco@iit.it"> Valentina Vasco </author>
+  </authors>
+
+  <data>
+      <output>
+          <type>rpc</type>
+          <port>/motionAnalyzer/opc</port>
+          <description>
+            Sends commands to \ref objectsPropertiesCollector to retrieve 3D skeletons.
+          </description>
+      </output>
+      <output>
+          <type>rpc</type>
+          <port>/motionAnalyzer/scaler:cmd</port>
+          <description>
+            Sends commands to \ref skeletonScaler to load and move the template skeleton.
+          </description>
+      </output>
+      <output>
+          <type>rpc</type>
+          <port>/motionAnalyzer/dtw:cmd</port>
+          <description>
+            Sends commands to \ref feedbackProducer to start the analysis for producing feeback.
+          </description>
+      </output>
+      <output>
+          <type>rpc</type>
+          <port>/motionAnalyzer/action:cmd</port>
+          <description>
+            Sends commands to \ref actionRecognizer to start the action recognition.
+          </description>
+      </output>
+      <output>
+          <type>Bottle</type>
+          <port>/motionAnalyzer/scope</port>
+          <description>
+            Outputs a yarp bottle containing the result of the computation along with the ideal value.
+          </description>
+      </output>
+  </data>
+
+  <services>
+    <server>
+      <type>motionAnalyzer_IDL</type>
+      <idl>idl.thrift</idl>
+      <port>/motionAnalyzer/cmd</port>
+      <description>service port</description>
+    </server>
+  </services>
+
+</module>

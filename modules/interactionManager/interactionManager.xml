@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="yarpmanifest.xsl"?>
+
+<module>
+  <name>interactionManager</name>
+  <doxygen-group>interactionManager</doxygen-group>
+  <description>This module is responsible for supervising the interaction among all modules involved in the assistive rehab demo.</description>
+  <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
+  <version>0.2.0</version>
+
+  <description-long>
+   This module supervises the interaction among all modules involved in the assistive rehab demo.
+   Specifically, it is responsible for:
+   - engaging/disengaging a user in front of the robot (settable with the parameters engage-distance and engage-azimuth), by interacting with \ref attentionManager;
+   - starting/stopping the real-time motion analysis, by interacting with \ref motionAnalyzer;
+   - controlling the robot's movements to physically show the exercises, by sending commands to \ref ctpService for range of motion movements and to cer_reaching-controller for reaching movements. Possible movements and commands sent to the ports are defined in the move-file bash script
+   - managing the verbal interaction.
+  </description-long>
+
+  <arguments>
+    <param default="0.1" desc="Periodicity of the module.">period</param>
+    <param default="speak-it" desc="Configuration file name for the speak.">speak-file</param>
+    <param default="run-movements.sh" desc="Script file for robot's movements.">move-file</param>
+    <param default="(2.0,4.0)" desc="User engaged within this distance (m).">engage-distance</param>
+    <param default="(-15.0 15.0)" desc="User engaged within this field of view (degrees).">engage-azimuth</param>
+  </arguments>
+
+  <authors>
+    <author email="ugo.pattacini@iit.it"> Ugo Pattacini </author>
+    <author email="valentina.vasco@iit.it"> Valentina Vasco </author>
+  </authors>
+
+  <data>
+      <input>
+          <type>Bottle</type>
+          <port>/interactionManager/synthetizer:i</port>
+          <description>
+            Receives the score associated to the performed exercise. To be connected to /feedbackSynthetizer/score:o.
+          </description>
+      </input>
+      <output>
+          <type>rpc</type>
+          <port>/interactionManager/attention:rpc</port>
+          <description>
+            Sends commands to \ref attentionManager to redirect the robot's gaze toward the engaged user.
+          </description>
+      </output>
+      <output>
+          <type>rpc</type>
+          <port>/interactionManager/analyzer:rpc</port>
+          <description>
+            Sends commands to \ref motionAnalyzer for starting/stopping the real-time motion analysis.
+          </description>
+      </output>
+      <output>
+          <type>rpc</type>
+          <port>/interactionManager/speech:rpc</port>
+          <description>
+            Sends commands to \ref iSpeak to wait until the sentence is spoken.
+          </description>
+      </output>
+      <output>
+          <type>Bottle</type>
+          <port>/interactionManager/speech:o</port>
+          <description>
+            Streams out the verbal interaction. To be connected to \ref iSpeak.
+          </description>
+      </output>
+  </data>
+
+  <services>
+    <server>
+      <type>interactionManager_IDL</type>
+      <idl>idl.thrift</idl>
+      <port>/interactionManager/cmd:rpc</port>
+      <description>service port</description>
+    </server>
+  </services>
+
+</module>

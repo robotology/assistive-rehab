@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="yarpmanifest.xsl"?>
+
+<module>
+  <name>faceRecognizer</name>
+  <doxygen-group>faceRecognizer</doxygen-group>
+  <description>This module is responsible for recognizing human faces from an image, where faces have been detected.</description>
+  <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
+  <version>0.2.0</version>
+
+  <description-long>
+   This module is responsible for recognizing human faces from an image, where faces have been detected.
+   The module receives blobs around faces from \ref humanStructure and sends the cropped image to \ref caffeCoder,
+   which extracts a vectorial representation of the input image using a previously trained network.
+   The extracted features are finally classified by \ref icub_linearClassifier.
+   Training can be carried out in real-time using the provided API.
+   The module outputs the image with labelled blobs around the recognized faces, and 2D skeletons with the option "Name" followed by the label of the face ("?" for empty label) and the size of the blob.
+   The name is used by \ref skeletonRetriever to set a unique tag to the 3D skeleton.
+  </description-long>
+
+  <arguments>
+    <param default="faceRecognizer" desc="The module's name; all the open ports will be tagged with the prefix /name.">name</param>
+    <param default="0.2" desc="Life span of detected blobs (s).">blobs_detection_timeout</param>
+    <param default="10.0" desc="Time used for training a face (s).">training_time</param>
+    <param default="5" desc="Number of frames skipped for sending the cropped image.">skip_frames</param>
+  </arguments>
+
+  <authors>
+    <author email="vadim.tikhanoff@iit.it"> Vadim Tikhanoff </author>
+  </authors>
+
+  <data>
+      <input>
+          <type>Bottle</type>
+          <port>/faceRecognizer/blobs:i</port>
+          <description>
+            Receives blobs' coordinates around detected faces, as top left and bottom right corners.
+          </description>
+      </input>
+      <input>
+          <type>ImageOfPixelRgb</type>
+          <port>/faceRecognizer/image:i</port>
+          <description>
+            Receives the input image.
+          </description>
+      </input>
+      <input>
+          <type>Bottle</type>
+          <port>/faceRecognizer/target:i</port>
+          <description>
+            Receives input skeletons.
+          </description>
+      </input>
+      <input>
+          <type>Bottle</type>
+          <port>/faceRecognizer/scores:i</port>
+          <description>
+            Receives the scores associated to each class.
+          </description>
+      </input>
+      <output>
+          <type>rpc</type>
+          <port>/faceRecognizer/classifier:io</port>
+          <description>
+            Sends commands to the classifier for training and classifying.
+          </description>
+      </output>
+      <output>
+          <type>ImageOfPixelRgb</type>
+          <port>/faceRecognizer/image:o</port>
+          <description>
+            Streams out the image with labelled blobs around the recognized faces.
+          </description>
+      </output>
+      <output>
+          <type>Bottle</type>
+          <port>/faceRecognizer/target:o</port>
+          <description>
+            Streams out 2D skeletons.
+          </description>
+      </output>
+      <output>
+          <type>ImageOfPixelRgb</type>
+          <port>/faceRecognizer/crop:o</port>
+          <description>
+            Streams out the region of interest with the recognized face (the closest or the one with a lifted hand).
+          </description>
+      </output>
+  </data>
+
+  <services>
+    <server>
+      <type>recognition_IDL</type>
+      <idl>faceRecognizer.thrift</idl>
+      <port>/faceRecognizer/rpc</port>
+      <description>service port</description>
+    </server>
+  </services>
+
+</module>

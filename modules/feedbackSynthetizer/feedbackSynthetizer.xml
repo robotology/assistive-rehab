@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="yarpmanifest.xsl"?>
+
+<module>
+  <name>feedbackSynthetizer</name>
+  <doxygen-group>feedbackSynthetizer</doxygen-group>
+  <description>This module is responsible for producing a verbal feedback.</description>
+  <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
+  <version>0.2.0</version>
+
+  <description-long>
+   This module is responsible for translating the numerical feedback provided by \ref feedbackProducer into a verbal feedback.
+   The speak file contains the verbal feedback for the following scenarios:
+   - "speed": when an error in speed is detected;
+   - "position-rom": when an error in position for range of motion exercises is detected;
+   - "position-ep": when an error for reaching exercises is detected;
+   - "wrong": when the wrong exercise is performed;
+   - "perfect": when none of the previous situations occurs.
+   The default speak file is in italian; the english version can be loaded by running the module followed by the command --from config-en.ini (note: the yarp dev speech has to be run by setting the default language as english).
+  </description-long>
+
+  <arguments>
+    <param default="feedbackSynthetizer" desc="The module's name; all the open ports will be tagged with the prefix /name">name</param>
+    <param default="config-it.ini" desc="Configuration file name for the speak.">from</param>
+    <param default="speak-it" desc="Configuration file name for the speak.">speak-file</param>
+    <param default="0.1" desc="Periodicity of the module (s).">period</param>
+    <param default="2" desc="Maximum number of verbal feedbacks provided.">speak-length</param>
+  </arguments>
+
+  <authors>
+    <author email="valentina.vasco@iit.it"> Valentina Vasco </author>
+  </authors>
+
+  <data>
+      <input>
+          <type>Bottle</type>
+          <port>/feedbackSynthetizer/dtw:i</port>
+          <description>
+            Receives numerical feedback. To be connected to /feedbackProducer:o.
+          </description>
+      </input>
+      <output>
+          <type>Bottle</type>
+          <port>/feedbackSynthetizer/speech:o</port>
+          <description>
+            Streams out the verbal feedback. To be connected to \ref iSpeak.
+          </description>
+      </output>
+      <output>
+          <type>Bottle</type>
+          <port>/feedbackSynthetizer/score:o</port>
+          <description>
+            Streams out the score associated to the performed exercise.
+          </description>
+      </output>
+  </data>
+
+</module>

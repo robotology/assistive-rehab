@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="yarpmanifest.xsl"?>
+
+<module>
+  <name>skeletonPlayer</name>
+  <doxygen-group>skeletonPlayer</doxygen-group>
+  <description>This module is responsible for playing back the trajectory of a skeleton.</description>
+  <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
+  <version>0.2.0</version>
+
+  <description-long>
+   This module is responsible for playing back the trajectory of a skeleton, as recorded by means of yarpdatadumper.
+  </description-long>
+
+  <authors>
+    <author email="ugo.pattacini@iit.it"> Ugo Pattacini </author>
+  </authors>
+
+  <data>
+      <output>
+          <type>rpc</type>
+          <port>/skeletonPlayer/opc:rpc</port>
+          <description>
+            Sends commands to \ref objectsPropertiesCollector to add played skeleton to the database.
+          </description>
+      </output>
+      <output>
+          <type>Bottle</type>
+          <port>/skeletonPlayer/viewer:o</port>
+          <description>
+            Steams out the 3D skeleton to be visualized. To connect to \ref skeletonViewer.
+          </description>
+      </output>
+  </data>
+
+  <services>
+    <server>
+      <type>skeletonPlayer_IDL</type>
+      <idl>idl.thrift</idl>
+      <port>/skeletonPlayer/cmd:rpc</port>
+      <description>service port</description>
+    </server>
+  </services>
+
+</module>

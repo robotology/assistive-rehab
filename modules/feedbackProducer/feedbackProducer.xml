@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="yarpmanifest.xsl"?>
+
+<module>
+  <name>feedbackProducer</name>
+  <doxygen-group>feedbackProducer</doxygen-group>
+  <description>This module is responsible for analyzing the performed movement and producing a feedback.</description>
+  <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
+  <version>0.2.0</version>
+
+  <description-long>
+   This module is responsible for analyzing the performed movement and producing a feedback, by comparing the selected skeleton with a predefined template for that movement.
+   The analysis is carried out only if the label of the performed exercise and the label of the predicted action (provided by \ref actionRecognizer) are the same.
+   The analysis is differentiated depending on the kind of exercise to perform: for range of motion exercises, a Fourier analysis (for detecting differences in speed) followed by a statistical analysis of the error between joints' positions are carried out;
+   for a reaching exercise, a statistical analysis of the target reached is performed.
+   The output feedback is in the form "joint_tag" "feedback_key" "feedback_value", where "feedback_key" and "feedback_value" can be (respectively):
+   - "speed" "pos" (/"neg"): if a positive (/negative) error in speed is detected for range of motion exercises;
+   - "position-rom" "pos x" (/"neg x") "pos y" (/"neg y") "pos z" (/"neg z"): if a positive (/negative) error in position (along x, y and z directions) is detected for range of motion exercises;
+   - "position-ep": if the target is not reached for reaching exercises;
+   - "wrong": if the label of the predicted action does not correspond to the exercise to perform;
+   - "perfect": if none of the previous scenarios occurs.
+   It makes use of gsl and fftw3 libraries.
+  </description-long>
+
+  <arguments>
+    <param default="-1" desc="Window length for the alignment (through DTW), where the warping path is searched">win</param>
+    <param default="0.01" desc="Periodicity of the module (s).">period</param>
+  </arguments>
+
+  <authors>
+    <author email="valentina.vasco@iit.it"> Valentina Vasco </author>
+  </authors>
+
+  <data>
+      <input>
+          <type>Bottle</type>
+          <port>/feedbackProducer/action:i</port>
+          <description>
+            Receives a yarp bottle containing the label of the action to perform, the label of the predicted action
+            and the confidence score. To be connected to /actionRecognizer/target:o.
+          </description>
+      </input>
+      <output>
+          <type>rpc</type>
+          <port>/feedbackProducer/opc</port>
+          <description>
+            Sends commands to \ref objectsPropertiesCollector to retrieve 3D skeletons.
+          </description>
+      </output>
+      <output>
+          <type>Bottle</type>
+          <port>/feedbackProducer:o</port>
+          <description>
+            Streams out a bottle containing the numerical feedback.
+          </description>
+      </output>
+  </data>
+
+  <services>
+    <server>
+      <type>feedbackProducer_IDL</type>
+      <idl>idl.thrift</idl>
+      <port>/feedbackProducer/rpc</port>
+      <description>service port</description>
+    </server>
+  </services>
+
+</module>

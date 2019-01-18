@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="yarpmanifest.xsl"?>
+
+<module>
+  <name>attentionManager</name>
+  <doxygen-group>attentionManager</doxygen-group>
+  <description>This module controls the gaze of the robot toward the salient part of the scene.</description>
+  <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
+  <version>0.2.0</version>
+
+  <description-long>
+   This module redirects the robot's gaze toward a keypoint of the skeleton in the scene.
+   It sends commands to cer_gaze-controller.
+  </description-long>
+
+  <arguments>
+    <param default="false" desc="Enable autonomous mode.">auto-start</param>
+    <param default="0.1" desc="Periodicity of the module (s).">period</param>
+    <param default="0.05" desc="Threshold for detecting inactivity of the skeleton.">inactivity-thres</param>
+  </arguments>
+
+  <authors>
+    <author email="ugo.pattacini@iit.it"> Ugo Pattacini </author>
+  </authors>
+
+  <data>
+      <input>
+          <type>Bottle</type>
+          <port>/attentionManager/opc:i</port>
+          <description>
+            Retrieves 3D skeletons from \ref objectsPropertiesCollector.
+          </description>
+      </input>
+      <input>
+          <type>Property</type>
+          <port>/attentionManager/gaze/state:i</port>
+          <description>
+            Retrieves the current pose of the camera.
+          </description>
+      </input>
+      <output>
+          <type>rpc</type>
+          <port>/attentionManager/gaze/cmd:rpc</port>
+          <description>
+            Sends commands to cer_gaze-controller.
+          </description>
+      </output>
+  </data>
+
+  <services>
+    <server>
+      <type>attentionManager_IDL</type>
+      <idl>idl.thrift</idl>
+      <port>/attentionManager/cmd:rpc</port>
+      <description>service port</description>
+    </server>
+  </services>
+
+</module>

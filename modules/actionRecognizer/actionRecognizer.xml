@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="yarpmanifest.xsl"?>
+
+<module>
+  <name>actionRecognizer</name>
+  <doxygen-group>actionRecognizer</doxygen-group>
+  <description>This module is responsible for recognizing actions.</description>
+  <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
+  <version>0.2.0</version>
+
+  <description-long>
+   This module retrieves the selected 3D skeleton from \ref objectsPropertiesCollector and sends the upper body 2D keypoints (x,y) (ankles and knees discarded), observed in a predefined window, to a pretrained LSTM.
+   The retrieved skeleton is normalized and keypoints are transformed and rescaled by a factor of 10 (same operations were performed during training). When the window is full, the network outputs the label of the predicted action.
+   Predicted actions are accumulated for a (settable) number of times, and the label of the most voted action is provided as output.
+   The adopted classes are defined in the config.ini file.
+   It makes use of TensorFlowCC.
+  </description-long>
+
+  <arguments>
+        <param default="actionRecognizer" desc="Module's name; all the open ports will be tagged with the prefix /name.">name</param>
+        <param default="true" desc="To enable prediction.">predict</param>
+        <param default="6" desc="Number of classes. This has to be the same as defined during training.">general::num-classes</param>
+        <param default="22" desc="Number of features (upper body 2D keypoints' coordinates) provided to the network. This has to be the same as defined during training.">general::num-features</param>
+        <param default="3" desc="Number of times predicted actions are accumulated. Only the most voted action is provided as output.">general::num-steps</param>
+        <param default="abduction_left / external_rotation_left / internal_rotation_left / random / static / reaching_left " desc="Label of the class.">class-i::label</param>
+        <param default="0 / 1 / 2 / 3 / 4 / 5" desc="Class number as provided by the network.">class-i::value</param>
+  </arguments>
+
+  <authors>
+    <author email="valentina.vasco@iit.it"> Valentina Vasco </author>
+  </authors>
+
+  <data>
+      <output>
+          <type>Bottle</type>
+          <port>/actionRecognizer/target:o</port>
+          <description>
+            Outputs a yarp bottle containing the label of the action to perform, the label of the predicted action and the confidence score.
+          </description>
+      </output>
+      <output>
+          <type>rpc</type>
+          <port>/actionRecognizer/opc</port>
+          <description>
+            Sends commands to \ref objectsPropertiesCollector to retrieve 3D skeletons. (Note: only 2D keypoints are used).
+          </description>
+      </output>
+  </data>
+
+  <services>
+    <server>
+      <type>actionRecognizer_IDL</type>
+      <idl>idl.thrift</idl>
+      <port>/actionRecognizer/rpc</port>
+      <description>service port</description>
+    </server>
+  </services>
+
+</module>
