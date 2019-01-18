@@ -33,7 +33,7 @@
     <param default="0.0" desc="Minimum value acceptable for the movement (degrees).">ROM_0::min</param>
     <param default="100.0" desc="Maximum value acceptable for the movement (degrees).">ROM_0::max</param>
     <param default="30" desc="Number of frames used in the action recognition for this movement. Sent to \ref actionRecognizer.">ROM_0::duration</param>
-    <param default="1.0" desc="Warping factor for squeezing (dilating) in time the template skeleton if <1 (>1). Sent to \ref skeletonScaler.">ROM_0::twarp</param>
+    <param default="1.0" desc="Warping factor for squeezing (dilating) in time the template skeleton if less than 1 (greater than 1). Sent to \ref skeletonScaler.">ROM_0::twarp</param>
     <param default="(elbowRight handRight)" desc="List of joints under analysis for producing final feedback, provided to \feedbackProducer.">ROM_0::joint_list</param>
     <param default="(0.5 0.5)" desc="List of thresholds (corresponding to joint_list) on the standard deviation of the error in position along x direction. Sent to \feedbackProducer.">ROM_0::sx_thresh</param>
     <param default="(0.5 0.5)" desc="List of thresholds (corresponding to joint_list) on the standard deviation of the error in position along y direction. Sent to \feedbackProducer.">ROM_0::sy_thresh</param>
