@@ -3,18 +3,18 @@
 
 <module>
   <name>skeletonScaler</name>
-  <doxygen-group></doxygen-group>
-  <description>This module .</description>
-  <copypolicy> Released under the terms of the GNU GPL v2.0 .</copypolicy>
+  <doxygen-group>skeletonScaler</doxygen-group>
+  <description>This module superimposes a (pre-recorded) template skeleton on the current skeleton.</description>
+  <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
   <version>0.2.0</version>
 
   <description-long>
-   Here you can provide a detailed description of what your module does, how it is structured, how it works, how to use it and so on.
+   This module superimposes a (pre-recorded) template skeleton on the current skeleton. It sends commands to the \ref skeletonPlayer for loading the template skeleton and computes the roto-translation matrix which allows to align the shoulder center keypoints and the planes of both skeletons.
   </description-long>
 
   <arguments>
-    <param default="default-value-0" desc="Describe the meaning and effect of parameter no. 0">parameter-0</param>
-    <param default="default-value-1" desc="Describe the meaning and effect of parameter no. 1">parameter-1</param>
+    <param default="0" desc="Number of repetitions the recorded skeleton is played (0 means infinite)">nsessions</param>
+    <param default="0.0" desc="Stream starting time computed from the time origin.">tbegin</param>
   </arguments>
 
   <authors>
@@ -22,27 +22,38 @@
   </authors>
 
   <data>
-      <input>
-          <type>data type</type>
-          <port carrier="tcp/udp/..">/skeletonRetriever/skeletons:i</port>
-          <description>
-            Short description of your port behaviour.
-          </description>
-      </input>
-      <input>
-          <type>data type</type>
-          <port carrier="tcp/udp/..">/skeletonRetriever/depth:i</port>
-          <description>
-            Short description of your port behaviour.
-          </description>
-      </input>
-      <output>
-          <type>data type</type>
-          <port carrier="tcp/udp/..">/skeletonRetriever/viewer:o</port>
-          <description>
-            Short description of your port behaviour.
-          </description>
-      </output>
-  </data>
+    <input>
+       <type>rpc</type>
+       <port>/skeletonScaler/rpc</port>
+       <description>Receives the following commands and provides replies: (notation: "." identifies a string)
+       -# <b>load skeleton file</b> <i>"load" "file" "context"</i>:load skeleton file. "file" name of the file containing the skeleton data. "context" context used to look for the file.
+       -# <b>set camera options</b> <i>"rot" pos_list focal_list </i>:set camera options to \ref skeletonViewer. pos_list the position of the camera in world coordinates. focal_list the focal point of the camera in world coordinates.
+       -# <b>start</b> <i>"run" twarp </i>:start. twarp specifies the warping factor squeezing (dilating) in time the original stream if <1 (>1).
+       -# <b>set skeleton's tag</b> <i>"tags" "tag" </i>:set skeleton's tag. "tag" tag of the skeleton.
+       -# <b>stop</b> <i>"stop"</i>:stop.
+       </description>
+    </input>
+    <output>
+        <type>rpc</type>
+        <port>/skeletonScaler/opc</port>
+        <description>
+          Sends commands to \ref objectsPropertiesCollector to retrieve template and selected skeletons.
+        </description>
+    </output>
+    <output>
+        <type>rpc</type>
+        <port>/skeletonScaler/player:rpc</port>
+        <description>
+          Sends commands to \ref skeletonPlayer for playing back the trajectory of the selected skeleton.
+        </description>
+    </output>
+    <output>
+        <type>rpc</type>
+        <port>/skeletonScaler/viewer:rpc</port>
+        <description>
+          Sends commands to \ref skeletonViewer to set camera options for visualization.
+        </description>
+    </output>
+</data>
 
 </module>

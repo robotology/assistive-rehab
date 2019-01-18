@@ -3,18 +3,24 @@
 
 <module>
   <name>skeletonViewer</name>
-  <doxygen-group></doxygen-group>
-  <description>This module .</description>
-  <copypolicy> Released under the terms of the GNU GPL v2.0 .</copypolicy>
+  <doxygen-group>skeletonViewer</doxygen-group>
+  <description>This module is responsible for displaying in real-time multiple skeletons in 3D.</description>
+  <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
   <version>0.2.0</version>
 
   <description-long>
-   Here you can provide a detailed description of what your module does, how it is structured, how it works, how to use it and so on.
+   This module is responsible for displaying in real-time multiple skeletons in 3D.
+   It makes use of VTK.
   </description-long>
 
   <arguments>
-    <param default="default-value-0" desc="Describe the meaning and effect of parameter no. 0">parameter-0</param>
-    <param default="default-value-1" desc="Describe the meaning and effect of parameter no. 1">parameter-1</param>
+    <param default="0" desc="Viewer's x position in screen coordinates pixels.">x</param>
+    <param default="0" desc="Viewer's y position in screen coordinates pixels.">y</param>
+    <param default="600" desc="Viewer's width in screen coordinates pixels.">w</param>
+    <param default="600" desc="Viewer's height in screen coordinates pixels.">h</param>
+    <param default="1.0" desc="Periodicity of the module (s)">gc-period</param>
+    <param default="(0.1,0.2,0.2)" desc="Viewer's background color using rgb color specification.">bg-color</param>
+
   </arguments>
 
   <authors>
@@ -23,26 +29,19 @@
 
   <data>
       <input>
-          <type>data type</type>
-          <port carrier="tcp/udp/..">/skeletonRetriever/skeletons:i</port>
+          <type>Bottle</type>
+          <port>/skeletonViewer:i</port>
           <description>
-            Short description of your port behaviour.
+            Receives 3D skeletons to visualize.
           </description>
       </input>
       <input>
-          <type>data type</type>
-          <port carrier="tcp/udp/..">/skeletonRetriever/depth:i</port>
-          <description>
-            Short description of your port behaviour.
-          </description>
-      </input>
-      <output>
-          <type>data type</type>
-          <port carrier="tcp/udp/..">/skeletonRetriever/viewer:o</port>
-          <description>
-            Short description of your port behaviour.
-          </description>
-      </output>
+           <type>rpc</type>
+           <port>/skeletonViewer:rpc</port>
+           <description>Receives the following commands and provides replies: (notation: "." identifies a string)
+           -# <b>set camera options</b> <i>"set_camera" ("position" pos_list) ("focalpoint" focal_list) ("viewup" view_list)</i>:set camera options for visualization. pos_list the position of the camera in world coordinates (set to (0.0,0.0,1.0) if not provided). focal_list the focal point of the camera in world coordinates (set to (0.0,0.0,0.0) if not provided). view_list view up direction for the camera (set to (0.0,1.0,0.0) if not provided).
+           </description>
+       </input>
   </data>
 
 </module>

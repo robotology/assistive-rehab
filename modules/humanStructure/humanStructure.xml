@@ -3,18 +3,20 @@
 
 <module>
   <name>humanStructure</name>
-  <doxygen-group></doxygen-group>
-  <description>This module .</description>
-  <copypolicy> Released under the terms of the GNU GPL v2.0 .</copypolicy>
+  <doxygen-group>humanStructure</doxygen-group>
+  <description>This module takes as input an image and 2D skeleton data and outputs sorted blobs around their faces.</description>
+  <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
   <version>0.2.0</version>
 
   <description-long>
-   Here you can provide a detailed description of what your module does, how it is structured, how it works, how to use it and so on.
+   This module takes as input an image and 2D skeleton data from yarpOpenPose and outputs sorted blobs around their faces.
+   Skeleton data are used to define blobs, whose corners are extracted from right ear and left ear keypoints (if one of the two is not detected, the nose is used).
+   Only skeletons with valid nose keypoints are considered, to avoid sending backward oriented faces.
+   Detected blobs are finally sorted from left to right to avoid confusion in case of occlusion (yarpOpenPose outputs an unsorted list of 2D skeletons).
   </description-long>
 
   <arguments>
-    <param default="default-value-0" desc="Describe the meaning and effect of parameter no. 0">parameter-0</param>
-    <param default="default-value-1" desc="Describe the meaning and effect of parameter no. 1">parameter-1</param>
+    <param default="humanStructure" desc="The module's name; all the open ports will be tagged with the prefix /name.">name</param>
   </arguments>
 
   <authors>
@@ -23,24 +25,38 @@
 
   <data>
       <input>
-          <type>data type</type>
-          <port carrier="tcp/udp/..">/skeletonRetriever/skeletons:i</port>
+          <type>Bottle</type>
+          <port>/humanStructure/skeleton:i</port>
           <description>
-            Short description of your port behaviour.
+            Receives the 2D input skeletons. To be connected to \yarpOpenPose\target:o.
           </description>
       </input>
       <input>
-          <type>data type</type>
-          <port carrier="tcp/udp/..">/skeletonRetriever/depth:i</port>
+          <type>ImageOfPixelRgb</type>
+          <port>/humanStructure/image:i</port>
           <description>
-            Short description of your port behaviour.
+            Receives the input image. To be connected to \yarpOpenPose\propag:o.
           </description>
       </input>
       <output>
-          <type>data type</type>
-          <port carrier="tcp/udp/..">/skeletonRetriever/viewer:o</port>
+          <type>ImageOfPixelRgb</type>
+          <port>/humanStructure/image:o</port>
           <description>
-            Short description of your port behaviour.
+            Streams out the input image with blobs around the detected faces.
+          </description>
+      </output>
+      <output>
+          <type>Bottle</type>
+          <port>/humanStructure/target:o</port>
+          <description>
+            Streams out the 2D input skeleton.
+          </description>
+      </output>
+      <output>
+          <type>Bottle</type>
+          <port>/humanStructure/blobs:o</port>
+          <description>
+            Streams out blobs' coordinates around detected faces as top left and bottom right corners.
           </description>
       </output>
   </data>

@@ -3,18 +3,28 @@
 
 <module>
   <name>feedbackSynthetizer</name>
-  <doxygen-group></doxygen-group>
-  <description>This module .</description>
-  <copypolicy> Released under the terms of the GNU GPL v2.0 .</copypolicy>
+  <doxygen-group>feedbackSynthetizer</doxygen-group>
+  <description>This module is responsible for producing a verbal feedback.</description>
+  <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
   <version>0.2.0</version>
 
   <description-long>
-   Here you can provide a detailed description of what your module does, how it is structured, how it works, how to use it and so on.
+   This module is responsible for translating the numerical feedback provided by \ref feedbackProducer into a verbal feedback.
+   The speak file contains the verbal feedback for the following scenarios:
+   - "speed": when an error in speed is detected;
+   - "position-rom": when an error in position for range of motion exercises is detected;
+   - "position-ep": when an error for reaching exercises is detected;
+   - "wrong": when the wrong exercise is performed;
+   - "perfect": when none of the previous situations occurs.
+   The default speak file is in italian; the english version can be loaded by running the module followed by the command --from config-en.ini (note: the yarp dev speech has to be run by setting the default language as english).
   </description-long>
 
   <arguments>
-    <param default="default-value-0" desc="Describe the meaning and effect of parameter no. 0">parameter-0</param>
-    <param default="default-value-1" desc="Describe the meaning and effect of parameter no. 1">parameter-1</param>
+    <param default="feedbackSynthetizer" desc="The module's name; all the open ports will be tagged with the prefix /name">name</param>
+    <param default="config-it.ini" desc="Configuration file name for the speak.">from</param>
+    <param default="speak-it" desc="Configuration file name for the speak.">speak-file</param>
+    <param default="0.1" desc="Periodicity of the module (s).">period</param>
+    <param default="2" desc="Maximum number of verbal feedbacks provided.">speak-length</param>
   </arguments>
 
   <authors>
@@ -23,24 +33,24 @@
 
   <data>
       <input>
-          <type>data type</type>
-          <port carrier="tcp/udp/..">/skeletonRetriever/skeletons:i</port>
+          <type>Bottle</type>
+          <port>/feedbackSynthetizer/dtw:i</port>
           <description>
-            Short description of your port behaviour.
-          </description>
-      </input>
-      <input>
-          <type>data type</type>
-          <port carrier="tcp/udp/..">/skeletonRetriever/depth:i</port>
-          <description>
-            Short description of your port behaviour.
+            Receives numerical feedback. To be connected to /feedbackProducer:o.
           </description>
       </input>
       <output>
-          <type>data type</type>
-          <port carrier="tcp/udp/..">/skeletonRetriever/viewer:o</port>
+          <type>Bottle</type>
+          <port>/feedbackSynthetizer/speech:o</port>
           <description>
-            Short description of your port behaviour.
+            Streams out the verbal feedback. To be connected to \ref iSpeak.
+          </description>
+      </output>
+      <output>
+          <type>Bottle</type>
+          <port>/feedbackSynthetizer/score:o</port>
+          <description>
+            Streams out the score associated to the performed exercise.
           </description>
       </output>
   </data>
