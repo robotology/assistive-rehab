@@ -117,7 +117,7 @@ public:
     /**
     * Overloaded constructor.
     * @param tag_ string containing the keypoint's tag.
-    * @param point_ vector containing the keypoint coordinates x,y,z (cm).
+    * @param point_ vector containing the keypoint world coordinates x,y,z.
     * @param updated_ true if the keypoint has been updated.
     */
     KeyPoint(const std::string &tag_, const yarp::sig::Vector &point_=yarp::sig::Vector(3,0.0),
@@ -151,13 +151,13 @@ public:
     const std::string& getTag() const { return tag; }
 
     /**
-    * Return a reference to the vector containing the keypoint's x,y,z coordinates (cm).
-    * @return reference to the vector containing the keypoint's x,y,z coordinates (cm).
+    * Return a reference to the vector containing the keypoint's x,y,z world coordinates.
+    * @return reference to the vector containing the keypoint's x,y,z world coordinates.
     */
     const yarp::sig::Vector &getPoint() const { return point; }
 
     /**
-    * Set keypoint's x,y,z coordinates to a desired value.
+    * Set keypoint's x,y,z world coordinates to a desired value.
     * @param point vector containing the desider point.
     * @return true/false on success/failure.
     */
@@ -198,16 +198,16 @@ public:
 class Skeleton
 {
 protected:
-    std::string type;
-    std::string tag;
-    std::vector<KeyPoint*> keypoints;
-    std::unordered_map<std::string,KeyPoint*> tag2key;
-    std::unordered_map<KeyPoint*,unsigned int> key2id;
+    std::string type; /**< skeleton's type ("assistive_rehab::SkeletonStd" or "assistive_rehab::SkeletonWaist") */
+    std::string tag; /**< skeleton's tag */
+    std::vector<KeyPoint*> keypoints; /**< vector of pointer to KeyPoint */
+    std::unordered_map<std::string,KeyPoint*> tag2key; /**< map associating a tag to a pointer to a KeyPoint */
+    std::unordered_map<KeyPoint*,unsigned int> key2id; /**< map associating a pointer to a KeyPoint to an index */
 
-    yarp::sig::Matrix T;
-    yarp::sig::Vector coronal;
-    yarp::sig::Vector sagittal;
-    yarp::sig::Vector transverse;
+    yarp::sig::Matrix T; /**< transformation matrix */
+    yarp::sig::Vector coronal; /**< vector containing the normal to the coronal plane */
+    yarp::sig::Vector sagittal; /**< vector containing the normal to the sagittal plane */
+    yarp::sig::Vector transverse; /**< vector containing the normal to the transverse plane */
 
     yarp::os::Property helper_toproperty(KeyPoint *k) const;
     void helper_fromproperty(yarp::os::Bottle *prop, KeyPoint *parent);
@@ -264,42 +264,43 @@ public:
     /**
     * Retrieve the transformation matrix of the skeleton.
     * @return reference to the skeleton's transformation matrix.
+    * @note if the transformation matrix is the identity matrix, keypoints are defined with respect to the camera.
     */
     const yarp::sig::Matrix& getTransformation() const { return T; }
 
     /**
     * Set a new coronal plane to the skeleton.
-    * @param coronal vector containing the x,y,z of the desired plane.
+    * @param coronal vector containing the x,y,z coordinates of the normal to the desired plane.
     */
     bool setCoronal(const yarp::sig::Vector &coronal);
 
     /**
     * Set a new sagittal plane to the skeleton.
-    * @param sagittal vector containing the x,y,z of the desired plane.
+    * @param sagittal vector containing the x,y,z coordinates of the normal to the desired plane.
     */
     bool setSagittal(const yarp::sig::Vector &sagittal);
 
     /**
     * Set a new transverse plane to the skeleton.
-    * @param transverse vector containing the x,y,z of the desired plane.
+    * @param transverse vector containing the x,y,z coordinates of the normal to the desired plane.
     */
     bool setTransverse(const yarp::sig::Vector &transverse);
 
     /**
     * Retrieve the coronal plane of the skeleton.
-    * @return vector containing the skeleton's coronal plane.
+    * @return vector containing x,y,z coordinates of the normal to skeleton's coronal plane.
     */
     yarp::sig::Vector getCoronal() const;
 
     /**
     * Retrieve the sagittal plane of the skeleton.
-    * @return vector containing the skeleton's sagittal plane.
+    * @return vector containing the x,y,z coordinates of the normal skeleton's sagittal plane.
     */
     yarp::sig::Vector getSagittal() const;
 
     /**
     * Retrieve the transverse plane of the skeleton.
-    * @return vector containing the skeleton's sagittal plane.
+    * @return vector containing the x,y,z coordinates of the normal skeleton's sagittal plane.
     */
     yarp::sig::Vector getTransverse() const;
 
@@ -330,7 +331,7 @@ public:
 
     /**
     * Import the skeleton structure from its properties.
-    * @param a Property object containing the properties of a skeleton.
+    * @param prop Property object containing the properties of a skeleton.
     *
     * Available properties are:
     * - type: string containing skeleton's type ("assistive_rehab::SkeletonStd" or "assistive_rehab::SkeletonWaist").
@@ -396,7 +397,7 @@ public:
 
     /**
     * Update skeleton from properties.
-    * @param prop property containing skeleton information.
+    * @param prop a Property object containing skeleton information.
     *
     * Available properties are:
     * - type: string containing skeleton's type ("assistive_rehab::SkeletonStd" or "assistive_rehab::SkeletonWaist").
@@ -421,7 +422,7 @@ public:
 
     /**
     * Retrieve the ordered list of keypoints.
-    * @return vector containing the ordered list of keypoints, each specified as vector containing the x,y,z coordinates.
+    * @return vector containing the ordered list of keypoints, each specified as vector containing the x,y,z world coordinates.
     */
     virtual std::vector<yarp::sig::Vector> get_ordered() const;
 
@@ -429,7 +430,7 @@ public:
     * Retrieve the unordered list of keypoints.
     * @return vector containing an unordered list of keypoints,
     * each specified as pair which associates a string, containing the keypoint's tag,
-    * and a vector, containing the x,y,z coordinates.
+    * and a vector, containing the x,y,z world coordinates.
     */
     virtual std::vector<std::pair<std::string,yarp::sig::Vector>> get_unordered() const;
 
@@ -490,7 +491,7 @@ public:
     /**
     * Update skeleton waist from standard from ordered list.
     * @param ordered vector containing the ordered list of keypoints.
-    * The single keypoint is specified as vector containing the x,y,z coordinates.
+    * The single keypoint is specified as vector containing the x,y,z world coordinates.
     */
     virtual void update_fromstd(const std::vector<yarp::sig::Vector> &ordered);
 
@@ -498,13 +499,13 @@ public:
     * Update skeleton waist from standard from unordered list.
     * @param unordered vector containing an unordered list of keypoints.
     * The single keypoint is specified as pair which associates a string, containing the keypoint's tag,
-    * and a vector, containing the x,y,z coordinates.
+    * and a vector, containing the x,y,z world coordinates.
     */
     virtual void update_fromstd(const std::vector<std::pair<std::string, yarp::sig::Vector>> &unordered);
 
     /**
     * Update skeleton waist from standard from yarp properties.
-    * @param prop property containing skeleton information.
+    * @param prop a Property object containing skeleton information.
     */
     virtual void update_fromstd(const yarp::os::Property &prop);
 
@@ -516,6 +517,8 @@ public:
 };
 
 /**
+* \ingroup skeleton
+*
 * Populate skeleton from a Property object.
 * @param prop reference to a Property object.
 * @return a pointer to a Skeleton object.
@@ -530,7 +533,7 @@ public:
 * - skeleton: list containing keypoints with the following subproperties:
 *     - tag: string containing keypoint's tag.
 *     - status: string containing keypoint's status (updated or stale).
-*     - position: vector containing keypoint's coordinates x,y,z.
+*     - position: vector containing keypoint's world coordinates x,y,z.
 *     - child: list containing keypoint's child, specified as position, status, tag.
 */
 Skeleton *skeleton_factory(const yarp::os::Property &prop);

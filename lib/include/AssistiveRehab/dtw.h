@@ -6,6 +6,7 @@
  ******************************************************************************/
 
 /**
+ * \defgroup dtw dtw
  *
  * Class for temporal alignment based on Dynamic Time Warping (DTW).
  *
@@ -69,7 +70,7 @@ namespace assistive_rehab
 {
 
 /**
-* Class for DTW.
+* Class for DTW (Dynamic Time Warping).
 */
 class Dtw
 {

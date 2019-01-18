@@ -6,8 +6,15 @@
  ******************************************************************************/
 
 /**
- * @file helpers.h
- * @authors: Ugo Pattacini <ugo.pattacini@iit.it>
+ * \defgroup helpers helpers
+ *
+ * Helper functions.
+ *
+ * \section intro_sec Description
+ *
+ * The current implemented helper function is required to filter a depth image.
+ *
+ * \author Ugo Pattacini <ugo.pattacini@iit.it>
  */
 
 #ifndef ASSISTIVE_REHAB_HELPERS_H
