@@ -289,6 +289,9 @@ public:
         if (yarp::sig::ImageOf<yarp::sig::PixelRgb> *tmp=imageInPort.read())
         {
             img=*tmp;
+            yarp::os::Stamp stamp;
+            imageInPort.getEnvelope(stamp);
+            thr_query->setImage(img,stamp);
         }
     }
 
@@ -422,19 +425,18 @@ public:
                                      const int i, const yarp::os::Bottle &labels)
     {
         yarp::os::Bottle winners;
-        yarp::sig::ImageOf<yarp::sig::PixelRgb> imgOut = img;
         cv::Mat imgMat=yarp::cv::toCvMat(img);
 
-        cv::Scalar highlight(14,198,8);
+        cv::Scalar highlight(8,198,14);
 
         if (allowedTrain)
         {
-            highlight[0] = 204;
+            highlight[0] = 0;
             highlight[1] = 0;
-            highlight[2] = 0;
+            highlight[2] = 204;
         }
 
-        cv::Scalar lowlight(0, 102, 204);
+        cv::Scalar lowlight(204, 102, 0);
 
         winners.clear();
 
@@ -491,6 +493,7 @@ public:
             cv::rectangle(imgMat,tl,br,(j==i)?highlight:lowlight,2);
         }
 
+        img=yarp::cv::fromCvMat<yarp::sig::PixelRgb>(imgMat);
         imageOutPort.prepare()=img;
         imageOutPort.writeStrict();
 
@@ -672,7 +675,7 @@ public:
     }
 
     /********************************************************/
-    bool send_cmd2rpc_classifier(std::string cmdstring, int Ntrials)
+    bool send_cmd2rpc_classifier(const std::string &cmdstring, int Ntrials)
     {
         bool done = false;
         for (int i=0; !done && i<Ntrials; i++)
@@ -690,7 +693,7 @@ public:
     }
 
     /********************************************************/
-    bool send_doublecmd2rpc_classifier(std::string cmdstring1, std::string cmdstring2, int Ntrials)
+    bool send_doublecmd2rpc_classifier(const std::string &cmdstring1, const std::string &cmdstring2, int Ntrials)
     {
         bool done = false;
         for (int i=0; !done && i<Ntrials; i++)
@@ -709,7 +712,7 @@ public:
     }
 
     /********************************************************/
-    bool start_train(std::string class_name)
+    bool start_train(const std::string &class_name)
     {
         if (!send_doublecmd2rpc_classifier("save", class_name.c_str(), 10))
         {
@@ -721,7 +724,7 @@ public:
     }
 
     /********************************************************/
-    bool stop_train(std::string class_name)
+    bool stop_train(const std::string &class_name)
     {
         if (!send_cmd2rpc_classifier("stop", 10))
         {
