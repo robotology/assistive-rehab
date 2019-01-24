@@ -3,6 +3,8 @@ Assistive and Rehabilitative Robotics
 
 <a href="https://zenhub.com"><img src="https://raw.githubusercontent.com/ZenHubIO/support/master/zenhub-badge.png"></a>
 
+Checkout the [website](http://robotology.github.com/assistive-rehab/mkdocs/site/index.html)!
+
 :books: Documentation can be browsed here: [http://robotology.github.com/assistive-rehab](http://robotology.github.com/assistive-rehab).
 
 ### Main contributors
