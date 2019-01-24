@@ -47,7 +47,7 @@ In Y1Q3, we introduce an optimization of the skeleton, which adjusts the depth o
 
 | Without `yarpOpenPose`  | With `yarpOpenPose` |
 | ------------- | ------------- |  
-| <p align="center"> <img src=https://user-images.githubusercontent.com/9716288/49950278-ca58e200-fef7-11e8-88b1-0256162843f8.gif width="350" height=332> </p> |   <p align="center"> <img src=https://user-images.githubusercontent.com/9716288/49950123-7e0da200-fef7-11e8-8a4a-e14eb6477cd3.gif  width="340"> </p> |  
+| <p align="center"> <img src=https://user-images.githubusercontent.com/9716288/49950278-ca58e200-fef7-11e8-88b1-0256162843f8.gif width="350" height=332> </p> |   <p align="center"> <img src=https://user-images.githubusercontent.com/9716288/49950123-7e0da200-fef7-11e8-8a4a-e14eb6477cd3.gif  width="340" height=332> </p> |  
 
 In Y1Q3, `yarpOpenPose` propagates the depth image in sync with the output of skeleton detection, in order to equalize the delay between the two streams.
 
