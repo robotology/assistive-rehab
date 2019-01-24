@@ -11,9 +11,3 @@ In alphabetical order:
 - Pattacini Ugo (@pattacini)
 - Tikhanoff Vadim (@vtikha)
 - Vasco Valentina (@vvasco)
-
-## Acknowledgments
-
-The development of `assistive-rehab` is supported by:
-
--
