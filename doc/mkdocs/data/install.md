@@ -15,9 +15,9 @@
 - [yarpOpenPose](https://github.com/robotology/human-sensing)
 
 !!! note "yarp"
-    - `ENABLE_yarpcar_depthimage ON`: to allow sending/receiving a depth image.
     - `ENABLE_yarpcar_mjpeg ON`: to allow mjpeg compression.
     - `ENABLE_yarpcar_zfp ON`: to allow zfp compression.
+    - `ENABLE_yarpmod_realsense2 ON`: to enable the realsense.
 
 !!! note "OpenCV"
     1. Download OpenCV: `git clone https://github.com/opencv/opencv.git`.
@@ -37,7 +37,7 @@
 - [VTK](https://github.com/Kitware/VTK) (8.1.0 or higher)
 
 !!! note "matio"
-    On `Ubuntu 18.04`, you can install the library through apt-get: `sudo apt-get install libmatio-dev`.
+    On `Ubuntu 18.04`, you can install the library through apt: `sudo apt install libmatio-dev`.
 
 !!! warning
     If an optional dependency is not found, the modules depending on it are not compiled.
@@ -47,17 +47,24 @@
 
 ## Installation
 
-!!! warning
-    The following instructions are for Unix-like systems, but they work similarly on other operating systems.
+If all the dependencies are met, proceed with the following instructions:
 
-```sh
-git clone https://github.com/robotology/assistive-rehab.git
-mkdir build && cd build
-ccmake ..
-configure and generate
-make
-make install
-```
+!!! example "From sources"
 
-!!! note
-    The project should be now installed in iCubContrib. If you want to install it in a different folder, set `CMAKE_INSTALL_PREFIX` to the desired install directory.
+    Substitute to `<install-prefix>` the absolute path where you want to install the project.
+
+    ````tab="GNU/Linux and macOS"
+    git clone https://github.com/robotology/assistive-rehab.git
+    mkdir build && cd build
+    cmake .. -DCMAKE_INSTALL_PREFIX=<install-prefix>
+    make
+    make install
+    ````
+
+    ````tab="Windows"
+    git clone https://github.com/robotology/assistive-rehab.git
+    mkdir build && cd build
+    cmake .. -DCMAKE_INSTALL_PREFIX=<install-prefix>
+    make
+    make install
+    ````

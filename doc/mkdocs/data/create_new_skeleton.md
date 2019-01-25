@@ -308,12 +308,12 @@ A skeleton can be retrieved as a property-like structure from a yarp port:
 
 ```cpp
 
-    SkeletonWaist skeleton;
-    if(Bottle* b=opcPort.read(false))
+    assistive_rehab::SkeletonWaist skeleton;
+    if(yarp::os::Bottle* b=opcPort.read(false))
     {
-        Property prop;
+        yarp::os::Property prop;
         prop.fromString(b->get(0).asList()->toString());
-        skeleton.update_fromstd(skeleton_factory(prop)->toProperty());
+        skeleton.update_fromstd(assistive_rehab::skeleton_factory(prop)->toProperty());
     }
 
 ```
@@ -322,34 +322,34 @@ or from the OPC as following:
 
 ```cpp
 
-    SkeletonWaist skeleton;
-    Bottle cmd,reply;
-    cmd.addVocab(Vocab::encode("ask"));
-    Bottle &content=cmd.addList().addList();
+    assistive_rehab::SkeletonWaist skeleton;
+    yarp::os::Bottle cmd,reply;
+    cmd.addVocab(yarp::os::Vocab::encode("ask"));
+    yarp::os::Bottle &content=cmd.addList().addList();
     content.addString("skeleton");
     opcPort.write(cmd,reply);
     if(reply.size()>1)
     {
         if(reply.get(0).asVocab()==Vocab::encode("ack"))
         {
-            if(Bottle *idField=reply.get(1).asList())
+            if(yarp::os::Bottle *idField=reply.get(1).asList())
             {
-                if(Bottle *idValues=idField->get(1).asList())
+                if(yarp::os::Bottle *idValues=idField->get(1).asList())
                 {
                     int id=idValues->get(0).asInt();
                     cmd.clear();
                     cmd.addVocab(Vocab::encode("get"));
-                    Bottle &content=cmd.addList().addList();
-                    Bottle replyProp;
+                    yarp::os::Bottle &content=cmd.addList().addList();
+                    yarp::os::Bottle replyProp;
                     content.addString("id");
                     content.addInt(id);
                     opcPort.write(cmd,replyProp);
-                    if(replyProp.get(0).asVocab() == Vocab::encode("ack"))
+                    if(replyProp.get(0).asVocab() == yarp::os::Vocab::encode("ack"))
                     {
-                        if(Bottle *propField=replyProp.get(1).asList())
+                        if(yarp::os::Bottle *propField=replyProp.get(1).asList())
                         {
-                            Property prop(propField->toString().c_str());
-                            skeleton.update_fromstd(skeleton_factory(prop)->toProperty());
+                            yarp::os::Property prop(propField->toString().c_str());
+                            skeleton.update_fromstd(assistive_rehab::skeleton_factory(prop)->toProperty());
                         }
                     }
                 }

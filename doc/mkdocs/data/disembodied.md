@@ -49,7 +49,7 @@ When the command `start` is given to `motionAnalyzer`, the visual pipeline start
 
 You should have the following situation:
 
-![](assets/disembodied-632a35ac.png)
+![disembodied-632a35ac](https://user-images.githubusercontent.com/9716288/51750753-4d528800-20b3-11e9-8215-b0c5f63db9a3.png)
 
 A verbal feedback is also provided throughout the experiment.
 

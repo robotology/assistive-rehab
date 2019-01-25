@@ -12,7 +12,7 @@ The robot physically shows to each patient the specific exercise to perform, whi
 
 The demo is implemented through the following components:
 
-![](assets/index-8fd38317.png)
+![index-8fd38317](https://user-images.githubusercontent.com/9716288/51750778-63f8df00-20b3-11e9-80a3-24bb870ecc82.png)
 
 - R1 is equipped with an [Intel RealSense D435](https://realsense.intel.com/stereo/) depth camera, which provides RGB images along with depth data;
 - acquisition and storage are carried out by the ACQ and the OPC module respectively. The ACQ module merges 2D skeleton data, as acquired by [`yarpOpenPose`](https://github.com/robotology/human-sensing), along with the depth information provided by the depth sensor. 3D skeletons are stored in the OPC. This architecture also allows to [replay experiments](replay_an_experiment.md), using the combination of `yarpdatadumper` and `yarpdataplayer`, giving to physiotherapists the possibility of computing new metrics (not run online) on the replayed experiment, and of maintaining a logbook of all the patient's exercises;
