@@ -372,6 +372,8 @@ For example, the following snippet allows you the get the `shoulder_center` coor
 
 ## Additional functionalities
 
+### Normalization
+
 Some applications might require a normalized skeleton, to avoid having different results for different human physiques.
 The normalization provided in the library makes the length of the observed human segments always equal to 1 and can be applied as following:
 
@@ -380,3 +382,32 @@ The normalization provided in the library makes the length of the observed human
    skeleton.normalize();
 
 ```
+
+### Keypoints' reference system
+
+Keypoints in the skeleton are defined with respect to the camera. To change the reference system, given a transformation matrix _T_, you can use the method `setTransformation`, as following:
+
+```cpp
+
+   skeleton.setTransformation(T);
+
+```
+
+!!! tip
+    If you want to use the skeleton as reference system, you can create the transformation matrix _T_ from the skeleton's planes:
+    ```cpp
+
+       yarp::sig::Vector coronal=skeleton.getCoronal();
+       yarp::sig::Vector sagittal=skeleton.getSagittal();
+       yarp::sig::Vector transverse=skeleton.getTransverse();
+       yarp::sig::Vector p=skeleton[assistive_rehab::KeyPointTag::shoulder_center]->getPoint();
+       yarp::sig::Matrix T1(4,4);
+       T1.setSubcol(coronal,0,0);
+       T1.setSubcol(sagittal,0,1);
+       T1.setSubcol(transverse,0,2);
+       T1.setSubcol(p,0,3);
+       T1(3,3)=1.0;
+       T=yarp::math::SE3inv(T1);
+       skeleton.setTransformation(T);
+
+    ```
