@@ -63,6 +63,8 @@ nav:
         - Getting started: 'tutorial_intro.md'
         - How to manage a skeleton object: 'create_new_skeleton.md'
         - How to replay an experiment: 'replay_an_experiment.md'
+        - How to run the pipeline in a disembodied manner: 'disembodied.md'
+        - How to temporally align two signals: 'align_signals.md'
     - Milestones:
         - Y1M5: 'Y1M5.md'
         - Y1Q3: 'Y1Q3.md'
