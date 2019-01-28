@@ -58,7 +58,7 @@ nav:
     - News:
         - Latest: 'latest_news.md'
     - Install: 'install.md'
-    - Documentation [v0.2.0]: https://robotology.github.io/assistive-rehab/doc/doxygen/doc/html/modules.html
+    - Documentation [v0.2.0]: https://robotology.github.io/assistive-rehab/doc/doxygen/doc/html/index.html
     - Tutorials:
         - Getting started: 'tutorial_intro.md'
         - How to manage a skeleton object: 'create_new_skeleton.md'
