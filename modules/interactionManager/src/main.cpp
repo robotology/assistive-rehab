@@ -425,8 +425,9 @@ class Interaction : public RFModule, public interactionManager_IDL
     bool updateModule() override
     {
         LockGuard lg(mutex);
-        if ((attentionPort.getOutputCount()==0) || (analyzerPort.getOutputCount()==0) ||
-                (speechStreamPort.getOutputCount()==0) || (speechRpcPort.getOutputCount()==0))
+        if ((attentionPort.getOutputCount()==0) || (analyzerPort.getOutputCount()==0))
+            //||
+            //    (speechStreamPort.getOutputCount()==0) || (speechRpcPort.getOutputCount()==0))
         {
             yInfo()<<"not connected";
             return true;
@@ -601,18 +602,19 @@ class Interaction : public RFModule, public interactionManager_IDL
                                             Time::yield();
                                         }
                                         
-                                        Time::delay(2.0);
+                                        Time::delay(3.0);
                                         speak("start",true);
                                         history[tag].push_back(metric);
                                         movethr->setFile(script_perform);
-                                        
+                                        movethr->startMoving();
+                                        Time::delay(1.0);
+
                                         cmd.clear();
                                         cmd.addString("start");
                                         if (analyzerPort.write(cmd,rep))
                                         {
                                             if (rep.get(0).asVocab()==ok)
                                             {
-                                                movethr->startMoving();
                                                 state=State::move;
                                                                                                                                             
                                                 assess_values.clear();
@@ -647,6 +649,7 @@ class Interaction : public RFModule, public interactionManager_IDL
             else
             {
                 yInfo()<<"Stopping";
+                Time::delay(3.0);
                 Bottle cmd,rep;
                 cmd.addString("stop");
                 analyzerPort.write(cmd,rep);

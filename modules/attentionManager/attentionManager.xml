@@ -16,8 +16,8 @@
   <arguments>
     <param default="false" desc="Enable autonomous mode.">auto-start</param>
     <param default="0.1" desc="Periodicity of the module (s).">period</param>
-    <param default="1.5" desc="Time constant of the gaze controller used while tracking skeletons (s).">gaze_follow_T</param>
-    <param default="2.0" desc="Time constant of the gaze controller used while looking around (s).">gaze_seek_T</param>
+    <param default="1.5" desc="Time constant of the gaze controller used while tracking skeletons (s).">gaze-follow-T</param>
+    <param default="2.0" desc="Time constant of the gaze controller used while looking around (s).">gaze-seek-T</param>
     <param default="0.05" desc="Threshold for detecting inactivity of the skeleton.">inactivity-thres</param>
   </arguments>
 

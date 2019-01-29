@@ -423,12 +423,6 @@
     </connection>
 
     <connection>
-        <from>/actionRecognizer/target:o</from>
-        <to>/feedbackSynthetizer/action:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
         <from>/feedbackSynthetizer/speech:o</from>
         <to>/iSpeak</to>
         <protocol>fast_tcp</protocol>
