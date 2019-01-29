@@ -41,6 +41,8 @@ class Attention : public RFModule, public attentionManager_IDL
     const int ack=Vocab::encode("ack");
     const double T=3.0;
     double period;
+    double gaze_follow_T;
+    double gaze_seek_T;
     double inactivity_thres;
     double still_t0;
     double lost_t0;
@@ -278,7 +280,7 @@ class Attention : public RFModule, public attentionManager_IDL
         {
             first_seek_look=true;
         }
-        return set_gaze_T(state==State::follow?1.5:2.0);
+        return set_gaze_T(state==State::follow?gaze_follow_T:gaze_seek_T);
     }
 
     /****************************************************************/
@@ -392,6 +394,8 @@ class Attention : public RFModule, public attentionManager_IDL
     {
         auto_mode=rf.check("auto-start");
         period=rf.check("period",Value(0.1)).asDouble();
+        gaze_follow_T=rf.check("gaze-follow-T",Value(1.5)).asDouble();
+        gaze_seek_T=rf.check("gaze-seek-T",Value(2.0)).asDouble();
         inactivity_thres=rf.check("inactivity-thres",Value(0.05)).asDouble();
         
         opcPort.open("/attentionManager/opc:i");
