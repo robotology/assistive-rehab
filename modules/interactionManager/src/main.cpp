@@ -425,9 +425,8 @@ class Interaction : public RFModule, public interactionManager_IDL
     bool updateModule() override
     {
         LockGuard lg(mutex);
-        if ((attentionPort.getOutputCount()==0) || (analyzerPort.getOutputCount()==0))
-            //||
-            //    (speechStreamPort.getOutputCount()==0) || (speechRpcPort.getOutputCount()==0))
+        if ((attentionPort.getOutputCount()==0) || (analyzerPort.getOutputCount()==0) ||
+                (speechStreamPort.getOutputCount()==0) || (speechRpcPort.getOutputCount()==0))
         {
             yInfo()<<"not connected";
             return true;
