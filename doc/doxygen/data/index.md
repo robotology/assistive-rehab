@@ -13,6 +13,7 @@ The library has definitions for:
 - defining different types of skeletons (standard or waist);
 - importing/exporting a skeleton's structure from/into a yarp Property;
 - normalizing and scaling a skeleton;
+- optimize skeletons to deal with keypoints that cannot be observed;
 - transform skeleton's keypoints to the desired reference system.
 
 Additional functionalities are also included for filtering depth images and aligning two mono or multidimensional time-series.
