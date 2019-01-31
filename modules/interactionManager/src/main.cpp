@@ -648,7 +648,7 @@ class Interaction : public RFModule, public interactionManager_IDL
             else
             {
                 yInfo()<<"Stopping";
-                Time::delay(3.0);
+                Time::delay(1.0);
                 Bottle cmd,rep;
                 cmd.addString("stop");
                 analyzerPort.write(cmd,rep);

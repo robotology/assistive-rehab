@@ -4,7 +4,7 @@ COUNT=0
 TIME=2.5
 SLEEP=2.5
 NREP_SHOW=2
-NREP_PERFORM=6
+NREP_PERFORM=7
 
 #########################
 #    ABDUCTION LEFT     #
