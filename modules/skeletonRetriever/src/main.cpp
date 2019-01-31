@@ -242,6 +242,7 @@ class Retriever : public RFModule
     double keys_recognition_confidence;
     double keys_recognition_percentage;
     int keys_acceptable_misses;
+    double min_acceptable_path;
     int tracking_threshold;
     double time_to_live;
 
@@ -428,7 +429,8 @@ class Retriever : public RFModule
         }
         
         double perc=((double)n)/((double)s->skeleton->getNumKeyPoints());
-        return (perc>=keys_recognition_percentage);
+        double max_path=s->skeleton->getMaxPath();
+        return ((perc>=keys_recognition_percentage) && (max_path>=min_acceptable_path));
     }
 
     /****************************************************************/
@@ -645,6 +647,7 @@ class Retriever : public RFModule
         keys_recognition_confidence=0.3;
         keys_recognition_percentage=0.3;
         keys_acceptable_misses=5;
+        min_acceptable_path=1.0;
         tracking_threshold=50;
         time_to_live=1.0;
         depth_enable=true;
@@ -669,6 +672,7 @@ class Retriever : public RFModule
             keys_recognition_confidence=gSkeleton.check("key-recognition-confidence",Value(keys_recognition_confidence)).asDouble();
             keys_recognition_percentage=gSkeleton.check("key-recognition-percentage",Value(keys_recognition_percentage)).asDouble();
             keys_acceptable_misses=gSkeleton.check("keys-acceptable-misses",Value(keys_acceptable_misses)).asInt();
+            min_acceptable_path=gSkeleton.check("min-acceptable-path",Value(min_acceptable_path)).asDouble();
             tracking_threshold=gSkeleton.check("tracking-threshold",Value(tracking_threshold)).asInt();
             time_to_live=gSkeleton.check("time-to-live",Value(time_to_live)).asDouble();
         }

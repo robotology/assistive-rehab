@@ -23,6 +23,7 @@
     <param default="0.3" desc="Keypoints whose confidence is lower than this threshold are discarded.">skeleton::keys-recognition-confidence</param>
     <param default="0.3" desc="Minimum percentage of keypoints to consider a skeleton valid.">skeleton::keys-recognition-percentage</param>
     <param default="5" desc="Number of consecutive times a keypoint can get lost before it becomes stale.">skeleton::keys-acceptable-misses</param>
+    <param default="1.0" desc="Minimum acceptable max path to consider a skeleton valid.">skeleton::min-acceptable-path</param>
     <param default="50" desc="Maximum distance a skeleton can move before erasing it.">skeleton::tracking-threshold</param>
     <param default="1.0" desc="Life span of a skeleton.">skeleton::time-to-live</param>
     <param default="true" desc="Enable depth filtering.">depth::enable</param>

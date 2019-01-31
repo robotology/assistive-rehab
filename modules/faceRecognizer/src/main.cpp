@@ -210,6 +210,8 @@ public:
 
         skip_frames = rf.check("skip_frames",yarp::os::Value(5)).asInt();
 
+        confidenceThreshold = rf.check("confidence_threhold",yarp::os::Value(0.85)).asDouble();
+
         rpcPort.open(("/"+getName("/rpc")).c_str());
 
         blobsPort.open(("/"+getName("/blobs:i")).c_str());
@@ -228,7 +230,6 @@ public:
 
         allowedTrain = false;
 
-        confidenceThreshold = 0.70;
         isLiftArm = true;
         gotTime = false;
         sentTrain = false;

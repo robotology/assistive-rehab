@@ -23,6 +23,7 @@
     <param default="0.2" desc="Life span of detected blobs (s).">blobs_detection_timeout</param>
     <param default="10.0" desc="Time used for training a face (s).">training_time</param>
     <param default="5" desc="Number of frames skipped for sending the cropped image.">skip_frames</param>
+    <param default="0.85" desc="Default value of the confidence threshold.">confidence_threhold</param>
   </arguments>
 
   <authors>
