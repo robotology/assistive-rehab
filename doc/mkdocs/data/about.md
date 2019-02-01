@@ -2,12 +2,17 @@
 
 ### Maintainer
 | | |
-|:---:|:---:|
+|:---:|:---|
 | [<img src="https://github.com/vvasco.png" width="40">](https://github.com/vvasco) | **Vasco Valentina** (@vvasco) |
 
 ### Contributors
-| | alphabetical order |
-|:---:|:---:|
-| [<img src="https://github.com/pattacini.png" width="40">](https://github.com/pattacini) | **Ugo Pattacini** (@pattacini) |
-| [<img src="https://github.com/vtikha.png" width="40">](https://github.com/vtikha) | **Vadim Tikhanoff** (@vtikha) |
-| [<img src="https://github.com/vvasco.png" width="40">](https://github.com/vvasco) | **Valentina Vasco** (@vvasco) |
+| | alphabetical order | main components |
+|:---:|:---|:---|
+| [<img src="https://github.com/pattacini.png" width="40">](https://github.com/pattacini) | **Ugo Pattacini** (@pattacini) | Skeletons Handling |
+| [<img src="https://github.com/vtikha.png" width="40">](https://github.com/vtikha) | **Vadim Tikhanoff** (@vtikha) | Face Recognition, I/F to OpenPose |
+| [<img src="https://github.com/vvasco.png" width="40">](https://github.com/vvasco) | **Valentina Vasco** (@vvasco) | Action Recognition, Movements Analysis |
+
+### Special Thanks
+| | alphabetical order | reason |
+|:---:|:---|:---|
+| [<img src="https://github.com/diegoferigo.png" width="40">](https://github.com/diegoferigo) | **Diego Ferigo** (@diegoferigo) | Hints on the website |
