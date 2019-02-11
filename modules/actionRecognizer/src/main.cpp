@@ -211,6 +211,8 @@ public:
         input = Tensor(DT_FLOAT, TensorShape({1,nframes,nfeatures}));
         idx_frame = 0;
         resetTensor();
+        predictions.clear();
+        outscores.clear();
 
         starting = true;
         return starting;
