@@ -45,6 +45,20 @@
 !!! failure
     If you want to run the full demo, also additional dependencies are required.
 
+!!! note "report"
+    For generating the offline report, you will need to install the following python libraries (you can install them through `pip install`):
+
+      - scipy
+      - numpy
+      - matplotlib
+      - pandas
+      - glob
+      - jupyter
+      - plotly
+
+        !!! note "plotly"
+            You need to enable jupyter extension to allow plotly to work in jupyter notebook: `pip install "notebook>=5.3" "ipywidgets>=7.2" --user`.    
+
 ## Installation
 
 If all the dependencies are met, proceed with the following instructions:
