@@ -671,6 +671,12 @@ public:
                         Bottle &stat=bList.addList();
                         stat.addString("static");
                     }
+                    else if(action == "random")
+                    {
+                        Bottle &bList=outfeedback.addList();
+                        Bottle &random=bList.addList();
+                        random.addString("random");
+                    }
                     else
                     {
                         Bottle &bList=outfeedback.addList();

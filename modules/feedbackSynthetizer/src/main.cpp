@@ -322,6 +322,32 @@ public:
         }
         speak_map[key] = make_pair(val,feedb);
 
+        Bottle &bRandom=rf_speak.findGroup("random");
+        if (bRandom.isNull() || !bRandom.check("key")
+                || !bRandom.check("value") || !bRandom.check("feedback"))
+        {
+            yError()<<"Unable to find group \"random\" and/or find key "
+                      "\"key\" and/or \"value\" and/or \"feedback\"";
+            return false;
+        }
+        key.clear();
+        bValue->clear();
+        bFeedback->clear();
+        key = bRandom.find("key").asString();
+        bValue = bRandom.find("value").asList();
+        bFeedback = bRandom.find("feedback").asList();
+        val.clear();
+        for(int i=0; i<bValue->size(); i++)
+        {
+            val.push_back(bValue->get(i).asString());
+        }
+        feedb.clear();
+        for(int i=0; i<bFeedback->size(); i++)
+        {
+            feedb.push_back(bFeedback->get(i).asString());
+        }
+        speak_map[key] = make_pair(val,feedb);
+
         return true;
     }
     
@@ -369,7 +395,7 @@ public:
                 }
                 else
                 {
-                    //wrong exercise or static
+                    //wrong exercise or static or random
                     priority=-1;
                     string key=f->get(0).asString();
                     params.clear();
@@ -384,7 +410,7 @@ public:
 
             switch (priority)
             {
-            case -1: //wrong exercise or static
+            case -1: //wrong exercise or static or random
                 score=0.0;
                 break;
             case 0: //error in speed
