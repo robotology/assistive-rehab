@@ -665,6 +665,12 @@ public:
                             analyzeEP(outfeedback);
                         }
                     }
+                    else if(action == "static")
+                    {
+                        Bottle &bList=outfeedback.addList();
+                        Bottle &stat=bList.addList();
+                        stat.addString("static");
+                    }
                     else
                     {
                         Bottle &bList=outfeedback.addList();

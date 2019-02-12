@@ -272,7 +272,7 @@ public:
 
         Bottle &bWrong=rf_speak.findGroup("wrong");
         if (bWrong.isNull() || !bWrong.check("key")
-                || !bPerfect.check("value") || !bPerfect.check("feedback"))
+                || !bWrong.check("value") || !bWrong.check("feedback"))
         {
             yError()<<"Unable to find group \"wrong\" and/or find key "
                       "\"key\" and/or \"value\" and/or \"feedback\"";
@@ -284,6 +284,32 @@ public:
         key = bWrong.find("key").asString();
         bValue = bWrong.find("value").asList();
         bFeedback = bWrong.find("feedback").asList();
+        val.clear();
+        for(int i=0; i<bValue->size(); i++)
+        {
+            val.push_back(bValue->get(i).asString());
+        }
+        feedb.clear();
+        for(int i=0; i<bFeedback->size(); i++)
+        {
+            feedb.push_back(bFeedback->get(i).asString());
+        }
+        speak_map[key] = make_pair(val,feedb);
+
+        Bottle &bStatic=rf_speak.findGroup("static");
+        if (bStatic.isNull() || !bStatic.check("key")
+                || !bStatic.check("value") || !bStatic.check("feedback"))
+        {
+            yError()<<"Unable to find group \"static\" and/or find key "
+                      "\"key\" and/or \"value\" and/or \"feedback\"";
+            return false;
+        }
+        key.clear();
+        bValue->clear();
+        bFeedback->clear();
+        key = bStatic.find("key").asString();
+        bValue = bStatic.find("value").asList();
+        bFeedback = bStatic.find("feedback").asList();
         val.clear();
         for(int i=0; i<bValue->size(); i++)
         {
@@ -343,7 +369,7 @@ public:
                 }
                 else
                 {
-                    //wrong exercise
+                    //wrong exercise or static
                     priority=-1;
                     string key=f->get(0).asString();
                     params.clear();
@@ -358,7 +384,7 @@ public:
 
             switch (priority)
             {
-            case -1: //wrong exercise
+            case -1: //wrong exercise or static
                 score=0.0;
                 break;
             case 0: //error in speed
