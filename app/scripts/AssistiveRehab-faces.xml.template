@@ -71,7 +71,7 @@
 
     <module>
        <name>attentionManager</name>
-       <parameters>--auto-start</parameters>
+       <parameters></parameters>
        <node>r1-console-linux</node>
     </module>
 

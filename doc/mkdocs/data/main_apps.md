@@ -35,7 +35,7 @@ yarpmanager
 ```
 
 Now click on _Assistive_Rehab_App_, hit run and then connect.
-The demo is now running! The robot starts looking around to engage a user. If the user accepts the invitation by lifting her/his hand, the interaction starts. The user has to repeat the exercise shown by the robot, which in turns evaluates how the exercise is being performed, through a verbal feedback. The session ends with the robot giving an overall feedback of the exercise. The interaction can go on, as the robot keeps memory of the past interaction.
+The demo is now running! To make the robot look around and engage the user, just issue the `start` command to the `interactionManager` module. If the user accepts the invitation by lifting her/his hand, the interaction starts. The user has to repeat the exercise shown by the robot, which in turns evaluates how the exercise is being performed, through a verbal feedback. The session ends with the robot giving an overall feedback of the exercise. The interaction can go on, as the robot keeps memory of the past interaction.
 
 Let's look a bit deeper into the application to see which are the modules running:
 
@@ -86,7 +86,7 @@ assistive-rehab-generate-report.sh
 Two html files will be created in the folder where you run the script.
 
 !!! note
-    Producing the report might take a while, as all the files whose names equal the name of the most recent file are processed. This allows us to create a report not only of the current session, but also of the clinical evolution of the patient.   
+    Producing the report might take a while, as all the files whose names equal the name of the most recent file are processed. This allows us to create a report not only of the current session, but also of the clinical evolution of the patient.
 
 ## The basic app integrated with face recognition: AssistiveRehab-faces.xml
 
