@@ -449,13 +449,17 @@ class Retriever : public RFModule
     }
 
     /****************************************************************/
-    bool opcAdd(shared_ptr<MetaSkeleton> &s)
+    bool opcAdd(shared_ptr<MetaSkeleton> &s, const Stamp &stamp)
     {
         if (opcPort.getOutputCount())
         {
             Bottle cmd,rep;
             cmd.addVocab(Vocab::encode("add"));
             Property prop=s->skeleton->toProperty();
+            if (stamp.isValid())
+            {
+                prop.put("stamp",stamp.getTime());
+            }
             cmd.addList().read(prop);
             if (opcPort.write(cmd,rep))
             {
@@ -465,7 +469,7 @@ class Retriever : public RFModule
                     if (is_unknown(s->skeleton->getTag()))
                     {
                         s->skeleton->setTag(getNameFromId(s->opc_id));
-                        return opcSet(s);
+                        return opcSet(s,stamp);
                     }
                     return true;
                 }
@@ -476,7 +480,7 @@ class Retriever : public RFModule
     }
 
     /****************************************************************/
-    bool opcSet(const shared_ptr<MetaSkeleton> &s)
+    bool opcSet(const shared_ptr<MetaSkeleton> &s, const Stamp &stamp)
     {
         if (opcPort.getOutputCount())
         {
@@ -484,6 +488,10 @@ class Retriever : public RFModule
             cmd.addVocab(Vocab::encode("set"));
             Bottle &pl=cmd.addList();
             Property prop=s->skeleton->toProperty();
+            if (stamp.isValid())
+            {
+                prop.put("stamp",stamp.getTime());
+            }
             pl.read(prop);
             Bottle id;
             Bottle &id_pl=id.addList();
@@ -781,6 +789,9 @@ class Retriever : public RFModule
                 // update existing skeletons / create new skeletons
                 if (!new_accepted_skeletons.empty())
                 {
+                    Stamp stamp;
+                    skeletonsPort.getEnvelope(stamp);
+
                     enforce_tag_uniqueness_input(new_accepted_skeletons);
 
                     vector<string> viewer_remove_tags;
@@ -796,13 +807,13 @@ class Retriever : public RFModule
                                 auto i=distance(scores.begin(),it);
                                 auto &s=pending[i];
                                 update(n,s,viewer_remove_tags);
-                                opcSet(s);
+                                opcSet(s,stamp);
                                 pending.erase(pending.begin()+i);
                                 continue;
                             }
                         }
 
-                        opcAdd(n);
+                        opcAdd(n,stamp);
                         skeletons.push_back(n);
                     }
 
