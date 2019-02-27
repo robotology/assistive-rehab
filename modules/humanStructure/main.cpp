@@ -24,6 +24,7 @@
 #include <yarp/os/Semaphore.h>
 #include <yarp/sig/Image.h>
 #include <yarp/cv/Cv.h>
+#include <yarp/os/Stamp.h>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/opencv.hpp>
@@ -93,6 +94,9 @@ public:
     {
         yarp::sig::ImageOf<yarp::sig::PixelRgb> &outImage  = imageOutPort.prepare();
         yarp::sig::ImageOf<yarp::sig::PixelRgb> *inImage = imageInPort.read();
+        
+        yarp::os::Stamp stamp;        
+        imageInPort.getEnvelope(stamp);
 
         yarp::os::Bottle &target  = targetPort.prepare();
 
@@ -358,11 +362,13 @@ public:
                     tmp.addInt(shapes[elements[i].second].get(2).asInt());
                     tmp.addInt(shapes[elements[i].second].get(3).asInt());
                 }
-
+                targetPort.setEnvelope(stamp);
                 targetPort.write();
             }
         }
+        imageOutPort.setEnvelope(stamp);
         imageOutPort.write();
+        blobPort.setEnvelope(stamp);
         blobPort.write();
     }
 };
