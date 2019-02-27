@@ -27,6 +27,7 @@
 #include <yarp/os/LockGuard.h>
 #include <yarp/sig/Image.h>
 #include <yarp/cv/Cv.h>
+#include <yarp/os/Stamp.h>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/opencv.hpp>
@@ -84,6 +85,8 @@ class Module : public yarp::os::RFModule, public recognition_IDL
     bool                recognition_started;
 
     QueryThread         *thr_query;
+        
+    yarp::os::Stamp     stamp;
 
 public:
 
@@ -290,7 +293,6 @@ public:
         if (yarp::sig::ImageOf<yarp::sig::PixelRgb> *tmp=imageInPort.read())
         {
             img=*tmp;
-            yarp::os::Stamp stamp;
             imageInPort.getEnvelope(stamp);
             thr_query->setImage(img,stamp);
         }
@@ -496,6 +498,7 @@ public:
 
         img=yarp::cv::fromCvMat<yarp::sig::PixelRgb>(imgMat);
         imageOutPort.prepare()=img;
+        imageOutPort.setEnvelope(stamp);
         imageOutPort.writeStrict();
 
         return winners;
@@ -627,7 +630,7 @@ public:
                 }
                 addSkeletons=*skeleton;
             }
-
+            targetOutPort.setEnvelope(stamp);
             targetOutPort.writeStrict();
         }
     }
