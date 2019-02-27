@@ -26,3 +26,8 @@ set_property(TARGET test-dtwlib PROPERTY FOLDER "Tests")
 add_executable(test-overlay test-overlay.cpp)
 target_link_libraries(test-overlay ${OpenCV_LIBRARIES} ${YARP_LIBRARIES} AssistiveRehab)
 set_property(TARGET test-overlay PROPERTY FOLDER "Tests")
+
+add_executable(test-tracker test-tracker.cpp)
+target_compile_definitions(test-tracker PRIVATE _USE_MATH_DEFINES)
+target_link_libraries(test-tracker ${YARP_LIBRARIES} AssistiveRehab)
+set_property(TARGET test-tracker PROPERTY FOLDER "Tests")
