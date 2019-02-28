@@ -58,7 +58,7 @@ class MetaSkeleton
     CamParamsHelper camParams;
     
     /****************************************************************/
-    vector<pair<string,Vector>> optimize_limbs(const vector<string> &tags)
+    vector<pair<string,pair<Vector,Vector>>> optimize_limbs(const vector<string> &tags)
     {
         bool all_updated=true;
         vector<double> lengths;
@@ -76,7 +76,7 @@ class MetaSkeleton
             }
         }
 
-        vector<pair<string,Vector>> unordered;
+        vector<pair<string,pair<Vector,Vector>>> unordered;
         if (all_updated && (lengths.size()==tags.size()-1))
         {
             unordered=LimbOptimizer::optimize(camParams,(*skeleton)[tags[0]],lengths);
@@ -138,19 +138,19 @@ public:
     }
 
     /****************************************************************/
-    void update(const vector<pair<string,Vector>> &unordered)
+    void update(const vector<pair<string,pair<Vector,Vector>>> &unordered)
     {
-        vector<pair<string,Vector>> unordered_filtered;
+        vector<pair<string,pair<Vector,Vector>>> unordered_filtered;
         for (auto &p:unordered)
         {
             int i=skeleton->getNumFromKey(p.first);
             if (i>=0)
             {
-                unordered_filtered.push_back(make_pair(p.first,filter[i]->filt(p.second)));
+                unordered_filtered.push_back(make_pair(p.first,make_pair(filter[i]->filt(p.second.first),p.second.second)));
             }
         }
         // update 1: incorporate filtered feedback
-        skeleton->update(unordered_filtered);
+        skeleton->update_withpixels(unordered_filtered);
         
         size_t latch_size=unordered_filtered.size();
         for (auto &it1:limbs_length)
@@ -196,12 +196,12 @@ public:
         // update 2: remove limbs' keypoints that are clearly too long
         if (unordered_filtered.size()<latch_size)
         {
-            skeleton->update(unordered_filtered);
+            skeleton->update_withpixels(unordered_filtered);
         }
 
         if (optimize_limblength)
         {
-            vector<pair<string,Vector>> tmp;
+            vector<pair<string,pair<Vector,Vector>>> tmp;
             tmp=optimize_limbs({KeyPointTag::shoulder_left,KeyPointTag::elbow_left,KeyPointTag::hand_left});
             unordered_filtered.insert(end(unordered_filtered),begin(tmp),end(tmp));
 
@@ -215,7 +215,7 @@ public:
             unordered_filtered.insert(end(unordered_filtered),begin(tmp),end(tmp));
 
             // update 3: adjust limbs' keypoints through optimization
-            skeleton->update(unordered_filtered);
+            skeleton->update_withpixels(unordered_filtered);
         }
     }
 };
@@ -319,10 +319,10 @@ class Retriever : public RFModule
         shared_ptr<MetaSkeleton> s(new MetaSkeleton(CamParamsHelper(depth.width(),depth.height(),fov_h),
                                                     time_to_live,filter_keypoint_order,filter_limblength_order,
                                                     optimize_limblength));
-        vector<pair<string,Vector>> unordered;
+        vector<pair<string,pair<Vector,Vector>>> unordered;
         vector<Vector> hips;
 
-        Vector p;
+        Vector p,pixel(2);
         for (size_t i=0; i<keys->size(); i++)
         {
             if (Bottle *k=keys->get(i).asList())
@@ -336,7 +336,8 @@ class Retriever : public RFModule
 
                     if ((confidence>=keys_recognition_confidence) && getPoint3D(u,v,p))
                     {
-                        unordered.push_back(make_pair(keysRemap[tag],p));
+                        pixel[0]=u; pixel[1]=v;
+                        unordered.push_back(make_pair(keysRemap[tag],make_pair(p,pixel)));
                         if ((keysRemap[tag]==KeyPointTag::hip_left) ||
                             (keysRemap[tag]==KeyPointTag::hip_right))
                         {
@@ -366,10 +367,11 @@ class Retriever : public RFModule
 
         if (hips.size()==2)
         {
-            unordered.push_back(make_pair(KeyPointTag::hip_center,0.5*(hips[0]+hips[1])));
+            pixel=-1.0;
+            unordered.push_back(make_pair(KeyPointTag::hip_center,make_pair(0.5*(hips[0]+hips[1]),pixel)));
         }
 
-        s->skeleton->update(unordered);
+        s->skeleton->update_withpixels(unordered);
         return s;
     }
 
@@ -377,21 +379,21 @@ class Retriever : public RFModule
     void update(const shared_ptr<MetaSkeleton> &src, shared_ptr<MetaSkeleton> &dest,
                 vector<string> &remove_tags)
     {
-        vector<pair<string,Vector>> unordered;
+        vector<pair<string,pair<Vector,Vector>>> unordered;
         for (unsigned int i=0; i<src->skeleton->getNumKeyPoints(); i++)
         {
             auto key=(*src->skeleton)[i];
             if (key->isUpdated())
             {
                 const Vector &p=key->getPoint();
-                unordered.push_back(make_pair(key->getTag(),p));
+                unordered.push_back(make_pair(key->getTag(),make_pair(p,key->getPixel())));
                 if (dest->keys_acceptable_misses[i]==0)
                     dest->init(key->getTag(),p);
                 dest->keys_acceptable_misses[i]=keys_acceptable_misses;
             }
             else if (dest->keys_acceptable_misses[i]>0)
             {
-                unordered.push_back(make_pair(key->getTag(),(*dest->skeleton)[i]->getPoint()));
+                unordered.push_back(make_pair(key->getTag(),make_pair((*dest->skeleton)[i]->getPoint(),(*dest->skeleton)[i]->getPixel())));
                 dest->keys_acceptable_misses[i]--;
             }
         }

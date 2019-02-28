@@ -51,12 +51,15 @@ const string SkeletonWaist="assistive_rehab::SkeletonWaist";
 
 }
 
-KeyPoint::KeyPoint() : updated(false), tag(""), point(3,0.0)
+KeyPoint::KeyPoint() : updated(false), tag(""),
+                       point(3,numeric_limits<double>::quiet_NaN()),
+                       pixel(2,numeric_limits<double>::quiet_NaN())
 {
 }
 
-KeyPoint::KeyPoint(const string &tag_, const Vector &point_, const bool updated_) :
-   updated(updated_), tag(tag_), point(point_)
+KeyPoint::KeyPoint(const string &tag_, const Vector &point_,
+                   const Vector &pixel_, const bool updated_) :
+   updated(updated_), tag(tag_), point(point_), pixel(pixel_)
 {
 }
 
@@ -66,6 +69,22 @@ bool KeyPoint::setPoint(const Vector &point)
     if (len>0)
     {
         this->point.setSubvector(0,point.subVector(0,len-1));
+        this->pixel=numeric_limits<double>::quiet_NaN();
+        updated=true;
+        return true;
+    }
+    else
+        return false;
+}
+
+bool KeyPoint::setPoint(const Vector &point, const Vector &pixel)
+{
+    unsigned int len1=(unsigned int)std::min(this->point.length(),point.length());
+    unsigned int len2=(unsigned int)std::min(this->pixel.length(),pixel.length());
+    if ((len1>0) && (len2>0))
+    {
+        this->point.setSubvector(0,point.subVector(0,len1-1));
+        this->pixel.setSubvector(0,pixel.subVector(0,len2-1));
         updated=true;
         return true;
     }
@@ -102,12 +121,13 @@ Property Skeleton::helper_toproperty(KeyPoint *k) const
     Property prop;
     if (k!=nullptr)
     {
-        Bottle position;
-        position.addList().read(k->point);
+        Bottle position; position.addList().read(k->point);
+        Bottle pixel; pixel.addList().read(k->pixel);
 
         prop.put("tag",k->getTag());
         prop.put("status",k->isUpdated()?"updated":"stale");
         prop.put("position",position.get(0));
+        prop.put("pixel",pixel.get(0));
         
         if (k->child.size()>0)
         {
@@ -136,11 +156,15 @@ void Skeleton::helper_fromproperty(Bottle *prop, KeyPoint *parent)
             string tag=b->check("tag",Value("")).asString();
             bool updated=(b->check("status",Value("stale")).asString()=="updated");
 
-            Vector point(3,0.0);
+            Vector point(3,numeric_limits<double>::quiet_NaN());
             if (Bottle *p=b->find("position").asList())
                 p->write(point);
 
-            KeyPoint *k=new KeyPoint(tag,point,updated);
+            Vector pixel(2,numeric_limits<double>::quiet_NaN());
+            if (Bottle *p=b->find("pixel").asList())
+                p->write(pixel);
+
+            KeyPoint *k=new KeyPoint(tag,point,pixel,updated);
             tag2key[tag]=k;
             keypoints.push_back(k);
             key2id[k]=(unsigned int)keypoints.size()-1;
@@ -173,6 +197,9 @@ void Skeleton::helper_updatefromproperty(Bottle *prop)
 
                     if (Bottle *p=b->find("position").asList())
                         p->write(k->point);
+
+                    if (Bottle *p=b->find("pixel").asList())
+                        p->write(k->pixel);
 
                     helper_updatefromproperty(b->find("child").asList());
                 }
@@ -425,7 +452,7 @@ const KeyPoint *Skeleton::operator[](const unsigned int i) const
 
 void Skeleton::update()
 {
-    Vector p(4,1);
+    Vector p(4,1.0);
     for (auto &k:keypoints)
     {
         if (k->isUpdated())
@@ -443,7 +470,7 @@ void Skeleton::update()
 
 void Skeleton::update(const vector<Vector> &ordered)
 {
-    Vector p(4,1);
+    Vector p(4,1.0);
     unsigned int i=0;
     for (auto &k:keypoints)
     {
@@ -467,7 +494,7 @@ void Skeleton::update(const vector<pair<string,Vector>> &unordered)
     for (auto &k:keypoints)
         k->stale();
 
-    Vector p(4,1);
+    Vector p(4,1.0);
     for (auto &it1:unordered)
     {
         auto it2=tag2key.find(get<0>(it1));
@@ -478,6 +505,49 @@ void Skeleton::update(const vector<pair<string,Vector>> &unordered)
             p[1]=v[1];
             p[2]=v[2];
             it2->second->setPoint((T*p).subVector(0,2));
+        }
+    }
+
+    update_planes();
+}
+
+void Skeleton::update_withpixels(const vector<pair<Vector,Vector>> &ordered)
+{
+    Vector p(4,1.0);
+    unsigned int i=0;
+    for (auto &k:keypoints)
+    {
+        k->stale();
+        if (i<ordered.size())
+        {
+            auto &v=ordered[i];
+            p[0]=v.first[0];
+            p[1]=v.first[1];
+            p[2]=v.first[2];
+            k->setPoint((T*p).subVector(0,2),v.second);
+        }
+        i++;
+    }
+
+    update_planes();
+}
+
+void Skeleton::update_withpixels(const vector<pair<string,pair<Vector,Vector>>> &unordered)
+{
+    for (auto &k:keypoints)
+        k->stale();
+
+    Vector p(4,1.0);
+    for (auto &it1:unordered)
+    {
+        auto it2=tag2key.find(get<0>(it1));
+        if (it2!=tag2key.end())
+        {
+            auto &v=get<1>(it1);
+            p[0]=v.first[0];
+            p[1]=v.first[1];
+            p[2]=v.first[2];
+            it2->second->setPoint((T*p).subVector(0,2),v.second);
         }
     }
 
@@ -522,6 +592,22 @@ vector<pair<string,Vector>> Skeleton::get_unordered() const
     return unordered;
 }
 
+vector<pair<Vector,Vector>> Skeleton::get_ordered_withpixels() const
+{
+    vector<pair<Vector,Vector>> ordered;
+    for (auto &k:keypoints)
+        ordered.push_back(make_pair(k->getPoint(),k->getPixel()));
+    return ordered;
+}
+
+vector<pair<string,pair<Vector,Vector>>> Skeleton::get_unordered_withpixels() const
+{
+    vector<pair<string,pair<Vector,Vector>>> unordered;
+    for (auto &it:tag2key)
+        unordered.push_back(make_pair(it.first,make_pair(it.second->getPoint(),it.second->getPixel())));
+    return unordered;
+}
+
 void Skeleton::normalize(const double n)
 {
     if (keypoints.size()>0)
@@ -554,7 +640,8 @@ void Skeleton::print(ostream &os) const
     for (auto &k:keypoints)
     {
         os<<"keypoint[\""<<k->getTag()<<"\"] = ("
-          <<k->getPoint().toString(3,3)<<"); status="
+          <<k->getPoint().toString(3,3)<<"); pixel=("
+          <<k->getPixel().toString(1,1)<<"); status="
           <<(k->isUpdated()?"updated":"stale")
           <<"; parent={";
           for (auto &p:k->parent) os<<"\""<<p->getTag()<<"\" ";
@@ -774,6 +861,39 @@ void SkeletonWaist::update_fromstd(const vector<Vector> &ordered)
 void SkeletonWaist::update_fromstd(const vector<pair<string,Vector>> &unordered)
 {
     update(unordered);
+    if (tag2key[KeyPointTag::hip_left]->isUpdated() || tag2key[KeyPointTag::hip_right]->isUpdated())
+        tag2key[KeyPointTag::hip_center]->setPoint(0.5*(tag2key[KeyPointTag::hip_left]->getPoint()+
+                                                        tag2key[KeyPointTag::hip_right]->getPoint()));
+    update_planes();
+}
+
+void SkeletonWaist::update_fromstd_withpixels(const vector<pair<Vector,Vector>> &ordered)
+{
+    for (auto &k:keypoints)
+        k->stale();
+
+    Vector p(4,1);
+    unsigned int i=0;
+    for (auto &v:ordered)
+    {
+        unsigned int pos=(i<waist_pos)?i:i+1;
+        auto &k=keypoints[pos];
+        p[0]=v.first[0];
+        p[1]=v.first[1];
+        p[2]=v.first[2];
+        k->setPoint((T*p).subVector(0,2),v.second);
+        i++;
+    }
+
+    if (tag2key[KeyPointTag::hip_left]->isUpdated() || tag2key[KeyPointTag::hip_right]->isUpdated())
+        tag2key[KeyPointTag::hip_center]->setPoint(0.5*(tag2key[KeyPointTag::hip_left]->getPoint()+
+                                                        tag2key[KeyPointTag::hip_right]->getPoint()));
+    update_planes();
+}
+
+void SkeletonWaist::update_fromstd_withpixels(const vector<pair<string,pair<Vector,Vector>>> &unordered)
+{
+    update_withpixels(unordered);
     if (tag2key[KeyPointTag::hip_left]->isUpdated() || tag2key[KeyPointTag::hip_right]->isUpdated())
         tag2key[KeyPointTag::hip_center]->setPoint(0.5*(tag2key[KeyPointTag::hip_left]->getPoint()+
                                                         tag2key[KeyPointTag::hip_right]->getPoint()));

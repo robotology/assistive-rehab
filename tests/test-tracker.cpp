@@ -38,9 +38,12 @@ class Tracker : public RFModule {
   BufferedPort<Bottle> opc;
   BufferedPort<Property> gaze_rx;
   BufferedPort<Property> gaze_tx;
+  Matrix gaze_frame;
   string keypoint;
+  bool use_pixel;
 
   bool configure(ResourceFinder& rf)override {
+    use_pixel = rf.check("use-pixel", Value(true)).asBool();
     keypoint = KeyPointTag::shoulder_center;
     opc.open("/test-tracker/skeletons:i");
     if (!Network::connect("/opc/broadcast:o", opc.getName())) {
@@ -66,10 +69,10 @@ class Tracker : public RFModule {
   }
 
   bool updateModule()override {
-    if (Bottle *skeletons = opc.read()) {
+    if (Bottle* skeletons = opc.read()) {
       string tag = skeletons->get(0).asString();
       if ((tag == "sync") || (tag == "async")) {
-        Vector fp;
+        Vector fp, pixel;
         ostringstream skeletons_info;
         double min_d = numeric_limits<double>::infinity();
         for (size_t i = 1; i < skeletons->size(); i++) {
@@ -79,36 +82,45 @@ class Tracker : public RFModule {
             unique_ptr<Skeleton> sk(skeleton_factory(prop));
             if ((*sk)[keypoint]->isUpdated()) {
               Vector x = (*sk)[keypoint]->getPoint();
+              Vector px = (*sk)[keypoint]->getPixel();
               double d = norm(x);
-              skeletons_info << sk->getTag() << ": (" << x.toString() << "); ";
+              skeletons_info << sk->getTag() << ": ("
+                  << x.toString(3, 3) << "), ("
+                  << px.toString(1, 1) << "); ";
               if (d < min_d) {
                 fp = x;
-                min_d = d; 
+                pixel = px;
+                min_d = d;
               }
             }
           }
         }
         if (fp.size() > 0) {
-          if (Property *prop=gaze_rx.read()) {
+          if (Property* prop = gaze_rx.read(false)) {
             Vector pose;
             prop->find("depth_rgb").asList()->write(pose);
-            Matrix frame = axis2dcm(pose.subVector(3,6));
-            frame.setSubcol(pose.subVector(0,2),0,3);
-      
-            fp.push_back(1.0);
-            fp = frame*fp;
-            fp.pop_back();
-
-            Bottle loc;
-            loc.addList().read(fp);
-            Property& options = gaze_tx.prepare();
-            options.put("control-frame", "depth_rgb");
-            options.put("target-type", "cartesian");
-            options.put("target-location", loc.get(0));
-            yInfo()<<"skeletons info: " << skeletons_info.str(); 
-            yInfo()<<"gazing at:" << options.toString();
-            gaze_tx.writeStrict();
+            gaze_frame = axis2dcm(pose.subVector(3, 6));
+            gaze_frame.setSubcol(pose.subVector(0, 2), 0, 3);
           }
+
+          Bottle loc;
+          Property& options = gaze_tx.prepare();
+          options.put("control-frame", "depth_rgb");
+          if (use_pixel) {
+            loc.addList().read(pixel);
+            options.put("target-type", "image");
+            options.put("image", "depth_rgb");
+          } else {
+            fp.push_back(1.0);
+            fp = gaze_frame * fp;
+            fp.pop_back();
+            loc.addList().read(fp);
+            options.put("target-type", "cartesian");
+          }
+          options.put("target-location", loc.get(0));
+          yInfo() << "skeletons info: " << skeletons_info.str();
+          yInfo() << "gazing at:" << options.toString();
+          gaze_tx.writeStrict();
         }
       }
     }

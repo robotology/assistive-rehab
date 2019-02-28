@@ -344,6 +344,10 @@ class Attention : public RFModule, public attentionManager_IDL
         Property options;
         options.put("control-frame","depth_rgb");
         options.put("target-type",type);
+        if (type=="image")
+        {
+            options.put("image","depth_rgb");
+        }
         options.put("target-location",loc.get(0));
 
         Bottle cmd,rep;
@@ -511,7 +515,7 @@ class Attention : public RFModule, public attentionManager_IDL
                 x.push_back(1.0);
                 x=gaze_frame*x;
                 x.pop_back();
-                look("cartesian",x);
+                look("image",(*s)[keypoint]->getPixel());
                 is_following_x=x;
 
                 // gaze speed is faster when chasing,

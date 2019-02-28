@@ -30,7 +30,8 @@ using namespace assistive_rehab;
 void print_hierarchy(const KeyPoint *k)
 {
     cout<<"keypoint[\""<<k->getTag()<<"\"] = ("
-        <<k->getPoint().toString(3,3)<<"); status="
+        <<k->getPoint().toString(3,3)<<"); pixel="
+        <<k->getPixel().toString(1,1)<<"); status="
         <<(k->isUpdated()?"updated":"stale")<<endl;
     for (unsigned int i=0; i<k->getNumChild(); i++)
         print_hierarchy(k->getChild(i));
@@ -55,51 +56,51 @@ int main()
 
     vector<pair<string,Vector>> unordered;
     {
-        Vector p(3,0.0); p[0]=0.0; p[1]=0.0; p[2]=0.0;
+        Vector p(3); p[0]=0.0; p[1]=0.0; p[2]=0.0;
         unordered.push_back(make_pair(KeyPointTag::shoulder_center,p));
     }
     {
-        Vector p(3,0.0); p[0]=0.0; p[1]=-0.1; p[2]=0.0;
+        Vector p(3); p[0]=0.0; p[1]=-0.1; p[2]=0.0;
         unordered.push_back(make_pair(KeyPointTag::head,p));
     }
     {
-        Vector p(3,0.0); p[0]=0.1; p[1]=0.0; p[2]=0.0;
+        Vector p(3); p[0]=0.1; p[1]=0.0; p[2]=0.0;
         unordered.push_back(make_pair(KeyPointTag::shoulder_left,p));
     }
     {
-        Vector p(3,0.0); p[0]=0.2; p[1]=0.0; p[2]=0.0;
+        Vector p(3); p[0]=0.2; p[1]=0.0; p[2]=0.0;
         unordered.push_back(make_pair(KeyPointTag::elbow_left,p));
     }
     {
-        Vector p(3,0.0); p[0]=0.3; p[1]=0.0; p[2]=0.0;
+        Vector p(3); p[0]=0.3; p[1]=0.0; p[2]=0.0;
         unordered.push_back(make_pair(KeyPointTag::hand_left,p));
     }
     {
-        Vector p(3,0.0); p[0]=-0.1; p[1]=0.0; p[2]=0.0;
+        Vector p(3); p[0]=-0.1; p[1]=0.0; p[2]=0.0;
         unordered.push_back(make_pair(KeyPointTag::shoulder_right,p));
     }
     {
-        Vector p(3,0.0); p[0]=-0.2; p[1]=0.0; p[2]=0.0;
+        Vector p(3); p[0]=-0.2; p[1]=0.0; p[2]=0.0;
         unordered.push_back(make_pair(KeyPointTag::elbow_right,p));
     }
     {
-        Vector p(3,0.0); p[0]=-0.3; p[1]=0.0; p[2]=0.0;
+        Vector p(3); p[0]=-0.3; p[1]=0.0; p[2]=0.0;
         unordered.push_back(make_pair(KeyPointTag::hand_right,p));
     }
     {
-        Vector p(3,0.0); p[0]=0.1; p[1]=0.1; p[2]=0.0;
+        Vector p(3); p[0]=0.1; p[1]=0.1; p[2]=0.0;
         unordered.push_back(make_pair(KeyPointTag::hip_left,p));
     }
     {
-        Vector p(3,0.0); p[0]=0.1; p[1]=0.2; p[2]=0.0;
+        Vector p(3); p[0]=0.1; p[1]=0.2; p[2]=0.0;
         unordered.push_back(make_pair(KeyPointTag::knee_left,p));
     }
     {
-        Vector p(3,0.0); p[0]=-0.1; p[1]=0.1; p[2]=0.0;
+        Vector p(3); p[0]=-0.1; p[1]=0.1; p[2]=0.0;
         unordered.push_back(make_pair(KeyPointTag::hip_right,p));
     }
     {
-        Vector p(3,0.0); p[0]=-0.1; p[1]=0.2; p[2]=0.0;
+        Vector p(3); p[0]=-0.1; p[1]=0.2; p[2]=0.0;
         unordered.push_back(make_pair(KeyPointTag::knee_right,p));
     }
 
@@ -128,6 +129,20 @@ int main()
     ofstream fout("test.log");
     skeleton1.print(fout);
     fout.close();
+    cout<<endl;
+
+    cout<<"### Dealing with pixels"<<endl;
+    SkeletonStd skeleton3;
+    skeleton3.setTag("test");
+    vector<pair<Vector,Vector>> ordered_withpixels;
+    for (size_t i=0; i<skeleton3.getNumKeyPoints(); i++)
+    {
+        Vector p(3,i/10.0);
+        Vector px(2,i*10.0);
+        ordered_withpixels.push_back(make_pair(p,px));
+    }
+    skeleton3.update_withpixels(ordered_withpixels);
+    skeleton3.print();
     cout<<endl;
 
     return EXIT_SUCCESS;

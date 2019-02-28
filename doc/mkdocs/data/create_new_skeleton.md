@@ -5,6 +5,7 @@ This tutorial will explain you the main functionalities to manage a skeleton obj
 - defining a skeleton;
 - retrieving a skeleton;
 - accessing single keypoints of a skeleton;
+- dealing with pixels;
 - additional functionalities.
 
 ## Defining a skeleton
@@ -43,12 +44,13 @@ A skeleton can be defined as:
         - tag: string containing keypoint's tag.
         - status: string containing keypoint's status (updated or stale).
         - position: vector containing keypoint's camera coordinates x,y,z.
+        - pixel: vector containing keypoint's image coordinates u,v.
         - child: list containing keypoint's child, specified as position, status, tag.
 
     An example is the following:
 
     ```
-    (coronal (0.0 0.0 1.0)) (sagittal (1.0 0.0 0.0)) (skeleton (((child (((position (0.0 1.0 0.0)) (status updated) (tag head)) ((child (((child (((position (3.0 0.0 3.67394039744206e-16)) (status updated) (tag handLeft)))) (position (2.0 0.0 2.44929359829471e-16)) (status updated) (tag elbowLeft)))) (position (1.0 0.0 1.22464679914735e-16)) (status updated) (tag shoulderLeft)) ((child (((child (((position (-3.0 0.0 -3.67394039744206e-16)) (status updated) (tag handRight)))) (position (-2.0 0.0 -2.44929359829471e-16)) (status updated) (tag elbowRight)))) (position (-1.0 0.0 -1.22464679914735e-16)) (status updated) (tag shoulderRight)) ((child (((child (((child (((position (0.552786404500042 -1.10557280900008 6.76968100883151e-17)) (status stale) (tag ankleLeft)))) (position (1.0 -2.0 1.22464679914735e-16)) (status updated) (tag kneeLeft)))) (position (1.0 -1.0 1.22464679914735e-16)) (status updated) (tag hipLeft)) ((child (((child (((position (-0.552786404500042 -1.10557280900008 -6.76968100883151e-17)) (status stale) (tag ankleRight)))) (position (-1.0 -2.0 -1.22464679914735e-16)) (status updated) (tag kneeRight)))) (position (-1.0 -1.0 -1.22464679914735e-16)) (status updated) (tag hipRight)))) (position (0.0 -1.0 0.0)) (status updated) (tag hipCenter)))) (position (0.0 0.0 0.0)) (status updated) (tag shoulderCenter)))) (tag test) (transformation (4 4 (-1.0 0.0 1.22464679914735e-16 0.0 0.0 1.0 0.0 0.0 -1.22464679914735e-16 0.0 -1.0 0.0 0.0 0.0 0.0 1.0))) (transverse (0.0 1.0 0.0)) (type "class assistive_rehab::SkeletonWaist")
+    (coronal (0.0 0.0 0.0)) (sagittal (-0.577350269189626 -0.577350269189626 -0.577350269189626)) (skeleton (((child (((pixel (10.0 10.0)) (position (0.1 0.1 0.1)) (status updated) (tag head)) ((child (((child (((pixel (40.0 40.0)) (position (0.4 0.4 0.4)) (status updated) (tag handLeft)))) (pixel (30.0 30.0)) (position (0.3 0.3 0.3)) (status updated) (tag elbowLeft)))) (pixel (20.0 20.0)) (position (0.2 0.2 0.2)) (status updated) (tag shoulderLeft)) ((child (((child (((pixel (70.0 70.0)) (position (0.7 0.7 0.7)) (status updated) (tag handRight)))) (pixel (60.0 60.0)) (position (0.6 0.6 0.6)) (status updated) (tag elbowRight)))) (pixel (50.0 50.0)) (position (0.5 0.5 0.5)) (status updated) (tag shoulderRight)) ((child (((child (((pixel (100.0 100.0)) (position (1.0 1.0 1.0)) (status updated) (tag ankleLeft)))) (pixel (90.0 90.0)) (position (0.9 0.9 0.9)) (status updated) (tag kneeLeft)))) (pixel (80.0 80.0)) (position (0.8 0.8 0.8)) (status updated) (tag hipLeft)) ((child (((child (((pixel (130.0 130.0)) (position (1.3 1.3 1.3)) (status updated) (tag ankleRight)))) (pixel (120.0 120.0)) (position (1.2 1.2 1.2)) (status updated) (tag kneeRight)))) (pixel (110.0 110.0)) (position (1.1 1.1 1.1)) (status updated) (tag hipRight)))) (pixel (0.0 0.0)) (position (0.0 0.0 0.0)) (status updated) (tag shoulderCenter)))) (tag test) (transformation (4 4 (1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0))) (transverse (-0.577350269189626 -0.577350269189626 -0.577350269189626)) (type "assistive_rehab::SkeletonStd")
     ```
 
 ### From an unordered list of keypoints
@@ -57,8 +59,6 @@ The following code snippet creates a `SkeletonWaist` object from an unordered li
 
 ```cpp
 
-#include <cstdlib>
-#include <cmath>
 #include <yarp/sig/Vector.h>
 #include "AssistiveRehab/skeleton.h"
 
@@ -67,52 +67,52 @@ int main()
     assistive_rehab::SkeletonWaist skeleton;
     std::vector<std::pair<std::string,yarp::sig::Vector>> unordered;
     {
-        yarp::sig::Vector p(3,0.0); p[0]=0.0; p[1]=0.0; p[2]=0.0;
-        unordered.push_back(make_pair(assistive_rehab::KeyPointTag::shoulder_center,p));
+        yarp::sig::Vector p(3); p[0]=0.0; p[1]=0.0; p[2]=0.0;
+        unordered.push_back(std::make_pair(assistive_rehab::KeyPointTag::shoulder_center,p));
     }
     {
-        yarp::sig::Vector p(3,0.0); p[0]=0.0; p[1]=-0.1; p[2]=0.0;
-        unordered.push_back(make_pair(assistive_rehab::KeyPointTag::head,p));
+        yarp::sig::Vector p(3); p[0]=0.0; p[1]=-0.1; p[2]=0.0;
+        unordered.push_back(std::make_pair(assistive_rehab::KeyPointTag::head,p));
     }
     {
-        yarp::sig::Vector p(3,0.0); p[0]=0.1; p[1]=0.0; p[2]=0.0;
-        unordered.push_back(make_pair(assistive_rehab::KeyPointTag::shoulder_left,p));
+        yarp::sig::Vector p(3); p[0]=0.1; p[1]=0.0; p[2]=0.0;
+        unordered.push_back(std::make_pair(assistive_rehab::KeyPointTag::shoulder_left,p));
     }
     {
-        yarp::sig::Vector p(3,0.0); p[0]=0.2; p[1]=0.0; p[2]=0.0;
-        unordered.push_back(make_pair(assistive_rehab::KeyPointTag::elbow_left,p));
+        yarp::sig::Vector p(3); p[0]=0.2; p[1]=0.0; p[2]=0.0;
+        unordered.push_back(std::make_pair(assistive_rehab::KeyPointTag::elbow_left,p));
     }
     {
-        yarp::sig::Vector p(3,0.0); p[0]=0.3; p[1]=0.0; p[2]=0.0;
-        unordered.push_back(make_pair(assistive_rehab::KeyPointTag::hand_left,p));
+        yarp::sig::Vector p(3); p[0]=0.3; p[1]=0.0; p[2]=0.0;
+        unordered.push_back(std::make_pair(assistive_rehab::KeyPointTag::hand_left,p));
     }
     {
-        yarp::sig::Vector p(3,0.0); p[0]=-0.1; p[1]=0.0; p[2]=0.0;
-        unordered.push_back(make_pair(assistive_rehab::KeyPointTag::shoulder_right,p));
+        yarp::sig::Vector p(3); p[0]=-0.1; p[1]=0.0; p[2]=0.0;
+        unordered.push_back(std::make_pair(assistive_rehab::KeyPointTag::shoulder_right,p));
     }
     {
-        yarp::sig::Vector p(3,0.0); p[0]=-0.2; p[1]=0.0; p[2]=0.0;
-        unordered.push_back(make_pair(assistive_rehab::KeyPointTag::elbow_right,p));
+        yarp::sig::Vector p(3); p[0]=-0.2; p[1]=0.0; p[2]=0.0;
+        unordered.push_back(std::make_pair(assistive_rehab::KeyPointTag::elbow_right,p));
     }
     {
-        yarp::sig::Vector p(3,0.0); p[0]=-0.3; p[1]=0.0; p[2]=0.0;
-        unordered.push_back(make_pair(assistive_rehab::KeyPointTag::hand_right,p));
+        yarp::sig::Vector p(3); p[0]=-0.3; p[1]=0.0; p[2]=0.0;
+        unordered.push_back(std::make_pair(assistive_rehab::KeyPointTag::hand_right,p));
     }
     {
-        yarp::sig::Vector p(3,0.0); p[0]=0.1; p[1]=0.1; p[2]=0.0;
-        unordered.push_back(make_pair(assistive_rehab::KeyPointTag::hip_left,p));
+        yarp::sig::Vector p(3); p[0]=0.1; p[1]=0.1; p[2]=0.0;
+        unordered.push_back(std::make_pair(assistive_rehab::KeyPointTag::hip_left,p));
     }
     {
-        yarp::sig::Vector p(3,0.0); p[0]=0.1; p[1]=0.2; p[2]=0.0;
-        unordered.push_back(make_pair(assistive_rehab::KeyPointTag::knee_left,p));
+        yarp::sig::Vector p(3); p[0]=0.1; p[1]=0.2; p[2]=0.0;
+        unordered.push_back(std::make_pair(assistive_rehab::KeyPointTag::knee_left,p));
     }
     {
-        yarp::sig::Vector p(3,0.0); p[0]=-0.1; p[1]=0.1; p[2]=0.0;
-        unordered.push_back(make_pair(assistive_rehab::KeyPointTag::hip_right,p));
+        yarp::sig::Vector p(3); p[0]=-0.1; p[1]=0.1; p[2]=0.0;
+        unordered.push_back(std::make_pair(assistive_rehab::KeyPointTag::hip_right,p));
     }
     {
-        yarp::sig::Vector p(3,0.0); p[0]=-0.1; p[1]=0.2; p[2]=0.0;
-        unordered.push_back(make_pair(assistive_rehab::KeyPointTag::knee_right,p));
+        yarp::sig::Vector p(3); p[0]=-0.1; p[1]=0.2; p[2]=0.0;
+        unordered.push_back(std::make_pair(assistive_rehab::KeyPointTag::knee_right,p));
     }
 
     skeleton.setTag("unordered");
@@ -129,31 +129,32 @@ The result is:
 ```
 tag = "unordered"
 transformation =
- 1.000  0.000  0.000  0.000
+-1.000  0.000  0.000  0.000
  0.000  1.000  0.000  0.000
- 0.000  0.000  1.000  0.000
+-0.000  0.000 -1.000  0.000
  0.000  0.000  0.000  1.000
-coronal = ( 0.000  0.000 -1.000)
-sagittal = ( 1.000  0.000  0.000)
+coronal = (-0.000  0.000  1.000)
+sagittal = (-1.000  0.000 -0.000)
 transverse = ( 0.000 -1.000  0.000)
-keypoint["shoulderCenter"] = ( 0.000  0.000  0.000); status=updated; parent={}; child={"head" "shoulderLeft" "shoulderRight" "hipCenter" }
-keypoint["head"] = ( 0.000 -0.100  0.000); status=updated; parent={"shoulderCenter" }; child={}
-keypoint["shoulderLeft"] = ( 0.100  0.000  0.000); status=updated; parent={"shoulderCenter" }; child={"elbowLeft" }
-keypoint["elbowLeft"] = ( 0.200  0.000  0.000); status=updated; parent={"shoulderLeft" }; child={"handLeft" }
-keypoint["handLeft"] = ( 0.300  0.000  0.000); status=updated; parent={"elbowLeft" }; child={}
-keypoint["shoulderRight"] = (-0.100  0.000  0.000); status=updated; parent={"shoulderCenter" }; child={"elbowRight" }
-keypoint["elbowRight"] = (-0.200  0.000  0.000); status=updated; parent={"shoulderRight" }; child={"handRight" }
-keypoint["handRight"] = (-0.300  0.000  0.000); status=updated; parent={"elbowRight" }; child={}
-keypoint["hipCenter"] = ( 0.000  0.100  0.000); status=updated; parent={"shoulderCenter" }; child={"hipLeft" "hipRight" }
-keypoint["hipLeft"] = ( 0.100  0.100  0.000); status=updated; parent={"hipCenter" }; child={"kneeLeft" }
-keypoint["kneeLeft"] = ( 0.100  0.200  0.000); status=updated; parent={"hipLeft" }; child={"ankleLeft" }
-keypoint["ankleLeft"] = ( 0.000  0.000  0.000); status=stale; parent={"kneeLeft" }; child={}
-keypoint["hipRight"] = (-0.100  0.100  0.000); status=updated; parent={"hipCenter" }; child={"kneeRight" }
-keypoint["kneeRight"] = (-0.100  0.200  0.000); status=updated; parent={"hipRight" }; child={"ankleRight" }
-keypoint["ankleRight"] = ( 0.000  0.000  0.000); status=stale; parent={"kneeRight" }; child={}
-
-
+keypoint["shoulderCenter"] = ( 0.000  0.000  0.000); pixel=( nan  nan); status=updated; parent={}; child={"head" "shoulderLeft" "shoulderRight" "hipCenter" }
+keypoint["head"] = ( 0.000 -0.100  0.000); pixel=( nan  nan); status=updated; parent={"shoulderCenter" }; child={}
+keypoint["shoulderLeft"] = (-0.100  0.000 -0.000); pixel=( nan  nan); status=updated; parent={"shoulderCenter" }; child={"elbowLeft" }
+keypoint["elbowLeft"] = (-0.200  0.000 -0.000); pixel=( nan  nan); status=updated; parent={"shoulderLeft" }; child={"handLeft" }
+keypoint["handLeft"] = (-0.300  0.000 -0.000); pixel=( nan  nan); status=updated; parent={"elbowLeft" }; child={}
+keypoint["shoulderRight"] = ( 0.100  0.000  0.000); pixel=( nan  nan); status=updated; parent={"shoulderCenter" }; child={"elbowRight" }
+keypoint["elbowRight"] = ( 0.200  0.000  0.000); pixel=( nan  nan); status=updated; parent={"shoulderRight" }; child={"handRight" }
+keypoint["handRight"] = ( 0.300  0.000  0.000); pixel=( nan  nan); status=updated; parent={"elbowRight" }; child={}
+keypoint["hipCenter"] = ( 0.000  0.100  0.000); pixel=( nan  nan); status=updated; parent={"shoulderCenter" }; child={"hipLeft" "hipRight" }
+keypoint["hipLeft"] = (-0.100  0.100 -0.000); pixel=( nan  nan); status=updated; parent={"hipCenter" }; child={"kneeLeft" }
+keypoint["kneeLeft"] = (-0.100  0.200 -0.000); pixel=( nan  nan); status=updated; parent={"hipLeft" }; child={"ankleLeft" }
+keypoint["ankleLeft"] = ( nan  nan  nan); pixel=( nan  nan); status=stale; parent={"kneeLeft" }; child={}
+keypoint["hipRight"] = ( 0.100  0.100  0.000); pixel=( nan  nan); status=updated; parent={"hipCenter" }; child={"kneeRight" }
+keypoint["kneeRight"] = ( 0.100  0.200  0.000); pixel=( nan  nan); status=updated; parent={"hipRight" }; child={"ankleRight" }
+keypoint["ankleRight"] = ( nan  nan  nan); pixel=( nan  nan); status=stale; parent={"kneeRight" }; child={}
 ```
+
+!!! note
+    Don't get worried about `nan` in the `pixel` fields: it's correct since we didn't set them up yet. Uninitialized points and/or pixels take `nan` values.
 
 ### From an ordered list of keypoints
 
@@ -161,8 +162,6 @@ The following code snippet creates a `SkeletonWaist` object from an ordered list
 
 ```cpp
 
-#include <cstdlib>
-#include <cmath>
 #include <yarp/sig/Vector.h>
 #include "AssistiveRehab/skeleton.h"
 
@@ -171,51 +170,51 @@ int main()
     assistive_rehab::SkeletonWaist skeleton;
     std::vector<yarp::sig::Vector> ordered;
     {
-        yarp::sig::Vector p(3,0.0); p[0]=0.0; p[1]=0.0; p[2]=0.0;
+        yarp::sig::Vector p(3); p[0]=0.0; p[1]=0.0; p[2]=0.0;
         ordered.push_back(p);
     }
     {
-        yarp::sig::Vector p(3,0.0); p[0]=0.0; p[1]=-0.1; p[2]=0.0;
+        yarp::sig::Vector p(3); p[0]=0.0; p[1]=-0.1; p[2]=0.0;
         ordered.push_back(p);
     }
     {
-        yarp::sig::Vector p(3,0.0); p[0]=0.1; p[1]=0.0; p[2]=0.0;
+        yarp::sig::Vector p(3); p[0]=0.1; p[1]=0.0; p[2]=0.0;
         ordered.push_back(p);
     }
     {
-        yarp::sig::Vector p(3,0.0); p[0]=0.2; p[1]=0.0; p[2]=0.0;
+        yarp::sig::Vector p(3); p[0]=0.2; p[1]=0.0; p[2]=0.0;
         ordered.push_back(p);
     }
     {
-        yarp::sig::Vector p(3,0.0); p[0]=0.3; p[1]=0.0; p[2]=0.0;
+        yarp::sig::Vector p(3); p[0]=0.3; p[1]=0.0; p[2]=0.0;
         ordered.push_back(p);
     }
     {
-        yarp::sig::Vector p(3,0.0); p[0]=-0.1; p[1]=0.0; p[2]=0.0;
+        yarp::sig::Vector p(3); p[0]=-0.1; p[1]=0.0; p[2]=0.0;
         ordered.push_back(p);
     }
     {
-        yarp::sig::Vector p(3,0.0); p[0]=-0.2; p[1]=0.0; p[2]=0.0;
+        yarp::sig::Vector p(3); p[0]=-0.2; p[1]=0.0; p[2]=0.0;
         ordered.push_back(p);
     }
     {
-        yarp::sig::Vector p(3,0.0); p[0]=-0.3; p[1]=0.0; p[2]=0.0;
+        yarp::sig::Vector p(3); p[0]=-0.3; p[1]=0.0; p[2]=0.0;
         ordered.push_back(p);
     }
     {
-        yarp::sig::Vector p(3,0.0); p[0]=0.1; p[1]=0.1; p[2]=0.0;
+        yarp::sig::Vector p(3); p[0]=0.1; p[1]=0.1; p[2]=0.0;
         ordered.push_back(p);
     }
     {
-        yarp::sig::Vector p(3,0.0); p[0]=0.1; p[1]=0.2; p[2]=0.0;
+        yarp::sig::Vector p(3); p[0]=0.1; p[1]=0.2; p[2]=0.0;
         ordered.push_back(p);
     }
     {
-        yarp::sig::Vector p(3,0.0); p[0]=-0.1; p[1]=0.1; p[2]=0.0;
+        yarp::sig::Vector p(3); p[0]=-0.1; p[1]=0.1; p[2]=0.0;
         ordered.push_back(p);
     }
     {
-        yarp::sig::Vector p(3,0.0); p[0]=-0.1; p[1]=0.2; p[2]=0.0;
+        yarp::sig::Vector p(3); p[0]=-0.1; p[1]=0.2; p[2]=0.0;
         ordered.push_back(p);
     }
 
@@ -240,21 +239,21 @@ transformation =
 coronal = ( 0.000  0.000 -1.000)
 sagittal = ( 1.000  0.000  0.000)
 transverse = ( 0.000 -1.000  0.000)
-keypoint["shoulderCenter"] = ( 0.000  0.000  0.000); status=updated; parent={}; child={"head" "shoulderLeft" "shoulderRight" "hipCenter" }
-keypoint["head"] = ( 0.000 -0.100  0.000); status=updated; parent={"shoulderCenter" }; child={}
-keypoint["shoulderLeft"] = ( 0.100  0.000  0.000); status=updated; parent={"shoulderCenter" }; child={"elbowLeft" }
-keypoint["elbowLeft"] = ( 0.200  0.000  0.000); status=updated; parent={"shoulderLeft" }; child={"handLeft" }
-keypoint["handLeft"] = ( 0.300  0.000  0.000); status=updated; parent={"elbowLeft" }; child={}
-keypoint["shoulderRight"] = (-0.100  0.000  0.000); status=updated; parent={"shoulderCenter" }; child={"elbowRight" }
-keypoint["elbowRight"] = (-0.200  0.000  0.000); status=updated; parent={"shoulderRight" }; child={"handRight" }
-keypoint["handRight"] = ( 0.000  0.000  0.000); status=stale; parent={"elbowRight" }; child={}
-keypoint["hipCenter"] = ( 0.000  0.150  0.000); status=updated; parent={"shoulderCenter" }; child={"hipLeft" "hipRight" }
-keypoint["hipLeft"] = ( 0.100  0.100  0.000); status=updated; parent={"hipCenter" }; child={"kneeLeft" }
-keypoint["kneeLeft"] = ( 0.100  0.200  0.000); status=updated; parent={"hipLeft" }; child={"ankleLeft" }
-keypoint["ankleLeft"] = (-0.100  0.100  0.000); status=updated; parent={"kneeLeft" }; child={}
-keypoint["hipRight"] = (-0.100  0.200  0.000); status=updated; parent={"hipCenter" }; child={"kneeRight" }
-keypoint["kneeRight"] = ( 0.000  0.000  0.000); status=stale; parent={"hipRight" }; child={"ankleRight" }
-keypoint["ankleRight"] = ( 0.000  0.000  0.000); status=stale; parent={"kneeRight" }; child={}
+keypoint["shoulderCenter"] = ( 0.000  0.000  0.000); pixel=( nan  nan); status=updated; parent={}; child={"head" "shoulderLeft" "shoulderRight" "hipCenter" }
+keypoint["head"] = ( 0.000 -0.100  0.000); pixel=( nan  nan); status=updated; parent={"shoulderCenter" }; child={}
+keypoint["shoulderLeft"] = ( 0.100  0.000  0.000); pixel=( nan  nan); status=updated; parent={"shoulderCenter" }; child={"elbowLeft" }
+keypoint["elbowLeft"] = ( 0.200  0.000  0.000); pixel=( nan  nan); status=updated; parent={"shoulderLeft" }; child={"handLeft" }
+keypoint["handLeft"] = ( 0.300  0.000  0.000); pixel=( nan  nan); status=updated; parent={"elbowLeft" }; child={}
+keypoint["shoulderRight"] = (-0.100  0.000  0.000); pixel=( nan  nan); status=updated; parent={"shoulderCenter" }; child={"elbowRight" }
+keypoint["elbowRight"] = (-0.200  0.000  0.000); pixel=( nan  nan); status=updated; parent={"shoulderRight" }; child={"handRight" }
+keypoint["handRight"] = ( 0.000  0.000  0.000); pixel=( nan  nan); status=stale; parent={"elbowRight" }; child={}
+keypoint["hipCenter"] = ( 0.000  0.150  0.000); pixel=( nan  nan); status=updated; parent={"shoulderCenter" }; child={"hipLeft" "hipRight" }
+keypoint["hipLeft"] = ( 0.100  0.100  0.000); pixel=( nan  nan); status=updated; parent={"hipCenter" }; child={"kneeLeft" }
+keypoint["kneeLeft"] = ( 0.100  0.200  0.000); pixel=( nan  nan); status=updated; parent={"hipLeft" }; child={"ankleLeft" }
+keypoint["ankleLeft"] = (-0.100  0.100  0.000); pixel=( nan  nan); status=updated; parent={"kneeLeft" }; child={}
+keypoint["hipRight"] = (-0.100  0.200  0.000); pixel=( nan  nan); status=updated; parent={"hipCenter" }; child={"kneeRight" }
+keypoint["kneeRight"] = ( 0.000  0.000  0.000); pixel=( nan  nan); status=stale; parent={"hipRight" }; child={"ankleRight" }
+keypoint["ankleRight"] = ( 0.000  0.000  0.000); pixel=( nan  nan); status=stale; parent={"kneeRight" }; child={}
 ```
 
 ### From a property-like structure
@@ -264,11 +263,9 @@ Assuming that the object `skeleton1` has been previously defined using one of th
 ```cpp
 
     yarp::os::Property prop=skeleton1.toProperty();
-    assistive_rehab::Skeleton* skeleton2;
-    skeleton2=assistive_rehab::skeleton_factory(prop);
+    std::unique_ptr<assistive_rehab::Skeleton> skeleton2(assistive_rehab::skeleton_factory(prop));
     skeleton2->setTag("properties");
     skeleton2->print();
-    delete skeleton2;
 
 ```
 
@@ -284,21 +281,21 @@ transformation =
 coronal = ( 0.000  0.000 -1.000)
 sagittal = ( 1.000  0.000  0.000)
 transverse = ( 0.000 -1.000  0.000)
-keypoint["shoulderCenter"] = ( 0.000  0.000  0.000); status=updated; parent={}; child={"head" "shoulderLeft" "shoulderRight" "hipCenter" }
-keypoint["head"] = ( 0.000 -0.100  0.000); status=updated; parent={"shoulderCenter" }; child={}
-keypoint["shoulderLeft"] = ( 0.100  0.000  0.000); status=updated; parent={"shoulderCenter" }; child={"elbowLeft" }
-keypoint["elbowLeft"] = ( 0.200  0.000  0.000); status=updated; parent={"shoulderLeft" }; child={"handLeft" }
-keypoint["handLeft"] = ( 0.300  0.000  0.000); status=updated; parent={"elbowLeft" }; child={}
-keypoint["shoulderRight"] = (-0.100  0.000  0.000); status=updated; parent={"shoulderCenter" }; child={"elbowRight" }
-keypoint["elbowRight"] = (-0.200  0.000  0.000); status=updated; parent={"shoulderRight" }; child={"handRight" }
-keypoint["handRight"] = (-0.300  0.000  0.000); status=updated; parent={"elbowRight" }; child={}
-keypoint["hipCenter"] = ( 0.000  0.100  0.000); status=updated; parent={"shoulderCenter" }; child={"hipLeft" "hipRight" }
-keypoint["hipLeft"] = ( 0.100  0.100  0.000); status=updated; parent={"hipCenter" }; child={"kneeLeft" }
-keypoint["kneeLeft"] = ( 0.100  0.200  0.000); status=updated; parent={"hipLeft" }; child={"ankleLeft" }
-keypoint["ankleLeft"] = ( 0.000  0.000  0.000); status=stale; parent={"kneeLeft" }; child={}
-keypoint["hipRight"] = (-0.100  0.100  0.000); status=updated; parent={"hipCenter" }; child={"kneeRight" }
-keypoint["kneeRight"] = (-0.100  0.200  0.000); status=updated; parent={"hipRight" }; child={"ankleRight" }
-keypoint["ankleRight"] = ( 0.000  0.000  0.000); status=stale; parent={"kneeRight" }; child={}
+keypoint["shoulderCenter"] = ( 0.000  0.000  0.000); pixel=( nan  nan); status=updated; parent={}; child={"head" "shoulderLeft" "shoulderRight" "hipCenter" }
+keypoint["head"] = ( 0.000 -0.100  0.000); pixel=( nan  nan); status=updated; parent={"shoulderCenter" }; child={}
+keypoint["shoulderLeft"] = ( 0.100  0.000  0.000); pixel=( nan  nan); status=updated; parent={"shoulderCenter" }; child={"elbowLeft" }
+keypoint["elbowLeft"] = ( 0.200  0.000  0.000); pixel=( nan  nan); status=updated; parent={"shoulderLeft" }; child={"handLeft" }
+keypoint["handLeft"] = ( 0.300  0.000  0.000); pixel=( nan  nan); status=updated; parent={"elbowLeft" }; child={}
+keypoint["shoulderRight"] = (-0.100  0.000  0.000); pixel=( nan  nan); status=updated; parent={"shoulderCenter" }; child={"elbowRight" }
+keypoint["elbowRight"] = (-0.200  0.000  0.000); pixel=( nan  nan); status=updated; parent={"shoulderRight" }; child={"handRight" }
+keypoint["handRight"] = (-0.300  0.000  0.000); pixel=( nan  nan); status=updated; parent={"elbowRight" }; child={}
+keypoint["hipCenter"] = ( 0.000  0.100  0.000); pixel=( nan  nan); status=updated; parent={"shoulderCenter" }; child={"hipLeft" "hipRight" }
+keypoint["hipLeft"] = ( 0.100  0.100  0.000); pixel=( nan  nan); status=updated; parent={"hipCenter" }; child={"kneeLeft" }
+keypoint["kneeLeft"] = ( 0.100  0.200  0.000); pixel=( nan  nan); status=updated; parent={"hipLeft" }; child={"ankleLeft" }
+keypoint["ankleLeft"] = ( 0.000  0.000  0.000); pixel=( nan  nan); status=stale; parent={"kneeLeft" }; child={}
+keypoint["hipRight"] = (-0.100  0.100  0.000); pixel=( nan  nan); status=updated; parent={"hipCenter" }; child={"kneeRight" }
+keypoint["kneeRight"] = (-0.100  0.200  0.000); pixel=( nan  nan); status=updated; parent={"hipRight" }; child={"ankleRight" }
+keypoint["ankleRight"] = ( 0.000  0.000  0.000); pixel=( nan  nan); status=stale; parent={"kneeRight" }; child={}
 
 ```
 
@@ -362,12 +359,36 @@ or from the OPC as following:
 ## Accessing single keypoints of a skeleton
 
 If you want to access to a keypoint of the skeleton, you can use the `operator[]` of the class `Skeleton`, by passing as parameter the keypoint's tag.
-For example, the following snippet allows you the get the `shoulder_center` coordinates:
+For example, the following snippet allows you the get the `shoulder_center` 3D coordinates:
 
 ```cpp
 
    yarp::sig::Vector sc=skeleton[assistive_rehab::KeyPointTag::shoulder_center]->getPoint();
 
+```
+
+## Dealing with pixels
+
+Occasionally, it might be worth storing also the pixels alongside the points, which are used by the algorithm to reconstruct the 3D skeleton.
+This is particularly useful when the skeleton is employed to enable gaze tracking, for example. In this context, the 3D information of the keypoints
+needs normally to be transformed from the camera frame to the root frame of the robot. Instead, having the pixels would ease this process. 
+
+The updating methods described above do have their pixel-wise counterparts:
+
+```cpp
+
+    std::vector<std::pair<yarp::sig::Vector,yarp::sig::Vector>> ordered_withpixels;
+    yarp::sig::Vector p(3,0.1); yarp::sig::Vector px(2,10.0);
+    ordered_withpixels.push_back(std::make_pair(p,px));
+    skeleton.update_withpixels(ordered_withpixels);
+
+    std::vector<std::pair<std::string<std::pair<yarp::sig::Vector,yarp::sig::Vector>>> unordered_withpixels;
+    yarp::sig::Vector p(3,0.1); yarp::sig::Vector px(2,10.0);
+    unordered_withpixels.push_back(std::make_pair(assistive_rehab::KeyPointTag::shoulder_center,std::make_pair(p,px)));
+    skeleton.update_withpixels(unordered_withpixels);
+
+    yarp::sig::Vector pixel=skeleton[assistive_rehab::KeyPointTag::shoulder_center].getPixel();
+    
 ```
 
 ## Additional functionalities
