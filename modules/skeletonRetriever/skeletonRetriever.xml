@@ -10,7 +10,7 @@
 
   <description-long>
    This module merges 2D skeleton data as acquired by yarpOpenPose along with the depth information provided by the camera.
-   The module communicates with the camera to retrieve its field of view. Given the keypoint depth and the camera's focal length, 3D world coordinates of the keypoints can be computed.
+   The module communicates with the camera to retrieve its field of view. Given the keypoint depth and the camera's focal length, 3D camera coordinates of the keypoints can be computed.
    The module can be also run offline (no real camera is available) by specifying the camera's FOV, using the command camera::fov (54 42) (adjust the FOV according to the camera you want to simulate).
    Erosion is applied to the depth map (true by default, can be disabled using the command depth::enable false).
    Median filtering is applied to the keypoints in order to make the acquisition more robust.

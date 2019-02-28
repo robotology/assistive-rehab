@@ -117,7 +117,8 @@ public:
     /**
     * Overloaded constructor.
     * @param tag_ string containing the keypoint's tag.
-    * @param point_ vector containing the keypoint world coordinates x,y,z.
+    * @param point_ vector containing the keypoint camera 
+    *               coordinates x,y,z.
     * @param updated_ true if the keypoint has been updated.
     */
     KeyPoint(const std::string &tag_, const yarp::sig::Vector &point_=yarp::sig::Vector(3,0.0),
@@ -151,13 +152,15 @@ public:
     const std::string& getTag() const { return tag; }
 
     /**
-    * Return a reference to the vector containing the keypoint's x,y,z world coordinates.
-    * @return reference to the vector containing the keypoint's x,y,z world coordinates.
+    * Return a reference to the vector containing the keypoint's 
+    * x,y,z camera coordinates. 
+    * @return reference to the vector containing the keypoint's 
+    *         x,y,z camera coordinates.
     */
     const yarp::sig::Vector &getPoint() const { return point; }
 
     /**
-    * Set keypoint's x,y,z world coordinates to a desired value.
+    * Set keypoint's x,y,z camera coordinates to a desired value.
     * @param point vector containing the desider point.
     * @return true/false on success/failure.
     */
@@ -422,7 +425,9 @@ public:
 
     /**
     * Retrieve the ordered list of keypoints.
-    * @return vector containing the ordered list of keypoints, each specified as vector containing the x,y,z world coordinates.
+    * @return vector containing the ordered list of keypoints, each 
+    *         specified as vector containing the x,y,z camera
+    *         coordinates.
     */
     virtual std::vector<yarp::sig::Vector> get_ordered() const;
 
@@ -430,7 +435,7 @@ public:
     * Retrieve the unordered list of keypoints.
     * @return vector containing an unordered list of keypoints,
     * each specified as pair which associates a string, containing the keypoint's tag,
-    * and a vector, containing the x,y,z world coordinates.
+    * and a vector, containing the x,y,z camera coordinates.
     */
     virtual std::vector<std::pair<std::string,yarp::sig::Vector>> get_unordered() const;
 
@@ -491,7 +496,8 @@ public:
     /**
     * Update skeleton waist from standard from ordered list.
     * @param ordered vector containing the ordered list of keypoints.
-    * The single keypoint is specified as vector containing the x,y,z world coordinates.
+    * The single keypoint is specified as vector containing the 
+    * x,y,z camera coordinates. 
     */
     virtual void update_fromstd(const std::vector<yarp::sig::Vector> &ordered);
 
@@ -499,7 +505,7 @@ public:
     * Update skeleton waist from standard from unordered list.
     * @param unordered vector containing an unordered list of keypoints.
     * The single keypoint is specified as pair which associates a string, containing the keypoint's tag,
-    * and a vector, containing the x,y,z world coordinates.
+    * and a vector, containing the x,y,z camera coordinates.
     */
     virtual void update_fromstd(const std::vector<std::pair<std::string, yarp::sig::Vector>> &unordered);
 
@@ -533,8 +539,10 @@ public:
 * - skeleton: list containing keypoints with the following subproperties:
 *     - tag: string containing keypoint's tag.
 *     - status: string containing keypoint's status (updated or stale).
-*     - position: vector containing keypoint's world coordinates x,y,z.
-*     - child: list containing keypoint's child, specified as position, status, tag.
+*     - position: vector containing keypoint's camera
+*       coordinates x,y,z.
+*     - child: list containing keypoint's child, specified as
+*       position, status, tag.
 */
 Skeleton *skeleton_factory(const yarp::os::Property &prop);
 
