@@ -42,7 +42,7 @@ A skeleton can be defined as:
     - skeleton: list containing keypoints with the following subproperties:
         - tag: string containing keypoint's tag.
         - status: string containing keypoint's status (updated or stale).
-        - position: vector containing keypoint's world coordinates x,y,z.
+        - position: vector containing keypoint's camera coordinates x,y,z.
         - child: list containing keypoint's child, specified as position, status, tag.
 
     An example is the following:
