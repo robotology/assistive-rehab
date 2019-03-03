@@ -779,9 +779,9 @@ SkeletonWaist::SkeletonWaist() : SkeletonStd()
 {
     type=SkeletonType::SkeletonWaist;
 
-    waist_pos=7;
+    waist_pos=8;
     tag2key[KeyPointTag::hip_center]=new KeyPoint(KeyPointTag::hip_center);
-    keypoints.insert(keypoints.begin()+waist_pos+1,tag2key[KeyPointTag::hip_center]);
+    keypoints.insert(keypoints.begin()+waist_pos,tag2key[KeyPointTag::hip_center]);
 
     key2id.clear();
     unsigned int id=0;
@@ -839,7 +839,7 @@ void SkeletonWaist::update_fromstd(const vector<Vector> &ordered)
     for (auto &k:keypoints)
         k->stale();
 
-    Vector p(4,1);
+    Vector p(4,1.0);
     unsigned int i=0;
     for (auto &v:ordered)
     {
@@ -872,7 +872,7 @@ void SkeletonWaist::update_fromstd_withpixels(const vector<pair<Vector,Vector>> 
     for (auto &k:keypoints)
         k->stale();
 
-    Vector p(4,1);
+    Vector p(4,1.0);
     unsigned int i=0;
     for (auto &v:ordered)
     {
