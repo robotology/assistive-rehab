@@ -29,7 +29,7 @@ protected:
     const CamParamsHelper& camParams;
     const KeyPoint* k;
     const vector<double>& lengths;
-    vector<pair<string,Vector>> result;
+    vector<pair<string,pair<Vector,Vector>>> result;
 
     vector<Vector> p1,y1,Dy1;
     vector<Vector> p2,y2,Dy2;
@@ -217,7 +217,7 @@ protected:
         for (auto c=k; c!=nullptr; c=c->getChild(0))
         {
             Vector v=get2D(c->getPoint());
-            result.push_back(make_pair(c->getTag(),get3D(v,x[i])));
+            result.push_back(make_pair(c->getTag(),make_pair(get3D(v,x[i]),v)));
             i++;
         }
     }
@@ -240,7 +240,7 @@ public:
     }
 
     /****************************************************************/
-    vector<pair<string,Vector>> get_result() const
+    vector<pair<string,pair<Vector,Vector>>> get_result() const
     {
         return result;
     }
@@ -248,9 +248,9 @@ public:
 
 
 /****************************************************************/
-vector<pair<string,Vector>> LimbOptimizer::optimize(const CamParamsHelper &camParams,
-                                                    const KeyPoint* k,
-                                                    const vector<double>& lengths)
+vector<pair<string,pair<Vector,Vector>>> LimbOptimizer::optimize(const CamParamsHelper &camParams,
+                                                                 const KeyPoint* k,
+                                                                 const vector<double>& lengths)
 {
     
     Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
@@ -275,7 +275,7 @@ vector<pair<string,Vector>> LimbOptimizer::optimize(const CamParamsHelper &camPa
         }
         default:
         {
-            return vector<pair<string,Vector>>();
+            return vector<pair<string,pair<Vector,Vector>>>();
         } 
     }
 }

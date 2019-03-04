@@ -53,6 +53,7 @@
 #include <utility>
 #include <ostream>
 #include <iostream>
+#include <limits>
 #include <yarp/os/Bottle.h>
 #include <yarp/os/Property.h>
 #include <yarp/sig/Vector.h>
@@ -103,6 +104,7 @@ class KeyPoint
     bool updated;
     std::string tag;
     yarp::sig::Vector point;
+    yarp::sig::Vector pixel;
     std::vector<KeyPoint*> parent;
     std::vector<KeyPoint*> child;
 
@@ -119,10 +121,12 @@ public:
     * @param tag_ string containing the keypoint's tag.
     * @param point_ vector containing the keypoint camera 
     *               coordinates x,y,z.
+    * @param pixel_ vector containing the keypoint image coordinates
+    *               u,v.
     * @param updated_ true if the keypoint has been updated.
     */
-    KeyPoint(const std::string &tag_, const yarp::sig::Vector &point_=yarp::sig::Vector(3,0.0),
-             const bool updated_=false);
+    KeyPoint(const std::string &tag_, const yarp::sig::Vector &point_=yarp::sig::Vector(3,std::numeric_limits<double>::quiet_NaN()),
+             const yarp::sig::Vector &pixel_=yarp::sig::Vector(2,std::numeric_limits<double>::quiet_NaN()),const bool updated_=false);
 
     /**
     * Deleted copy constructor.
@@ -165,6 +169,24 @@ public:
     * @return true/false on success/failure.
     */
     bool setPoint(const yarp::sig::Vector &point);
+
+    /**
+    * Set keypoint's x,y,z camera coordinates as well as u,v, image 
+    * coordinates to a desired value. 
+    * @param point vector containing the desider point.
+    * @param pixel vector containing the desider pixel.
+    * @return true/false on success/failure.
+    */
+    bool setPoint(const yarp::sig::Vector &point,
+                  const yarp::sig::Vector &pixel);
+
+    /**
+    * Return a reference to the vector containing the keypoint's u,v
+    * image coordinates. 
+    * @return reference to the vector containing the keypoint's u,v 
+    *         image coordinates.
+    */
+    const yarp::sig::Vector &getPixel() const { return pixel; }
 
     /**
     * Retrieve the number of parents of the keypoint.
@@ -327,7 +349,10 @@ public:
     * - skeleton: list containing keypoints with the following subproperties:
     *     - tag: string containing keypoint's tag.
     *     - status: string containing keypoint's status (updated or stale).
-    *     - position: vector containing keypoint's coordinates x,y,z.
+    *     - position: vector containing keypoint's camera
+    *       coordinates x,y,z.
+    *     - pixel: vector containing keypoint's image coordinates
+    *       u,v.
     *     - child: list containing keypoint's child, specified as position, status, tag.
     */
     virtual yarp::os::Property toProperty();
@@ -346,7 +371,10 @@ public:
     * - skeleton: list containing keypoints with the following subproperties:
     *     - tag: string containing keypoint's tag.
     *     - status: string containing keypoint's status (updated or stale).
-    *     - position: vector containing keypoint's coordinates x,y,z.
+    *     - position: vector containing keypoint's camera
+    *       coordinates x,y,z.
+    *     - pixel: vector containing keypoint's image coordinates
+    *       u,v.
     *     - child: list containing keypoint's child, specified as position, status, tag.
     */
     virtual void fromProperty(const yarp::os::Property &prop);
@@ -399,6 +427,24 @@ public:
     virtual void update(const std::vector<std::pair<std::string,yarp::sig::Vector>> &unordered);
 
     /**
+    * Update skeleton from ordered list.
+    * @param ordered vector containing the ordered list of keypoints.
+    * The single keypoint is specified as a pair of a vector 
+    * containing the x,y,z camera coordinates and a vector 
+    * containing the u,v image coordinates. 
+    */
+    virtual void update_withpixels(const std::vector<std::pair<yarp::sig::Vector,yarp::sig::Vector>> &ordered);
+
+    /**
+    * Update skeleton from unordered list.
+    * @param unordered vector containing an unordered list of keypoints.
+    * The single keypoint is specified as pair that associates a 
+    * string containing the keypoint's tag to a pair of vectors 
+    * contianing x,y,z and u,v coordinates. 
+    */
+    virtual void update_withpixels(const std::vector<std::pair<std::string,std::pair<yarp::sig::Vector,yarp::sig::Vector>>> &unordered);
+
+    /**
     * Update skeleton from properties.
     * @param prop a Property object containing skeleton information.
     *
@@ -412,7 +458,10 @@ public:
     * - skeleton: list containing keypoints with the following subproperties:
     *     - tag: string containing keypoint's tag.
     *     - status: string containing keypoint's status (updated or stale).
-    *     - position: vector containing keypoint's coordinates x,y,z.
+    *     - position: vector containing keypoint's camera
+    *       coordinates x,y,z.
+    *     - pixel: vector containing keypoint's image coordinates
+    *       u,v.
     *     - child: list containing keypoint's child, specified as position, status, tag.
     */
     virtual void update(const yarp::os::Property &prop);
@@ -438,6 +487,23 @@ public:
     * and a vector, containing the x,y,z camera coordinates.
     */
     virtual std::vector<std::pair<std::string,yarp::sig::Vector>> get_unordered() const;
+
+    /**
+    * Retrieve the ordered list of keypoints.
+    * @return vector containing the ordered list of keypoints, each 
+    *         specified as a pair of vectors with x,y,z and u,v
+    *         coordinates.
+    */
+    virtual std::vector<std::pair<yarp::sig::Vector,yarp::sig::Vector>> get_ordered_withpixels() const;
+
+    /**
+    * Retrieve the unordered list of keypoints.
+    * @return vector containing an unordered list of keypoints,
+    * each specified as pair that associates a string containing the
+    * keypoint's tag to a pair of vectors of x,y,z and u,v 
+    * coordinates. 
+    */
+    virtual std::vector<std::pair<std::string,std::pair<yarp::sig::Vector,yarp::sig::Vector>>> get_unordered_withpixels() const;
 
     /**
     * Normalize skeleton in order to have unitary/desired distance among keypoints.
@@ -510,6 +576,18 @@ public:
     virtual void update_fromstd(const std::vector<std::pair<std::string, yarp::sig::Vector>> &unordered);
 
     /**
+    * Update skeleton waist from standard from ordered list.
+    * @param ordered vector containing the ordered list of keypoints.
+    */
+    virtual void update_fromstd_withpixels(const std::vector<std::pair<yarp::sig::Vector,yarp::sig::Vector>> &ordered);
+
+    /**
+    * Update skeleton waist from standard from unordered list.
+    * @param unordered vector containing an unordered list of keypoints.
+    */
+    virtual void update_fromstd_withpixels(const std::vector<std::pair<std::string,std::pair<yarp::sig::Vector,yarp::sig::Vector>>> &unordered);
+
+    /**
     * Update skeleton waist from standard from yarp properties.
     * @param prop a Property object containing skeleton information.
     */
@@ -541,6 +619,8 @@ public:
 *     - status: string containing keypoint's status (updated or stale).
 *     - position: vector containing keypoint's camera
 *       coordinates x,y,z.
+*     - pixel: vector containing keypoint's image coordinates
+*       u,v.
 *     - child: list containing keypoint's child, specified as
 *       position, status, tag.
 */

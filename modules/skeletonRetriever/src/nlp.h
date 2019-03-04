@@ -24,9 +24,9 @@
 struct LimbOptimizer
 {
     /****************************************************************/
-    static std::vector<std::pair<std::string,yarp::sig::Vector>> optimize(const CamParamsHelper &camParams,
-                                                                          const assistive_rehab::KeyPoint* k,
-                                                                          const std::vector<double>& lengths);
+    static std::vector<std::pair<std::string,std::pair<yarp::sig::Vector,yarp::sig::Vector>>> optimize(const CamParamsHelper &camParams,
+                                                                                                       const assistive_rehab::KeyPoint* k,
+                                                                                                       const std::vector<double>& lengths);
 };
 
 #endif
