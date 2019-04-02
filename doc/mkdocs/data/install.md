@@ -29,12 +29,17 @@
 
 ## Optional dependencies
 
-- [TensorFlowCC](https://github.com/FloopCZ/tensorflow_cc)
-- fftw3
-- GSL
-- [matio](https://github.com/tbeu/matio)
-- IPOPT
-- [VTK](https://github.com/Kitware/VTK) (8.1.0 or higher)
+|  Dependency  |  License  |
+| --------- | --------- |
+| [TensorFlowCC](https://github.com/FloopCZ/tensorflow_cc) | MIT |
+| fftw3 | GPL |
+| GSL | GPL |
+| [matio](https://github.com/tbeu/matio) | BSD 2-Clause |
+| IPOPT | EPL |
+| [VTK](https://github.com/Kitware/VTK) (8.1.0 or higher) | BSD-style |
+
+!!! note "TensorFlowCC"
+    TensorFlowCC builds and installs the TensorFlow C++ API, which is released under Apache 2.0 license.
 
 !!! note "matio"
     On `Ubuntu 18.04`, you can install the library through apt: `sudo apt install libmatio-dev`.
@@ -55,6 +60,13 @@
       - glob
       - jupyter
       - plotly
+      - warnings
+      - collections
+      - math
+      - re
+      - os
+      - datetime
+      - IPython
 
         !!! note "plotly"
             You need to enable jupyter extension to allow plotly to work in jupyter notebook: `pip install "notebook>=5.3" "ipywidgets>=7.2" --user`.    
