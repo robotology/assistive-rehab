@@ -30,7 +30,7 @@ using namespace assistive_rehab;
 
 class TestRom : public RFModule
 {
-    SkeletonWaist skeleton;
+    SkeletonStd skeleton;
     double radius,phase,t0;
     BufferedPort<Bottle> port;
     RpcServer rpcPort;

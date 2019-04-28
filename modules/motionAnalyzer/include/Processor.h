@@ -33,15 +33,15 @@ class Processor
     yarp::sig::Matrix invT;
 
 protected:
-    assistive_rehab::SkeletonWaist curr_skeleton,first_skeleton;
+    assistive_rehab::SkeletonStd curr_skeleton,first_skeleton;
     yarp::sig::Matrix inv_reference_system;
     yarp::sig::Vector plane_normal,coronal,sagittal,transverse;
 
 public:
     Processor();
     virtual ~Processor() {;}
-    void setInitialConf(assistive_rehab::SkeletonWaist &skeleton_, yarp::sig::Matrix &T);
-    void update(assistive_rehab::SkeletonWaist& curr_skeleton_);
+    void setInitialConf(assistive_rehab::SkeletonStd &skeleton_, yarp::sig::Matrix &T);
+    void update(assistive_rehab::SkeletonStd& curr_skeleton_);
     yarp::sig::Vector getPlaneNormal() const { return plane_normal; }
     virtual double computeMetric() = 0;
     virtual double getIdeal() = 0;

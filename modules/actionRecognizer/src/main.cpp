@@ -41,7 +41,7 @@ class Recognizer : public RFModule, public actionRecognizer_IDL
     unordered_map<int,string> class_map;
     int nframes,nsteps,nclasses,nfeatures;
     string skel_tag;
-    SkeletonWaist skeletonIn;
+    SkeletonStd skeletonIn;
 
     bool predict,updated;
     int idx_frame,idx_step;

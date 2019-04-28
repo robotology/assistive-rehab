@@ -37,16 +37,17 @@ const string hip_center="hipCenter";
 const string hip_left="hipLeft";
 const string knee_left="kneeLeft";
 const string ankle_left="ankleLeft";
+const string foot_left="footLeft";
 const string hip_right="hipRight";
 const string knee_right="kneeRight";
 const string ankle_right="ankleRight";
+const string foot_right="footRight";
 }
 
 namespace SkeletonType
 {
 const string Skeleton="assistive_rehab::Skeleton";
 const string SkeletonStd="assistive_rehab::SkeletonStd";
-const string SkeletonWaist="assistive_rehab::SkeletonWaist";
 }
 
 }
@@ -663,12 +664,15 @@ SkeletonStd::SkeletonStd()
     tag2key[KeyPointTag::shoulder_right]=new KeyPoint(KeyPointTag::shoulder_right);
     tag2key[KeyPointTag::elbow_right]=new KeyPoint(KeyPointTag::elbow_right);
     tag2key[KeyPointTag::hand_right]=new KeyPoint(KeyPointTag::hand_right);
+    tag2key[KeyPointTag::hip_center]=new KeyPoint(KeyPointTag::hip_center);
     tag2key[KeyPointTag::hip_left]=new KeyPoint(KeyPointTag::hip_left);
     tag2key[KeyPointTag::knee_left]=new KeyPoint(KeyPointTag::knee_left);
     tag2key[KeyPointTag::ankle_left]=new KeyPoint(KeyPointTag::ankle_left);
+    tag2key[KeyPointTag::foot_left]=new KeyPoint(KeyPointTag::foot_left);
     tag2key[KeyPointTag::hip_right]=new KeyPoint(KeyPointTag::hip_right);
     tag2key[KeyPointTag::knee_right]=new KeyPoint(KeyPointTag::knee_right);
     tag2key[KeyPointTag::ankle_right]=new KeyPoint(KeyPointTag::ankle_right);
+    tag2key[KeyPointTag::foot_right]=new KeyPoint(KeyPointTag::foot_right);
 
     keypoints.push_back(tag2key[KeyPointTag::shoulder_center]);
     keypoints.push_back(tag2key[KeyPointTag::head]);
@@ -678,12 +682,15 @@ SkeletonStd::SkeletonStd()
     keypoints.push_back(tag2key[KeyPointTag::shoulder_right]);
     keypoints.push_back(tag2key[KeyPointTag::elbow_right]);
     keypoints.push_back(tag2key[KeyPointTag::hand_right]);
+    keypoints.push_back(tag2key[KeyPointTag::hip_center]);
     keypoints.push_back(tag2key[KeyPointTag::hip_left]);
     keypoints.push_back(tag2key[KeyPointTag::knee_left]);
     keypoints.push_back(tag2key[KeyPointTag::ankle_left]);
+    keypoints.push_back(tag2key[KeyPointTag::foot_left]);
     keypoints.push_back(tag2key[KeyPointTag::hip_right]);
     keypoints.push_back(tag2key[KeyPointTag::knee_right]);
     keypoints.push_back(tag2key[KeyPointTag::ankle_right]);
+    keypoints.push_back(tag2key[KeyPointTag::foot_right]);
 
     unsigned int id=0;
     for (auto &k:keypoints)
@@ -693,8 +700,7 @@ SkeletonStd::SkeletonStd()
     tag2key[KeyPointTag::shoulder_center]->child.push_back(tag2key[KeyPointTag::head]);
     tag2key[KeyPointTag::shoulder_center]->child.push_back(tag2key[KeyPointTag::shoulder_left]);
     tag2key[KeyPointTag::shoulder_center]->child.push_back(tag2key[KeyPointTag::shoulder_right]);
-    tag2key[KeyPointTag::shoulder_center]->child.push_back(tag2key[KeyPointTag::hip_left]);
-    tag2key[KeyPointTag::shoulder_center]->child.push_back(tag2key[KeyPointTag::hip_right]);
+    tag2key[KeyPointTag::shoulder_center]->child.push_back(tag2key[KeyPointTag::hip_center]);
 
     // head
     tag2key[KeyPointTag::head]->parent.push_back(tag2key[KeyPointTag::shoulder_center]);
@@ -721,8 +727,13 @@ SkeletonStd::SkeletonStd()
     // handRight
     tag2key[KeyPointTag::hand_right]->parent.push_back(tag2key[KeyPointTag::elbow_right]);
 
+    // hipCenter
+    tag2key[KeyPointTag::hip_center]->parent.push_back(tag2key[KeyPointTag::shoulder_center]);
+    tag2key[KeyPointTag::hip_center]->child.push_back(tag2key[KeyPointTag::hip_left]);
+    tag2key[KeyPointTag::hip_center]->child.push_back(tag2key[KeyPointTag::hip_right]);
+
     // hipLeft
-    tag2key[KeyPointTag::hip_left]->parent.push_back(tag2key[KeyPointTag::shoulder_center]);
+    tag2key[KeyPointTag::hip_left]->parent.push_back(tag2key[KeyPointTag::hip_center]);
     tag2key[KeyPointTag::hip_left]->child.push_back(tag2key[KeyPointTag::knee_left]);
 
     // kneeLeft
@@ -731,9 +742,13 @@ SkeletonStd::SkeletonStd()
 
     // ankleLeft
     tag2key[KeyPointTag::ankle_left]->parent.push_back(tag2key[KeyPointTag::knee_left]);
+    tag2key[KeyPointTag::ankle_left]->child.push_back(tag2key[KeyPointTag::foot_left]);
+
+    // footLeft
+    tag2key[KeyPointTag::foot_left]->parent.push_back(tag2key[KeyPointTag::ankle_left]);
 
     // hipRight
-    tag2key[KeyPointTag::hip_right]->parent.push_back(tag2key[KeyPointTag::shoulder_center]);
+    tag2key[KeyPointTag::hip_right]->parent.push_back(tag2key[KeyPointTag::hip_center]);
     tag2key[KeyPointTag::hip_right]->child.push_back(tag2key[KeyPointTag::knee_right]);
 
     // kneeRight
@@ -742,70 +757,13 @@ SkeletonStd::SkeletonStd()
 
     // ankleRight
     tag2key[KeyPointTag::ankle_right]->parent.push_back(tag2key[KeyPointTag::knee_right]);
+    tag2key[KeyPointTag::ankle_right]->child.push_back(tag2key[KeyPointTag::foot_right]);
+
+    // footRight
+    tag2key[KeyPointTag::foot_right]->parent.push_back(tag2key[KeyPointTag::ankle_right]);
 }
 
 bool SkeletonStd::update_planes()
-{
-    int cnt=0;
-    if (tag2key[KeyPointTag::shoulder_left]->isUpdated() &&
-        tag2key[KeyPointTag::shoulder_right]->isUpdated())
-    {
-        sagittal=tag2key[KeyPointTag::shoulder_left]->getPoint()-
-                 tag2key[KeyPointTag::shoulder_right]->getPoint();
-        double n=norm(sagittal);
-        if (n>0.0)
-            sagittal/=n;
-        cnt++;
-    }
-
-    if (tag2key[KeyPointTag::shoulder_center]->isUpdated() &&
-        tag2key[KeyPointTag::hip_left]->isUpdated() &&
-        tag2key[KeyPointTag::hip_right]->isUpdated())
-    {
-        transverse=tag2key[KeyPointTag::shoulder_center]->getPoint()-
-                   0.5*(tag2key[KeyPointTag::hip_left]->getPoint()+
-                        tag2key[KeyPointTag::hip_right]->getPoint());
-        double n=norm(transverse);
-        if (n>0.0)
-            transverse/=n;
-        cnt++;
-    }
-
-    coronal=cross(sagittal,transverse);
-    return (cnt>=2);
-}
-
-SkeletonWaist::SkeletonWaist() : SkeletonStd()
-{
-    type=SkeletonType::SkeletonWaist;
-
-    waist_pos=8;
-    tag2key[KeyPointTag::hip_center]=new KeyPoint(KeyPointTag::hip_center);
-    keypoints.insert(keypoints.begin()+waist_pos,tag2key[KeyPointTag::hip_center]);
-
-    key2id.clear();
-    unsigned int id=0;
-    for (auto &k:keypoints)
-        key2id[k]=id++;
-
-    // shoulderCenter
-    tag2key[KeyPointTag::shoulder_center]->child.pop_back();
-    tag2key[KeyPointTag::shoulder_center]->child.pop_back();
-    tag2key[KeyPointTag::shoulder_center]->child.push_back(tag2key[KeyPointTag::hip_center]);
-
-    // hipCenter
-    tag2key[KeyPointTag::hip_center]->parent.push_back(tag2key[KeyPointTag::shoulder_center]);
-    tag2key[KeyPointTag::hip_center]->child.push_back(tag2key[KeyPointTag::hip_left]);
-    tag2key[KeyPointTag::hip_center]->child.push_back(tag2key[KeyPointTag::hip_right]);
-
-    // hipLeft
-    tag2key[KeyPointTag::hip_left]->parent[0]=tag2key[KeyPointTag::hip_center];
-
-    // hipRight
-    tag2key[KeyPointTag::hip_right]->parent[0]=tag2key[KeyPointTag::hip_center];
-}
-
-bool SkeletonWaist::update_planes()
 {
     int cnt=0;
     if (tag2key[KeyPointTag::shoulder_left]->isUpdated() &&
@@ -834,80 +792,6 @@ bool SkeletonWaist::update_planes()
     return (cnt>=2);
 }
 
-void SkeletonWaist::update_fromstd(const vector<Vector> &ordered)
-{
-    for (auto &k:keypoints)
-        k->stale();
-
-    Vector p(4,1.0);
-    unsigned int i=0;
-    for (auto &v:ordered)
-    {
-        unsigned int pos=(i<waist_pos)?i:i+1;
-        auto &k=keypoints[pos];
-        p[0]=v[0];
-        p[1]=v[1];
-        p[2]=v[2];
-        k->setPoint((T*p).subVector(0,2));
-        i++;
-    }
-
-    if (tag2key[KeyPointTag::hip_left]->isUpdated() || tag2key[KeyPointTag::hip_right]->isUpdated())
-        tag2key[KeyPointTag::hip_center]->setPoint(0.5*(tag2key[KeyPointTag::hip_left]->getPoint()+
-                                                        tag2key[KeyPointTag::hip_right]->getPoint()));
-    update_planes();
-}
-
-void SkeletonWaist::update_fromstd(const vector<pair<string,Vector>> &unordered)
-{
-    update(unordered);
-    if (tag2key[KeyPointTag::hip_left]->isUpdated() || tag2key[KeyPointTag::hip_right]->isUpdated())
-        tag2key[KeyPointTag::hip_center]->setPoint(0.5*(tag2key[KeyPointTag::hip_left]->getPoint()+
-                                                        tag2key[KeyPointTag::hip_right]->getPoint()));
-    update_planes();
-}
-
-void SkeletonWaist::update_fromstd_withpixels(const vector<pair<Vector,Vector>> &ordered)
-{
-    for (auto &k:keypoints)
-        k->stale();
-
-    Vector p(4,1.0);
-    unsigned int i=0;
-    for (auto &v:ordered)
-    {
-        unsigned int pos=(i<waist_pos)?i:i+1;
-        auto &k=keypoints[pos];
-        p[0]=v.first[0];
-        p[1]=v.first[1];
-        p[2]=v.first[2];
-        k->setPoint((T*p).subVector(0,2),v.second);
-        i++;
-    }
-
-    if (tag2key[KeyPointTag::hip_left]->isUpdated() || tag2key[KeyPointTag::hip_right]->isUpdated())
-        tag2key[KeyPointTag::hip_center]->setPoint(0.5*(tag2key[KeyPointTag::hip_left]->getPoint()+
-                                                        tag2key[KeyPointTag::hip_right]->getPoint()));
-    update_planes();
-}
-
-void SkeletonWaist::update_fromstd_withpixels(const vector<pair<string,pair<Vector,Vector>>> &unordered)
-{
-    update_withpixels(unordered);
-    if (tag2key[KeyPointTag::hip_left]->isUpdated() || tag2key[KeyPointTag::hip_right]->isUpdated())
-        tag2key[KeyPointTag::hip_center]->setPoint(0.5*(tag2key[KeyPointTag::hip_left]->getPoint()+
-                                                        tag2key[KeyPointTag::hip_right]->getPoint()));
-    update_planes();
-}
-
-void SkeletonWaist::update_fromstd(const Property &prop)
-{
-    update(prop);
-    if (tag2key[KeyPointTag::hip_left]->isUpdated() || tag2key[KeyPointTag::hip_right]->isUpdated())
-        tag2key[KeyPointTag::hip_center]->setPoint(0.5*(tag2key[KeyPointTag::hip_left]->getPoint()+
-                                                        tag2key[KeyPointTag::hip_right]->getPoint()));
-}
-
 Skeleton *assistive_rehab::skeleton_factory(const Property &prop)
 {
     Skeleton *skeleton=nullptr;
@@ -916,8 +800,6 @@ Skeleton *assistive_rehab::skeleton_factory(const Property &prop)
         string type=prop.find("type").asString();
         if (type==SkeletonType::SkeletonStd)
             skeleton=new SkeletonStd;
-        else if (type==SkeletonType::SkeletonWaist)
-            skeleton=new SkeletonWaist;
 
         if (skeleton!=nullptr)
             skeleton->fromProperty(prop);

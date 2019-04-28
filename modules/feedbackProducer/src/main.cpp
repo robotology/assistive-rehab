@@ -46,7 +46,7 @@ private:
 
     Mutex mutex;
 
-    SkeletonWaist skeletonIn,skeletonTemplate;
+    SkeletonStd skeletonIn,skeletonTemplate;
     string skel_tag,template_tag,metric_tag;
     vector<vector<Vector>> skeleton_template,skeleton_candidate;
     bool updated,started;
@@ -275,7 +275,7 @@ public:
     }
 
     /********************************************************/
-    void fill(const SkeletonWaist& skeleton, vector<Vector>& temp)
+    void fill(const SkeletonStd& skeleton, vector<Vector>& temp)
     {
         for(size_t i=0; i<joint_list.size(); i++)
         {

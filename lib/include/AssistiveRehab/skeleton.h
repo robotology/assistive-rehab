@@ -16,10 +16,6 @@
  * with a predefined structure.
  * The class Keypoint can be used to deal with single keypoints of the skeleton.
  *
- * A skeleton can be defined as:
- * - a standard skeleton
- * - a waist skeleton: which introduces a virtual link identified by the tag hip_center.
- *
  * A skeleton can be defined from:
  * - an ordered list of keypoints, according to the following order:
  *   - 0: shoulder_center
@@ -30,13 +26,15 @@
  *   - 5: shoulder_right
  *   - 6: elbow_right
  *   - 7: hand_right
- *   - 8: hip_left
- *   - 9: knee_left
- *   - 10: ankle_left
- *   - 11: hip_right
- *   - 12: knee_right
- *   - 13: ankle_right
- *   A waist skeleton has hip_center at index 8 and the following keypoints are shifted one index ahead.
+ *   - 8: hip_center
+ *   - 9: hip_left
+ *   - 10: knee_left
+ *   - 11: ankle_left
+ *   - 12: foot_left
+ *   - 13: hip_right
+ *   - 14: knee_right
+ *   - 15: ankle_right
+ *   - 16: foot_right
  * - an unordered list of keypoints, where each keypoint is identified by its tag;
  * - its properties.
  *
@@ -76,21 +74,21 @@ extern const std::string hip_center;
 extern const std::string hip_left;
 extern const std::string knee_left;
 extern const std::string ankle_left;
+extern const std::string foot_left;
 extern const std::string hip_right;
 extern const std::string knee_right;
 extern const std::string ankle_right;
+extern const std::string foot_right;
 }
 
 namespace SkeletonType
 {
 extern const std::string Skeleton;
 extern const std::string SkeletonStd;
-extern const std::string SkeletonWaist;
 }
 
 class Skeleton;
 class SkeletonStd;
-class SkeletonWaist;
 
 /**
 * Basic class for single keypoint of a skeleton.
@@ -99,7 +97,6 @@ class KeyPoint
 {
     friend class Skeleton;
     friend class SkeletonStd;
-    friend class SkeletonWaist;
 
     bool updated;
     std::string tag;
@@ -223,7 +220,7 @@ public:
 class Skeleton
 {
 protected:
-    std::string type; /**< skeleton's type ("assistive_rehab::SkeletonStd" or "assistive_rehab::SkeletonWaist") */
+    std::string type; /**< skeleton's type ("assistive_rehab::SkeletonStd") */
     std::string tag; /**< skeleton's tag */
     std::vector<KeyPoint*> keypoints; /**< vector of pointer to KeyPoint */
     std::unordered_map<std::string,KeyPoint*> tag2key; /**< map associating a tag to a pointer to a KeyPoint */
@@ -340,7 +337,7 @@ public:
     * @return a Property object containing the properties of a skeleton.
     *
     * Available properties are:
-    * - type: string containing skeleton's type ("assistive_rehab::SkeletonStd" or "assistive_rehab::SkeletonWaist").
+    * - type: string containing skeleton's type ("assistive_rehab::SkeletonStd").
     * - tag: string containing skeleton's tag.
     * - transformation: 4 x 4 skeleton's roto-translation matrix.
     * - coronal: vector containing skeleton's coronal plane.
@@ -362,7 +359,7 @@ public:
     * @param prop Property object containing the properties of a skeleton.
     *
     * Available properties are:
-    * - type: string containing skeleton's type ("assistive_rehab::SkeletonStd" or "assistive_rehab::SkeletonWaist").
+    * - type: string containing skeleton's type ("assistive_rehab::SkeletonStd").
     * - tag: string containing skeleton's tag.
     * - transformation: 4 x 4 skeleton's roto-translation matrix.
     * - coronal: vector containing skeleton's coronal plane.
@@ -449,7 +446,7 @@ public:
     * @param prop a Property object containing skeleton information.
     *
     * Available properties are:
-    * - type: string containing skeleton's type ("assistive_rehab::SkeletonStd" or "assistive_rehab::SkeletonWaist").
+    * - type: string containing skeleton's type ("assistive_rehab::SkeletonStd").
     * - tag: string containing skeleton's tag.
     * - transformation: 4 x 4 skeleton's roto-translation matrix.
     * - coronal: vector containing skeleton's coronal plane.
@@ -546,69 +543,12 @@ public:
 /**
 * \ingroup skeleton
 *
-* Basic class for skeleton waist.
-*/
-class SkeletonWaist : public SkeletonStd
-{
-protected:
-    unsigned int waist_pos;
-    
-public:
-    /**
-    * Default constructor.
-    */
-    SkeletonWaist();
-
-    /**
-    * Update skeleton waist from standard from ordered list.
-    * @param ordered vector containing the ordered list of keypoints.
-    * The single keypoint is specified as vector containing the 
-    * x,y,z camera coordinates. 
-    */
-    virtual void update_fromstd(const std::vector<yarp::sig::Vector> &ordered);
-
-    /**
-    * Update skeleton waist from standard from unordered list.
-    * @param unordered vector containing an unordered list of keypoints.
-    * The single keypoint is specified as pair which associates a string, containing the keypoint's tag,
-    * and a vector, containing the x,y,z camera coordinates.
-    */
-    virtual void update_fromstd(const std::vector<std::pair<std::string, yarp::sig::Vector>> &unordered);
-
-    /**
-    * Update skeleton waist from standard from ordered list.
-    * @param ordered vector containing the ordered list of keypoints.
-    */
-    virtual void update_fromstd_withpixels(const std::vector<std::pair<yarp::sig::Vector,yarp::sig::Vector>> &ordered);
-
-    /**
-    * Update skeleton waist from standard from unordered list.
-    * @param unordered vector containing an unordered list of keypoints.
-    */
-    virtual void update_fromstd_withpixels(const std::vector<std::pair<std::string,std::pair<yarp::sig::Vector,yarp::sig::Vector>>> &unordered);
-
-    /**
-    * Update skeleton waist from standard from yarp properties.
-    * @param prop a Property object containing skeleton information.
-    */
-    virtual void update_fromstd(const yarp::os::Property &prop);
-
-    /**
-    * Update skeleton planes.
-    * @return true/false on success/failure (failure occurs if not all planes are updated).
-    */
-    bool update_planes() override;
-};
-
-/**
-* \ingroup skeleton
-*
 * Populate skeleton from a Property object.
 * @param prop reference to a Property object.
 * @return a pointer to a Skeleton object.
 *
 * Available properties are:
-* - type: string containing skeleton's type ("assistive_rehab::SkeletonStd" or "assistive_rehab::SkeletonWaist").
+* - type: string containing skeleton's type ("assistive_rehab::SkeletonStd").
 * - tag: string containing skeleton's tag.
 * - transformation: 4 x 4 skeleton's roto-translation matrix.
 * - coronal: vector containing skeleton's coronal plane.

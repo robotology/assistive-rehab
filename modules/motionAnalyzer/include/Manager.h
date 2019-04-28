@@ -49,7 +49,7 @@ class Manager : public yarp::os::RFModule,
     std::vector<double> time_samples;
     std::vector<double> ideal_samples;
     std::vector<yarp::sig::Vector > all_planes;
-    assistive_rehab::SkeletonWaist skeletonIn;
+    assistive_rehab::SkeletonStd skeletonIn;
 
     yarp::sig::Vector elbowLeft;
     yarp::sig::Vector elbowRight;

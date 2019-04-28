@@ -10,7 +10,6 @@ Assistive-rehab library provides basic functionality for handling skeletons.
 The library has definitions for:
 
 - creating a skeleton as series of keypoints linked together with a predefined structure;
-- defining different types of skeletons (standard or waist);
 - importing/exporting a skeleton's structure from/into a yarp Property;
 - normalizing and scaling a skeleton;
 - optimize skeletons to deal with keypoints that cannot be observed;

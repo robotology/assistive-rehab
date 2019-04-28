@@ -40,7 +40,7 @@ void print_hierarchy(const KeyPoint *k)
 int main()
 {
     cout<<"### Defining the Skeleton"<<endl;
-    SkeletonWaist skeleton1;
+    SkeletonStd skeleton1;
     skeleton1.setTag("test");
 
     Vector rot(4,0.0); rot[1]=1.0; rot[3]=M_PI;
@@ -88,6 +88,10 @@ int main()
         unordered.push_back(make_pair(KeyPointTag::hand_right,p));
     }
     {
+        Vector p(3); p[0]=0.0; p[1]=0.1; p[2]=0.0;
+        unordered.push_back(make_pair(KeyPointTag::hip_center,p));
+    }
+    {
         Vector p(3); p[0]=0.1; p[1]=0.1; p[2]=0.0;
         unordered.push_back(make_pair(KeyPointTag::hip_left,p));
     }
@@ -105,7 +109,7 @@ int main()
     }
 
     cout<<"### Updating Skeleton's structure"<<endl;
-    skeleton1.update_fromstd(unordered);
+    skeleton1.update(unordered);
     skeleton1.print();
     cout<<endl;
 

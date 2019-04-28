@@ -62,7 +62,7 @@ void print(const Matrix& m)
 }
 
 /********************************************************/
-void Processor::setInitialConf(SkeletonWaist &skeleton_, Matrix &T)
+void Processor::setInitialConf(SkeletonStd &skeleton_, Matrix &T)
 {
     first_skeleton.update(skeleton_.toProperty());
     first_skeleton.normalize();
@@ -85,7 +85,7 @@ void Processor::setInitialConf(SkeletonWaist &skeleton_, Matrix &T)
 }
 
 /****************************************************************/
-void Processor::update(SkeletonWaist &curr_skeleton_)
+void Processor::update(SkeletonStd &curr_skeleton_)
 {
     curr_skeleton.update(curr_skeleton_.toProperty());
     curr_skeleton.normalize();
