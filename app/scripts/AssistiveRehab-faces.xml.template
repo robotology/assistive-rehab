@@ -32,6 +32,7 @@
 
     <module>
         <name>yarpOpenPose</name>
+        <parameters>--model_name COCO</parameters>
         <node>r1-cuda-linux</node>
     </module>
 
