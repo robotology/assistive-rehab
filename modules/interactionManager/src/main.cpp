@@ -105,6 +105,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     MoveThread *movethr;
     string move_file,motion_type;
     vector<double> engage_distance,engage_azimuth;
+    bool mirror;
 
     unordered_map<string,vector<string>> history;
     unordered_map<string,string> speak_map;
@@ -383,6 +384,8 @@ class Interaction : public RFModule, public interactionManager_IDL
             }
         }
 
+        mirror=rf.check("mirror",Value(true)).asBool();
+
         if (!load_speak(rf.getContext(),speak_file))
         {
             string msg="Unable to locate file";
@@ -555,20 +558,37 @@ class Interaction : public RFModule, public interactionManager_IDL
                                 motion_type=rep.get(0).asString();
                                 size_t found=motion_type.find_last_of("_");
                                 string part=motion_type.substr(found+1,motion_type.size());
-                                string partrob,partskel;
-                                if(part=="left")
+                                string partrob,partspeech;
+                                if(mirror)
                                 {
-                                    partrob="right";
-                                    partskel=parttomove[1];
+                                    if(part=="left")
+                                    {
+                                        partrob="right";
+                                        partspeech=parttomove[1];
+                                    }
+                                    if(part=="right")
+                                    {
+                                        partrob="left";
+                                        partspeech=parttomove[0];
+                                    }
                                 }
-                                if(part=="right")
+                                else
                                 {
-                                    partrob="left";
-                                    partskel=parttomove[0];
+                                    if(part=="left")
+                                    {
+                                        partrob="left";
+                                        partspeech=parttomove[1];
+                                    }
+                                    if(part=="right")
+                                    {
+                                        partrob="right";
+                                        partspeech=parttomove[0];
+                                    }
                                 }
-                                string motion_type_mirrored=motion_type.substr(0,found)+"_"+partrob;
-                                string script_show=move_file+" "+"show_"+motion_type_mirrored;
-                                string script_perform=move_file+" "+"perform_"+motion_type_mirrored;
+
+                                string motion_type_robot=motion_type.substr(0,found)+"_"+partrob;
+                                string script_show=move_file+" "+"show_"+motion_type_robot;
+                                string script_perform=move_file+" "+"perform_"+motion_type_robot;
 
                                 cmd.clear();
                                 cmd.addString("selectSkel");
@@ -590,7 +610,7 @@ class Interaction : public RFModule, public interactionManager_IDL
                                         }
 
                                         vector<SpeechParam> p;
-                                        p.push_back(SpeechParam(partskel));
+                                        p.push_back(SpeechParam(partspeech));
                                         speak("show",true,p);
                                         movethr->setFile(script_show);
                                         movethr->startMoving();
