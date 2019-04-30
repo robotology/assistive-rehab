@@ -23,6 +23,7 @@
     <param default="run-movements.sh" desc="Script file for robot's movements.">move-file</param>
     <param default="(2.0,4.0)" desc="User engaged within this distance (m).">engage-distance</param>
     <param default="(-15.0 15.0)" desc="User engaged within this field of view (degrees).">engage-azimuth</param>
+    <param default="true" desc="If true, the user has to move the opposite arm with respect to the robot.">mirror-exercise</param>
   </arguments>
 
   <authors>

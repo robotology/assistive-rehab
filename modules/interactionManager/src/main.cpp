@@ -105,7 +105,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     MoveThread *movethr;
     string move_file,motion_type;
     vector<double> engage_distance,engage_azimuth;
-    bool mirror;
+    bool mirror_exercise;
 
     unordered_map<string,vector<string>> history;
     unordered_map<string,string> speak_map;
@@ -384,7 +384,7 @@ class Interaction : public RFModule, public interactionManager_IDL
             }
         }
 
-        mirror=rf.check("mirror",Value(true)).asBool();
+        mirror_exercise=rf.check("mirror-exercise",Value(true)).asBool();
 
         if (!load_speak(rf.getContext(),speak_file))
         {
@@ -559,7 +559,7 @@ class Interaction : public RFModule, public interactionManager_IDL
                                 size_t found=motion_type.find_last_of("_");
                                 string part=motion_type.substr(found+1,motion_type.size());
                                 string partrob,partspeech;
-                                if(mirror)
+                                if(mirror_exercise)
                                 {
                                     if(part=="left")
                                     {
