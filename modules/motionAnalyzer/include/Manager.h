@@ -44,27 +44,11 @@ class Manager : public yarp::os::RFModule,
 
     std::map<std::string,Metric*> motion_repertoire;
 
-    int numKeypoints;
     std::vector< std::vector <std::pair<std::string,yarp::sig::Vector>> > all_keypoints;
     std::vector<double> time_samples;
     std::vector<double> ideal_samples;
     std::vector<yarp::sig::Vector > all_planes;
     assistive_rehab::SkeletonStd skeletonIn;
-
-    yarp::sig::Vector elbowLeft;
-    yarp::sig::Vector elbowRight;
-    yarp::sig::Vector handLeft;
-    yarp::sig::Vector handRight;
-    yarp::sig::Vector head;
-    yarp::sig::Vector shoulderCenter;
-    yarp::sig::Vector shoulderLeft;
-    yarp::sig::Vector shoulderRight;
-    yarp::sig::Vector hipLeft;
-    yarp::sig::Vector hipRight;
-    yarp::sig::Vector kneeLeft;
-    yarp::sig::Vector kneeRight;
-    yarp::sig::Vector ankleLeft;
-    yarp::sig::Vector ankleRight;
 
     yarp::sig::Vector cameraposinit;
     yarp::sig::Vector focalpointinit;
@@ -101,7 +85,6 @@ class Manager : public yarp::os::RFModule,
     double radius,inliers_thresh;
     int zscore_thresh;
 
-    void init();
     bool loadInitialConf();
     bool loadMotionList();
     bool loadMetric(const std::string &metric_tag);
