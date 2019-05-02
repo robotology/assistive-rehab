@@ -350,7 +350,8 @@ public:
                 {
                     string tagjoint=skeletonIn[i]->getTag();
                     if(tagjoint != KeyPointTag::ankle_left && tagjoint != KeyPointTag::ankle_right
-                            && tagjoint != KeyPointTag::knee_left && tagjoint != KeyPointTag::knee_right)
+                            && tagjoint != KeyPointTag::knee_left && tagjoint != KeyPointTag::knee_right
+                            && tagjoint != KeyPointTag::foot_left && tagjoint != KeyPointTag::foot_right)
                     {
                         Vector p=skeletonIn[i]->getPoint();
                         p.push_back(1.0);
