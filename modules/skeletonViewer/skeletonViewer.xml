@@ -6,7 +6,7 @@
   <doxygen-group>skeletonViewer</doxygen-group>
   <description>This module is responsible for displaying in real-time multiple skeletons in 3D.</description>
   <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
-  <version>0.2.0</version>
+  <version>0.3.0</version>
 
   <description-long>
    This module is responsible for displaying in real-time multiple skeletons in 3D.
