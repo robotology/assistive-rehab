@@ -186,7 +186,7 @@ class Scaler : public RFModule
     }
 
     /****************************************************************/
-    void getSkeletonsFromOpc(SkeletonWaist& skeleton, SkeletonWaist& playedSkel)
+    void getSkeletonsFromOpc(SkeletonStd& skeleton, SkeletonStd& playedSkel)
     {
         //ask for the property id
         Bottle cmd, reply;
@@ -232,14 +232,14 @@ class Scaler : public RFModule
                                                 if(!sel_tag.empty() && tag==sel_tag)
                                                 {
                                                     Skeleton* skel1 = skeleton_factory(prop);
-                                                    skeleton.update_fromstd(skel1->toProperty());
+                                                    skeleton.update(skel1->toProperty());
                                                     delete skel1;
                                                 }
                                             }
                                             else
                                             {
                                                 Skeleton* skel2 = skeleton_factory(prop);
-                                                playedSkel.update_fromstd(skel2->toProperty());
+                                                playedSkel.update(skel2->toProperty());
                                                 delete skel2;
                                             }
                                         }
@@ -372,7 +372,7 @@ class Scaler : public RFModule
                 return false;
         }
 
-        SkeletonWaist retrievedSkel, playedSkel;
+        SkeletonStd retrievedSkel, playedSkel;
 
         getSkeletonsFromOpc(retrievedSkel,playedSkel);
         yInfo() << retrievedSkel.getTag() << playedSkel.getTag();

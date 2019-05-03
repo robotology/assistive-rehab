@@ -41,7 +41,7 @@ class Recognizer : public RFModule, public actionRecognizer_IDL
     unordered_map<int,string> class_map;
     int nframes,nsteps,nclasses,nfeatures;
     string skel_tag;
-    SkeletonWaist skeletonIn;
+    SkeletonStd skeletonIn;
 
     bool predict,updated;
     int idx_frame,idx_step;
@@ -350,7 +350,8 @@ public:
                 {
                     string tagjoint=skeletonIn[i]->getTag();
                     if(tagjoint != KeyPointTag::ankle_left && tagjoint != KeyPointTag::ankle_right
-                            && tagjoint != KeyPointTag::knee_left && tagjoint != KeyPointTag::knee_right)
+                            && tagjoint != KeyPointTag::knee_left && tagjoint != KeyPointTag::knee_right
+                            && tagjoint != KeyPointTag::foot_left && tagjoint != KeyPointTag::foot_right)
                     {
                         Vector p=skeletonIn[i]->getPoint();
                         p.push_back(1.0);

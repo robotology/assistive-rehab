@@ -6,7 +6,7 @@
   <doxygen-group>skeletonRetriever</doxygen-group>
   <description>This module merges 2D skeleton data with the depth information.</description>
   <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
-  <version>0.2.0</version>
+  <version>0.3.0</version>
 
   <description-long>
    This module merges 2D skeleton data as acquired by yarpOpenPose along with the depth information provided by the camera.

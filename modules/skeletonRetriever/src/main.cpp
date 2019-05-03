@@ -88,7 +88,7 @@ public:
     const int opc_id_invalid=-1;
     double timer;
     int opc_id;
-    shared_ptr<SkeletonWaist> skeleton;
+    shared_ptr<SkeletonStd> skeleton;
     vector<int> keys_acceptable_misses;
     Vector pivot;
     double name_confidence;
@@ -99,7 +99,7 @@ public:
                  camParams(camParams_), timer(t), opc_id(opc_id_invalid),
                  optimize_limblength(optimize_limblength_), name_confidence(0.0)
     {
-        skeleton=shared_ptr<SkeletonWaist>(new SkeletonWaist());
+        skeleton=shared_ptr<SkeletonStd>(new SkeletonStd());
         keys_acceptable_misses.assign(skeleton->getNumKeyPoints(),0);
         pivot=-1.0*ones(2);
 
@@ -115,13 +115,15 @@ public:
 
         limbs_length[KeyPointTag::knee_left]=shared_ptr<MedianFilter>(new MedianFilter(filter_limblength_order_,zeros(1)));
         limbs_length[KeyPointTag::ankle_left]=shared_ptr<MedianFilter>(new MedianFilter(filter_limblength_order_,zeros(1)));
+        limbs_length[KeyPointTag::foot_left]=shared_ptr<MedianFilter>(new MedianFilter(filter_limblength_order_,zeros(1)));
         limbs_length[KeyPointTag::knee_right]=shared_ptr<MedianFilter>(new MedianFilter(filter_limblength_order_,zeros(1)));
         limbs_length[KeyPointTag::ankle_right]=shared_ptr<MedianFilter>(new MedianFilter(filter_limblength_order_,zeros(1)));
+        limbs_length[KeyPointTag::foot_right]=shared_ptr<MedianFilter>(new MedianFilter(filter_limblength_order_,zeros(1)));
 
         limbs_length_cnt[KeyPointTag::elbow_left]=limbs_length_cnt[KeyPointTag::hand_left]=
         limbs_length_cnt[KeyPointTag::elbow_right]=limbs_length_cnt[KeyPointTag::hand_right]=
-        limbs_length_cnt[KeyPointTag::knee_left]=limbs_length_cnt[KeyPointTag::ankle_left]=
-        limbs_length_cnt[KeyPointTag::knee_right]=limbs_length_cnt[KeyPointTag::ankle_right]=0;
+        limbs_length_cnt[KeyPointTag::knee_left]=limbs_length_cnt[KeyPointTag::ankle_left]=limbs_length_cnt[KeyPointTag::foot_left]=
+        limbs_length_cnt[KeyPointTag::knee_right]=limbs_length_cnt[KeyPointTag::ankle_right]=limbs_length_cnt[KeyPointTag::foot_right]=0;
     }
 
     /****************************************************************/
@@ -208,10 +210,10 @@ public:
             tmp=optimize_limbs({KeyPointTag::shoulder_right,KeyPointTag::elbow_right,KeyPointTag::hand_right});
             unordered_filtered.insert(end(unordered_filtered),begin(tmp),end(tmp));
 
-            tmp=optimize_limbs({KeyPointTag::hip_left,KeyPointTag::knee_left,KeyPointTag::ankle_left});
+            tmp=optimize_limbs({KeyPointTag::hip_left,KeyPointTag::knee_left,KeyPointTag::ankle_left,KeyPointTag::foot_left});
             unordered_filtered.insert(end(unordered_filtered),begin(tmp),end(tmp));
 
-            tmp=optimize_limbs({KeyPointTag::hip_right,KeyPointTag::knee_right,KeyPointTag::ankle_right});
+            tmp=optimize_limbs({KeyPointTag::hip_right,KeyPointTag::knee_right,KeyPointTag::ankle_right,KeyPointTag::foot_right});
             unordered_filtered.insert(end(unordered_filtered),begin(tmp),end(tmp));
 
             // update 3: adjust limbs' keypoints through optimization
@@ -320,7 +322,11 @@ class Retriever : public RFModule
                                                     time_to_live,filter_keypoint_order,filter_limblength_order,
                                                     optimize_limblength));
         vector<pair<string,pair<Vector,Vector>>> unordered;
-        vector<Vector> hips;
+        auto foot_left=make_pair(string(""),make_pair(Vector(1),Vector(1)));
+        auto foot_right=foot_left;
+        vector<Vector> shoulders, hips;
+        bool shoulder_center_detected=false;
+        bool hip_center_detected=false;
 
         Vector p,pixel(2);
         for (size_t i=0; i<keys->size(); i++)
@@ -337,16 +343,49 @@ class Retriever : public RFModule
                     if ((confidence>=keys_recognition_confidence) && getPoint3D(u,v,p))
                     {
                         pixel[0]=u; pixel[1]=v;
-                        unordered.push_back(make_pair(keysRemap[tag],make_pair(p,pixel)));
-                        if ((keysRemap[tag]==KeyPointTag::hip_left) ||
-                            (keysRemap[tag]==KeyPointTag::hip_right))
+                        auto pair_=make_pair(keysRemap[tag],make_pair(p,pixel));
+
+                        // handle foot as big-toe; if big-toe is not available,
+                        // then use small-toe as fallback
+                        if (keysRemap[tag]==KeyPointTag::foot_left)
+                        {
+                            if (foot_left.first.empty() || (tag=="LBigToe"))
+                            {
+                                foot_left=pair_;
+                            }
+                        }
+                        else if (keysRemap[tag]==KeyPointTag::foot_right)
+                        {
+                            if (foot_right.first.empty() || (tag=="RBigToe"))
+                            {
+                                foot_right=pair_;
+                            }
+                        }
+                        else
+                        {
+                            unordered.push_back(pair_);
+                        }
+
+                        // if [shoulder|hip]_center is not available, then
+                        // use (left + right)/2 as fallback
+                        if (keysRemap[tag]==KeyPointTag::shoulder_center)
+                        {
+                            shoulder_center_detected=true;
+                            s->pivot=pixel;
+                        }
+                        else if ((keysRemap[tag]==KeyPointTag::shoulder_left) ||
+                                 (keysRemap[tag]==KeyPointTag::shoulder_right))
+                        {
+                            shoulders.push_back(p);
+                        }
+                        else if (keysRemap[tag]==KeyPointTag::hip_center)
+                        {
+                            hip_center_detected=true;
+                        }
+                        else if ((keysRemap[tag]==KeyPointTag::hip_left) ||
+                                 (keysRemap[tag]==KeyPointTag::hip_right))
                         {
                             hips.push_back(p);
-                        }
-                        else if (keysRemap[tag]==KeyPointTag::shoulder_center)
-                        {
-                            s->pivot[0]=u;
-                            s->pivot[1]=v;
                         }
                     }
                 }
@@ -365,10 +404,25 @@ class Retriever : public RFModule
             }
         }
 
-        if (hips.size()==2)
+        if (!foot_left.first.empty())
         {
-            pixel=-1.0;
-            unordered.push_back(make_pair(KeyPointTag::hip_center,make_pair(0.5*(hips[0]+hips[1]),pixel)));
+            unordered.push_back(foot_left);
+        }
+        if (!foot_right.first.empty())
+        {
+            unordered.push_back(foot_right);
+        }
+        if (!shoulder_center_detected && (shoulders.size()==2))
+        {
+            pixel=numeric_limits<double>::quiet_NaN();
+            unordered.push_back(make_pair(KeyPointTag::shoulder_center,
+                                          make_pair(0.5*(shoulders[0]+shoulders[1]),pixel)));
+        }
+        if (!hip_center_detected && (hips.size()==2))
+        {
+            pixel=numeric_limits<double>::quiet_NaN();
+            unordered.push_back(make_pair(KeyPointTag::hip_center,
+                                          make_pair(0.5*(hips[0]+hips[1]),pixel)));
         }
 
         s->skeleton->update_withpixels(unordered);
@@ -644,12 +698,17 @@ class Retriever : public RFModule
         keysRemap["LShoulder"]=KeyPointTag::shoulder_left;
         keysRemap["LElbow"]=KeyPointTag::elbow_left;
         keysRemap["LWrist"]=KeyPointTag::hand_left;
+        keysRemap["MidHip"]=KeyPointTag::hip_center;
         keysRemap["RHip"]=KeyPointTag::hip_right;
         keysRemap["RKnee"]=KeyPointTag::knee_right;
         keysRemap["RAnkle"]=KeyPointTag::ankle_right;
+        keysRemap["RBigToe"]=KeyPointTag::foot_right;
+        keysRemap["RSmallToe"]=KeyPointTag::foot_right;
         keysRemap["LHip"]=KeyPointTag::hip_left;
         keysRemap["LKnee"]=KeyPointTag::knee_left;
         keysRemap["LAnkle"]=KeyPointTag::ankle_left;
+        keysRemap["LBigToe"]=KeyPointTag::foot_left;
+        keysRemap["LSmallToe"]=KeyPointTag::foot_left;
 
         // default values
         camera_configured=false;

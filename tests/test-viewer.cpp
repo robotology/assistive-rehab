@@ -32,7 +32,7 @@ using namespace assistive_rehab;
 class TestViewer : public RFModule
 {
     SkeletonStd skeleton1;
-    SkeletonWaist skeleton2;
+    SkeletonStd skeleton2;
     double radius,phase,t0;
     BufferedPort<Bottle> port;
 
@@ -77,6 +77,10 @@ class TestViewer : public RFModule
         {
             Vector p(3,0.0); p[0]=-0.3; p[1]=0.0; p[2]=1.0;
             unordered.push_back(make_pair(KeyPointTag::hand_right,p));
+        }
+        {
+            Vector p(3,0.0); p[0]=0.0; p[1]=0.1; p[2]=1.0;
+            unordered.push_back(make_pair(KeyPointTag::hip_center,p));
         }
         {
             Vector p(3,0.0); p[0]=0.1; p[1]=0.1; p[2]=1.0;
@@ -138,7 +142,7 @@ class TestViewer : public RFModule
         rot.push_back(theta);
         Matrix T=axis2dcm(rot);
         skeleton2.setTransformation(T);
-        skeleton2.update_fromstd(skeleton1.get_ordered());
+        skeleton2.update(skeleton1.get_ordered());
 
         Property prop1=skeleton1.toProperty();
         Property prop2=skeleton2.toProperty();

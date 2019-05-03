@@ -6,7 +6,7 @@
   <doxygen-group>skeletonScaler</doxygen-group>
   <description>This module superimposes a (pre-recorded) template skeleton on the current skeleton.</description>
   <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
-  <version>0.2.0</version>
+  <version>0.3.0</version>
 
   <description-long>
    This module superimposes a (pre-recorded) template skeleton on the current skeleton. It sends commands to the \ref skeletonPlayer for loading the template skeleton and computes the roto-translation matrix which allows to align the shoulder center keypoints and the planes of both skeletons.

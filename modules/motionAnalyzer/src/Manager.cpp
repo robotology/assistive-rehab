@@ -31,29 +31,6 @@ using namespace yarp::os;
 using namespace yarp::sig;
 using namespace assistive_rehab;
 
-void Manager::init()
-{
-    numKeypoints = 15;
-
-    elbowLeft.resize(3);
-    elbowRight.resize(3);
-    handLeft.resize(3);
-    handRight.resize(3);
-    head.resize(3);
-    shoulderCenter.resize(3);
-    shoulderLeft.resize(3);
-    shoulderRight.resize(3);
-    hipLeft.resize(3);
-    hipRight.resize(3);
-    kneeLeft.resize(3);
-    kneeRight.resize(3);
-    ankleLeft.resize(3);
-    ankleRight.resize(3);
-
-    cameraposinit.resize(3);
-    focalpointinit.resize(3);
-}
-
 bool Manager::loadInitialConf()
 {
     ResourceFinder rf;
@@ -690,7 +667,9 @@ bool Manager::configure(ResourceFinder &rf)
 
     metric=NULL;
 
-    init();
+    cameraposinit.resize(3);
+    focalpointinit.resize(3);
+
     loadInitialConf();
     if(!loadMotionList())
         return false;
@@ -792,6 +771,7 @@ bool Manager::updateModule()
 /********************************************************/
 bool Manager::writeStructToMat(const string& name, const vector< vector< pair<string,Vector> > >& keypoints_skel, mat_t *matfp)
 {
+    int numKeypoints = skeletonIn.getNumKeyPoints();
     const char *fields[numKeypoints];
     for(int i=0; i<numKeypoints; i++)
     {
