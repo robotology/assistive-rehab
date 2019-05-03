@@ -203,11 +203,12 @@ class Detector : public RFModule
                     cam_intrinsic.at<double>(1,1)=fy;
                     cam_intrinsic.at<double>(1,2)=py;
 
-                    cam_distortion.at<double>(0,0)=k1;
-                    cam_distortion.at<double>(0,1)=k2;
-                    cam_distortion.at<double>(0,2)=t1;
-                    cam_distortion.at<double>(0,3)=t2;
-                    cam_distortion.at<double>(0,4)=k3;
+
+                    cam_distortion.at<double>(0,0)=0.0; //k1;
+                    cam_distortion.at<double>(0,1)=0.0; //k2;
+                    cam_distortion.at<double>(0,2)=0.0; //t1;
+                    cam_distortion.at<double>(0,3)=0.0; //t2;
+                    cam_distortion.at<double>(0,4)=0.0; //k3;
 
                     return true;
                 }
