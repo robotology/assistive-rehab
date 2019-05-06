@@ -6,7 +6,7 @@ Assistive-rehab is a framework for developing the assistive intelligence of [R1 
 
 ## Library
 
-Assistive-rehab library provides basic functionality for handling skeletons and can be found [here](https://robotology.github.io/assistive-rehab/doc/doxygen/doc/html/group__skeleton.html).
+[<b><c>Assistive-rehab library</c></b>](https://robotology.github.io/assistive-rehab/doc/doxygen/doc/html/group__skeleton.html) provides basic functionalities for handling skeletons.
 The library has definitions for:
 
 - creating a skeleton as series of keypoints linked together with a predefined structure;
