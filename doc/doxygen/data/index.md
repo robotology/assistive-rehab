@@ -6,7 +6,7 @@ Assistive-rehab is a framework for developing the assistive intelligence of [R1 
 
 ## Library
 
-Assistive-rehab library provides basic functionality for handling skeletons.
+Assistive-rehab library provides basic functionality for handling skeletons and can be found [here](https://robotology.github.io/assistive-rehab/doc/doxygen/doc/html/group__skeleton.html).
 The library has definitions for:
 
 - creating a skeleton as series of keypoints linked together with a predefined structure;
@@ -21,12 +21,12 @@ Additional functionalities are also included for filtering depth images and alig
 
 Assistive-rehab modules allow the user to:
 
-- **retrieve 3D skeletons**: given depth image from the camera and 2D skeleton data from [`yarpOpenPose`](https://github.com/robotology/human-sensing), `skeletonRetriever` produces 3D skeletons and adds them in a yarp oriented database through [`objectsPropertiesCollector`](http://www.icub.org/doc/icub-main/group__objectsPropertiesCollector.html);
-- **visualize 3D skeletons**: the output of `skeletonRetriever` can be visualized in real-time on the `skeletonViewer`;
-- **analyze human motion**: the quality of the movement can be evaluated in real-time through `motionAnalyzer`, by specifying the tag of the metric under analysis. Metrics as the range of motion and the speed of the end-point are currently implemented;
-- **recognize human actions**: 2D skeleton's keypoints can feed the `actionRecognizer` for predicting the label of the exercise being performed;
-- **produce a verbal feedback**: a feedback can be produced by `feedbackProducer` and translated to verbal through `feedbackSynthetizer`;
-- **replay and manipulate a recorded skeleton**: a skeleton recorded by means of `yarpdatadumper` can be played back through `skeletonPlayer`.  
+- **retrieve 3D skeletons**: given depth image from the camera and 2D skeleton data from [**`yarpOpenPose`**](https://github.com/robotology/human-sensing), **`skeletonRetriever`** produces 3D skeletons and adds them in a yarp oriented database through [**`objectsPropertiesCollector`**](http://www.icub.org/doc/icub-main/group__objectsPropertiesCollector.html);
+- **visualize 3D skeletons**: the output of **`skeletonRetriever`** can be visualized in real-time on the **`skeletonViewer`**;
+- **analyze human motion**: the quality of the movement can be evaluated in real-time through **`motionAnalyzer`**, by specifying the tag of the metric under analysis. Metrics as the range of motion and the speed of the end-point are currently implemented;
+- **recognize human actions**: 2D skeleton's keypoints can feed the **`actionRecognizer`** for predicting the label of the exercise being performed;
+- **produce a verbal feedback**: a feedback can be produced by **`feedbackProducer`** and translated to verbal through **`feedbackSynthetizer`**;
+- **replay and manipulate a recorded skeleton**: a skeleton recorded by means of **`yarpdatadumper`** can be played back through **`skeletonPlayer`**.  
 
 Additional details can be found in the related [Modules](https://robotology.github.io/assistive-rehab/doc/doxygen/doc/html/modules.html) section.
 
