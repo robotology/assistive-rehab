@@ -18,7 +18,7 @@ Changes include:
 - the new framework is compatible with the [Y1M5 demo](Y1M5.md), which was successfully tested online on the robot;
 - the new framework is compatible with datasets recorded before the release, which can be reproduced by means of `yarpdataplayer`.
 
-__May 6, 2019__ : Checkout our new [release v.0.2.1](https://github.com/robotology/assistive-rehab/releases/tag/v.0.2.1)!
+__May 6, 2019__ : Checkout our new [release v0.2.1](https://github.com/robotology/assistive-rehab/releases/tag/v0.2.1)!
 
 What's new?
 
