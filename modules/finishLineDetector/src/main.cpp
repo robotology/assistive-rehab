@@ -42,9 +42,9 @@ class Detector : public RFModule
         setName(moduleName.c_str());
 
         period = rf.check("period",Value(0.1)).asDouble();
-        nx = rf.check("nx",Value(4)).asInt();
+        nx = rf.check("nx",Value(6)).asInt();
         ny = rf.check("ny",Value(1)).asInt();
-        marker_size = rf.check("marker-size",Value(0.17)).asDouble();
+        marker_size = rf.check("marker-size",Value(0.13)).asDouble();
         marker_dist = rf.check("marker-dist",Value(0.05)).asDouble();;
 
         //create dictionary
