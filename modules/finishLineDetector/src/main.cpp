@@ -53,7 +53,7 @@ class Detector : public RFModule
 
         //configure the detector with corner refinement
         detector_params = cv::aruco::DetectorParameters::create();
-        detector_params->doCornerRefinement = true;
+        detector_params->cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
 
         //final estimate
         est_pose.resize(7);
@@ -87,55 +87,59 @@ class Detector : public RFModule
             cv::aruco::detectMarkers(inImgMat,dictionary,corners,ids);
 
             //read camera params
-            getCameraOptions(cam_intrinsic,cam_distortion);
-
-            //perform refinement
-            cv::aruco::refineDetectedMarkers(inImgMat,board,corners,ids,rejected,
-                                             cam_intrinsic,cam_distortion);
-
-            //if at least one marker detected
-            if(ids.size()>0)
+            if(getCameraOptions(cam_intrinsic,cam_distortion))
             {
-                cv::aruco::drawDetectedMarkers(inImgMat,corners,ids);
+			    //perform refinement
+                cv::aruco::refineDetectedMarkers(inImgMat,board,corners,ids,rejected,
+                                                 cam_intrinsic,cam_distortion);
 
-                //estimate pose
-                //use cv::Mat and not cv::Vec3d to avoid issues with
-                //cv::aruco::estimatePoseBoard() initial guess
-                int valid=cv::aruco::estimatePoseBoard(corners,ids,board,
-                                                       cam_intrinsic,cam_distortion,
-                                                       rvec,tvec);
-
-                //if at least one board marker detected
-                if(valid>0)
+                //if at least one marker detected
+                if(ids.size()>0)
                 {
-                    cv::aruco::drawAxis(inImgMat,cam_intrinsic,cam_distortion,rvec,tvec,0.5);
-                    cv::Mat Rmat;
-                    cv::Rodrigues(rvec,Rmat);
-                    yarp::sig::Matrix R(3,3);
-                    for(int i=0;i<Rmat.rows;i++)
-                    {
-                        for(int j=0;j<Rmat.cols;j++)
-                        {
-                            R(i,j)=Rmat.at<double>(i,j);
-                        }
-                    }
-                    yarp::sig::Vector rot=yarp::math::dcm2axis(R);
-                    est_pose[0]=tvec.at<double>(0);
-                    est_pose[1]=tvec.at<double>(1);
-                    est_pose[2]=tvec.at<double>(2);
-                    est_pose[3]=rot[0];
-                    est_pose[4]=rot[1];
-                    est_pose[5]=rot[2];
-                    est_pose[6]=rot[3];
+                    cv::aruco::drawDetectedMarkers(inImgMat,corners,ids);
 
-                    yarp::os::Bottle &pose=posePort.prepare();
-                    pose.clear();
-                    pose.addList().read(est_pose);
-                    posePort.write();
+                    //estimate pose
+                    //use cv::Mat and not cv::Vec3d to avoid issues with
+                    //cv::aruco::estimatePoseBoard() initial guess
+                    int valid=cv::aruco::estimatePoseBoard(corners,ids,board,
+                                                           cam_intrinsic,cam_distortion,
+                                                           rvec,tvec);
+
+                    //if at least one board marker detected
+                    if(valid>0)
+                    {
+                        cv::aruco::drawAxis(inImgMat,cam_intrinsic,cam_distortion,rvec,tvec,0.5);
+                        cv::Mat Rmat;
+                        cv::Rodrigues(rvec,Rmat);
+                        yarp::sig::Matrix R(3,3);
+                        for(int i=0;i<Rmat.rows;i++)
+                        {
+                            for(int j=0;j<Rmat.cols;j++)
+                            {
+                                R(i,j)=Rmat.at<double>(i,j);
+                            }
+                        }
+                        yarp::sig::Vector rot=yarp::math::dcm2axis(R);
+                        est_pose[0]=tvec.at<double>(0);
+                        est_pose[1]=tvec.at<double>(1);
+                        est_pose[2]=tvec.at<double>(2);
+                        est_pose[3]=rot[0];
+                        est_pose[4]=rot[1];
+                        est_pose[5]=rot[2];
+                        est_pose[6]=rot[3];
+                    
+                        yInfo() << "Estimated pose" << est_pose.toString();
+ 
+                        yarp::os::Bottle &pose=posePort.prepare();
+                        pose.clear();
+                        pose.addList().read(est_pose);
+                        posePort.write();
+                    }
                 }
-            }
-            outImg=yarp::cv::fromCvMat<yarp::sig::PixelRgb>(inImgMat);
-            imgOutPort.write();
+                outImg=yarp::cv::fromCvMat<yarp::sig::PixelRgb>(inImgMat);
+                imgOutPort.write();				
+			}
+
         }
         return true;
     }
