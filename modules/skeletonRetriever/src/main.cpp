@@ -90,7 +90,7 @@ public:
     int opc_id;
     shared_ptr<SkeletonStd> skeleton;
     vector<int> keys_acceptable_misses;
-    Vector pivot;
+    vector<Vector> pivots;
     double name_confidence;
 
     /****************************************************************/
@@ -101,7 +101,7 @@ public:
     {
         skeleton=shared_ptr<SkeletonStd>(new SkeletonStd());
         keys_acceptable_misses.assign(skeleton->getNumKeyPoints(),0);
-        pivot=-1.0*ones(2);
+        pivots.assign(2,numeric_limits<double>::infinity()*ones(2));
 
         for (unsigned int i=0; i<skeleton->getNumKeyPoints(); i++)
         {
@@ -371,7 +371,7 @@ class Retriever : public RFModule
                         if (keysRemap[tag]==KeyPointTag::shoulder_center)
                         {
                             shoulder_center_detected=true;
-                            s->pivot=pixel;
+                            s->pivots[0]=pixel;
                         }
                         else if ((keysRemap[tag]==KeyPointTag::shoulder_left) ||
                                  (keysRemap[tag]==KeyPointTag::shoulder_right))
@@ -381,6 +381,7 @@ class Retriever : public RFModule
                         else if (keysRemap[tag]==KeyPointTag::hip_center)
                         {
                             hip_center_detected=true;
+                            s->pivots[1]=pixel;
                         }
                         else if ((keysRemap[tag]==KeyPointTag::hip_left) ||
                                  (keysRemap[tag]==KeyPointTag::hip_right))
@@ -454,7 +455,7 @@ class Retriever : public RFModule
 
         dest->update(unordered);
         dest->timer=time_to_live;
-        dest->pivot=src->pivot;
+        dest->pivots=src->pivots;
 
         string oldTag=dest->skeleton->getTag();
         dest->skeleton->setTag(is_unknown(src->skeleton->getTag())?
@@ -470,7 +471,12 @@ class Retriever : public RFModule
     /****************************************************************/
     bool isValid(const shared_ptr<MetaSkeleton> &s) const
     {
-        if ((s->pivot[0]<0.0) || (s->pivot[1]<0.0))
+        bool no_pivots=true;
+        for (auto &pivot:s->pivots)
+        {
+            no_pivots=no_pivots && (norm(pivot)==numeric_limits<double>::infinity());
+        }
+        if (no_pivots)
         {
             return false;
         }
@@ -496,7 +502,11 @@ class Retriever : public RFModule
         vector<double> scores;
         for (auto &s:c)
         {
-            double dist=norm(s->pivot-n->pivot);
+            double dist=numeric_limits<double>::infinity();
+            for (size_t i=0; i<s->pivots.size(); i++)
+            {
+                dist=std::min(dist,norm(s->pivots[i]-n->pivots[i]));
+            }
             scores.push_back(dist<=tracking_threshold?dist:
                              numeric_limits<double>::infinity());
         }
