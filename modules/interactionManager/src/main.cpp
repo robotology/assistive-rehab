@@ -46,6 +46,7 @@ public:
 class MoveThread : public Thread
 {
     string file;
+    int nrep;
     bool startmoving;
 
 public:
@@ -58,8 +59,12 @@ public:
             if(startmoving)
             {
                 yInfo()<<"Loading"<<file;
-                if(system(file.c_str()))
-                    yError()<<"Processor not available";
+                yInfo()<<"Repeat exercise"<<nrep<<"times";
+                for(int i=0;i<nrep;i++)
+                {
+                    if(system(file.c_str()))
+                        yError()<<"Processor not available";
+                }
                 stopMoving();
             }
         }
@@ -76,9 +81,17 @@ public:
         return startmoving;
     }
 
-    void setFile(const string & file_)
+    void init(const string & file_, const int nrep_)
     {
         file=file_;
+        nrep=nrep_;
+    }
+
+    bool setInitialPosition(const string & initialpos)
+    {
+        if(system(initialpos.c_str()))
+            yError()<<"Processor not available";
+        return true;
     }
 
     void startMoving()
@@ -109,6 +122,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     vector<double> panel_size,panel_pose;
     vector<int> panel_color;
     string panelid;
+    int nrep_show,nrep_perform;
 
     unordered_map<string,vector<string>> history;
     unordered_map<string,string> speak_map;
@@ -477,6 +491,9 @@ class Interaction : public RFModule, public interactionManager_IDL
             panel_color[2]=p->get(2).asInt();
         }
 
+        nrep_show=rf.check("nrep-show",Value(2)).asInt();
+        nrep_perform=rf.check("nrep-perform",Value(7)).asInt();
+
         if (!load_speak(rf.getContext(),speak_file))
         {
             string msg="Unable to locate file";
@@ -685,67 +702,62 @@ class Interaction : public RFModule, public interactionManager_IDL
                                 cmd.addString("setPart");
                                 cmd.addString(part);
 
+                                string motion_type_robot=motion_type.substr(0,found)+"_"+partrob;
+                                string script_starting=move_file+" "+"startingpos_"+motion_type_robot;
+                                string script_move=move_file+" "+motion_type_robot;
+
+                                cmd.clear();
+                                cmd.addString("selectSkel");
+                                cmd.addString(tag);
+                                yInfo()<<"Selecting skeleton"<<tag;
                                 if (analyzerPort.write(cmd,rep))
                                 {
                                     if (rep.get(0).asVocab()==ok)
                                     {
-                                        string motion_type_robot=motion_type.substr(0,found)+"_"+partrob;
-                                        string script_show=move_file+" "+"show_"+motion_type_robot;
-                                        string script_perform=move_file+" "+"perform_"+motion_type_robot;
+                                        if (history.find(tag)==end(history))
+                                        {
+                                            speak("explain",true);
+                                        }
+                                        else
+                                        {
+                                            vector<SpeechParam> p;
+                                            p.push_back(SpeechParam(tag[0]!='#'?(tag+","):string("")));
+                                            speak("in-the-know",true,p);
+                                        }
+
+                                        vector<SpeechParam> p;
+                                        p.push_back(SpeechParam(partspeech));
+                                        speak("show",true,p);
+                                        movethr->setInitialPosition(script_starting);
+                                        movethr->init(script_move,nrep_show);
+                                        movethr->startMoving();
+
+                                        while(movethr->isMoving())
+                                        {
+                                            //wait until it finishes
+                                            Time::yield();
+                                        }
+                                        
+                                        Time::delay(3.0);
+                                        speak("start",true);
+                                        history[tag].push_back(metric);
+                                        movethr->setInitialPosition(script_starting);
+                                        movethr->init(script_move,nrep_perform);
+                                        movethr->startMoving();
+                                        Time::delay(1.0);
 
                                         cmd.clear();
-                                        cmd.addString("selectSkel");
-                                        cmd.addString(tag);
-                                        yInfo()<<"Selecting skeleton"<<tag;
+                                        cmd.addString("start");
                                         if (analyzerPort.write(cmd,rep))
                                         {
                                             if (rep.get(0).asVocab()==ok)
                                             {
-                                                if (history.find(tag)==end(history))
-                                                {
-                                                    speak("explain",true);
-                                                }
-                                                else
-                                                {
-                                                    vector<SpeechParam> p;
-                                                    p.push_back(SpeechParam(tag[0]!='#'?(tag+","):string("")));
-                                                    speak("in-the-know",true,p);
-                                                }
-
-                                                vector<SpeechParam> p;
-                                                p.push_back(SpeechParam(partspeech));
-                                                speak("show",true,p);
-                                                movethr->setFile(script_show);
-                                                movethr->startMoving();
-
-                                                while(movethr->isMoving())
-                                                {
-                                                    //wait until it finishes
-                                                    Time::yield();
-                                                }
-
-                                                Time::delay(3.0);
-                                                speak("start",true);
-                                                history[tag].push_back(metric);
-                                                movethr->setFile(script_perform);
-                                                movethr->startMoving();
-                                                Time::delay(1.0);
-
-                                                cmd.clear();
-                                                cmd.addString("start");
-                                                if (analyzerPort.write(cmd,rep))
-                                                {
-                                                    if (rep.get(0).asVocab()==ok)
-                                                    {
-                                                        state=State::move;
-
-                                                        assess_values.clear();
-                                                        t0=Time::now();
-                                                    }
-                                                }
+                                                state=State::move;
+                                                                                                                                            
+                                                assess_values.clear();
+                                                t0=Time::now();
                                             }
                                         }
-
                                     }
                                 }
                             }
@@ -759,6 +771,7 @@ class Interaction : public RFModule, public interactionManager_IDL
                 cmd.addString("stop");
                 analyzerPort.write(cmd,rep);
 
+                movethr->stopMoving();
                 speak("ouch",true);
                 disengage();
             }
