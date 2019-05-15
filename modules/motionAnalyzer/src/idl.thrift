@@ -45,6 +45,12 @@ service motionAnalyzer_IDL
    bool start();
 
    /**
+   * Stop feedback.
+   * @return true/false on success/failure.
+   */
+   bool stop_feedback();
+
+   /**
    * Stop processing.
    * @return true/false on success/failure.
    */

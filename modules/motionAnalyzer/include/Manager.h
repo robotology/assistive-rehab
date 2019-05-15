@@ -94,6 +94,7 @@ class Manager : public yarp::os::RFModule,
     bool start();
     bool stop();
     bool setPart(const std::string &part);
+    bool stop_feedback();
 
     bool writeStructToMat(const std::string& name, const std::vector< std::vector< std::pair<std::string,yarp::sig::Vector> > >& keypoints_skel, mat_t *matfp);
     bool writeStructToMat(const std::string& name, const Metric& metric, mat_t *matfp);

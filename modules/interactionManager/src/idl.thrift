@@ -29,4 +29,10 @@ service interactionManager_IDL
     */
    bool stop();
 
+   /**
+    * Start the interaction with occlusion.
+    * @return true/false on success/failure.
+    */
+   bool start_occlusion();
+
 }
