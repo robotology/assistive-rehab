@@ -1,0 +1,3155 @@
+<?xml version="1.0" ?>
+<sdf version='1.6'>
+  <world name='default'>
+    <light name='sun' type='directional'>
+      <cast_shadows>1</cast_shadows>
+      <pose frame=''>0 0 10 0 -0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+    <model name='ground_plane'>
+      <static>1</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>100</mu>
+                <mu2>50</mu2>
+              </ode>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='visual'>
+          <cast_shadows>0</cast_shadows>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Grey</name>
+            </script>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <gravity>0 0 -9.8</gravity>
+    <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
+    <atmosphere type='adiabatic'/>
+    <physics name='default_physics' default='0' type='ode'>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+    <scene>
+      <ambient>0.4 0.4 0.4 1</ambient>
+      <background>0.7 0.7 0.7 1</background>
+      <shadows>1</shadows>
+    </scene>
+    <audio>
+      <device>default</device>
+    </audio>
+    <wind/>
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <latitude_deg>0</latitude_deg>
+      <longitude_deg>0</longitude_deg>
+      <elevation>0</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
+    <model name='SIM_CER_ROBOT'>
+      <link name='mobile_base_body_link'>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0.003532 0 0.062803 0 -0 0</pose>
+          <mass>14</mass>
+          <inertia>
+            <ixx>0.342401</ixx>
+            <ixy>0</ixy>
+            <ixz>-0.0396992</ixz>
+            <iyy>0.362542</iyy>
+            <iyz>0</iyz>
+            <izz>0.168981</izz>
+          </inertia>
+        </inertial>
+        <collision name='mobile_base_body_link_collision'>
+          <pose frame=''>0 0 -0.16 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_mobilebase_body.dae</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode>
+                <mu>0</mu>
+                <mu2>0</mu2>
+              </ode>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='mobile_base_body_link_visual'>
+          <pose frame=''>0 0 -0.16 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_mobilebase_body.dae</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <uri>__default__</uri>
+              <name>__default__</name>
+            </script>
+          </material>
+        </visual>
+        <velocity_decay/>
+        <sensor name='base_laser' type='ray'>
+          <always_on>1</always_on>
+          <update_rate>40</update_rate>
+          <pose frame=''>0.07 0 0.031 0 -0 0</pose>
+          <ray>
+            <scan>
+              <horizontal>
+                <samples>360</samples>
+                <resolution>1</resolution>
+                <min_angle>-3.14</min_angle>
+                <max_angle>3.14</max_angle>
+              </horizontal>
+              <vertical>
+                <samples>1</samples>
+                <min_angle>0</min_angle>
+                <max_angle>0</max_angle>
+              </vertical>
+            </scan>
+            <range>
+              <min>0.1</min>
+              <max>5</max>
+              <resolution>0.01</resolution>
+            </range>
+            <noise>
+              <type>gaussian</type>
+              <mean>0</mean>
+              <stddev>0.005</stddev>
+            </noise>
+          </ray>
+          <plugin name='laser_sensor' filename='libgazebo_yarp_lasersensor.so'>
+            <yarpConfigurationFile>model://cer/conf/gazebo_cer_laser_sensor.ini</yarpConfigurationFile>
+          </plugin>
+        </sensor>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <link name='mobile_base_l_tyre_link'>
+        <pose frame=''>0 0.139 0 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0 0.034425 9e-06 0 -0 0</pose>
+          <mass>3</mass>
+          <inertia>
+            <ixx>0.0200196</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.0376169</iyy>
+            <iyz>-8.28446e-07</iyz>
+            <izz>0.0200156</izz>
+          </inertia>
+        </inertial>
+        <collision name='mobile_base_l_tyre_link_collision'>
+          <pose frame=''>0 0.03 0 1.5708 -0 0</pose>
+          <geometry>
+            <cylinder>
+              <length>0.005</length>
+              <radius>0.16</radius>
+            </cylinder>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='mobile_base_l_tyre_link_visual'>
+          <pose frame=''>0 -0.139 -0.16 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_mobilebase_l_tyre.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='mobile_base_l_wheel_joint' type='revolute'>
+        <child>mobile_base_l_tyre_link</child>
+        <parent>mobile_base_body_link</parent>
+        <axis>
+          <xyz>0 1 0</xyz>
+          <limit>
+            <lower>-1e+16</lower>
+            <upper>1e+16</upper>
+          </limit>
+          <dynamics>
+            <damping>0.5</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='mobile_base_r_tyre_link'>
+        <pose frame=''>0 -0.139 0 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0 -0.034425 9e-06 0 -0 0</pose>
+          <mass>3</mass>
+          <inertia>
+            <ixx>0.0200196</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.0376169</iyy>
+            <iyz>8.28101e-07</iyz>
+            <izz>0.0200156</izz>
+          </inertia>
+        </inertial>
+        <collision name='mobile_base_r_tyre_link_collision'>
+          <pose frame=''>0 -0.03 0 1.5708 -0 0</pose>
+          <geometry>
+            <cylinder>
+              <length>0.005</length>
+              <radius>0.16</radius>
+            </cylinder>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='mobile_base_r_tyre_link_visual'>
+          <pose frame=''>0 0.139 -0.16 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_mobilebase_r_tyre.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='mobile_base_r_wheel_joint' type='revolute'>
+        <child>mobile_base_r_tyre_link</child>
+        <parent>mobile_base_body_link</parent>
+        <axis>
+          <xyz>0 1 0</xyz>
+          <limit>
+            <lower>-1e+16</lower>
+            <upper>1e+16</upper>
+          </limit>
+          <dynamics>
+            <damping>0.5</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='torso_slider_eq_link'>
+        <pose frame=''>0.044 0 0.071 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0.015175 3e-06 0.244533 0 -0 0</pose>
+          <mass>7.5</mass>
+          <inertia>
+            <ixx>0.0978792</ixx>
+            <ixy>-1.83466e-06</ixy>
+            <ixz>0.00625726</ixz>
+            <iyy>0.0969511</iyy>
+            <iyz>0</iyz>
+            <izz>0.0746114</izz>
+          </inertia>
+        </inertial>
+        <collision name='torso_slider_eq_link_collision'>
+          <pose frame=''>-0.044 0 -0.231 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_torso_slider_eq.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='torso_slider_eq_link_visual'>
+          <pose frame=''>-0.044 0 -0.231 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_torso_slider_eq.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='torso_heave_eq_joint' type='prismatic'>
+        <child>torso_slider_eq_link</child>
+        <parent>mobile_base_body_link</parent>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>0</lower>
+            <upper>0.17</upper>
+            <effort>1200</effort>
+            <velocity>0.5</velocity>
+          </limit>
+          <dynamics>
+            <damping>1000</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='torso_pin_eq_link'>
+        <pose frame=''>0.044 0 0.47 -3.14159 -0 0</pose>
+        <inertial>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <mass>1.5</mass>
+          <inertia>
+            <ixx>0.000379688</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.00143984</iyy>
+            <iyz>0</iyz>
+            <izz>0.00143984</izz>
+          </inertia>
+        </inertial>
+        <collision name='torso_pin_eq_link_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_torso_pin_eq.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='torso_pin_eq_link_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_torso_pin_eq.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='torso_roll_eq_joint' type='revolute'>
+        <child>torso_pin_eq_link</child>
+        <parent>torso_slider_eq_link</parent>
+        <axis>
+          <xyz>1 0 0</xyz>
+          <limit>
+            <lower>-0.523599</lower>
+            <upper>0.523599</upper>
+            <effort>50</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>100</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='torso_platform_link'>
+        <pose frame=''>0.044 0 0.47 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <mass>1.5</mass>
+          <inertia>
+            <ixx>0.00153125</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.00153125</iyy>
+            <iyz>0</iyz>
+            <izz>0.0030375</izz>
+          </inertia>
+        </inertial>
+        <collision name='torso_platform_link_collision'>
+          <pose frame=''>-0.044 0 -0.63 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_torso_platform.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='torso_platform_link_visual'>
+          <pose frame=''>-0.044 0 -0.63 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_torso_platform.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='torso_pitch_eq_joint' type='revolute'>
+        <child>torso_platform_link</child>
+        <parent>torso_pin_eq_link</parent>
+        <axis>
+          <xyz>0 1 0</xyz>
+          <limit>
+            <lower>-0.523599</lower>
+            <upper>0.523599</upper>
+            <effort>50</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>100</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='chest_link'>
+        <pose frame=''>0.044 0 0.47 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>-0.033031 0 0.220198 0 -0 0</pose>
+          <mass>13</mass>
+          <inertia>
+            <ixx>0.275816</ixx>
+            <ixy>0</ixy>
+            <ixz>0.0564476</ixz>
+            <iyy>0.253579</iyy>
+            <iyz>0</iyz>
+            <izz>0.127156</izz>
+          </inertia>
+        </inertial>
+        <collision name='chest_link_collision'>
+          <pose frame=''>-0.044 0 -0.63 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_chest.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='chest_link_visual'>
+          <pose frame=''>-0.044 0 -0.63 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_chest.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='torso_yaw_joint' type='revolute'>
+        <child>chest_link</child>
+        <parent>torso_platform_link</parent>
+        <axis>
+          <xyz>-0 -0 1</xyz>
+          <limit>
+            <lower>-1.0472</lower>
+            <upper>1.0472</upper>
+            <effort>30</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='l_clavicle_link'>
+        <pose frame=''>-0.04 0.177 0.84 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <mass>0.2</mass>
+          <inertia>
+            <ixx>0.000288</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.000288</iyy>
+            <iyz>0</iyz>
+            <izz>0.000288</izz>
+          </inertia>
+        </inertial>
+        <collision name='l_clavicle_link_collision'>
+          <pose frame=''>0.04 -0.177 -1 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_clavicle.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='l_clavicle_link_visual'>
+          <pose frame=''>0.04 -0.177 -1 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_clavicle.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='l_shoulder_pitch_joint' type='revolute'>
+        <child>l_clavicle_link</child>
+        <parent>chest_link</parent>
+        <axis>
+          <xyz>0 -0.970296 -0.241922</xyz>
+          <limit>
+            <lower>-0.523599</lower>
+            <upper>1.5708</upper>
+            <effort>30</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='l_shoulder_link'>
+        <pose frame=''>-0.04 0.177 0.84 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>2e-06 0.042148 -0.06332 0 -0 0</pose>
+          <mass>0.5</mass>
+          <inertia>
+            <ixx>0.00076143</ixx>
+            <ixy>0</ixy>
+            <ixz>-2.84061e-08</ixz>
+            <iyy>0.000819748</iyy>
+            <iyz>-0.000135828</iyz>
+            <izz>0.000588486</izz>
+          </inertia>
+        </inertial>
+        <collision name='l_shoulder_link_collision'>
+          <pose frame=''>0.04 -0.177 -1 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_shoulder.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='l_shoulder_link_visual'>
+          <pose frame=''>0.04 -0.177 -1 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_shoulder.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='l_shoulder_roll_joint' type='revolute'>
+        <child>l_shoulder_link</child>
+        <parent>l_clavicle_link</parent>
+        <axis>
+          <xyz>1 -0 0</xyz>
+          <limit>
+            <lower>-0.174533</lower>
+            <upper>1.309</upper>
+            <effort>30</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='l_upperarm_FT_sensor_link'>
+        <pose frame=''>-0.04 0.211 0.73 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>-0.000784 -0.000123 -0.042763 0 -0 0</pose>
+          <mass>0.8</mass>
+          <inertia>
+            <ixx>0.0012924</ixx>
+            <ixy>-4.63196e-08</ixy>
+            <ixz>-4.45408e-05</ixz>
+            <iyy>0.00128408</iyy>
+            <iyz>-1.2213e-06</iyz>
+            <izz>0.000657768</izz>
+          </inertia>
+        </inertial>
+        <collision name='l_upperarm_FT_sensor_link_collision'>
+          <pose frame=''>0.04 -0.211 -0.89 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_upperarm_sensor.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <collision name='l_upperarm_FT_sensor_link_fixed_joint_lump__l_upperarm_link_collision_1'>
+          <pose frame=''>0.04 -0.211 -0.89 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_upperarm.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='l_upperarm_FT_sensor_link_visual'>
+          <pose frame=''>0.04 -0.211 -0.89 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_upperarm_sensor.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <visual name='l_upperarm_FT_sensor_link_fixed_joint_lump__l_upperarm_link_visual_1'>
+          <pose frame=''>0.04 -0.211 -0.89 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_upperarm.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='l_shoulder_yaw_joint' type='revolute'>
+        <child>l_upperarm_FT_sensor_link</child>
+        <parent>l_shoulder_link</parent>
+        <axis>
+          <xyz>-0 -0 1</xyz>
+          <limit>
+            <lower>-1.5708</lower>
+            <upper>1.5708</upper>
+            <effort>15</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='l_elbow_sphere_link'>
+        <pose frame=''>-0.04 0.211 0.589 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <mass>0.2</mass>
+          <inertia>
+            <ixx>0.000128</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.000128</iyy>
+            <iyz>0</iyz>
+            <izz>0.000128</izz>
+          </inertia>
+        </inertial>
+        <collision name='l_elbow_sphere_link_collision'>
+          <pose frame=''>0.04 -0.211 -0.749 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_elbow_sphere.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='l_elbow_sphere_link_visual'>
+          <pose frame=''>0.04 -0.211 -0.749 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_elbow_sphere.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='l_elbow_joint' type='revolute'>
+        <child>l_elbow_sphere_link</child>
+        <parent>l_upperarm_FT_sensor_link</parent>
+        <axis>
+          <xyz>-0 -1 -0</xyz>
+          <limit>
+            <lower>0</lower>
+            <upper>1.74533</upper>
+            <effort>20</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='l_forearm_link'>
+        <pose frame=''>-0.04 0.211 0.518 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>-0.000512 -0.000175 -0.072511 0 -0 0</pose>
+          <mass>0.6</mass>
+          <inertia>
+            <ixx>0.00283352</ixx>
+            <ixy>0</ixy>
+            <ixz>3.15449e-05</ixz>
+            <iyy>0.00282953</iyy>
+            <iyz>1.0379e-07</iyz>
+            <izz>0.000436673</izz>
+          </inertia>
+        </inertial>
+        <collision name='l_forearm_link_collision'>
+          <pose frame=''>0.04 -0.211 -0.678 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_forearm.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='l_forearm_link_visual'>
+          <pose frame=''>0.04 -0.211 -0.678 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_forearm.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='l_wrist_pronosupination_joint' type='revolute'>
+        <child>l_forearm_link</child>
+        <parent>l_elbow_sphere_link</parent>
+        <axis>
+          <xyz>0 -0 1</xyz>
+          <limit>
+            <lower>-1.5708</lower>
+            <upper>1.5708</upper>
+            <effort>10</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='l_wrist_slider_eq_link'>
+        <pose frame=''>-0.04 0.211 0.589 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0 -5.9e-05 -0.225761 0 -0 0</pose>
+          <mass>0.3</mass>
+          <inertia>
+            <ixx>0.000939997</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.00094</iyy>
+            <iyz>4.18243e-09</iyz>
+            <izz>0.000220942</izz>
+          </inertia>
+        </inertial>
+        <collision name='l_wrist_slider_eq_link_collision'>
+          <pose frame=''>0.04 -0.211 -0.749 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_wrist_slider.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='l_wrist_slider_eq_link_visual'>
+          <pose frame=''>0.04 -0.211 -0.749 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_wrist_slider.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='l_wrist_heave_eq_joint' type='prismatic'>
+        <child>l_wrist_slider_eq_link</child>
+        <parent>l_forearm_link</parent>
+        <axis>
+          <xyz>-0 0 -1</xyz>
+          <limit>
+            <lower>0</lower>
+            <upper>0.13</upper>
+            <effort>200</effort>
+            <velocity>0.25</velocity>
+          </limit>
+          <dynamics>
+            <damping>100</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='l_wrist_cup_eq_link'>
+        <pose frame=''>-0.072 0.211 0.298 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0.031989 -5.9e-05 -0.018146 0 -0 0</pose>
+          <mass>0.2</mass>
+          <inertia>
+            <ixx>0.000102239</ixx>
+            <ixy>0</ixy>
+            <ixz>3.78925e-08</ixz>
+            <iyy>0.000102239</iyy>
+            <iyz>0</iyz>
+            <izz>0.000163555</izz>
+          </inertia>
+        </inertial>
+        <collision name='l_wrist_cup_eq_link_collision'>
+          <pose frame=''>0.072 -0.211 -0.458 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_wrist_cup_eq.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='l_wrist_cup_eq_link_visual'>
+          <pose frame=''>0.072 -0.211 -0.458 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_wrist_cup_eq.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='l_wrist_roll_eq_joint' type='revolute'>
+        <child>l_wrist_cup_eq_link</child>
+        <parent>l_wrist_slider_eq_link</parent>
+        <axis>
+          <xyz>1 0 -0</xyz>
+          <limit>
+            <lower>-0.523599</lower>
+            <upper>0.523599</upper>
+            <effort>10</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='l_hand_root_link'>
+        <pose frame=''>-0.04 0.211 0.298 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0.000191 -0.013614 -0.06234 0 -0 0</pose>
+          <mass>0.3</mass>
+          <inertia>
+            <ixx>0.000294522</ixx>
+            <ixy>1.41029e-06</ixy>
+            <ixz>6.92026e-08</ixz>
+            <iyy>0.000297775</iyy>
+            <iyz>-2.11461e-05</iyz>
+            <izz>0.000189897</izz>
+          </inertia>
+        </inertial>
+        <collision name='l_hand_root_link_collision'>
+          <pose frame=''>0.04 -0.211 -0.458 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_hand_root.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='l_hand_root_link_visual'>
+          <pose frame=''>0.04 -0.211 -0.458 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_hand_root.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='l_wrist_pitch_eq_joint' type='revolute'>
+        <child>l_hand_root_link</child>
+        <parent>l_wrist_cup_eq_link</parent>
+        <axis>
+          <xyz>-0 -1 -0</xyz>
+          <limit>
+            <lower>-0.523599</lower>
+            <upper>0.523599</upper>
+            <effort>10</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='l_hand_paddle_proximal_link'>
+        <pose frame=''>-0.04 0.198143 0.185494 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>-9.7e-05 0.010867 -0.022259 0 -0 0</pose>
+          <mass>0.05</mass>
+          <inertia>
+            <ixx>0.0001</ixx>
+            <ixy>-6.9439e-09</ixy>
+            <ixz>1.7549e-08</ixz>
+            <iyy>0.0001</iyy>
+            <iyz>1.81902e-06</iyz>
+            <izz>0.0001</izz>
+          </inertia>
+        </inertial>
+        <collision name='l_hand_paddle_proximal_link_collision'>
+          <pose frame=''>0.04 -0.198143 -0.345494 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_hand_paddle_proximal.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='l_hand_paddle_proximal_link_visual'>
+          <pose frame=''>0.04 -0.198143 -0.345494 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_hand_paddle_proximal.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='l_hand_paddle_proximal_joint' type='revolute'>
+        <child>l_hand_paddle_proximal_link</child>
+        <parent>l_hand_root_link</parent>
+        <axis>
+          <xyz>-1 -0 0</xyz>
+          <limit>
+            <lower>0</lower>
+            <upper>1.22173</upper>
+            <effort>5</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='l_hand_paddle_distal_link'>
+        <pose frame=''>-0.04 0.214471 0.146748 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0.001321 0.005592 -0.020601 0 -0 0</pose>
+          <mass>0.05</mass>
+          <inertia>
+            <ixx>0.0001</ixx>
+            <ixy>-1.94983e-07</ixy>
+            <ixz>9.01259e-07</ixz>
+            <iyy>0.0001</iyy>
+            <iyz>6.79853e-07</iyz>
+            <izz>0.0001</izz>
+          </inertia>
+        </inertial>
+        <collision name='l_hand_paddle_distal_link_collision'>
+          <pose frame=''>0.04 -0.214471 -0.306748 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_hand_paddle_distal.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='l_hand_paddle_distal_link_visual'>
+          <pose frame=''>0.04 -0.214471 -0.306748 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_hand_paddle_distal.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='l_hand_paddle_distal_joint' type='revolute'>
+        <child>l_hand_paddle_distal_link</child>
+        <parent>l_hand_paddle_proximal_link</parent>
+        <axis>
+          <xyz>-1 -0 0</xyz>
+          <limit>
+            <lower>0</lower>
+            <upper>1.22173</upper>
+            <effort>5</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='l_hand_thumb_proximal_link'>
+        <pose frame=''>-0.04 0.171352 0.222282 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0.002515 -0.017936 -0.003159 0 -0 0</pose>
+          <mass>0.05</mass>
+          <inertia>
+            <ixx>0.0001</ixx>
+            <ixy>-1.50858e-09</ixy>
+            <ixz>3.04948e-10</ixz>
+            <iyy>0.0001</iyy>
+            <iyz>-2.63475e-06</iyz>
+            <izz>0.0001</izz>
+          </inertia>
+        </inertial>
+        <collision name='l_hand_thumb_proximal_link_collision'>
+          <pose frame=''>0.04 -0.171352 -0.382282 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_hand_thumb_proximal.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='l_hand_thumb_proximal_link_visual'>
+          <pose frame=''>0.04 -0.171352 -0.382282 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_hand_thumb_proximal.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='l_hand_thumb_proximal_joint' type='revolute'>
+        <child>l_hand_thumb_proximal_link</child>
+        <parent>l_hand_root_link</parent>
+        <axis>
+          <xyz>1 0 -0</xyz>
+          <limit>
+            <lower>0</lower>
+            <upper>1.0472</upper>
+            <effort>5</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='l_hand_thumb_distal_link'>
+        <pose frame=''>-0.039745 0.130827 0.211296 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0.002193 -0.014529 -0.005865 0 -0 0</pose>
+          <mass>0.05</mass>
+          <inertia>
+            <ixx>0.0001</ixx>
+            <ixy>1.50893e-10</ixy>
+            <ixz>4.0488e-10</ixz>
+            <iyy>0.0001</iyy>
+            <iyz>-9.14021e-07</iyz>
+            <izz>0.0001</izz>
+          </inertia>
+        </inertial>
+        <collision name='l_hand_thumb_distal_link_collision'>
+          <pose frame=''>0.039745 -0.130827 -0.371296 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_hand_thumb_distal.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='l_hand_thumb_distal_link_visual'>
+          <pose frame=''>0.039745 -0.130827 -0.371296 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_l_hand_thumb_distal.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='l_hand_thumb_distal_joint' type='revolute'>
+        <child>l_hand_thumb_distal_link</child>
+        <parent>l_hand_thumb_proximal_link</parent>
+        <axis>
+          <xyz>1 0 -0</xyz>
+          <limit>
+            <lower>0</lower>
+            <upper>1.22173</upper>
+            <effort>5</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='neck_link'>
+        <pose frame=''>-0.05 -0 0.87 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>-0.000322 0 0.07756 0 -0 0</pose>
+          <mass>1.4</mass>
+          <inertia>
+            <ixx>0.00429793</ixx>
+            <ixy>0</ixy>
+            <ixz>-0.000592817</ixz>
+            <iyy>0.00443784</iyy>
+            <iyz>-6.85477e-08</iyz>
+            <izz>0.000419904</izz>
+          </inertia>
+        </inertial>
+        <collision name='neck_link_collision'>
+          <pose frame=''>0.05 0 -1.03 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_neck.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='neck_link_visual'>
+          <pose frame=''>0.05 0 -1.03 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_neck.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='neck_pitch_joint' type='revolute'>
+        <child>neck_link</child>
+        <parent>chest_link</parent>
+        <axis>
+          <xyz>0 1 0</xyz>
+          <limit>
+            <lower>-0.523599</lower>
+            <upper>0.872665</upper>
+            <effort>10</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='head_link'>
+        <pose frame=''>-0.038321 -0 1.02838 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0.030149 -2e-06 -0.00035 0 -0 0</pose>
+          <mass>2</mass>
+          <inertia>
+            <ixx>0.0106536</ixx>
+            <ixy>-7.34817e-08</ixy>
+            <ixz>0.000274098</ixz>
+            <iyy>0.00398482</iyy>
+            <iyz>1.64063e-07</iyz>
+            <izz>0.00944369</izz>
+          </inertia>
+        </inertial>
+        <collision name='head_link_collision'>
+          <pose frame=''>0.038321 0 -1.18838 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_head.dae</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='head_link_visual'>
+          <pose frame=''>0.038321 0 -1.18838 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_head.dae</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <uri>__default__</uri>
+              <name>__default__</name>
+            </script>
+          </material>
+        </visual>
+        <velocity_decay/>
+        <sensor name='multicamera_sensor' type='multicamera'>
+          <always_on>1</always_on>
+          <update_rate>30</update_rate>
+          <pose frame=''>0.052167 0 -0.06748 -1.5708 -0 -1.5708</pose>
+          <camera name='left_camera'>
+            <pose frame=''>-0.0325 0 0 -1.57079 -1.57079 3.14159</pose>
+            <horizontal_fov>1.5708</horizontal_fov>
+            <image>
+              <width>640</width>
+              <height>480</height>
+            </image>
+            <clip>
+              <near>0.1</near>
+              <far>100</far>
+            </clip>
+          </camera>
+          <camera name='right_camera'>
+            <pose frame=''>0.0325 0 0 -1.57079 -1.57079 3.14159</pose>
+            <horizontal_fov>1.5708</horizontal_fov>
+            <image>
+              <width>640</width>
+              <height>480</height>
+            </image>
+            <clip>
+              <near>0.1</near>
+              <far>100</far>
+            </clip>
+          </camera>
+          <plugin name='multicamera_plugin' filename='libgazebo_yarp_multicamera.so'>
+            <yarpConfigurationFile>model://cer/conf/gazebo_cer_multicamera.ini</yarpConfigurationFile>
+          </plugin>
+        </sensor>
+        <velocity_decay/>
+        <sensor name='asus_xtion_depth' type='depth'>
+          <always_on>1</always_on>
+          <update_rate>30</update_rate>
+          <pose frame=''>0.059881 0.044487 0.04402 -1.5708 -0 -1.5708</pose>
+          <camera name='asus_xtion_depth_camera'>
+            <pose frame=''>0 0 0 -1.57079 -1.57079 3.14159</pose>
+            <horizontal_fov>1.02259</horizontal_fov>
+            <distortion>
+              <k1>0</k1>
+              <k2>0</k2>
+              <k3>0</k3>
+              <p1>0</p1>
+              <p2>0</p2>
+              <center>319.5 239.5</center>
+            </distortion>
+            <image>
+              <width>640</width>
+              <height>480</height>
+              <format>R8G8B8</format>
+            </image>
+            <clip>
+              <near>0.02</near>
+              <far>3000</far>
+            </clip>
+          </camera>
+          <plugin name='depth_camera_plugin' filename='libgazebo_yarp_depthCamera.so'>
+            <yarpConfigurationFile>model://cer/conf/gazebo_cer_depthCamera.ini</yarpConfigurationFile>
+          </plugin>
+        </sensor>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <sensor name='asus_xtion_rgb' type='camera'>
+          <always_on>1</always_on>
+          <update_rate>30</update_rate>
+          <pose frame=''>0.059881 0.018487 0.04402 -1.5708 -0 -1.5708</pose>
+          <camera name='asus_xtion_rgb_camera'>
+            <pose frame=''>0 0 0 -1.57079 -1.57079 3.14159</pose>
+            <horizontal_fov>1.02259</horizontal_fov>
+            <distortion>
+              <k1>0</k1>
+              <k2>0</k2>
+              <k3>0</k3>
+              <p1>0</p1>
+              <p2>0</p2>
+              <center>319.5 239.5</center>
+            </distortion>
+            <image>
+              <width>640</width>
+              <height>480</height>
+              <format>R8G8B8</format>
+            </image>
+            <clip>
+              <near>0.02</near>
+              <far>3000</far>
+            </clip>
+          </camera>
+          <plugin name='xtion_camera_rgb_plugin' filename='libgazebo_yarp_camera.so'>
+            <yarpConfigurationFile>model://cer/conf/gazebo_cer_xtion_camera_rgb.ini</yarpConfigurationFile>
+          </plugin>
+        </sensor>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='neck_yaw_joint' type='revolute'>
+        <child>head_link</child>
+        <parent>neck_link</parent>
+        <axis>
+          <xyz>0.173648 -0 0.984808</xyz>
+          <limit>
+            <lower>-1.39626</lower>
+            <upper>1.39626</upper>
+            <effort>10</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='r_clavicle_link'>
+        <pose frame=''>-0.04 -0.177 0.84 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <mass>0.2</mass>
+          <inertia>
+            <ixx>0.000288</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.000288</iyy>
+            <iyz>0</iyz>
+            <izz>0.000288</izz>
+          </inertia>
+        </inertial>
+        <collision name='r_clavicle_link_collision'>
+          <pose frame=''>0.04 0.177 -1 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_clavicle.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='r_clavicle_link_visual'>
+          <pose frame=''>0.04 0.177 -1 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_clavicle.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='r_shoulder_pitch_joint' type='revolute'>
+        <child>r_clavicle_link</child>
+        <parent>chest_link</parent>
+        <axis>
+          <xyz>-0 -0.970296 0.241922</xyz>
+          <limit>
+            <lower>-0.523599</lower>
+            <upper>1.5708</upper>
+            <effort>30</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='r_shoulder_link'>
+        <pose frame=''>-0.04 -0.177 0.84 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>2e-06 -0.042148 -0.06332 0 -0 0</pose>
+          <mass>0.5</mass>
+          <inertia>
+            <ixx>0.00076143</ixx>
+            <ixy>0</ixy>
+            <ixz>-2.84508e-08</ixz>
+            <iyy>0.000819748</iyy>
+            <iyz>0.000135828</iyz>
+            <izz>0.000588486</izz>
+          </inertia>
+        </inertial>
+        <collision name='r_shoulder_link_collision'>
+          <pose frame=''>0.04 0.177 -1 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_shoulder.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='r_shoulder_link_visual'>
+          <pose frame=''>0.04 0.177 -1 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_shoulder.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='r_shoulder_roll_joint' type='revolute'>
+        <child>r_shoulder_link</child>
+        <parent>r_clavicle_link</parent>
+        <axis>
+          <xyz>-1 0 0</xyz>
+          <limit>
+            <lower>-0.174533</lower>
+            <upper>1.309</upper>
+            <effort>30</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='r_upperarm_FT_sensor_link'>
+        <pose frame=''>-0.04 -0.211 0.73 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>-0.000784 0.000123 -0.042763 0 -0 0</pose>
+          <mass>0.8</mass>
+          <inertia>
+            <ixx>0.0012924</ixx>
+            <ixy>4.63196e-08</ixy>
+            <ixz>-4.45409e-05</ixz>
+            <iyy>0.00128408</iyy>
+            <iyz>1.2212e-06</iyz>
+            <izz>0.000657768</izz>
+          </inertia>
+        </inertial>
+        <collision name='r_upperarm_FT_sensor_link_collision'>
+          <pose frame=''>0.04 0.211 -0.89 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_upperarm_sensor.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <collision name='r_upperarm_FT_sensor_link_fixed_joint_lump__r_upperarm_link_collision_1'>
+          <pose frame=''>0.04 0.211 -0.89 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_upperarm.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='r_upperarm_FT_sensor_link_visual'>
+          <pose frame=''>0.04 0.211 -0.89 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_upperarm_sensor.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <visual name='r_upperarm_FT_sensor_link_fixed_joint_lump__r_upperarm_link_visual_1'>
+          <pose frame=''>0.04 0.211 -0.89 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_upperarm.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='r_shoulder_yaw_joint' type='revolute'>
+        <child>r_upperarm_FT_sensor_link</child>
+        <parent>r_shoulder_link</parent>
+        <axis>
+          <xyz>0 0 -1</xyz>
+          <limit>
+            <lower>-1.5708</lower>
+            <upper>1.5708</upper>
+            <effort>15</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='r_elbow_sphere_link'>
+        <pose frame=''>-0.04 -0.211 0.589 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <mass>0.2</mass>
+          <inertia>
+            <ixx>0.000128</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.000128</iyy>
+            <iyz>0</iyz>
+            <izz>0.000128</izz>
+          </inertia>
+        </inertial>
+        <collision name='r_elbow_sphere_link_collision'>
+          <pose frame=''>0.04 0.211 -0.749 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_elbow_sphere.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='r_elbow_sphere_link_visual'>
+          <pose frame=''>0.04 0.211 -0.749 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_elbow_sphere.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='r_elbow_joint' type='revolute'>
+        <child>r_elbow_sphere_link</child>
+        <parent>r_upperarm_FT_sensor_link</parent>
+        <axis>
+          <xyz>-0 -1 -0</xyz>
+          <limit>
+            <lower>0</lower>
+            <upper>1.74533</upper>
+            <effort>20</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='r_forearm_link'>
+        <pose frame=''>-0.04 -0.211 0.518 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>-0.000512 0.000175 -0.072511 0 -0 0</pose>
+          <mass>0.6</mass>
+          <inertia>
+            <ixx>0.00283352</ixx>
+            <ixy>0</ixy>
+            <ixz>3.15449e-05</ixz>
+            <iyy>0.00282953</iyy>
+            <iyz>-1.03787e-07</iyz>
+            <izz>0.000436673</izz>
+          </inertia>
+        </inertial>
+        <collision name='r_forearm_link_collision'>
+          <pose frame=''>0.04 0.211 -0.678 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_forearm.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='r_forearm_link_visual'>
+          <pose frame=''>0.04 0.211 -0.678 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_forearm.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='r_wrist_pronosupination_joint' type='revolute'>
+        <child>r_forearm_link</child>
+        <parent>r_elbow_sphere_link</parent>
+        <axis>
+          <xyz>-0 0 -1</xyz>
+          <limit>
+            <lower>-1.5708</lower>
+            <upper>1.5708</upper>
+            <effort>10</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='r_wrist_slider_eq_link'>
+        <pose frame=''>-0.04 -0.211 0.589 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0 5.9e-05 -0.225759 0 -0 0</pose>
+          <mass>0.3</mass>
+          <inertia>
+            <ixx>0.00094001</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.000940012</iyy>
+            <iyz>0</iyz>
+            <izz>0.00022094</izz>
+          </inertia>
+        </inertial>
+        <collision name='r_wrist_slider_eq_link_collision'>
+          <pose frame=''>0.04 0.211 -0.749 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_wrist_slider.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='r_wrist_slider_eq_link_visual'>
+          <pose frame=''>0.04 0.211 -0.749 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_wrist_slider.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='r_wrist_heave_eq_joint' type='prismatic'>
+        <child>r_wrist_slider_eq_link</child>
+        <parent>r_forearm_link</parent>
+        <axis>
+          <xyz>-0 0 -1</xyz>
+          <limit>
+            <lower>0</lower>
+            <upper>0.13</upper>
+            <effort>200</effort>
+            <velocity>0.25</velocity>
+          </limit>
+          <dynamics>
+            <damping>100</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='r_wrist_cup_eq_link'>
+        <pose frame=''>-0.072 -0.211 0.298 0 -0 1.5708</pose>
+        <inertial>
+          <pose frame=''>-1.1e-05 -0.031941 -0.018146 0 -0 0</pose>
+          <mass>0.2</mass>
+          <inertia>
+            <ixx>0.000102239</ixx>
+            <ixy>0</ixy>
+            <ixz>3.78925e-08</ixz>
+            <iyy>0.000102239</iyy>
+            <iyz>0</iyz>
+            <izz>0.000163555</izz>
+          </inertia>
+        </inertial>
+        <collision name='r_wrist_cup_eq_link_collision'>
+          <pose frame=''>0.04 0.179 -0.458 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_wrist_cup_eq.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='r_wrist_cup_eq_link_visual'>
+          <pose frame=''>0.04 0.179 -0.458 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_wrist_cup_eq.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='r_wrist_roll_eq_joint' type='revolute'>
+        <child>r_wrist_cup_eq_link</child>
+        <parent>r_wrist_slider_eq_link</parent>
+        <axis>
+          <xyz>-1 0 0</xyz>
+          <limit>
+            <lower>-0.523599</lower>
+            <upper>0.523599</upper>
+            <effort>10</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='r_hand_root_link'>
+        <pose frame=''>-0.04 -0.211 0.298 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0.000191 0.013614 -0.06234 0 -0 0</pose>
+          <mass>0.3</mass>
+          <inertia>
+            <ixx>0.000294522</ixx>
+            <ixy>-1.41036e-06</ixy>
+            <ixz>6.91732e-08</ixz>
+            <iyy>0.000297774</iyy>
+            <iyz>2.11461e-05</iyz>
+            <izz>0.000189897</izz>
+          </inertia>
+        </inertial>
+        <collision name='r_hand_root_link_collision'>
+          <pose frame=''>0.04 0.211 -0.458 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_hand_root.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='r_hand_root_link_visual'>
+          <pose frame=''>0.04 0.211 -0.458 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_hand_root.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='r_wrist_pitch_eq_joint' type='revolute'>
+        <child>r_hand_root_link</child>
+        <parent>r_wrist_cup_eq_link</parent>
+        <axis>
+          <xyz>-0 -1 -0</xyz>
+          <limit>
+            <lower>-0.523599</lower>
+            <upper>0.523599</upper>
+            <effort>10</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='r_hand_paddle_proximal_link'>
+        <pose frame=''>-0.04 -0.198143 0.185494 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>-9.7e-05 -0.010867 -0.022258 0 -0 0</pose>
+          <mass>0.05</mass>
+          <inertia>
+            <ixx>0.0001</ixx>
+            <ixy>6.93652e-09</ixy>
+            <ixz>1.75564e-08</ixz>
+            <iyy>0.0001</iyy>
+            <iyz>-1.81901e-06</iyz>
+            <izz>0.0001</izz>
+          </inertia>
+        </inertial>
+        <collision name='r_hand_paddle_proximal_link_collision'>
+          <pose frame=''>0.04 0.198143 -0.345494 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_hand_paddle_proximal.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='r_hand_paddle_proximal_link_visual'>
+          <pose frame=''>0.04 0.198143 -0.345494 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_hand_paddle_proximal.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='r_hand_paddle_proximal_joint' type='revolute'>
+        <child>r_hand_paddle_proximal_link</child>
+        <parent>r_hand_root_link</parent>
+        <axis>
+          <xyz>1 0 -0</xyz>
+          <limit>
+            <lower>0</lower>
+            <upper>1.22173</upper>
+            <effort>5</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='r_hand_paddle_distal_link'>
+        <pose frame=''>-0.04 -0.214471 0.146748 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0.001321 -0.005592 -0.020601 0 -0 0</pose>
+          <mass>0.05</mass>
+          <inertia>
+            <ixx>0.0001</ixx>
+            <ixy>1.94983e-07</ixy>
+            <ixz>9.0126e-07</ixz>
+            <iyy>0.0001</iyy>
+            <iyz>-6.79853e-07</iyz>
+            <izz>0.0001</izz>
+          </inertia>
+        </inertial>
+        <collision name='r_hand_paddle_distal_link_collision'>
+          <pose frame=''>0.04 0.214471 -0.306748 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_hand_paddle_distal.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='r_hand_paddle_distal_link_visual'>
+          <pose frame=''>0.04 0.214471 -0.306748 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_hand_paddle_distal.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='r_hand_paddle_distal_joint' type='revolute'>
+        <child>r_hand_paddle_distal_link</child>
+        <parent>r_hand_paddle_proximal_link</parent>
+        <axis>
+          <xyz>1 0 -0</xyz>
+          <limit>
+            <lower>0</lower>
+            <upper>1.22173</upper>
+            <effort>5</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='r_hand_thumb_proximal_link'>
+        <pose frame=''>-0.04 -0.171352 0.222282 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0.002515 0.017936 -0.003159 0 -0 0</pose>
+          <mass>0.05</mass>
+          <inertia>
+            <ixx>0.0001</ixx>
+            <ixy>1.49367e-09</ixy>
+            <ixz>3.12525e-10</ixz>
+            <iyy>0.0001</iyy>
+            <iyz>2.63475e-06</iyz>
+            <izz>0.0001</izz>
+          </inertia>
+        </inertial>
+        <collision name='r_hand_thumb_proximal_link_collision'>
+          <pose frame=''>0.04 0.171352 -0.382282 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_hand_thumb_proximal.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='r_hand_thumb_proximal_link_visual'>
+          <pose frame=''>0.04 0.171352 -0.382282 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_hand_thumb_proximal.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='r_hand_thumb_proximal_joint' type='revolute'>
+        <child>r_hand_thumb_proximal_link</child>
+        <parent>r_hand_root_link</parent>
+        <axis>
+          <xyz>-1 -0 0</xyz>
+          <limit>
+            <lower>0</lower>
+            <upper>1.0472</upper>
+            <effort>5</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='r_hand_thumb_distal_link'>
+        <pose frame=''>-0.04 -0.130827 0.211296 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0.002448 0.014529 -0.005865 0 -0 0</pose>
+          <mass>0.05</mass>
+          <inertia>
+            <ixx>3.85163e-06</ixx>
+            <ixy>-1.50194e-10</ixy>
+            <ixz>4.04682e-10</ixz>
+            <iyy>7.40388e-06</iyy>
+            <iyz>9.14021e-07</iyz>
+            <izz>8.52416e-06</izz>
+          </inertia>
+        </inertial>
+        <collision name='r_hand_thumb_distal_link_collision'>
+          <pose frame=''>0.04 0.130827 -0.371296 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_hand_thumb_distal.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='r_hand_thumb_distal_link_visual'>
+          <pose frame=''>0.04 0.130827 -0.371296 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>model://cer/meshes/dae/sim_cer_r_hand_thumb_distal.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='r_hand_thumb_distal_joint' type='revolute'>
+        <child>r_hand_thumb_distal_link</child>
+        <parent>r_hand_thumb_proximal_link</parent>
+        <axis>
+          <xyz>-1 -0 0</xyz>
+          <limit>
+            <lower>0</lower>
+            <upper>1.22173</upper>
+            <effort>5</effort>
+            <velocity>3.14</velocity>
+          </limit>
+          <dynamics>
+            <damping>10</damping>
+            <friction>0</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <ode>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <plugin name='controlboard_torso' filename='libgazebo_yarp_controlboard.so'>
+        <yarpConfigurationFile>model://cer/conf/gazebo_cer_torso.ini</yarpConfigurationFile>
+      </plugin>
+      <plugin name='controlboard_torso_tripod' filename='libgazeboTripod.so'>
+        <yarpConfigurationFile>model://cer/conf/gazebo_cer_torso_tripod.ini</yarpConfigurationFile>
+      </plugin>
+      <plugin name='controlboard_left_upper_arm' filename='libgazebo_yarp_controlboard.so'>
+        <yarpConfigurationFile>model://cer/conf/gazebo_cer_left_upper_arm.ini</yarpConfigurationFile>
+      </plugin>
+      <plugin name='controlboard_left_wrist' filename='libgazebo_yarp_controlboard.so'>
+        <yarpConfigurationFile>model://cer/conf/gazebo_cer_left_wrist.ini</yarpConfigurationFile>
+      </plugin>
+      <plugin name='controlboard_left_wrist_tripod' filename='libgazeboTripod.so'>
+        <yarpConfigurationFile>model://cer/conf/gazebo_cer_left_wrist_tripod.ini</yarpConfigurationFile>
+      </plugin>
+      <plugin name='controlboard_right_upper_arm' filename='libgazebo_yarp_controlboard.so'>
+        <yarpConfigurationFile>model://cer/conf/gazebo_cer_right_upper_arm.ini</yarpConfigurationFile>
+      </plugin>
+      <plugin name='controlboard_right_wrist' filename='libgazebo_yarp_controlboard.so'>
+        <yarpConfigurationFile>model://cer/conf/gazebo_cer_right_wrist.ini</yarpConfigurationFile>
+      </plugin>
+      <plugin name='controlboard_right_wrist_tripod' filename='libgazeboTripod.so'>
+        <yarpConfigurationFile>model://cer/conf/gazebo_cer_right_wrist_tripod.ini</yarpConfigurationFile>
+      </plugin>
+      <plugin name='controlboard_right_arm' filename='libgazebo_yarp_controlboard.so'>
+        <yarpConfigurationFile>model://cer/conf/gazebo_cer_right_arm.ini</yarpConfigurationFile>
+      </plugin>
+      <plugin name='controlboard_left_arm' filename='libgazebo_yarp_controlboard.so'>
+        <yarpConfigurationFile>model://cer/conf/gazebo_cer_left_arm.ini</yarpConfigurationFile>
+      </plugin>
+      <plugin name='controlboard_head' filename='libgazebo_yarp_controlboard.so'>
+        <yarpConfigurationFile>model://cer/conf/gazebo_cer_head.ini</yarpConfigurationFile>
+      </plugin>
+      <plugin name='controlboard_left_hand' filename='libgazebo_yarp_controlboard.so'>
+        <yarpConfigurationFile>model://cer/conf/gazebo_cer_left_hand.ini</yarpConfigurationFile>
+      </plugin>
+      <plugin name='controlboard_right_hand' filename='libgazebo_yarp_controlboard.so'>
+        <yarpConfigurationFile>model://cer/conf/gazebo_cer_right_hand.ini</yarpConfigurationFile>
+      </plugin>
+      <plugin name='mais_left_hand' filename='libgazebo_yarp_maissensor.so'>
+        <yarpConfigurationFile>model://cer/conf/gazebo_cer_left_hand_mais.ini</yarpConfigurationFile>
+      </plugin>
+      <plugin name='mais_right_hand' filename='libgazebo_yarp_maissensor.so'>
+        <yarpConfigurationFile>model://cer/conf/gazebo_cer_right_hand_mais.ini</yarpConfigurationFile>
+      </plugin>
+      <plugin name='controlboard_mobile_base' filename='libgazebo_yarp_controlboard.so'>
+        <yarpConfigurationFile>model://cer/conf/gazebo_cer_mobile_base.ini</yarpConfigurationFile>
+      </plugin>
+      <plugin name='controlboard_all' filename='libgazebo_yarp_controlboard.so'>
+        <yarpConfigurationFile>model://cer/conf/gazebo_cer_all.ini</yarpConfigurationFile>
+      </plugin>
+      <plugin name='world_interface' filename='libgazebo_yarp_worldinterface.so'>
+        <yarpConfigurationFile>model://cer/conf/worldInterface.ini</yarpConfigurationFile>
+      </plugin>
+      <static>0</static>
+      <pose frame=''>2.01144 -1.05759 0.16 0 -0 0</pose>
+    </model>
+    <state world_name='default'>
+      <sim_time>88 31000000</sim_time>
+      <real_time>89 384453090</real_time>
+      <wall_time>1557914121 172463680</wall_time>
+      <iterations>88031</iterations>
+      <model name='SIM_CER_ROBOT'>
+        <pose frame=''>2.01485 -1.01115 0.159995 -1e-06 0.008415 1.57807</pose>
+        <scale>1 1 1</scale>
+        <link name='chest_link'>
+          <pose frame=''>2.0145 -0.963199 0.629602 1e-06 0.007517 1.57807</pose>
+          <velocity>-0.000353 -0.001638 -0.002872 -0.012186 0.000589 0.000468</velocity>
+          <acceleration>0.023706 0.409703 -8.49624 0.677565 1.19464 0.934848</acceleration>
+          <wrench>0.308181 5.32614 -110.451 0 -0 0</wrench>
+        </link>
+        <link name='head_link'>
+          <pose frame=''>2.01507 -1.0412 1.18858 2e-06 0.008246 1.57807</pose>
+          <velocity>-3.9e-05 -0.000118 -0.00138 0.021313 0.000541 0.000504</velocity>
+          <acceleration>-0.117842 -0.532791 -5.86089 0.608506 0.268911 0.468613</acceleration>
+          <wrench>-0.235684 -1.06558 -11.7218 0 -0 0</wrench>
+        </link>
+        <link name='l_clavicle_link'>
+          <pose frame=''>1.8381 -1.0457 1.00022 9e-06 0.007518 1.57807</pose>
+          <velocity>4.4e-05 0.002717 -0.000707 -0.010901 0.000493 0.002014</velocity>
+          <acceleration>0.286318 3.22211 -5.13689 1.35669 -1.07973 0.18655</acceleration>
+          <wrench>0.057264 0.644422 -1.02738 0 -0 0</wrench>
+        </link>
+        <link name='l_elbow_sphere_link'>
+          <pose frame=''>1.80415 -1.04784 0.749221 -8.4e-05 0.007515 1.57807</pose>
+          <velocity>-0.000666 0.000247 -0.000146 0.003725 -0.003053 -0.000958</velocity>
+          <acceleration>-2.10115 -2.20357 -3.78067 -1.81681 -0.423828 0.497582</acceleration>
+          <wrench>-0.42023 -0.440713 -0.756134 0 -0 0</wrench>
+        </link>
+        <link name='l_forearm_link'>
+          <pose frame=''>1.80417 -1.04837 0.678224 -9.4e-05 0.007513 1.57807</pose>
+          <velocity>-0.000334 0.000575 -0.000259 0.003867 -0.003548 -0.002577</velocity>
+          <acceleration>-0.845229 -1.08533 -4.03846 1.52023 0.639866 0.338948</acceleration>
+          <wrench>-0.507137 -0.651196 -2.42307 0 -0 0</wrench>
+        </link>
+        <link name='l_hand_paddle_distal_link'>
+          <pose frame=''>1.80074 -1.0512 0.305019 -6.7e-05 0.007511 1.57807</pose>
+          <velocity>-0.000251 0.000416 0.000297 -0.005341 0.002866 -0.004315</velocity>
+          <acceleration>0.232891 1.26883 -0.06514 -0.547709 1.56782 0.161781</acceleration>
+          <wrench>0.011645 0.063441 -0.003257 0 -0 0</wrench>
+        </link>
+        <link name='l_hand_paddle_proximal_link'>
+          <pose frame=''>1.81706 -1.05079 0.343765 -5.9e-05 0.007511 1.57807</pose>
+          <velocity>-0.000146 0.000548 0.000251 -0.005546 0.003065 -0.004294</velocity>
+          <acceleration>0.262908 1.1305 -0.074708 -0.925549 1.30923 -2.42881</acceleration>
+          <wrench>0.013145 0.056525 -0.003735 0 -0 0</wrench>
+        </link>
+        <link name='l_hand_root_link'>
+          <pose frame=''>1.8042 -1.05004 0.456268 -1e-06 0.007511 1.57807</pose>
+          <velocity>0.00016 0.001201 0.000267 -0.005315 0.002729 -0.004288</velocity>
+          <acceleration>0.341266 0.913491 -0.123613 1.60589 0.317665 -2.20531</acceleration>
+          <wrench>0.10238 0.274047 -0.037084 0 -0 0</wrench>
+        </link>
+        <link name='l_hand_thumb_distal_link'>
+          <pose frame=''>1.88437 -1.04985 0.36956 0.000154 0.007512 1.57807</pose>
+          <velocity>-3.8e-05 0.000409 0.000104 -0.004495 0.00189 -0.004624</velocity>
+          <acceleration>0.400263 0.759716 -0.060276 -2.69574 -0.570816 2.17429</acceleration>
+          <wrench>0.020013 0.037986 -0.003014 0 -0 0</wrench>
+        </link>
+        <link name='l_hand_thumb_proximal_link'>
+          <pose frame=''>1.84385 -1.05032 0.380552 0.000128 0.007512 1.57807</pose>
+          <velocity>-2.8e-05 0.000639 0.000181 -0.004574 0.001981 -0.004697</velocity>
+          <acceleration>0.376548 0.830146 -0.089533 -2.54124 -0.346835 1.07857</acceleration>
+          <wrench>0.018827 0.041507 -0.004477 0 -0 0</wrench>
+        </link>
+        <link name='l_shoulder_link'>
+          <pose frame=''>1.8381 -1.0457 1.00022 -0.000143 0.00752 1.57807</pose>
+          <velocity>0.000224 0.002629 -0.000422 -0.009401 0.002036 0.000667</velocity>
+          <acceleration>0.199643 1.60546 -4.15357 -0.737475 -0.359824 0.017493</acceleration>
+          <wrench>0.099822 0.802729 -2.07678 0 -0 0</wrench>
+        </link>
+        <link name='l_upperarm_FT_sensor_link'>
+          <pose frame=''>1.80412 -1.04678 0.890218 -0.000141 0.007521 1.57807</pose>
+          <velocity>-0.000365 0.001509 -0.00041 -0.008833 0.001853 -0.000277</velocity>
+          <acceleration>-1.28843 -0.265221 -4.34993 1.10025 0.24516 -1.1776</acceleration>
+          <wrench>-1.03075 -0.212177 -3.47994 0 -0 0</wrench>
+        </link>
+        <link name='l_wrist_cup_eq_link'>
+          <pose frame=''>1.80443 -1.08203 0.456508 0 0.007508 1.57807</pose>
+          <velocity>0.000275 0.001408 0.000346 -0.001677 0.004161 -0.004205</velocity>
+          <acceleration>0.773772 1.13704 -0.066152 -1.75063 -0.115477 -2.9702</acceleration>
+          <wrench>0.154754 0.227407 -0.01323 0 -0 0</wrench>
+        </link>
+        <link name='l_wrist_slider_eq_link'>
+          <pose frame=''>1.80415 -1.04785 0.74726 -9.3e-05 0.007513 1.57807</pose>
+          <velocity>-0.000364 0.000485 0.000474 0.003117 -0.002586 -0.003056</velocity>
+          <acceleration>0.142317 0.109603 0.054269 -2.33073 0.891423 -1.39583</acceleration>
+          <wrench>0.042695 0.032881 0.016281 0 -0 0</wrench>
+        </link>
+        <link name='mobile_base_body_link'>
+          <pose frame=''>2.01485 -1.01115 0.159995 -1e-06 0.008415 1.57807</pose>
+          <velocity>-0.000117 0.001087 -0.004582 0.005686 -0.000626 -0.001087</velocity>
+          <acceleration>-0.003469 0.651424 -12.3908 -2.534 -0.272458 -2.79075</acceleration>
+          <wrench>-0.048564 9.11994 -173.471 0 -0 0</wrench>
+        </link>
+        <link name='mobile_base_l_tyre_link'>
+          <pose frame=''>1.87586 -1.01216 0.159995 -2e-06 0.008377 1.57807</pose>
+          <velocity>-0.000145 0.001221 -0.004869 -0.000702 -0.000242 -0.001102</velocity>
+          <acceleration>-0.043548 1.34729 -12.8059 -1.30391 0.754966 -0.339022</acceleration>
+          <wrench>-0.130644 4.04187 -38.4176 0 -0 0</wrench>
+        </link>
+        <link name='mobile_base_r_tyre_link'>
+          <pose frame=''>2.15385 -1.01014 0.159995 -2e-06 0.008376 1.57807</pose>
+          <velocity>-0.000139 0.00093 -0.004654 0.001035 -0.000228 -0.001004</velocity>
+          <acceleration>-0.036777 1.27082 -12.7558 -1.30161 0.757252 -0.131115</acceleration>
+          <wrench>-0.11033 3.81246 -38.2675 0 -0 0</wrench>
+        </link>
+        <link name='neck_link'>
+          <pose frame=''>2.01517 -1.05419 1.0303 2e-06 0.008247 1.57807</pose>
+          <velocity>-0.000123 0.003236 -0.001637 0.02156 0.00056 0.000674</velocity>
+          <acceleration>-0.121732 1.65802 -7.03388 -1.04584 1.49706 -1.87459</acceleration>
+          <wrench>-0.170425 2.32123 -9.84743 0 -0 0</wrench>
+        </link>
+        <link name='r_clavicle_link'>
+          <pose frame=''>2.19209 -1.04313 1.00022 -5e-06 0.007521 1.57807</pose>
+          <velocity>-5.1e-05 0.002959 -0.002216 -0.0105 0.000314 0.001909</velocity>
+          <acceleration>0.100876 3.25306 -8.02641 1.88017 -0.856856 0.886512</acceleration>
+          <wrench>0.020175 0.650611 -1.60528 0 -0 0</wrench>
+        </link>
+        <link name='r_elbow_sphere_link'>
+          <pose frame=''>2.22607 -1.04477 0.749221 0.000148 0.007509 1.57807</pose>
+          <velocity>0.000646 0.001517 -0.000486 -0.013038 -0.003807 0.002231</velocity>
+          <acceleration>2.24908 -0.692504 -4.09609 -3.05906 0.247013 0.651977</acceleration>
+          <wrench>0.449817 -0.138501 -0.819218 0 -0 0</wrench>
+        </link>
+        <link name='r_forearm_link'>
+          <pose frame=''>2.22606 -1.0453 0.678222 0.000101 0.007525 1.57808</pose>
+          <velocity>0.000169 0.001047 -2.7e-05 -0.000376 0.003658 0.007431</velocity>
+          <acceleration>0.587132 -0.744093 -3.09146 0.094077 0.010734 2.75908</acceleration>
+          <wrench>0.352279 -0.446456 -1.85488 0 -0 0</wrench>
+        </link>
+        <link name='r_hand_paddle_distal_link'>
+          <pose frame=''>2.22953 -1.04808 0.305015 7.4e-05 0.007512 1.57808</pose>
+          <velocity>0.000423 0.000107 0.000381 -0.005434 -0.003436 0.008133</velocity>
+          <acceleration>0.262266 0.558167 0.114409 3.04466 0.402985 -0.025607</acceleration>
+          <wrench>0.013113 0.027908 0.00572 0 -0 0</wrench>
+        </link>
+        <link name='r_hand_paddle_proximal_link'>
+          <pose frame=''>2.2132 -1.04791 0.343761 6.5e-05 0.007512 1.57808</pose>
+          <velocity>0.000296 0.000182 0.000326 -0.005636 -0.003758 0.008073</velocity>
+          <acceleration>0.17849 0.44552 0.091865 2.5029 0.957573 -2.48606</acceleration>
+          <wrench>0.008925 0.022276 0.004593 0 -0 0</wrench>
+        </link>
+        <link name='r_hand_root_link'>
+          <pose frame=''>2.22605 -1.04697 0.456264 6e-06 0.007514 1.57808</pose>
+          <velocity>-6e-05 0.000845 0.000312 -0.004366 -0.002045 0.008353</velocity>
+          <acceleration>-0.147698 0.367854 -0.030332 2.46719 1.29625 -0.784939</acceleration>
+          <wrench>-0.04431 0.110356 -0.0091 0 -0 0</wrench>
+        </link>
+        <link name='r_hand_thumb_distal_link'>
+          <pose frame=''>2.14589 -1.04821 0.369557 -0.000137 0.007513 1.57808</pose>
+          <velocity>0.00019 -0.000227 9.4e-05 -0.004606 -0.002061 0.008455</velocity>
+          <acceleration>-0.041946 -0.435225 -0.144008 -2.15593 0.638917 -2.21568</acceleration>
+          <wrench>-0.002097 -0.021761 -0.0072 0 -0 0</wrench>
+        </link>
+        <link name='r_hand_thumb_proximal_link'>
+          <pose frame=''>2.18641 -1.04783 0.380548 -0.000119 0.007513 1.57808</pose>
+          <velocity>0.000118 0.000176 0.000228 -0.004513 -0.00227 0.008415</velocity>
+          <acceleration>-0.134486 -0.061084 -0.050101 1.3391 -0.323726 2.11953</acceleration>
+          <wrench>-0.006724 -0.003054 -0.002505 0 -0 0</wrench>
+        </link>
+        <link name='r_shoulder_link'>
+          <pose frame=''>2.19209 -1.04313 1.00022 0.000165 0.007525 1.57807</pose>
+          <velocity>-0.00107 0.002955 -0.001435 -0.007164 -0.013379 -9.8e-05</velocity>
+          <acceleration>-0.121181 1.84904 -4.92955 -2.65976 0.026939 0.362554</acceleration>
+          <wrench>-0.060591 0.92452 -2.46477 0 -0 0</wrench>
+        </link>
+        <link name='r_upperarm_FT_sensor_link'>
+          <pose frame=''>2.22608 -1.04371 0.890217 0.000143 0.007527 1.57807</pose>
+          <velocity>0.000117 0.002223 -0.000583 -0.005371 -0.004898 0.002051</velocity>
+          <acceleration>1.30799 0.578329 -4.30046 -2.91578 -0.602658 -1.78011</acceleration>
+          <wrench>1.04639 0.462663 -3.44036 0 -0 0</wrench>
+        </link>
+        <link name='r_wrist_cup_eq_link'>
+          <pose frame=''>2.22629 -1.07897 0.456505 0.007524 -1e-05 -3.13431</pose>
+          <velocity>-6.8e-05 0.00095 0.000336 3e-05 0.003688 0.008086</velocity>
+          <acceleration>-0.851408 0.703007 0.004732 -0.719554 -1.15032 -2.88419</acceleration>
+          <wrench>-0.170282 0.140601 0.000946 0 -0 0</wrench>
+        </link>
+        <link name='r_wrist_slider_eq_link'>
+          <pose frame=''>2.22607 -1.04478 0.747256 0.0001 0.007525 1.57808</pose>
+          <velocity>0.000364 0.001043 0.000393 -0.000104 0.003379 0.007385</velocity>
+          <acceleration>-0.414985 0.031121 0.02311 2.51327 -0.987224 -0.666671</acceleration>
+          <wrench>-0.124495 0.009336 0.006933 0 -0 0</wrench>
+        </link>
+        <link name='torso_pin_eq_link'>
+          <pose frame=''>2.0145 -0.963199 0.629607 -3.14159 0.008452 1.57807</pose>
+          <velocity>-0.000355 -0.001597 -0.004161 0.009379 -0.000543 -0.00108</velocity>
+          <acceleration>0.03747 -3.72586 -12.0373 -0.519681 -0.119422 -0.120263</acceleration>
+          <wrench>0.056205 -5.58878 -18.056 0 -0 0</wrench>
+        </link>
+        <link name='torso_platform_link'>
+          <pose frame=''>2.0145 -0.963199 0.629605 1e-06 0.007635 1.57807</pose>
+          <velocity>-0.000354 -0.001598 -0.003623 -0.000377 0.000391 -0.001121</velocity>
+          <acceleration>0.035578 -3.75719 -10.8144 -0.223757 -0.218 -0.344196</acceleration>
+          <wrench>0.053366 -5.63579 -16.2216 0 -0 0</wrench>
+        </link>
+        <link name='torso_slider_eq_link'>
+          <pose frame=''>2.01453 -0.966557 0.230621 -1e-06 0.008417 1.57807</pose>
+          <velocity>-0.000114 0.000774 -0.004107 0.005985 -0.000615 -0.00109</velocity>
+          <acceleration>0.031102 -1.99291 -11.7132 -1.1106 0.030324 0.675457</acceleration>
+          <wrench>0.233262 -14.9468 -87.8492 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='ground_plane'>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <light name='sun'>
+        <pose frame=''>0 0 10 0 -0 0</pose>
+      </light>
+    </state>
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose frame=''>1.87519 4.17655 1.50984 -0 0.239643 -1.57499</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+  </world>
+</sdf>

@@ -1,0 +1,285 @@
+<application>
+<name>Assistive Rehabilitation Virtual App</name>
+
+    <module>
+        <name>gazebo</name>
+        <workdir>$ENV{ROBOT_CODE}/assistive-rehab/app/conf</workdir>
+        <parameters>virtual-scenario.sdf</parameters>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdev</name>
+        <parameters>--device speech --lingware-context speech --default-language it-IT --robot r1 --pitch 80 --speed 110</parameters>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdev</name>
+        <parameters>--context AssistiveRehab --from realsense2.ini</parameters>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>iSpeak</name>
+        <parameters>--package speech-dev</parameters>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpOpenPose</name>
+        <parameters></parameters>
+        <node>localhost</node>
+    </module>
+
+    <module>
+       <name>objectsPropertiesCollector</name>
+       <parameters>--name opc --no-load-db --no-save-db --sync-bc 0.1</parameters>
+       <node>localhost</node>
+    </module>
+
+    <module>
+       <name>skeletonRetriever</name>
+       <parameters></parameters>
+       <node>localhost</node>
+    </module>
+
+    <module>
+       <name>attentionManager</name>
+       <parameters></parameters>
+       <node>localhost</node>
+    </module>
+
+    <module>
+       <name>cer_gaze-controller</name>
+       <parameters>--robot SIM_CER_ROBOT --cameras::context cameraCalibration --cameras::file cerEyes_320x240.ini --joints-limits::pitch "(-20.0 20.0)" --joints-limits::yaw "(-40.0 40.0)"</parameters>
+       <ensure>
+          <wait when="stop">3</wait>
+       </ensure>
+       <node>localhost</node>
+    </module>
+
+    <module>
+       <name>motionAnalyzer</name>
+       <parameters>--from motion-repertoire-abductionleft.ini</parameters>
+       <node>localhost</node>
+    </module>
+
+    <module>
+       <name>skeletonPlayer</name>
+       <parameters></parameters>
+       <node>localhost</node>
+    </module>
+
+    <module>
+       <name>skeletonScaler</name>
+       <node>localhost</node>
+    </module>
+
+    <module>
+       <name>feedbackProducer</name>
+       <node>localhost</node>
+    </module>
+
+    <module>
+       <name>actionRecognizer</name>
+       <node>localhost</node>
+    </module>
+
+    <module>
+       <name>feedbackSynthetizer</name>
+       <node>localhost</node>
+    </module>
+
+    <module>
+        <name>interactionManager</name>
+        <parameters></parameters>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>ctpService</name>
+        <parameters>--robot SIM_CER_ROBOT --part right_arm</parameters>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>ctpService</name>
+        <parameters>--robot SIM_CER_ROBOT --part left_arm</parameters>
+        <node>localhost</node>
+    </module>
+
+    <connection>
+        <from>/iSpeak/speech-dev/rpc</from>
+        <to>/r1/speech:rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/depthCamera/rgbImage:o</from>
+        <to>/yarpOpenPose/image:i</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/depthCamera/depthImage:o</from>
+        <to>/yarpOpenPose/float:i</to>
+        <protocol>fast_tcp+send.portmonitor+file.zfp+recv.portmonitor+file.zfp+type.dll</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/float:o</from>
+        <to>/skeletonRetriever/depth:i</to>
+        <protocol>fast_tcp+send.portmonitor+file.zfp+recv.portmonitor+file.zfp+type.dll</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonRetriever/cam:rpc</from>
+        <to>/depthCamera/rpc:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/target:o</from>
+        <to>/skeletonRetriever/skeletons:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonRetriever/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/opc/broadcast:o</from>
+        <to>/attentionManager/opc:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/attentionManager/gaze/cmd:rpc</from>
+        <to>/cer_gaze-controller/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer_gaze-controller/state:o</from>
+        <to>/attentionManager/gaze/state:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/motionAnalyzer/opc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/motionAnalyzer/scaler:cmd</from>
+        <to>/skeletonScaler/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/motionAnalyzer/dtw:cmd</from>
+        <to>/feedbackProducer/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/motionAnalyzer/action:cmd</from>
+        <to>/actionRecognizer/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonPlayer/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonScaler/opc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonScaler/player:rpc</from>
+        <to>/skeletonPlayer/cmd:rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/feedbackProducer/opc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/feedbackProducer/analyzer:rpc</from>
+        <to>/motionAnalyzer/cmd</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/feedbackProducer:o</from>
+        <to>/feedbackSynthetizer/dtw:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/actionRecognizer/opc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/actionRecognizer/target:o</from>
+        <to>/feedbackProducer/action:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/feedbackSynthetizer/speech:o</from>
+        <to>/iSpeak</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/feedbackSynthetizer/score:o</from>
+        <to>/interactionManager/synthetizer:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/interactionManager/attention:rpc</from>
+        <to>/attentionManager/cmd:rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/interactionManager/analyzer:rpc</from>
+        <to>/motionAnalyzer/cmd</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/interactionManager/gazebo:rpc</from>
+        <to>/world_input_port</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/interactionManager/speech:o</from>
+        <to>/iSpeak</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/interactionManager/speech:rpc</from>
+        <to>/iSpeak/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+</application>
