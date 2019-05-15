@@ -1,238 +1,139 @@
 #!/bin/bash
 
-COUNT=0
 TIME=2.5
 SLEEP=2.5
-NREP_SHOW=2
-NREP_PERFORM=7
 
 #########################
 #    ABDUCTION LEFT     #
 #########################
+startingpos_abduction_left() {
+    
+    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 15.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/left_arm/rpc
+}
+
 abduction_left() {
     
-    NREP=$1
-    while [  $COUNT -lt $NREP ]; do
-        echo "ctpq time $TIME off 1 pos (70.0)" | yarp rpc /ctpservice/left_arm/rpc
-        sleep $SLEEP
-        echo "ctpq time $TIME off 1 pos (16.5)" | yarp rpc /ctpservice/left_arm/rpc
-        sleep $SLEEP    
-        COUNT=$((COUNT+1)) 
-    done
-    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 15.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/left_arm/rpc
-}
-
-show_abduction_left() {
-
-    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 15.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/left_arm/rpc
-    sleep 1.0
-    abduction_left $NREP_SHOW
-}
-
-perform_abduction_left() {
-
-    abduction_left $NREP_PERFORM
+    echo "ctpq time $TIME off 1 pos (70.0)" | yarp rpc /ctpservice/left_arm/rpc
+    sleep $SLEEP
+    echo "ctpq time $TIME off 1 pos (16.5)" | yarp rpc /ctpservice/left_arm/rpc
+    sleep $SLEEP    
 }
 
 #########################
 #    ABDUCTION RIGHT    #
 #########################
+startingpos_abduction_right() {
+
+    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 15.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/right_arm/rpc
+}
+
 abduction_right() {
 
-    NREP=$1
-    while [  $COUNT -lt $NREP ]; do
-        echo "ctpq time $TIME off 1 pos (85.0)" | yarp rpc /ctpservice/right_arm/rpc
-        sleep $SLEEP
-        echo "ctpq time $TIME off 1 pos (16.5)" | yarp rpc /ctpservice/right_arm/rpc
-        sleep $SLEEP    
-        COUNT=$((COUNT+1)) 
-    done
-    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 15.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/right_arm/rpc
-}
-
-show_abduction_right() {
-
-    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 15.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/right_arm/rpc
-    sleep 1.0
-    abduction_right $NREP_SHOW
-}
-
-perform_abduction_right() {
-
-    abduction_right $NREP_PERFORM
+    echo "ctpq time $TIME off 1 pos (85.0)" | yarp rpc /ctpservice/right_arm/rpc
+    sleep $SLEEP
+    echo "ctpq time $TIME off 1 pos (16.5)" | yarp rpc /ctpservice/right_arm/rpc
+    sleep $SLEEP    
 }
 
 ##################################
 #    EXTERNAL ROTATION  LEFT     #
 ##################################
+startingpos_external_rotation_left() {
+    
+    echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 80.0)" | yarp rpc /ctpservice/left_arm/rpc
+}
 external_rotation_left() {
 
-    NREP=$1   
+    echo "ctpq time $TIME off 0 pos (80.0 83.0 0.0 80.0)" | yarp rpc /ctpservice/left_arm/rpc
+    sleep $SLEEP
     echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 80.0)" | yarp rpc /ctpservice/left_arm/rpc
-    sleep 1.0
-    while [  $COUNT -lt $NREP ]; do
-        echo "ctpq time $TIME off 0 pos (80.0 83.0 0.0 80.0)" | yarp rpc /ctpservice/left_arm/rpc
-        sleep $SLEEP
-        echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 80.0)" | yarp rpc /ctpservice/left_arm/rpc
-        sleep $SLEEP
-        COUNT=$((COUNT+1)) 
-    done
-    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 15.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/left_arm/rpc
-}
-
-show_external_rotation_left() {
-
-    external_rotation_left $NREP_SHOW
-}
-
-perform_external_rotation_left() {
-
-    external_rotation_left $NREP_PERFORM
+    sleep $SLEEP
 }
 
 ##################################
 #    EXTERNAL ROTATION  RIGHT    #
 ##################################
+startingpos_external_rotation_right() {
+
+    echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 80.0)" | yarp rpc /ctpservice/right_arm/rpc
+}
+
 external_rotation_right() {
 
-    NREP=$1
+    echo "ctpq time $TIME off 0 pos (80.0 83.0 0.0 80.0)" | yarp rpc /ctpservice/right_arm/rpc
+    sleep $SLEEP
     echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 80.0)" | yarp rpc /ctpservice/right_arm/rpc
-    sleep 1.0
-    while [  $COUNT -lt $NREP ]; do
-        echo "ctpq time $TIME off 0 pos (80.0 83.0 0.0 80.0)" | yarp rpc /ctpservice/right_arm/rpc
-        sleep $SLEEP
-        echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 80.0)" | yarp rpc /ctpservice/right_arm/rpc
-        sleep $SLEEP    
-        COUNT=$((COUNT+1))  
-    done
-    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 15.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/right_arm/rpc
-}
-
-show_external_rotation_right() {
-
-    external_rotation_right $NREP_SHOW
-}
-
-perform_external_rotation_right() {
-
-    external_rotation_right $NREP_PERFORM
+    sleep $SLEEP    
 }
 
 ##################################
 #    INTERNAL ROTATION  LEFT     #
 ##################################
+startingpos_internal_rotation_left() {
+
+    echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 85.0)" | yarp rpc /ctpservice/left_arm/rpc
+}
+
 internal_rotation_left() {
 
-    NREP=$1
+    echo "ctpq time $TIME off 0 pos (-60.0 83.0 0.0 85.0)" | yarp rpc /ctpservice/left_arm/rpc
+    sleep $SLEEP
     echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 85.0)" | yarp rpc /ctpservice/left_arm/rpc
-    sleep 1.0
-    while [  $COUNT -lt $NREP ]; do
-        echo "ctpq time $TIME off 0 pos (-60.0 83.0 0.0 85.0)" | yarp rpc /ctpservice/left_arm/rpc
-        sleep $SLEEP
-        echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 85.0)" | yarp rpc /ctpservice/left_arm/rpc
-        sleep $SLEEP    
-        COUNT=$((COUNT+1))  
-    done
-    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 15.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/left_arm/rpc
-}
-
-show_internal_rotation_left() {
-
-    internal_rotation_left $NREP_SHOW
-
-}
-
-perform_internal_rotation_left() {
-
-    internal_rotation_left $NREP_PERFORM
+    sleep $SLEEP    
 }
 
 ##################################
 #    INTERNAL ROTATION  RIGHT    #
 ##################################
+startingpos_internal_rotation_right() {
+
+    echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 85.0)" | yarp rpc /ctpservice/right_arm/rpc
+}
+
 internal_rotation_right() {
 
-    NREP=$1
+    echo "ctpq time $TIME off 0 pos (-60.0 83.0 0.0 85.0)" | yarp rpc /ctpservice/right_arm/rpc
+    sleep $SLEEP    
     echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 85.0)" | yarp rpc /ctpservice/right_arm/rpc
-    sleep 1.0
-    while [  $COUNT -lt $NREP ]; do
-        echo "ctpq time $TIME off 0 pos (-60.0 83.0 0.0 85.0)" | yarp rpc /ctpservice/right_arm/rpc
-        sleep $SLEEP    
-        echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 85.0)" | yarp rpc /ctpservice/right_arm/rpc
-        sleep $SLEEP    
-        COUNT=$((COUNT+1)) 
-    done
-    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 15.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/right_arm/rpc
-}
-
-show_internal_rotation_right() {
-
-    internal_rotation_right $NREP_SHOW
-}
-
-perform_internal_rotation_right() {
-
-    internal_rotation_right $NREP_PERFORM
+    sleep $SLEEP    
 }
 
 #########################
 #    REACHING RIGHT     #
 #########################
+startingpos_reaching_right() {
+
+    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 15.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/right_arm/rpc
+}
+
 reaching_right() {
 
     T=2.0
     echo "set T $T" | yarp rpc /cer_reaching-controller/right/rpc
-
-    NREP=$1
-    while [  $COUNT -lt $NREP ]; do
-        echo "go ((parameters ((mode "full_pose+no_torso_no_heave") (torso_heave 0.1) (lower_arm_heave 0.05))) (target (0.35 -0.35 0.55 1.0 0.0 0.0 3.1415)))" | yarp rpc /cer_reaching-controller/right/rpc
-        sleep 3.5
-        echo "go ((parameters ((mode "full_pose+no_torso_no_heave") (torso_heave 0.1) (lower_arm_heave 0.05))) (target (0.55 -0.33 1.2 1.0 0.0 0.0 3.1415)))" | yarp rpc /cer_reaching-controller/right/rpc
-        sleep 3.5
-        COUNT=$((COUNT+1))
-    done
-    sleep 2.0
-    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 15.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/right_arm/rpc
-}
-
-show_reaching_right() {
-
-    reaching_right $NREP_SHOW
-}
-
-perform_reaching_right() {
-
-    reaching_right $NREP_PERFORM
+    echo "go ((parameters ((mode "full_pose+no_torso_no_heave") (torso_heave 0.1) (lower_arm_heave 0.05))) (target (0.35 -0.35 0.55 1.0 0.0 0.0 3.1415)))" | yarp rpc /cer_reaching-controller/right/rpc
+    sleep 3.5
+    echo "go ((parameters ((mode "full_pose+no_torso_no_heave") (torso_heave 0.1) (lower_arm_heave 0.05))) (target (0.55 -0.33 1.2 1.0 0.0 0.0 3.1415)))" | yarp rpc /cer_reaching-controller/right/rpc
+    sleep 3.5
 }
 
 #########################
 #     REACHING LEFT     #
 #########################
+startingpos_reaching_left() {
+
+    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 15.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/left_arm/rpc
+}
+
 reaching_left() {
 
     T=2.0
     echo "set T $T" | yarp rpc /cer_reaching-controller/left/rpc
-
-    NREP=$1
-    while [  $COUNT -lt $NREP ]; do
-        echo "go ((parameters ((mode "full_pose+no_torso_no_heave") (torso_heave 0.1) (lower_arm_heave 0.05))) (target (0.35 0.3 0.55 0.0 0.0 0.0 0.0)))" | yarp rpc /cer_reaching-controller/left/rpc
-        sleep 3.5
-        echo "go ((parameters ((mode "full_pose+no_torso_no_heave") (torso_heave 0.1) (lower_arm_heave 0.05))) (target (0.55 0.33 1.2 0.0 0.0 0.0 0.0)))" | yarp rpc /cer_reaching-controller/left/rpc
-        sleep 3.5
-        COUNT=$((COUNT+1)) 
-    done
-    sleep 2.0
-    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 15.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/left_arm/rpc
+    echo "go ((parameters ((mode "full_pose+no_torso_no_heave") (torso_heave 0.1) (lower_arm_heave 0.05))) (target (0.35 0.3 0.55 0.0 0.0 0.0 0.0)))" | yarp rpc /cer_reaching-controller/left/rpc
+    sleep 3.5
+    echo "go ((parameters ((mode "full_pose+no_torso_no_heave") (torso_heave 0.1) (lower_arm_heave 0.05))) (target (0.55 0.33 1.2 0.0 0.0 0.0 0.0)))" | yarp rpc /cer_reaching-controller/left/rpc
+    sleep 3.5
 }
 
-show_reaching_left() {
 
-    reaching_left $NREP_SHOW
-}
-
-perform_reaching_left() {
-
-    reaching_left $NREP_PERFORM
-}
 
 $1
