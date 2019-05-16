@@ -355,6 +355,7 @@ class Interaction : public RFModule, public interactionManager_IDL
             rep.clear();
             cmd.addString("deleteObject");
             cmd.addString(panelid);
+            worldGazeboPort.write(cmd,rep);
             if(rep.get(0).asVocab()==ok)
             {
                 ret=true;
