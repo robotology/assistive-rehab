@@ -111,7 +111,10 @@ class Scaler : public RFModule
                 reply.addVocab(Vocab::encode("ok"));
             }
             else
+            {
+                reply.addVocab(Vocab::encode("fail"));
                 yWarning() << "Unable to rotate camera";
+            }
         }
         if(command.get(0).asString() == "run")
         {
