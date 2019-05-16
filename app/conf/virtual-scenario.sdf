@@ -1753,13 +1753,17 @@
             </mesh>
           </geometry>
           <material>
+            <diffuse>1 1 1 1</diffuse>
             <script>
               <uri>__default__</uri>
               <name>__default__</name>
             </script>
           </material>
+          <plugin name='face' filename='libgazebo_yarp_videotexture.so'>
+            <yarpConfigurationFile>model://cer/conf/sim_cer_face.ini</yarpConfigurationFile>
+          </plugin>
         </visual>
-        <velocity_decay/>
+<!--         <velocity_decay/>
         <sensor name='multicamera_sensor' type='multicamera'>
           <always_on>1</always_on>
           <update_rate>30</update_rate>
@@ -1792,7 +1796,7 @@
             <yarpConfigurationFile>model://cer/conf/gazebo_cer_multicamera.ini</yarpConfigurationFile>
           </plugin>
         </sensor>
-        <velocity_decay/>
+       <velocity_decay/>
         <sensor name='asus_xtion_depth' type='depth'>
           <always_on>1</always_on>
           <update_rate>30</update_rate>
@@ -1852,7 +1856,7 @@
           <plugin name='xtion_camera_rgb_plugin' filename='libgazebo_yarp_camera.so'>
             <yarpConfigurationFile>model://cer/conf/gazebo_cer_xtion_camera_rgb.ini</yarpConfigurationFile>
           </plugin>
-        </sensor>
+        </sensor> -->
         <self_collide>0</self_collide>
         <enable_wind>0</enable_wind>
         <kinematic>0</kinematic>

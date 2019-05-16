@@ -26,6 +26,11 @@
         <node>localhost</node>
     </module>
 
+     <module>
+        <name>faceExpressionImage</name>
+        <node>localhost</node>
+    </module>
+
     <module>
         <name>yarpOpenPose</name>
         <parameters></parameters>
@@ -112,6 +117,12 @@
     <connection>
         <from>/iSpeak/speech-dev/rpc</from>
         <to>/r1/speech:rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/iSpeak/r1:rpc</from>
+        <to>/faceExpressionImage/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
