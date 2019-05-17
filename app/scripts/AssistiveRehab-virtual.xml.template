@@ -34,7 +34,7 @@
     <module>
         <name>yarpOpenPose</name>
         <parameters></parameters>
-        <node>localhost</node>
+        <node>cuda-machine</node>
     </module>
 
     <module>
@@ -58,10 +58,12 @@
     <module>
        <name>cer_gaze-controller</name>
        <parameters>--robot SIM_CER_ROBOT --cameras::context cameraCalibration --cameras::file cerEyes_320x240.ini --joints-limits::pitch "(-20.0 20.0)" --joints-limits::yaw "(-40.0 40.0)"</parameters>
-       <ensure>
-          <wait when="stop">3</wait>
-       </ensure>
-       <node>localhost</node>
+        <dependencies>
+          <port timeout="180">/SIM_CER_ROBOT/torso_tripod/rpc:i</port>
+          <port timeout="180">/SIM_CER_ROBOT/torso_tripod/command:i</port>
+          <port timeout="180">/SIM_CER_ROBOT/torso_tripod/stateExt:o</port>
+        </dependencies>
+        <node>localhost</node>
     </module>
 
     <module>
@@ -88,7 +90,7 @@
 
     <module>
        <name>actionRecognizer</name>
-       <node>localhost</node>
+       <node>cuda-machine</node>
     </module>
 
     <module>
@@ -105,12 +107,22 @@
     <module>
         <name>ctpService</name>
         <parameters>--robot SIM_CER_ROBOT --part right_arm</parameters>
+        <dependencies>
+          <port timeout="180">/SIM_CER_ROBOT/right_arm/rpc:i</port>
+          <port timeout="180">/SIM_CER_ROBOT/right_arm/command:i</port>
+          <port timeout="180">/SIM_CER_ROBOT/right_arm/stateExt:o</port>
+        </dependencies>
         <node>localhost</node>
     </module>
 
     <module>
         <name>ctpService</name>
         <parameters>--robot SIM_CER_ROBOT --part left_arm</parameters>
+        <dependencies>
+          <port timeout="180">/SIM_CER_ROBOT/left_arm/rpc:i</port>
+          <port timeout="180">/SIM_CER_ROBOT/left_arm/command:i</port>
+          <port timeout="180">/SIM_CER_ROBOT/left_arm/stateExt:o</port>
+        </dependencies>
         <node>localhost</node>
     </module>
 

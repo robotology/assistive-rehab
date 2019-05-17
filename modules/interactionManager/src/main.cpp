@@ -331,6 +331,12 @@ class Interaction : public RFModule, public interactionManager_IDL
     {
         bool ret=false;
         state=State::idle;
+
+        if(movethr->isMoving())
+        {
+            movethr->stopMoving();
+        }
+
         Bottle cmd,rep;
         cmd.addString("stop");
         if (attentionPort.write(cmd,rep))
@@ -809,7 +815,6 @@ class Interaction : public RFModule, public interactionManager_IDL
                 cmd.addString("stop");
                 analyzerPort.write(cmd,rep);
 
-                movethr->stopMoving();
                 speak("ouch",true);
                 disengage();
             }
