@@ -127,6 +127,12 @@
     </connection>
 
     <connection>
+        <from>/faceExpressionImage/image:o</from>
+        <to>/SIM_CER_ROBOT::SIM_CER_ROBOT::head_link::head_link_visual</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
         <from>/depthCamera/rgbImage:o</from>
         <to>/yarpOpenPose/image:i</to>
         <protocol>mjpeg</protocol>
