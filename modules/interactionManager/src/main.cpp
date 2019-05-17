@@ -123,6 +123,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     vector<int> panel_color;
     string panelid;
     int nrep_show,nrep_perform;
+    bool virtual_mode;
 
     unordered_map<string,vector<string>> history;
     unordered_map<string,string> speak_map;
@@ -342,7 +343,22 @@ class Interaction : public RFModule, public interactionManager_IDL
                 {
                     if (rep.get(0).asVocab()==ok)
                     {
-                        ret=true;
+                        if(virtual_mode)
+                        {
+                            cmd.clear();
+                            cmd.addString("set_virtual");
+                            if (attentionPort.write(cmd,rep))
+                            {
+                                if (rep.get(0).asVocab()==ok)
+                                {
+                                    ret=true;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ret=true;
+                        }
                     }
                 }
             }
@@ -494,6 +510,7 @@ class Interaction : public RFModule, public interactionManager_IDL
 
         nrep_show=rf.check("nrep-show",Value(2)).asInt();
         nrep_perform=rf.check("nrep-perform",Value(7)).asInt();
+        virtual_mode=rf.check("virtual-mode",Value(false)).asBool();
 
         if (!load_speak(rf.getContext(),speak_file))
         {
