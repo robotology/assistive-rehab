@@ -119,7 +119,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     string move_file,motion_type;
     vector<double> engage_distance,engage_azimuth;
     bool mirror_exercise;
-    vector<double> panel_size,panel_pose;
+    vector<double> panel_size,panel_pose_left,panel_pose_right;
     vector<int> panel_color;
     string panelid;
     int nrep_show,nrep_perform;
@@ -130,6 +130,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     vector<double> assess_values;
     vector<string> parttomove;
     bool occluded,keepmoving;
+    string partrob;
 
     Mutex mutex;
 
@@ -160,12 +161,24 @@ class Interaction : public RFModule, public interactionManager_IDL
         cmd.addDouble(panel_size[0]); //width
         cmd.addDouble(panel_size[1]); //height
         cmd.addDouble(panel_size[2]); //thickness
-        cmd.addDouble(panel_pose[0]); //pose.x
-        cmd.addDouble(panel_pose[1]); //pose.y
-        cmd.addDouble(panel_pose[2]); //pose.z
-        cmd.addDouble(panel_pose[3]); //pose.roll
-        cmd.addDouble(panel_pose[4]); //pose.pitch
-        cmd.addDouble(panel_pose[5]); //pose.yaw
+        if(partrob=="left")
+        {
+            cmd.addDouble(panel_pose_left[0]); //pose.x
+            cmd.addDouble(panel_pose_left[1]); //pose.y
+            cmd.addDouble(panel_pose_left[2]); //pose.z
+            cmd.addDouble(panel_pose_left[3]); //pose.roll
+            cmd.addDouble(panel_pose_left[4]); //pose.pitch
+            cmd.addDouble(panel_pose_left[5]); //pose.yaw
+        }
+        else
+        {
+            cmd.addDouble(panel_pose_right[0]); //pose.x
+            cmd.addDouble(panel_pose_right[1]); //pose.y
+            cmd.addDouble(panel_pose_right[2]); //pose.z
+            cmd.addDouble(panel_pose_right[3]); //pose.roll
+            cmd.addDouble(panel_pose_right[4]); //pose.pitch
+            cmd.addDouble(panel_pose_right[5]); //pose.yaw
+        }
         cmd.addInt(panel_color[0]); //color.r
         cmd.addInt(panel_color[1]); //color.g
         cmd.addInt(panel_color[2]); //color.b
@@ -210,6 +223,20 @@ class Interaction : public RFModule, public interactionManager_IDL
                     cmd.addString("stop");
                     analyzerPort.write(cmd,rep);
                 }
+                ret=true;
+            }
+        }
+
+        if(occluded)
+        {
+            ret=false;
+            cmd.clear();
+            rep.clear();
+            cmd.addString("deleteObject");
+            cmd.addString(panelid);
+            worldGazeboPort.write(cmd,rep);
+            if(rep.get(0).asVocab()==ok)
+            {
                 ret=true;
             }
         }
@@ -495,15 +522,26 @@ class Interaction : public RFModule, public interactionManager_IDL
             panel_size[2]=p->get(2).asDouble();
         }
 
-        panel_pose.resize(6,0.0);
-        if (Bottle *p=rf.find("panel-pose").asList())
+        panel_pose_right.resize(6,0.0);
+        if (Bottle *p=rf.find("panel-pose-right").asList())
         {
-            panel_pose[0]=p->get(0).asDouble();
-            panel_pose[1]=p->get(1).asDouble();
-            panel_pose[2]=p->get(2).asDouble();
-            panel_pose[3]=p->get(3).asDouble();
-            panel_pose[4]=p->get(4).asDouble();
-            panel_pose[5]=p->get(5).asDouble();
+            panel_pose_right[0]=p->get(0).asDouble();
+            panel_pose_right[1]=p->get(1).asDouble();
+            panel_pose_right[2]=p->get(2).asDouble();
+            panel_pose_right[3]=p->get(3).asDouble();
+            panel_pose_right[4]=p->get(4).asDouble();
+            panel_pose_right[5]=p->get(5).asDouble();
+        }
+
+        panel_pose_left.resize(6,0.0);
+        if (Bottle *p=rf.find("panel-pose-left").asList())
+        {
+            panel_pose_left[0]=p->get(0).asDouble();
+            panel_pose_left[1]=p->get(1).asDouble();
+            panel_pose_left[2]=p->get(2).asDouble();
+            panel_pose_left[3]=p->get(3).asDouble();
+            panel_pose_left[4]=p->get(4).asDouble();
+            panel_pose_left[5]=p->get(5).asDouble();
         }
 
         panel_color.resize(3,255);
@@ -694,7 +732,7 @@ class Interaction : public RFModule, public interactionManager_IDL
                                 motion_type=rep.get(0).asString();
                                 size_t found=motion_type.find_last_of("_");
                                 string part=motion_type.substr(found+1,motion_type.size());
-                                string partrob,partspeech;
+                                string partspeech;
                                 if(mirror_exercise)
                                 {
                                     if(part=="left")
