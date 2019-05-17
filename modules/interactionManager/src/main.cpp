@@ -123,7 +123,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     vector<int> panel_color;
     string panelid;
     int nrep_show,nrep_perform;
-    bool virtual_mode;
+    bool virtual_mode,show_once;
 
     unordered_map<string,vector<string>> history;
     unordered_map<string,string> speak_map;
@@ -511,6 +511,7 @@ class Interaction : public RFModule, public interactionManager_IDL
         nrep_show=rf.check("nrep-show",Value(2)).asInt();
         nrep_perform=rf.check("nrep-perform",Value(7)).asInt();
         virtual_mode=rf.check("virtual-mode",Value(false)).asBool();
+        show_once=rf.check("show-once",Value(false)).asBool();
 
         if (!load_speak(rf.getContext(),speak_file))
         {
@@ -743,17 +744,36 @@ class Interaction : public RFModule, public interactionManager_IDL
                                             speak("in-the-know",true,p);
                                         }
 
-                                        vector<SpeechParam> p;
-                                        p.push_back(SpeechParam(partspeech));
-                                        speak("show",true,p);
-                                        movethr->setInitialPosition(script_starting);
-                                        movethr->init(script_move,nrep_show);
-                                        movethr->startMoving();
-
-                                        while(movethr->isMoving())
+                                        if(!show_once)
                                         {
-                                            //wait until it finishes
-                                            Time::yield();
+                                            vector<SpeechParam> p;
+                                            p.push_back(SpeechParam(partspeech));
+                                            speak("show",true,p);
+                                            movethr->setInitialPosition(script_starting);
+                                            movethr->init(script_move,nrep_show);
+                                            movethr->startMoving();
+                                            while(movethr->isMoving())
+                                            {
+                                                //wait until it finishes
+                                                Time::yield();
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if(history.find(tag)==end(history))
+                                            {
+                                                vector<SpeechParam> p;
+                                                p.push_back(SpeechParam(partspeech));
+                                                speak("show",true,p);
+                                                movethr->setInitialPosition(script_starting);
+                                                movethr->init(script_move,nrep_show);
+                                                movethr->startMoving();
+                                                while(movethr->isMoving())
+                                                {
+                                                    //wait until it finishes
+                                                    Time::yield();
+                                                }
+                                            }
                                         }
                                         
                                         Time::delay(3.0);
