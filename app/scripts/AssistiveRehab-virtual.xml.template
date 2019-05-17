@@ -98,7 +98,7 @@
 
     <module>
         <name>interactionManager</name>
-        <parameters></parameters>
+        <parameters>--virtual-mode true --explain-exercise-once true</parameters>
         <node>localhost</node>
     </module>
 
