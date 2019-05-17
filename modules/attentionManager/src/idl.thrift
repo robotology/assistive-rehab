@@ -89,4 +89,11 @@ service attentionManager_IDL
     * @return true/false on success/failure.
     */
    bool set_auto();
+
+   /**
+    * Enable virtual scenario mode.
+    * @return true/false on success/failure.
+    */
+   bool set_virtual();
+
 }

@@ -36,7 +36,7 @@ using namespace assistive_rehab;
 class Attention : public RFModule, public attentionManager_IDL
 {
     enum class State { unconnected, connection_trigger, idle, seek, follow } state;
-    bool auto_mode;
+    bool auto_mode,virtual_mode;
 
     const int ack=Vocab::encode("ack");
     const double T=3.0;
@@ -49,7 +49,8 @@ class Attention : public RFModule, public attentionManager_IDL
     bool first_follow_look;
     bool first_seek_look;
 
-    Matrix gaze_frame;
+    Matrix gaze_frame,gaze_frame_init;
+    bool first_gaze_frame;
     Vector is_following_x;
     vector<shared_ptr<Skeleton>> skeletons;
     vector<double> activity;
@@ -107,6 +108,7 @@ class Attention : public RFModule, public attentionManager_IDL
         bool ret=true;
         ret&=switch_to(state=State::idle);
         ret&=look("angular",zeros(2));
+        first_gaze_frame=true;
         return ret;
     }
 
@@ -187,6 +189,14 @@ class Attention : public RFModule, public attentionManager_IDL
         }
         auto_mode=true;
         return switch_to(State::seek);
+    }
+
+    /****************************************************************/
+    bool set_virtual() override
+    {
+        LockGuard lg(mutex);
+        virtual_mode=true;
+        return true;
     }
 
     /****************************************************************/
@@ -401,7 +411,8 @@ class Attention : public RFModule, public attentionManager_IDL
         gaze_follow_T=rf.check("gaze-follow-T",Value(1.5)).asDouble();
         gaze_seek_T=rf.check("gaze-seek-T",Value(2.0)).asDouble();
         inactivity_thres=rf.check("inactivity-thres",Value(0.05)).asDouble();
-        
+        virtual_mode=rf.check("virtual-mode",Value(false)).asBool();
+
         opcPort.open("/attentionManager/opc:i");
         gazeCmdPort.open("/attentionManager/gaze/cmd:rpc");
         gazeStatePort.open("/attentionManager/gaze/state:i");
@@ -415,6 +426,7 @@ class Attention : public RFModule, public attentionManager_IDL
         still_t0=lost_t0=Time::now();
         first_follow_look=false;
         first_seek_look=false;
+        first_gaze_frame=true;
 
         Rand::init();
         return true;
@@ -436,6 +448,18 @@ class Attention : public RFModule, public attentionManager_IDL
             p->find("depth_rgb").asList()->write(pose);
             gaze_frame=axis2dcm(pose.subVector(3,6));
             gaze_frame.setSubcol(pose.subVector(0,2),0,3);
+        }
+
+        if(first_gaze_frame && virtual_mode)
+        {
+            if (Property *p=gazeStatePort.read(true))
+            {
+                Vector pose;
+                p->find("depth_rgb").asList()->write(pose);
+                gaze_frame_init=axis2dcm(pose.subVector(3,6));
+                gaze_frame_init.setSubcol(pose.subVector(0,2),0,3);
+                first_gaze_frame=false;
+            }
         }
 
         skeletons.clear();
@@ -513,9 +537,17 @@ class Attention : public RFModule, public attentionManager_IDL
 
                 Vector x=(*s)[keypoint]->getPoint();
                 x.push_back(1.0);
-                x=gaze_frame*x;
+                if(virtual_mode)
+                {
+                    x=gaze_frame_init*x;
+                    look("cartesian",x);
+                }
+                else
+                {
+                    x=gaze_frame*x;
+                    look("image",(*s)[keypoint]->getPixel());
+                }
                 x.pop_back();
-                look("image",(*s)[keypoint]->getPixel());
                 is_following_x=x;
 
                 // gaze speed is faster when chasing,
