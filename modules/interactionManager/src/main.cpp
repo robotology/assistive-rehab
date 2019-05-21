@@ -559,21 +559,21 @@ class Interaction : public RFModule, public interactionManager_IDL
     }
 
     /****************************************************************/
-    string select_metric(const Bottle &metrics)
+    string select_randomly(const Bottle &s)
     {
-        string metric;
+        string selected;
         double p=Rand::scalar(0,1);
         auto it1=history.find(tag);
         if (it1==end(history))
         {
-            metric=metrics.get((int)floor(p*metrics.size())).asString();
+            selected=s.get((int)floor(p*s.size())).asString();
         }
         else
         {
             vector<string> s1,diff;
-            for (int i=0; i<metrics.size(); i++)
+            for (int i=0; i<s.size(); i++)
             {
-                s1.push_back(metrics.get(i).asString());
+                s1.push_back(s.get(i).asString());
             }
             sort(begin(s1),end(s1));
 
@@ -588,9 +588,9 @@ class Interaction : public RFModule, public interactionManager_IDL
             }
             auto it2=diff.begin();
             advance(it2,(int)floor(p*diff.size()));
-            metric=*it2;
+            selected=*it2;
         }
-        return metric;
+        return selected;
     }
 
     /****************************************************************/
@@ -904,172 +904,193 @@ class Interaction : public RFModule, public interactionManager_IDL
         if (state==State::engaged)
         {
             Bottle cmd,rep;
-            cmd.addString("listMetrics");
+            cmd.addString("listExercises");
             if (analyzerPort.write(cmd,rep))
             {
-                Bottle &metrics=*rep.get(0).asList();
-                if (metrics.size()>0)
+                Bottle &exercises=*rep.get(0).asList();
+                if (exercises.size()>0)
                 {
-                    string metric=select_metric(metrics);
-                    yInfo()<<"Selected metric:"<<metric;
+                    string exercise=select_randomly(exercises);
+                    yInfo()<<"Selected exercise:"<<exercise;
 
                     cmd.clear();
-                    cmd.addString("loadMetric");
-                    cmd.addString(metric);
+                    rep.clear();
+                    cmd.addString("loadExercise");
+                    cmd.addString(exercise);
                     if (analyzerPort.write(cmd,rep))
                     {
                         bool ack=rep.get(0).asBool();
                         if (ack)
                         {
                             cmd.clear();
-                            cmd.addString("getMotionType");
-                            if(analyzerPort.write(cmd,rep))
+                            cmd.addString("listMetrics");
+                            if (analyzerPort.write(cmd,rep))
                             {
-                                motion_type=rep.get(0).asString();
-                                string template_tag;
-                                if(use_robot_template)
+                                Bottle &metrics=*rep.get(0).asList();
+                                if (metrics.size()>0)
                                 {
-                                    template_tag=robot_skeleton_name;
-                                }
-                                else
-                                {
-                                    template_tag=motion_type;
-                                }
-
-                                cmd.clear();
-                                rep.clear();
-                                cmd.addString("setTemplateTag");
-                                cmd.addString(template_tag);
-                                if(analyzerPort.write(cmd,rep))
-                                {
-                                    size_t found=motion_type.find_last_of("_");
-                                    string part=motion_type.substr(found+1,motion_type.size());
-                                    if(mirror_exercise)
-                                    {
-                                        if(part=="left")
-                                        {
-                                            partrob="right";
-                                            partspeech=parttomove[1];
-                                        }
-                                        if(part=="right")
-                                        {
-                                            partrob="left";
-                                            partspeech=parttomove[0];
-                                        }
-                                    }
-                                    else
-                                    {
-                                        if(part=="left")
-                                        {
-                                            partrob="left";
-                                            partspeech=parttomove[1];
-                                        }
-                                        if(part=="right")
-                                        {
-                                            partrob="right";
-                                            partspeech=parttomove[0];
-                                        }
-                                    }
+                                    string metric=select_randomly(metrics);
+                                    yInfo()<<"Selected metric:"<<metric;
 
                                     cmd.clear();
                                     rep.clear();
-                                    cmd.addString("setPart");
-                                    cmd.addString(part);
-                                    if(analyzerPort.write(cmd,rep))
+                                    cmd.addString("selectMetric");
+                                    cmd.addString(metric);
+                                    if (analyzerPort.write(cmd,rep))
                                     {
-                                        motion_type_robot=motion_type.substr(0,found)+"_"+partrob;
-                                        script_starting=move_file+" "+"startingpos_"+motion_type_robot;
-                                        script_move=move_file+" "+motion_type_robot;
-                                        script_home=move_file+" "+"home_"+motion_type_robot;
-
-                                        cmd.clear();
-                                        rep.clear();
-                                        cmd.addString("selectSkel");
-                                        cmd.addString(tag);
-                                        yInfo()<<"Selecting skeleton"<<tag;
-                                        if (analyzerPort.write(cmd,rep))
+                                        ack=rep.get(0).asBool();
+                                        if(ack)
                                         {
-                                            if (rep.get(0).asVocab()==ok)
+                                            cmd.clear();
+                                            rep.clear();
+                                            cmd.addString("listMetricProps");
+                                            if (analyzerPort.write(cmd,rep))
                                             {
-                                                //imitation and observation phases are not separated
-                                                //the robot shows the exercise and then the user imitates
-                                                //we don't wait for the imitation to be started externally
-                                                if(!wait_for_imitation)
+                                                Bottle &props=*rep.get(0).asList();
+                                                if (props.size()>0)
                                                 {
-                                                    if (history.find(tag)==end(history))
-                                                    {
-                                                        speak("explain",true);
-                                                    }
-                                                    else
-                                                    {
-                                                        vector<SpeechParam> p;
-                                                        p.push_back(SpeechParam(tag[0]!='#'?(tag+","):string("")));
-                                                        speak("in-the-know",true,p);
-                                                    }
-
-                                                    vector<SpeechParam> p;
-                                                    p.push_back(SpeechParam(partspeech));
-                                                    speak("show",true,p);
-                                                    movethr->setInitialPosition(script_starting);
-                                                    movethr->init(script_move,nrep_show);
-                                                    movethr->startMoving();
-                                                    while(!movethr->hasStoppedMoving())
-                                                    {
-                                                        //wait until it finishes
-                                                        Time::yield();
-                                                    }
+                                                    string prop=select_randomly(props);
+                                                    yInfo()<<"Selected prop:"<<prop;
 
                                                     cmd.clear();
                                                     rep.clear();
-                                                    cmd.addString("is_following");
-                                                    if (attentionPort.write(cmd,rep))
-                                                    {
-                                                        follow_tag=rep.get(0).asString();
-                                                        if (follow_tag!=tag)
-                                                        {
-                                                            speak("disengaged",true);
-                                                            disengage();
-                                                            return true;
-                                                        }
-                                                    }
-
-                                                    movethr->setHomePosition(script_home);
-                                                    movethr->setInitialPosition(script_starting);
-                                                    Time::delay(3.0);
-                                                    speak("start",true);
-                                                    history[tag].push_back(metric);
-                                                    movethr->init(script_move,nrep_perform);
-                                                    movethr->startMoving();
-                                                    Time::delay(1.0);
-
-                                                    cmd.clear();
-                                                    rep.clear();
-                                                    cmd.addString("start");
-                                                    cmd.addInt(use_robot_template);
-                                                    yInfo()<<cmd.toString();
+                                                    cmd.addString("selectMetricProp");
+                                                    cmd.addString(prop);
                                                     if (analyzerPort.write(cmd,rep))
                                                     {
-                                                        if (rep.get(0).asVocab()==ok)
+                                                        ack=rep.get(0).asBool();
+                                                        if(ack)
                                                         {
-                                                            state=State::move;
+                                                            size_t found=exercise.find_last_of("_");
+                                                            string part=exercise.substr(found+1,exercise.size());
+                                                            string partrob,partspeech;
+                                                            if(mirror_exercise)
+                                                            {
+                                                                if(part=="left")
+                                                                {
+                                                                    partrob="right";
+                                                                    partspeech=parttomove[1];
+                                                                }
+                                                                if(part=="right")
+                                                                {
+                                                                    partrob="left";
+                                                                    partspeech=parttomove[0];
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                if(part=="left")
+                                                                {
+                                                                    partrob="left";
+                                                                    partspeech=parttomove[1];
+                                                                }
+                                                                if(part=="right")
+                                                                {
+                                                                    partrob="right";
+                                                                    partspeech=parttomove[0];
+                                                                }
+                                                            }
 
-                                                            assess_values.clear();
-                                                            t0=Time::now();
+                                                            cmd.clear();
+                                                            rep.clear();
+                                                            cmd.addString("setPart");
+                                                            cmd.addString(part);
+                                                            if(analyzerPort.write(cmd,rep))
+                                                            {
+	                                                        script_starting=move_file+" "+"startingpos_"+motion_type_robot;
+                                                                script_move=move_file+" "+motion_type_robot;
+                                                                script_home=move_file+" "+"home_"+motion_type_robot;
+                                                                
+                                                                cmd.clear();
+                                                                rep.clear();
+                                                                cmd.addString("selectSkel");
+                                                                cmd.addString(tag);
+                                                                yInfo()<<"Selecting skeleton"<<tag;
+                                                                if (analyzerPort.write(cmd,rep))
+                                                                {
+                                                                    if (rep.get(0).asVocab()==ok)
+                                                                    {
+                                                                        //imitation and observation phases are not separated
+                                                                        //the robot shows the exercise and then the user imitates
+                                                                        //we don't wait for the imitation to be started externally
+                                                                        if(!wait_for_imitation)
+                                                                        {
+                                                                            if (history.find(tag)==end(history))
+                                                                            {
+                                                                                speak("explain",true);
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                vector<SpeechParam> p;
+                                                                                p.push_back(SpeechParam(tag[0]!='#'?(tag+","):string("")));
+                                                                                speak("in-the-know",true,p);
+                                                                            }
+
+                                                                            vector<SpeechParam> p;
+                                                                            p.push_back(SpeechParam(partspeech));
+                                                                            speak("show",true,p);
+                                                                            movethr->setInitialPosition(script_starting);
+                                                                            movethr->init(script_move,nrep_show);
+                                                                            movethr->startMoving();
+                                                                            while(!movethr->hasStoppedMoving())
+                                                                            {
+                                                                            //wait until it finishes
+                                                                            Time::yield();
+                                                                            }
+
+                                                                            cmd.clear();
+                                                                            rep.clear();
+                                                                            cmd.addString("is_following");
+                                                                            if (attentionPort.write(cmd,rep))
+                                                                            {
+                                                                                follow_tag=rep.get(0).asString();
+                                                                                if (follow_tag!=tag)
+                                                                                {
+                                                                                    speak("disengaged",true);
+                                                                                    disengage();
+                                                                                    return true;
+                                                                                }
+                                                                            }
+
+                                                                            movethr->setHomePosition(script_home);
+                                                                            movethr->setInitialPosition(script_starting);
+                                                                            Time::delay(3.0);
+                                                                            speak("start",true);
+                                                                            history[tag].push_back(exercise);
+                                                                            movethr->init(script_move,nrep_perform);
+                                                                            movethr->startMoving();
+                                                                            Time::delay(1.0);
+
+                                                                            cmd.clear();
+                                                                            cmd.addString("start");
+                                                                            if (analyzerPort.write(cmd,rep))
+                                                                            {
+                                                                                if (rep.get(0).asVocab()==ok)
+                                                                                {
+                                                                                    state=State::move;
+
+                                                                                    assess_values.clear();
+                                                                                    t0=Time::now();
+                                                                                }
+                                                                            }
+                                                                         }
+                                                                    else
+                                                                    {
+                                                                        //we have two phases: observation and imitation
+                                                                        //observation starts when the command start_observation is given
+                                                                        //imitation starts when the command start_imitation is given
+                                                                        state=State::show;
+                                                                    }
+                                                                }
+                                                            }
                                                         }
                                                     }
-                                                }
-                                                else
-                                                {
-                                                    //we have two phases: observation and imitation
-                                                    //observation starts when the command start_observation is given
-                                                    //imitation starts when the command start_imitation is given
-                                                    state=State::show;
                                                 }
                                             }
                                         }
                                     }
-                                }
-                            }
+                                 }
+                             }
                         }
                     }
                 }
