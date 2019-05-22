@@ -16,8 +16,8 @@ source_group("Header Files" FILES ${header})
 source_group("IDL Files" FILES ${idl})
 source_group("DOC Files" FILES ${doc_files})
 
-include_directories(${PROJECT_SOURCE_DIR}/include)
 add_executable(${PROJECT_NAME} ${header} ${source} ${idl} ${IDL_GEN_FILES} ${doc_files})
+target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES} ${YARP_LIBRARIES})
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
