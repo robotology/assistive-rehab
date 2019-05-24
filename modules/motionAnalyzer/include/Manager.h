@@ -88,7 +88,8 @@ class Manager : public yarp::os::RFModule,
     bool stop() override;
 
     bool writeStructToMat(const std::string& name, const std::vector< std::vector< std::pair<std::string,yarp::sig::Vector> > >& keypoints_skel, mat_t *matfp);
-    bool writeStructToMat(const std::string& name, const Metric &metric, mat_t *matfp);
+    bool writeStructToMat(const std::string& name, const Exercise *ex, mat_t *matfp);
+    matvar_t * writeStructToMat(const Metric *m);
     bool writeKeypointsToFile(mat_t *matfp);
     void print(const std::vector< std::vector< std::pair<std::string,yarp::sig::Vector> > >& keypoints_skel);
 

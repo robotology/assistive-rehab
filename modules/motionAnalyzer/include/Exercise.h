@@ -61,7 +61,7 @@ public:
 
 };
 
-class AbductionLeft : public Exercise
+class RangeOfMotion : public Exercise
 {
 private:
     int duration;
@@ -74,52 +74,72 @@ private:
     yarp::sig::Vector psd_thresh;
 
 public:
-    AbductionLeft();
+    RangeOfMotion(const std::string &name_);
 
     void setFeedbackParams(const yarp::os::Property &p) override;
     yarp::sig::Matrix getFeedbackThresholds() override;
 
 };
 
-class InternalRotationLeft : public Exercise
-{
-private:
-    int duration;
-    double twarp;
-    std::vector<std::string> joint_list;
-    yarp::sig::Vector sx_thresh;
-    yarp::sig::Vector sy_thresh;
-    yarp::sig::Vector sz_thresh;
-    yarp::sig::Vector range_freq;
-    yarp::sig::Vector psd_thresh;
+//class AbductionLeft : public Exercise
+//{
+//private:
+//    int duration;
+//    double twarp;
+//    std::vector<std::string> joint_list;
+//    yarp::sig::Vector sx_thresh;
+//    yarp::sig::Vector sy_thresh;
+//    yarp::sig::Vector sz_thresh;
+//    yarp::sig::Vector range_freq;
+//    yarp::sig::Vector psd_thresh;
 
-public:
-    InternalRotationLeft();
+//public:
+//    AbductionLeft();
 
-    void setFeedbackParams(const yarp::os::Property &p) override;
-    yarp::sig::Matrix getFeedbackThresholds() override;
+//    void setFeedbackParams(const yarp::os::Property &p) override;
+//    yarp::sig::Matrix getFeedbackThresholds() override;
 
-};
+//};
 
-class ExternalRotationLeft : public Exercise
-{
-private:
-    int duration;
-    double twarp;
-    std::vector<std::string> joint_list;
-    yarp::sig::Vector sx_thresh;
-    yarp::sig::Vector sy_thresh;
-    yarp::sig::Vector sz_thresh;
-    yarp::sig::Vector range_freq;
-    yarp::sig::Vector psd_thresh;
+//class InternalRotationLeft : public Exercise
+//{
+//private:
+//    int duration;
+//    double twarp;
+//    std::vector<std::string> joint_list;
+//    yarp::sig::Vector sx_thresh;
+//    yarp::sig::Vector sy_thresh;
+//    yarp::sig::Vector sz_thresh;
+//    yarp::sig::Vector range_freq;
+//    yarp::sig::Vector psd_thresh;
 
-public:
-    ExternalRotationLeft();
+//public:
+//    InternalRotationLeft();
 
-    void setFeedbackParams(const yarp::os::Property &p) override;
-    yarp::sig::Matrix getFeedbackThresholds() override;
+//    void setFeedbackParams(const yarp::os::Property &p) override;
+//    yarp::sig::Matrix getFeedbackThresholds() override;
 
-};
+//};
+
+//class ExternalRotationLeft : public Exercise
+//{
+//private:
+//    int duration;
+//    double twarp;
+//    std::vector<std::string> joint_list;
+//    yarp::sig::Vector sx_thresh;
+//    yarp::sig::Vector sy_thresh;
+//    yarp::sig::Vector sz_thresh;
+//    yarp::sig::Vector range_freq;
+//    yarp::sig::Vector psd_thresh;
+
+//public:
+//    ExternalRotationLeft();
+
+//    void setFeedbackParams(const yarp::os::Property &p) override;
+//    yarp::sig::Matrix getFeedbackThresholds() override;
+
+//};
 
 
 class ReachingLeft : public Exercise

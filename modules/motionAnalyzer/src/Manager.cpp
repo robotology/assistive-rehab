@@ -57,17 +57,11 @@ bool Manager::loadMotionList(ResourceFinder &rf)
                     if(!bGeneral.isNull())
                     {
                         string type=bGeneral.find("type").asString();
-                        if(ex_tag==ExerciseTag::abduction_left)
+                        if(ex_tag==ExerciseTag::abduction_left ||
+                                ex_tag==ExerciseTag::internal_rotation_left ||
+                                ex_tag==ExerciseTag::external_rotation_left)
                         {
-                            exercises[i]=new AbductionLeft();
-                        }
-                        if(ex_tag==ExerciseTag::internal_rotation_left)
-                        {
-                            exercises[i]=new InternalRotationLeft();
-                        }
-                        if(ex_tag==ExerciseTag::external_rotation_left)
-                        {
-                            exercises[i]=new ExternalRotationLeft();
+                            exercises[i]=new RangeOfMotion(ex_tag);
                         }
                         if(ex_tag==ExerciseTag::reaching_left)
                         {
@@ -859,7 +853,6 @@ bool Manager::stop()
             {
                 time_samples.clear();
                 all_keypoints.clear();
-                all_planes.clear();
             }
             else
                 yError() << "Could not save to file";
@@ -889,7 +882,6 @@ bool Manager::stop()
     {
         time_samples.clear();
         all_keypoints.clear();
-        all_planes.clear();
     }
     else
         yError() << "Could not save to file";
@@ -1090,7 +1082,6 @@ bool Manager::updateModule()
                         double res=result.find(prop_tag).asDouble();
                         scopebottleout.addDouble(res);
                     }
-//                    all_planes.push_back(processor[i]->getPlaneNormal());
                 }
                 scopePort.write();
             }
@@ -1152,224 +1143,234 @@ bool Manager::writeStructToMat(const string& name, const vector< vector< pair<st
 }
 
 /********************************************************/
-bool Manager::writeStructToMat(const string& name, const Metric& metric, mat_t *matfp)
+bool Manager::writeStructToMat(const string& name, const Exercise* ex, mat_t *matfp)
 {
-    Property params=metric.getParams();
+    vector<const Metric*> metrics=ex->getMetrics();
+    size_t numMetrics=metrics.size();
+    const char *fields[2]={"name","metrics"};
+
+    //main struct for exercise
+    size_t dim_struct[2]={1,1};
+    matvar_t *matvar=Mat_VarCreateStruct(name.c_str(),2,dim_struct,fields,2);
+    if(matvar==NULL)
+    {
+        yError()<<"Could not create exercise structure";
+        return false;
+    }
+    string currex_name=curr_exercise->getName();
+    size_t dim_name[2]={1,currex_name.size()};
+    char *exname=new char[currex_name.size()+1];
+    strcpy(exname, currex_name.c_str());
+    matvar_t *ex_matvar=Mat_VarCreate(fields[0],MAT_C_CHAR,MAT_T_UTF8,2,dim_name,exname,0);
+    Mat_VarSetStructFieldByName(matvar,fields[0],0,ex_matvar);
+    delete [] exname;
+
+    size_t dim_struct_metrics[2]={1,1};
+    const char *fields_metrics[numMetrics];
+    vector<string> fieldnames(numMetrics,"");
+    for(size_t i=0; i<numMetrics; i++)
+    {
+        Property params=metrics[i]->getParams();
+        fieldnames[i]=params.find("name").asString();
+        fields_metrics[i]=fieldnames[i].c_str();
+    }
+    matvar_t *met_matvar=Mat_VarCreateStruct("metrics",2,dim_struct_metrics,fields_metrics,numMetrics);
+    if(met_matvar==NULL)
+    {
+        yError()<<"Could not create exercise structure";
+        return false;
+    }
+
+    matvar_t *submatvar;
+    for(size_t i=0; i<numMetrics; i++)
+    {
+        submatvar=writeStructToMat(metrics[i]);
+        Mat_VarSetStructFieldByName(met_matvar,fields_metrics[i],0,submatvar);
+    }
+
+    Mat_VarSetStructFieldByName(matvar,fields[1],0,met_matvar);
+    Mat_VarWrite(matfp,matvar,MAT_COMPRESSION_NONE);
+    Mat_VarFree(matvar);
+
+    return true;
+}
+
+/********************************************************/
+matvar_t * Manager::writeStructToMat(const Metric* m)
+{
+    matvar_t* submatvar;
+    Property params=m->getParams();
+    string metric_name=params.find("name").asString();
     string metric_type=params.find("type").asString();
     if(metric_type==MetricType::rom)
     {
         int numFields=8;
-        const char *fields[numFields]={"tag_joint","ref_joint","ref_dir","tag_plane","max","min",
-                                      "tstart","tend"};
-
-        matvar_t *field;
+        const char *subfields[numFields]={"tag_joint","ref_joint","ref_dir","tag_plane",
+                                          "max","min","tstart","tend"};
         size_t dim_struct[2]={1,1};
-        matvar_t *matvar=Mat_VarCreateStruct(name.c_str(),2,dim_struct,fields,numFields);
-        if(matvar!=NULL)
-        {
-            string joint_met=params.find("tag").asString();
-            char *joint_c=new char[joint_met.length()+1];
-            strcpy(joint_c, joint_met.c_str());
-            size_t dims_field_joint[2]={1,joint_met.size()};
-            field=Mat_VarCreate(NULL,MAT_C_CHAR,MAT_T_UTF8,2,dims_field_joint,joint_c,0);
-            Mat_VarSetStructFieldByName(matvar,fields[0],0,field);
-            delete [] joint_c;
+        submatvar=Mat_VarCreateStruct(metric_name.c_str(),2,dim_struct,subfields,numFields);
+        matvar_t *subfield;
+        string joint_met=params.find("tag_joint").asString();
+        char *joint_c=new char[joint_met.length()+1];
+        strcpy(joint_c, joint_met.c_str());
+        size_t dims_field_joint[2]={1,joint_met.size()};
+        subfield=Mat_VarCreate(NULL,MAT_C_CHAR,MAT_T_UTF8,2,dims_field_joint,joint_c,0);
+        Mat_VarSetStructFieldByName(submatvar,subfields[0],0,subfield);
+        delete [] joint_c;
 
-            string ref_joint=params.find("ref_joint").asString();
-            char *joint_ref=new char[ref_joint.length()+1];
-            strcpy(joint_ref,ref_joint.c_str());
-            size_t dims_field_refjoint[2]={1,ref_joint.size()};
-            field=Mat_VarCreate(NULL,MAT_C_CHAR,MAT_T_UTF8,2,dims_field_refjoint,joint_ref,0);
-            Mat_VarSetStructFieldByName(matvar,fields[1],0,field);
-            delete [] joint_ref;
+        string ref_joint=params.find("ref_joint").asString();
+        char *joint_ref=new char[ref_joint.length()+1];
+        strcpy(joint_ref,ref_joint.c_str());
+        size_t dims_field_refjoint[2]={1,ref_joint.size()};
+        subfield=Mat_VarCreate(NULL,MAT_C_CHAR,MAT_T_UTF8,2,dims_field_refjoint,joint_ref,0);
+        Mat_VarSetStructFieldByName(submatvar,subfields[1],0,subfield);
+        delete [] joint_ref;
 
-            size_t dims_field_dir[2]={1,3};
-            Bottle *bRef=params.find("ref_dir").asList();
-            Vector ref_met(3,0.0);
-            ref_met[0]=bRef->get(0).asDouble();
-            ref_met[1]=bRef->get(1).asDouble();
-            ref_met[2]=bRef->get(2).asDouble();
-            field=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_dir,ref_met.data(),MAT_F_DONT_COPY_DATA);
-            Mat_VarSetStructFieldByName(matvar,fields[2],0,field);
+        size_t dims_field_dir[2]={1,3};
+        Bottle *bRef=params.find("ref_dir").asList();
+        Vector ref_met(3,0.0);
+        ref_met[0]=bRef->get(0).asDouble();
+        ref_met[1]=bRef->get(1).asDouble();
+        ref_met[2]=bRef->get(2).asDouble();
+        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_dir,ref_met.data(),0);
+        Mat_VarSetStructFieldByName(submatvar,subfields[2],0,subfield);
 
-            size_t nPlanes = all_planes.size();
-            vector<double> field_vector;
-            field_vector.resize(3*nPlanes);
-            size_t dims_field_plane[2] = {nPlanes,3};
-            for(size_t i=0; i<nPlanes; i++)
-            {
-                field_vector[i] = all_planes[i][0];
-                field_vector[i+nPlanes] = all_planes[i][1];
-                field_vector[i+2*nPlanes] = all_planes[i][2];
-            }
-            field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_plane,field_vector.data(),MAT_F_GLOBAL);
-            Mat_VarSetStructFieldByName(matvar,fields[3],0,field);
+        string tag_plane=params.find("tag_plane").asString();
+        char *plane_tag=new char[tag_plane.length()+1];
+        strcpy(plane_tag,tag_plane.c_str());
+        size_t dims_field_tagplane[2]={1,tag_plane.size()};
+        subfield=Mat_VarCreate(NULL,MAT_C_CHAR,MAT_T_UTF8,2,dims_field_tagplane,plane_tag,0);
+        Mat_VarSetStructFieldByName(submatvar,subfields[3],0,subfield);
+        delete [] plane_tag;
 
-            size_t dims_field_max[2]={1,1};
-            double max_val=params.find("maxv").asDouble();
-            field=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_max,&max_val,MAT_F_DONT_COPY_DATA);
-            Mat_VarSetStructFieldByName(matvar,fields[4],0,field);
+        size_t dims_field_max[2]={1,1};
+        double max_val=params.find("max").asDouble();
+        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_max,&max_val,MAT_F_DONT_COPY_DATA);
+        Mat_VarSetStructFieldByName(submatvar,subfields[4],0,subfield);
 
-            size_t dims_field_min[2]={1,1};
-            double min_val=params.find("minv").asDouble();
-            field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_min,&min_val,MAT_F_DONT_COPY_DATA);
-            Mat_VarSetStructFieldByName(matvar,fields[5],0,field);
+        size_t dims_field_min[2]={1,1};
+        double min_val=params.find("min").asDouble();
+        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_min,&min_val,MAT_F_DONT_COPY_DATA);
+        Mat_VarSetStructFieldByName(submatvar,subfields[5],0,subfield);
 
-            size_t dims_field_tstart[2]={1,1};
-            cout<< "started at "<<tstart_session;
-            field=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tstart,&tstart_session,MAT_F_DONT_COPY_DATA);
-            Mat_VarSetStructFieldByName(matvar,fields[6],0,field);
+        size_t dims_field_tstart[2]={1,1};
+        cout<< "started at "<<tstart_session;
+        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tstart,&tstart_session,MAT_F_DONT_COPY_DATA);
+        Mat_VarSetStructFieldByName(submatvar,subfields[6],0,subfield);
 
-            cout<<" ended at "<<tend_session<<endl;
-            size_t dims_field_tend[2]={1,1};
-            field=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tend,&tend_session,MAT_F_DONT_COPY_DATA);
-            Mat_VarSetStructFieldByName(matvar,fields[7],0,field);
-
-            Mat_VarWrite(matfp,matvar,MAT_COMPRESSION_NONE);
-            Mat_VarFree(matvar);
-        }
-        else
-        {
-            return false;
-        }
+        cout<<" ended at "<<tend_session<<endl;
+        size_t dims_field_tend[2]={1,1};
+        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tend,&tend_session,MAT_F_DONT_COPY_DATA);
+        Mat_VarSetStructFieldByName(submatvar,subfields[7],0,subfield);
     }
     if(metric_type==MetricType::step)
     {
         int numFields=6;
-        const char *fields[numFields]={"num","den","max","min","tstart","tend"};
-
-        matvar_t *field;
+        const char *subfields[numFields]={"num","den","max","min","tstart","tend"};
         size_t dim_struct[2]={1,1};
-        matvar_t *matvar=Mat_VarCreateStruct(name.c_str(),2,dim_struct,fields,numFields);
-        if(matvar!=NULL)
-        {
-            size_t dims_field_num[2]={1,3};
-            Bottle *bNum=params.find("num").asList();
-            Vector num(3,0.0);
-            num[0]=bNum->get(0).asDouble();
-            num[1]=bNum->get(1).asDouble();
-            num[2]=bNum->get(2).asDouble();
-            field=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_num,num.data(),MAT_F_DONT_COPY_DATA);
-            Mat_VarSetStructFieldByName(matvar,fields[0],0,field);
+        submatvar=Mat_VarCreateStruct(metric_name.c_str(),2,dim_struct,subfields,numFields);
+        matvar_t *subfield;
+        size_t dims_field_num[2]={1,3};
+        Bottle *bNum=params.find("num").asList();
+        Vector num(3,0.0);
+        num[0]=bNum->get(0).asDouble();
+        num[1]=bNum->get(1).asDouble();
+        num[2]=bNum->get(2).asDouble();
+        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_num,num.data(),0);
+        Mat_VarSetStructFieldByName(submatvar,subfields[0],0,subfield);
 
-            size_t dims_field_den[2]={1,3};
-            Bottle *bDen=params.find("den").asList();
-            Vector den(3,0.0);
-            den[0]=bDen->get(0).asDouble();
-            den[1]=bDen->get(1).asDouble();
-            den[2]=bDen->get(2).asDouble();
-            field=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_den,den.data(),MAT_F_DONT_COPY_DATA);
-            Mat_VarSetStructFieldByName(matvar,fields[1],0,field);
+        size_t dims_field_den[2]={1,3};
+        Bottle *bDen=params.find("den").asList();
+        Vector den(3,0.0);
+        den[0]=bDen->get(0).asDouble();
+        den[1]=bDen->get(1).asDouble();
+        den[2]=bDen->get(2).asDouble();
+        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_den,den.data(),0);
+        Mat_VarSetStructFieldByName(submatvar,subfields[1],0,subfield);
 
-            size_t dims_field_max[2]={1,1};
-            double max_val=params.find("max").asDouble();
-            field=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_max,&max_val,MAT_F_DONT_COPY_DATA);
-            Mat_VarSetStructFieldByName(matvar,fields[2],0,field);
+        size_t dims_field_max[2]={1,1};
+        double max_val=params.find("max").asDouble();
+        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_max,&max_val,MAT_F_DONT_COPY_DATA);
+        Mat_VarSetStructFieldByName(submatvar,subfields[2],0,subfield);
 
-            size_t dims_field_min[2]={1,1};
-            double min_val=params.find("minv").asDouble();
-            field=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_min,&min_val,MAT_F_DONT_COPY_DATA);
-            Mat_VarSetStructFieldByName(matvar,fields[3],0,field);
+        size_t dims_field_min[2]={1,1};
+        double min_val=params.find("min").asDouble();
+        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_min,&min_val,MAT_F_DONT_COPY_DATA);
+        Mat_VarSetStructFieldByName(submatvar,subfields[3],0,subfield);
 
-            size_t dims_field_tstart[2]={1,1};
-            cout<<"started at "<<tstart_session;
-            field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tstart,&tstart_session,MAT_F_DONT_COPY_DATA);
-            Mat_VarSetStructFieldByName(matvar,fields[4],0,field);
+        size_t dims_field_tstart[2]={1,1};
+        cout<<"started at "<<tstart_session;
+        subfield = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tstart,&tstart_session,MAT_F_DONT_COPY_DATA);
+        Mat_VarSetStructFieldByName(submatvar,subfields[4],0,subfield);
 
-            cout<<" ended at "<<tend_session<<endl;
-            size_t dims_field_tend[2]={1,1};
-            field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tend,&tend_session,MAT_F_DONT_COPY_DATA);
-            Mat_VarSetStructFieldByName(matvar,fields[5],0,field);
-
-            Mat_VarWrite(matfp,matvar,MAT_COMPRESSION_NONE);
-            Mat_VarFree(matvar);
-        }
-        else
-        {
-            return false;
-        }
+        cout<<" ended at "<<tend_session<<endl;
+        size_t dims_field_tend[2]={1,1};
+        subfield = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tend,&tend_session,MAT_F_DONT_COPY_DATA);
+        Mat_VarSetStructFieldByName(submatvar,subfields[5],0,subfield);
     }
     if(metric_type==MetricType::end_point)
     {
         int numFields=8;
-        const char *fields[numFields]={"tag_joint","ref_dir","tag_plane","max","min","target"
-                                      "tstart","tend"};
-
-        matvar_t *field;
+        const char *subfields[numFields]={"tag_joint","ref_dir","tag_plane","max","min","target",
+                                          "tstart","tend"};
         size_t dim_struct[2]={1,1};
-        matvar_t *matvar=Mat_VarCreateStruct(name.c_str(),2,dim_struct,fields,numFields);
-        if(matvar!=NULL)
-        {
-            string joint_met=params.find("tag").asString();
-            char *joint_c=new char[joint_met.length()+1];
-            strcpy(joint_c, joint_met.c_str());
-            size_t dims_field_joint[2]={1,joint_met.size()};
-            field=Mat_VarCreate(NULL,MAT_C_CHAR,MAT_T_UTF8,2,dims_field_joint,joint_c,0);
-            Mat_VarSetStructFieldByName(matvar,fields[0],0,field);
-            delete [] joint_c;
+        submatvar=Mat_VarCreateStruct(metric_name.c_str(),2,dim_struct,subfields,numFields);
+        matvar_t *subfield;
+        string joint_met=params.find("tag_joint").asString();
+        char *joint_c=new char[joint_met.length()+1];
+        strcpy(joint_c, joint_met.c_str());
+        size_t dims_field_joint[2]={1,joint_met.size()};
+        subfield=Mat_VarCreate(NULL,MAT_C_CHAR,MAT_T_UTF8,2,dims_field_joint,joint_c,0);
+        Mat_VarSetStructFieldByName(submatvar,subfields[0],0,subfield);
+        delete [] joint_c;
 
-            size_t dims_field_dir[2]={1,3};
-            Bottle *bRef=params.find("ref_dir").asList();
-            Vector ref_met(3,0.0);
-            ref_met[0]=bRef->get(0).asDouble();
-            ref_met[1]=bRef->get(1).asDouble();
-            ref_met[2]=bRef->get(2).asDouble();
-            field=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_dir,ref_met.data(),MAT_F_DONT_COPY_DATA);
-            Mat_VarSetStructFieldByName(matvar,fields[1],0,field);
+        size_t dims_field_dir[2]={1,3};
+        Bottle *bRef=params.find("ref_dir").asList();
+        Vector ref_met(3,0.0);
+        ref_met[0]=bRef->get(0).asDouble();
+        ref_met[1]=bRef->get(1).asDouble();
+        ref_met[2]=bRef->get(2).asDouble();
+        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_dir,ref_met.data(),0);
+        Mat_VarSetStructFieldByName(submatvar,subfields[1],0,subfield);
 
-            size_t nPlanes = all_planes.size();
-            vector<double> field_vector;
-            field_vector.resize(3*nPlanes);
-            size_t dims_field_plane[2] = {nPlanes,3};
-            for(size_t i=0; i<nPlanes; i++)
-            {
-                field_vector[i] = all_planes[i][0];
-                field_vector[i+nPlanes] = all_planes[i][1];
-                field_vector[i+2*nPlanes] = all_planes[i][2];
-            }
-            field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_plane,field_vector.data(),MAT_F_GLOBAL);
-            Mat_VarSetStructFieldByName(matvar,fields[2],0,field);
+        string tag_plane=params.find("tag_plane").asString();
+        char *plane_tag=new char[tag_plane.length()+1];
+        strcpy(plane_tag,tag_plane.c_str());
+        size_t dims_field_tagplane[2]={1,tag_plane.size()};
+        subfield=Mat_VarCreate(NULL,MAT_C_CHAR,MAT_T_UTF8,2,dims_field_tagplane,plane_tag,0);
+        Mat_VarSetStructFieldByName(submatvar,subfields[2],0,subfield);
+        delete [] plane_tag;
 
-            size_t dims_field_max[2]={1,1};
-            double max_val=params.find("maxv").asDouble();
-            field=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_max,&max_val,MAT_F_DONT_COPY_DATA);
-            Mat_VarSetStructFieldByName(matvar,fields[3],0,field);
+        size_t dims_field_max[2]={1,1};
+        double max_val=params.find("max").asDouble();
+        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_max,&max_val,MAT_F_DONT_COPY_DATA);
+        Mat_VarSetStructFieldByName(submatvar,subfields[3],0,subfield);
 
-            size_t dims_field_min[2]={1,1};
-            double min_val=params.find("minv").asDouble();
-            field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_min,&min_val,MAT_F_DONT_COPY_DATA);
-            Mat_VarSetStructFieldByName(matvar,fields[4],0,field);
+        size_t dims_field_min[2]={1,1};
+        double min_val=params.find("min").asDouble();
+        subfield = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_min,&min_val,MAT_F_DONT_COPY_DATA);
+        Mat_VarSetStructFieldByName(submatvar,subfields[4],0,subfield);
 
-            size_t dims_field_target[2]={1,3};
-            Bottle *bTarget=params.find("target").asList();
-            Vector target(3,0.0);
-            target[0]=bTarget->get(0).asDouble();
-            target[1]=bTarget->get(1).asDouble();
-            target[2]=bTarget->get(2).asDouble();
-            field=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_target,target.data(),MAT_F_DONT_COPY_DATA);
-            Mat_VarSetStructFieldByName(matvar,fields[5],0,field);
+        size_t dims_field_target[2]={1,3};
+        Bottle *bTarget=params.find("target").asList();
+        Vector target(3,0.0);
+        target[0]=bTarget->get(0).asDouble();
+        target[1]=bTarget->get(1).asDouble();
+        target[2]=bTarget->get(2).asDouble();
+        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_target,target.data(),0);
+        Mat_VarSetStructFieldByName(submatvar,subfields[5],0,subfield);
 
-            size_t dims_field_tstart[2]={1,1};
-            cout<< "started at "<<tstart_session;
-            field=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tstart,&tstart_session,MAT_F_DONT_COPY_DATA);
-            Mat_VarSetStructFieldByName(matvar,fields[6],0,field);
+        size_t dims_field_tstart[2]={1,1};
+        cout<<"started at "<<tstart_session;
+        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tstart,&tstart_session,MAT_F_DONT_COPY_DATA);
+        Mat_VarSetStructFieldByName(submatvar,subfields[6],0,subfield);
 
-            cout<<" ended at "<<tend_session<<endl;
-            size_t dims_field_tend[2]={1,1};
-            field=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tend,&tend_session,MAT_F_DONT_COPY_DATA);
-            Mat_VarSetStructFieldByName(matvar,fields[7],0,field);
-
-            Mat_VarWrite(matfp,matvar,MAT_COMPRESSION_NONE);
-            Mat_VarFree(matvar);
-        }
-        else
-        {
-            return false;
-        }
+        cout<<" ended at "<<tend_session<<endl;
+        size_t dims_field_tend[2]={1,1};
+        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tend,&tend_session,MAT_F_DONT_COPY_DATA);
+        Mat_VarSetStructFieldByName(submatvar,subfields[7],0,subfield);
     }
-
-    return true;
-
+    return submatvar;
 }
 
 /********************************************************/
@@ -1409,22 +1410,18 @@ bool Manager::writeKeypointsToFile(mat_t *matfp)
 //    if(all_keypoints.size() != 0)
 //        print(all_keypoints);
 
-    //Save keypoint
+    //Save keypoints
     if(!writeStructToMat("Keypoints",all_keypoints,matfp))
     {
         yError() << "Could not save keypoints.. the file will not be saved";
         return false;
     }
 
-    //Save metrics to process
-    vector<const Metric*> met=curr_exercise->getMetrics();
-    for(int i=0;i<met.size();i++)
+    //Save exercise
+    if(!writeStructToMat("Exercise",curr_exercise,matfp))
     {
-        if(!writeStructToMat(met[i]->getParams().find("name").asString().c_str(),*met[i],matfp))
-        {
-            yError() << "Could not save exercise.. the file will not be saved";
-            return false;
-        }
+        yError() << "Could not save exercise.. the file will not be saved";
+        return false;
     }
 
     return true;

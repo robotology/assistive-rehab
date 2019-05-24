@@ -95,16 +95,16 @@ Exercise::~Exercise()
     }
 }
 
-/************************/
-/*      ABDUCTION       */
-/************************/
-AbductionLeft::AbductionLeft()
+/*****************************************/
+/*      Range of Motion Exercises        */
+/*****************************************/
+RangeOfMotion::RangeOfMotion(const string &name_)
 {
-    name=ExerciseTag::abduction_left;
+    name=name_;
     type=ExerciseType::rehabilitation;
 }
 
-void AbductionLeft::setFeedbackParams(const Property &p)
+void RangeOfMotion::setFeedbackParams(const Property &p)
 {
     feedparams=p;
     duration=feedparams.find("duration").asInt();
@@ -139,7 +139,7 @@ void AbductionLeft::setFeedbackParams(const Property &p)
     }
 }
 
-Matrix AbductionLeft::getFeedbackThresholds()
+Matrix RangeOfMotion::getFeedbackThresholds()
 {
     feedbackMat.resize(5,joint_list.size());
     for(size_t i=0; i<joint_list.size(); i++)
@@ -153,121 +153,179 @@ Matrix AbductionLeft::getFeedbackThresholds()
     return feedbackMat;
 }
 
-/************************/
-/*     INTERNAL ROT     */
-/************************/
-InternalRotationLeft::InternalRotationLeft()
-{
-    name=ExerciseTag::internal_rotation_left;
-    type=ExerciseType::rehabilitation;
-}
+///************************/
+///*      ABDUCTION       */
+///************************/
+//AbductionLeft::AbductionLeft()
+//{
+//    name=ExerciseTag::abduction_left;
+//    type=ExerciseType::rehabilitation;
+//}
 
-void InternalRotationLeft::setFeedbackParams(const Property &p)
-{
-    feedparams=p;
-    duration=feedparams.find("duration").asInt();
-    twarp=feedparams.find("twarp").asDouble();
-    Bottle t=feedparams.findGroup("thresh");
-    Bottle jnt=t.findGroup("joint");
-    Bottle sx=t.findGroup("sx");
-    Bottle sy=t.findGroup("sy");
-    Bottle sz=t.findGroup("sz");
-    Bottle freq=t.findGroup("freq");
-    Bottle psd=t.findGroup("psd");
+//void AbductionLeft::setFeedbackParams(const Property &p)
+//{
+//    feedparams=p;
+//    duration=feedparams.find("duration").asInt();
+//    twarp=feedparams.find("twarp").asDouble();
+//    Bottle t=feedparams.findGroup("thresh");
+//    Bottle jnt=t.findGroup("joint");
+//    Bottle sx=t.findGroup("sx");
+//    Bottle sy=t.findGroup("sy");
+//    Bottle sz=t.findGroup("sz");
+//    Bottle freq=t.findGroup("freq");
+//    Bottle psd=t.findGroup("psd");
 
-    for(int i=0;i<jnt.size()-1;i++)
-    {
-        Bottle *t1=jnt.get(i+1).asList();
-        joint_list.push_back(t1->get(1).asString());
+//    for(int i=0;i<jnt.size()-1;i++)
+//    {
+//        Bottle *t1=jnt.get(i+1).asList();
+//        joint_list.push_back(t1->get(1).asString());
 
-        Bottle *t2=sx.get(i+1).asList();
-        sx_thresh.push_back(t2->get(1).asDouble());
+//        Bottle *t2=sx.get(i+1).asList();
+//        sx_thresh.push_back(t2->get(1).asDouble());
 
-        Bottle *t3=sy.get(i+1).asList();
-        sy_thresh.push_back(t3->get(1).asDouble());
+//        Bottle *t3=sy.get(i+1).asList();
+//        sy_thresh.push_back(t3->get(1).asDouble());
 
-        Bottle *t4=sz.get(i+1).asList();
-        sz_thresh.push_back(t4->get(1).asDouble());
+//        Bottle *t4=sz.get(i+1).asList();
+//        sz_thresh.push_back(t4->get(1).asDouble());
 
-        Bottle *t6=freq.get(i+1).asList();
-        range_freq.push_back(t6->get(1).asDouble());
+//        Bottle *t6=freq.get(i+1).asList();
+//        range_freq.push_back(t6->get(1).asDouble());
 
-        Bottle *t7=psd.get(i+1).asList();
-        psd_thresh.push_back(t7->get(1).asDouble());
-    }
-}
+//        Bottle *t7=psd.get(i+1).asList();
+//        psd_thresh.push_back(t7->get(1).asDouble());
+//    }
+//}
 
-Matrix InternalRotationLeft::getFeedbackThresholds()
-{
-    feedbackMat.resize(5,joint_list.size());
-    for(size_t i=0; i<joint_list.size(); i++)
-    {
-        feedbackMat[0][i]=sx_thresh[i];
-        feedbackMat[1][i]=sy_thresh[i];
-        feedbackMat[2][i]=sz_thresh[i];
-        feedbackMat[3][i]=range_freq[i];
-        feedbackMat[4][i]=psd_thresh[i];
-    }
-    return feedbackMat;
-}
+//Matrix AbductionLeft::getFeedbackThresholds()
+//{
+//    feedbackMat.resize(5,joint_list.size());
+//    for(size_t i=0; i<joint_list.size(); i++)
+//    {
+//        feedbackMat[0][i]=sx_thresh[i];
+//        feedbackMat[1][i]=sy_thresh[i];
+//        feedbackMat[2][i]=sz_thresh[i];
+//        feedbackMat[3][i]=range_freq[i];
+//        feedbackMat[4][i]=psd_thresh[i];
+//    }
+//    return feedbackMat;
+//}
 
-/************************/
-/*     EXTERNAL ROT     */
-/************************/
-ExternalRotationLeft::ExternalRotationLeft()
-{
-    name=ExerciseTag::external_rotation_left;
-    type=ExerciseType::rehabilitation;
-}
+///************************/
+///*     INTERNAL ROT     */
+///************************/
+//InternalRotationLeft::InternalRotationLeft()
+//{
+//    name=ExerciseTag::internal_rotation_left;
+//    type=ExerciseType::rehabilitation;
+//}
 
-void ExternalRotationLeft::setFeedbackParams(const Property &p)
-{
-    feedparams=p;
-    duration=feedparams.find("duration").asInt();
-    twarp=feedparams.find("twarp").asDouble();
-    Bottle t=feedparams.findGroup("thresh");
-    Bottle jnt=t.findGroup("joint");
-    Bottle sx=t.findGroup("sx");
-    Bottle sy=t.findGroup("sy");
-    Bottle sz=t.findGroup("sz");
-    Bottle freq=t.findGroup("freq");
-    Bottle psd=t.findGroup("psd");
+//void InternalRotationLeft::setFeedbackParams(const Property &p)
+//{
+//    feedparams=p;
+//    duration=feedparams.find("duration").asInt();
+//    twarp=feedparams.find("twarp").asDouble();
+//    Bottle t=feedparams.findGroup("thresh");
+//    Bottle jnt=t.findGroup("joint");
+//    Bottle sx=t.findGroup("sx");
+//    Bottle sy=t.findGroup("sy");
+//    Bottle sz=t.findGroup("sz");
+//    Bottle freq=t.findGroup("freq");
+//    Bottle psd=t.findGroup("psd");
 
-    for(int i=0;i<jnt.size()-1;i++)
-    {
-        Bottle *t1=jnt.get(i+1).asList();
-        joint_list.push_back(t1->get(1).asString());
+//    for(int i=0;i<jnt.size()-1;i++)
+//    {
+//        Bottle *t1=jnt.get(i+1).asList();
+//        joint_list.push_back(t1->get(1).asString());
 
-        Bottle *t2=sx.get(i+1).asList();
-        sx_thresh.push_back(t2->get(1).asDouble());
+//        Bottle *t2=sx.get(i+1).asList();
+//        sx_thresh.push_back(t2->get(1).asDouble());
 
-        Bottle *t3=sy.get(i+1).asList();
-        sy_thresh.push_back(t3->get(1).asDouble());
+//        Bottle *t3=sy.get(i+1).asList();
+//        sy_thresh.push_back(t3->get(1).asDouble());
 
-        Bottle *t4=sz.get(i+1).asList();
-        sz_thresh.push_back(t4->get(1).asDouble());
+//        Bottle *t4=sz.get(i+1).asList();
+//        sz_thresh.push_back(t4->get(1).asDouble());
 
-        Bottle *t6=freq.get(i+1).asList();
-        range_freq.push_back(t6->get(1).asDouble());
+//        Bottle *t6=freq.get(i+1).asList();
+//        range_freq.push_back(t6->get(1).asDouble());
 
-        Bottle *t7=psd.get(i+1).asList();
-        psd_thresh.push_back(t7->get(1).asDouble());
-    }
-}
+//        Bottle *t7=psd.get(i+1).asList();
+//        psd_thresh.push_back(t7->get(1).asDouble());
+//    }
+//}
 
-Matrix ExternalRotationLeft::getFeedbackThresholds()
-{
-    feedbackMat.resize(5,joint_list.size());
-    for(size_t i=0; i<joint_list.size(); i++)
-    {
-        feedbackMat[0][i]=sx_thresh[i];
-        feedbackMat[1][i]=sy_thresh[i];
-        feedbackMat[2][i]=sz_thresh[i];
-        feedbackMat[3][i]=range_freq[i];
-        feedbackMat[4][i]=psd_thresh[i];
-    }
-    return feedbackMat;
-}
+//Matrix InternalRotationLeft::getFeedbackThresholds()
+//{
+//    feedbackMat.resize(5,joint_list.size());
+//    for(size_t i=0; i<joint_list.size(); i++)
+//    {
+//        feedbackMat[0][i]=sx_thresh[i];
+//        feedbackMat[1][i]=sy_thresh[i];
+//        feedbackMat[2][i]=sz_thresh[i];
+//        feedbackMat[3][i]=range_freq[i];
+//        feedbackMat[4][i]=psd_thresh[i];
+//    }
+//    return feedbackMat;
+//}
+
+///************************/
+///*     EXTERNAL ROT     */
+///************************/
+//ExternalRotationLeft::ExternalRotationLeft()
+//{
+//    name=ExerciseTag::external_rotation_left;
+//    type=ExerciseType::rehabilitation;
+//}
+
+//void ExternalRotationLeft::setFeedbackParams(const Property &p)
+//{
+//    feedparams=p;
+//    duration=feedparams.find("duration").asInt();
+//    twarp=feedparams.find("twarp").asDouble();
+//    Bottle t=feedparams.findGroup("thresh");
+//    Bottle jnt=t.findGroup("joint");
+//    Bottle sx=t.findGroup("sx");
+//    Bottle sy=t.findGroup("sy");
+//    Bottle sz=t.findGroup("sz");
+//    Bottle freq=t.findGroup("freq");
+//    Bottle psd=t.findGroup("psd");
+
+//    for(int i=0;i<jnt.size()-1;i++)
+//    {
+//        Bottle *t1=jnt.get(i+1).asList();
+//        joint_list.push_back(t1->get(1).asString());
+
+//        Bottle *t2=sx.get(i+1).asList();
+//        sx_thresh.push_back(t2->get(1).asDouble());
+
+//        Bottle *t3=sy.get(i+1).asList();
+//        sy_thresh.push_back(t3->get(1).asDouble());
+
+//        Bottle *t4=sz.get(i+1).asList();
+//        sz_thresh.push_back(t4->get(1).asDouble());
+
+//        Bottle *t6=freq.get(i+1).asList();
+//        range_freq.push_back(t6->get(1).asDouble());
+
+//        Bottle *t7=psd.get(i+1).asList();
+//        psd_thresh.push_back(t7->get(1).asDouble());
+//    }
+//}
+
+//Matrix ExternalRotationLeft::getFeedbackThresholds()
+//{
+//    feedbackMat.resize(5,joint_list.size());
+//    for(size_t i=0; i<joint_list.size(); i++)
+//    {
+//        feedbackMat[0][i]=sx_thresh[i];
+//        feedbackMat[1][i]=sy_thresh[i];
+//        feedbackMat[2][i]=sz_thresh[i];
+//        feedbackMat[3][i]=range_freq[i];
+//        feedbackMat[4][i]=psd_thresh[i];
+//    }
+//    return feedbackMat;
+//}
 
 /************************/
 /*      REACHING        */
