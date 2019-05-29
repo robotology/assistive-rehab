@@ -432,6 +432,26 @@ bool Manager::selectSkel(const string &skel_tag)
 }
 
 /********************************************************/
+bool Manager::setPart(const string &part)
+{
+    LockGuard lg(mutex);
+
+    yInfo() << "Moving" << part << "arm";
+    Bottle cmd,reply;
+    cmd.addString("loadModel");
+    cmd.addString(part);
+    actionPort.write(cmd,reply);
+    if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+    {
+        yError() << "Could not set part to actionRecognizer";
+        return false;
+    }
+
+    return true;
+
+}
+
+/********************************************************/
 bool Manager::start()
 {
     LockGuard lg(mutex);

@@ -40,6 +40,7 @@ class Recognizer : public RFModule, public actionRecognizer_IDL
     unordered_map<string,int> keypoint2int;
     unordered_map<int,string> class_map;
     int nframes,nsteps,nclasses,nfeatures;
+    string part;
     string skel_tag;
     SkeletonStd skeletonIn;
 
@@ -61,12 +62,14 @@ class Recognizer : public RFModule, public actionRecognizer_IDL
     Mutex mutex;
     bool starting;
     string action_to_perform;
+    ResourceFinder rf;
     
 
 public:
     /********************************************************/
-    bool configure(ResourceFinder &rf)
+    bool configure(ResourceFinder &rf_)
     {
+        rf = rf_;
         string moduleName = rf.check("name", Value("actionRecognizer")).asString();
         setName(moduleName.c_str());
         predict = rf.check("predict",Value(true)).asBool();
@@ -81,6 +84,7 @@ public:
             yError()<<"Unable to find key \"num-classes\" or \"num-features\"";
             return false;
         }
+        part=bGroup.find("part").asString();
         nclasses=bGroup.find("num-classes").asInt();
         nfeatures=bGroup.find("num-features").asInt();
         nsteps=bGroup.find("num-steps").asInt();
@@ -123,8 +127,8 @@ public:
         idx_step=0;
 
         // Set up input paths
-        pathToGraph = rf.findFileByName("model.meta");
-        checkpointPath = pathToGraph.substr(0, pathToGraph.find_last_of("/\\")) + "/model";
+        pathToGraph = rf.findFileByName("model_"+part+".meta");
+        checkpointPath = pathToGraph.substr(0, pathToGraph.find_last_of("/\\")) + "/model_"+part;
         if(predict)
         {
             yInfo() << "Loading model from:" << pathToGraph;
@@ -173,6 +177,62 @@ public:
         opcPort.open("/" + moduleName + "/opc");
         outPort.open("/" + moduleName + "/target:o");
         attach(analyzerPort);
+        return true;
+    }
+
+    /**********************************************************/
+    bool loadModel(const string &part_) override
+    {
+        LockGuard lg(mutex);
+
+        // Set up input paths
+        part = part_;
+        pathToGraph = rf.findFileByName("model_"+part+".meta");
+        checkpointPath = pathToGraph.substr(0, pathToGraph.find_last_of("/\\")) + "/model_"+part;
+        if(predict)
+        {
+            yInfo() << "Loading model from:" << pathToGraph;
+
+            sess_opts.config.mutable_gpu_options()->set_allow_growth(true); //to limit GPU usage
+            session = NewSession(sess_opts);
+            if (session == nullptr)
+            {
+                throw runtime_error("Could not create Tensorflow session");
+                return false;
+            }
+
+            // Read in the protobuf graph we exported
+            MetaGraphDef graph_def;
+            status = ReadBinaryProto(Env::Default(), pathToGraph, &graph_def);
+            if (!status.ok())
+            {
+                throw runtime_error("Error reading graph definition from " + pathToGraph + ": " + status.ToString());
+                return false;
+            }
+
+            // Add the graph to the session
+            status = session->Create(graph_def.graph_def());
+            if (!status.ok())
+            {
+                throw runtime_error("Error creating graph: " + status.ToString());
+                return false;
+            }
+
+            // Read weights from the saved checkpoint
+            Tensor checkpointPathTensor(DT_STRING, TensorShape());
+            checkpointPathTensor.scalar<std::string>()() = checkpointPath;
+            status = session->Run(
+                    {{ graph_def.saver_def().filename_tensor_name(), checkpointPathTensor },},
+                    {},
+                    {graph_def.saver_def().restore_op_name()},
+                    nullptr);
+            if (!status.ok())
+            {
+                throw runtime_error("Error loading checkpoint from " + checkpointPath + ": " + status.ToString());
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -398,7 +458,14 @@ public:
                             cout << scores[k] << " ";
                         }
                         cout << endl;
-                        predicted_action=class_map[pred];
+                        if(class_map[pred]!="random" && class_map[pred]!="static")
+                        {
+                            predicted_action=class_map[pred]+"_"+part;
+                        }
+                        else
+                        {
+                            predicted_action=class_map[pred];
+                        }
                         outscore=scores[pred];
                         predictions.push_back(predicted_action);
                         outscores.push_back(outscore);
