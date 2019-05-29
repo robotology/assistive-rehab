@@ -589,7 +589,7 @@ class Interaction : public RFModule, public interactionManager_IDL
                                 cmd.clear();
                                 rep.clear();
                                 cmd.addString("setPart");
-                                cmd.addString(partspeech);
+                                cmd.addString(part);
 
                                 if (analyzerPort.write(cmd,rep))
                                 {
