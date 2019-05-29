@@ -586,60 +586,72 @@ class Interaction : public RFModule, public interactionManager_IDL
                                     }
                                 }
 
-                                string motion_type_robot=motion_type.substr(0,found)+"_"+partrob;
-                                string script_show=move_file+" "+"show_"+motion_type_robot;
-                                string script_perform=move_file+" "+"perform_"+motion_type_robot;
-
                                 cmd.clear();
-                                cmd.addString("selectSkel");
-                                cmd.addString(tag);
-                                yInfo()<<"Selecting skeleton"<<tag;
+                                rep.clear();
+                                cmd.addString("setPart");
+                                cmd.addString(partspeech);
+
                                 if (analyzerPort.write(cmd,rep))
                                 {
                                     if (rep.get(0).asVocab()==ok)
                                     {
-                                        if (history.find(tag)==end(history))
-                                        {
-                                            speak("explain",true);
-                                        }
-                                        else
-                                        {
-                                            vector<SpeechParam> p;
-                                            p.push_back(SpeechParam(tag[0]!='#'?(tag+","):string("")));
-                                            speak("in-the-know",true,p);
-                                        }
-
-                                        vector<SpeechParam> p;
-                                        p.push_back(SpeechParam(partspeech));
-                                        speak("show",true,p);
-                                        movethr->setFile(script_show);
-                                        movethr->startMoving();
-
-                                        while(movethr->isMoving())
-                                        {
-                                            //wait until it finishes
-                                            Time::yield();
-                                        }
-                                        
-                                        Time::delay(3.0);
-                                        speak("start",true);
-                                        history[tag].push_back(metric);
-                                        movethr->setFile(script_perform);
-                                        movethr->startMoving();
-                                        Time::delay(1.0);
+                                        string motion_type_robot=motion_type.substr(0,found)+"_"+partrob;
+                                        string script_show=move_file+" "+"show_"+motion_type_robot;
+                                        string script_perform=move_file+" "+"perform_"+motion_type_robot;
 
                                         cmd.clear();
-                                        cmd.addString("start");
+                                        cmd.addString("selectSkel");
+                                        cmd.addString(tag);
+                                        yInfo()<<"Selecting skeleton"<<tag;
                                         if (analyzerPort.write(cmd,rep))
                                         {
                                             if (rep.get(0).asVocab()==ok)
                                             {
-                                                state=State::move;
-                                                                                                                                            
-                                                assess_values.clear();
-                                                t0=Time::now();
+                                                if (history.find(tag)==end(history))
+                                                {
+                                                    speak("explain",true);
+                                                }
+                                                else
+                                                {
+                                                    vector<SpeechParam> p;
+                                                    p.push_back(SpeechParam(tag[0]!='#'?(tag+","):string("")));
+                                                    speak("in-the-know",true,p);
+                                                }
+
+                                                vector<SpeechParam> p;
+                                                p.push_back(SpeechParam(partspeech));
+                                                speak("show",true,p);
+                                                movethr->setFile(script_show);
+                                                movethr->startMoving();
+
+                                                while(movethr->isMoving())
+                                                {
+                                                    //wait until it finishes
+                                                    Time::yield();
+                                                }
+
+                                                Time::delay(3.0);
+                                                speak("start",true);
+                                                history[tag].push_back(metric);
+                                                movethr->setFile(script_perform);
+                                                movethr->startMoving();
+                                                Time::delay(1.0);
+
+                                                cmd.clear();
+                                                cmd.addString("start");
+                                                if (analyzerPort.write(cmd,rep))
+                                                {
+                                                    if (rep.get(0).asVocab()==ok)
+                                                    {
+                                                        state=State::move;
+
+                                                        assess_values.clear();
+                                                        t0=Time::now();
+                                                    }
+                                                }
                                             }
                                         }
+
                                     }
                                 }
                             }

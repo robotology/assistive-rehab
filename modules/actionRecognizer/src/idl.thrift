@@ -57,4 +57,10 @@ service actionRecognizer_IDL
     */
    bool stop();
 
+   /**
+    * Load the correct model (for left or right part).
+    * @return true/false on success/failure.
+   */
+   bool loadModel(1:string part);
+
 }

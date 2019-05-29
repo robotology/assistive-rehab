@@ -63,4 +63,10 @@ service motionAnalyzer_IDL
    */
    list<string> listJoints()
 
+   /**
+   * Select the part to move.
+   * @return true/false on success/failure.
+   */
+   bool setPart(1:string part);
+
 }
