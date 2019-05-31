@@ -10,19 +10,19 @@
 
     <module>
         <name>yarpdev</name>
-        <parameters>--device speech --lingware-context speech --default-language it-IT --robot r1 --pitch 80 --speed 110</parameters>
+        <parameters>--device speech --lingware-context speech --default-language it-IT --robot SIM_CER_ROBOT --pitch 80 --speed 110</parameters>
         <node>localhost</node>
     </module>
 
     <module>
         <name>yarpdev</name>
-        <parameters>--context AssistiveRehab --from realsense2.ini</parameters>
+        <parameters>--context AssistiveRehab --from realsense2.ini --name /depthCameraExt</parameters>
         <node>localhost</node>
     </module>
 
     <module>
         <name>iSpeak</name>
-        <parameters>--package speech-dev</parameters>
+        <parameters>--package speech-dev --name iSpeakSIM</parameters>
         <node>localhost</node>
     </module>
 
@@ -100,7 +100,7 @@
 
     <module>
         <name>interactionManager</name>
-        <parameters>--virtual-mode true --explain-exercise-once true</parameters>
+        <parameters>--virtual-mode true --explain-exercise-once true --nrep-show 12 --nrep-perform 24 --raise-hand false</parameters>
         <node>localhost</node>
     </module>
 
@@ -127,13 +127,13 @@
     </module>
 
     <connection>
-        <from>/iSpeak/speech-dev/rpc</from>
-        <to>/r1/speech:rpc</to>
+        <from>/iSpeakSIM/speech-dev/rpc</from>
+        <to>/SIM_CER_ROBOT/speech:rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
-        <from>/iSpeak/r1:rpc</from>
+        <from>/iSpeakSIM/r1:rpc</from>
         <to>/faceExpressionImage/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
@@ -145,13 +145,13 @@
     </connection>
 
     <connection>
-        <from>/depthCamera/rgbImage:o</from>
+        <from>/depthCameraExt/rgbImage:o</from>
         <to>/yarpOpenPose/image:i</to>
         <protocol>mjpeg</protocol>
     </connection>
 
     <connection>
-        <from>/depthCamera/depthImage:o</from>
+        <from>/depthCameraExt/depthImage:o</from>
         <to>/yarpOpenPose/float:i</to>
         <protocol>fast_tcp+send.portmonitor+file.zfp+recv.portmonitor+file.zfp+type.dll</protocol>
     </connection>
@@ -164,7 +164,7 @@
 
     <connection>
         <from>/skeletonRetriever/cam:rpc</from>
-        <to>/depthCamera/rpc:i</to>
+        <to>/depthCameraExt/rpc:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
@@ -272,7 +272,7 @@
 
     <connection>
         <from>/feedbackSynthetizer/speech:o</from>
-        <to>/iSpeak</to>
+        <to>/iSpeakSIM</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
@@ -302,13 +302,13 @@
 
     <connection>
         <from>/interactionManager/speech:o</from>
-        <to>/iSpeak</to>
+        <to>/iSpeakSIM</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/interactionManager/speech:rpc</from>
-        <to>/iSpeak/rpc</to>
+        <to>/iSpeakSIM/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
 </application>
