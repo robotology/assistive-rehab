@@ -30,9 +30,27 @@ service interactionManager_IDL
    bool stop();
 
    /**
-    * Start the interaction with occlusion.
+    * Start imitation phase with occlusion.
     * @return true/false on success/failure.
     */
    bool start_occlusion();
+
+  /**
+   * Start observation phase.
+   * @return true/false on success/failure.
+   */
+   bool start_observation();
+
+  /**
+   * Start imitation phase.
+   * @return true/false on success/failure.
+   */
+   bool start_imitation();
+
+  /**
+   * Raise hand to start the interaction.
+   * @return true/false on success/failure.
+   */
+   bool set_raise_hand();
 
 }
