@@ -66,6 +66,7 @@ nav:
         - How to run the pipeline in a disembodied manner: 'disembodied.md'
         - How to temporally align two signals: 'align_signals.md'
         - How to run the main applications: 'main_apps.md'
+        - How to run the virtual demo: 'virtual_demo.md'
     - Milestones:
         - Y1M5: 'Y1M5.md'
         - Y1Q3: 'Y1Q3.md'
