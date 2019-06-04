@@ -27,12 +27,15 @@ class Detector : public RFModule
     cv::Ptr<cv::aruco::DetectorParameters> detector_params;
     cv::Mat cam_intrinsic,cam_distortion;
     cv::Mat rvec,tvec; // Rodrigues coefficients wrt cam
-    yarp::sig::Vector est_pose;
+    yarp::sig::Matrix gaze_frame;
+    int opc_id;
+    bool add;
 
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > imgInPort;
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > imgOutPort;
-    yarp::os::BufferedPort<yarp::os::Bottle> posePort;
     yarp::os::RpcClient camPort;
+    yarp::os::RpcClient opcPort;
+    yarp::os::BufferedPort<yarp::os::Property> gazeStatePort;
 
     /****************************************************************/
     bool configure(ResourceFinder &rf) override
@@ -55,13 +58,14 @@ class Detector : public RFModule
         detector_params = cv::aruco::DetectorParameters::create();
         detector_params->cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
 
-        //final estimate
-        est_pose.resize(7);
+        add=true;
+        opc_id=-1;
 
         imgInPort.open("/" + getName() + "/img:i");
         imgOutPort.open("/" + getName() + "/img:o");
-        posePort.open("/" + getName() + "/pose:o");
         camPort.open("/" + getName() + "/cam:rpc");
+        opcPort.open("/" + getName() + "/opc:rpc");
+        gazeStatePort.open("/" + getName() + "/gaze/state:i");
 
         return true;
     }
@@ -75,83 +79,190 @@ class Detector : public RFModule
     /****************************************************************/
     bool updateModule() override
     {
-        if (yarp::sig::ImageOf<yarp::sig::PixelRgb> *inImg=imgInPort.read())
+        if (Property *p=gazeStatePort.read(false))
         {
-            yarp::sig::ImageOf<yarp::sig::PixelRgb> &outImg=imgOutPort.prepare();
-            cv::Mat inImgMat;
-            inImgMat=yarp::cv::toCvMat(*inImg);
+            yarp::sig::Vector pose;
+            p->find("depth_rgb").asList()->write(pose);
+            gaze_frame=yarp::math::axis2dcm(pose.subVector(3,6));
+            gaze_frame.setSubcol(pose.subVector(0,2),0,3);
 
-            //detect markers
-            std::vector<int> ids;
-            std::vector<std::vector<cv::Point2f> > corners,rejected;
-            cv::aruco::detectMarkers(inImgMat,dictionary,corners,ids);
-
-            //read camera params
-            if(getCameraOptions(cam_intrinsic,cam_distortion))
+            if (yarp::sig::ImageOf<yarp::sig::PixelRgb> *inImg=imgInPort.read())
             {
-			    //perform refinement
-                cv::aruco::refineDetectedMarkers(inImgMat,board,corners,ids,rejected,
-                                                 cam_intrinsic,cam_distortion);
+                yarp::sig::ImageOf<yarp::sig::PixelRgb> &outImg=imgOutPort.prepare();
+                cv::Mat inImgMat;
+                inImgMat=yarp::cv::toCvMat(*inImg);
 
-                //if at least one marker detected
-                if(ids.size()>0)
+                //detect markers
+                std::vector<int> ids;
+                std::vector<std::vector<cv::Point2f> > corners,rejected;
+                cv::aruco::detectMarkers(inImgMat,dictionary,corners,ids);
+
+                //read camera params
+                if(getCameraOptions(cam_intrinsic,cam_distortion))
                 {
-                    cv::aruco::drawDetectedMarkers(inImgMat,corners,ids);
+                    //perform refinement
+                    cv::aruco::refineDetectedMarkers(inImgMat,board,corners,ids,rejected,
+                                                     cam_intrinsic,cam_distortion);
 
-                    //estimate pose
-                    //use cv::Mat and not cv::Vec3d to avoid issues with
-                    //cv::aruco::estimatePoseBoard() initial guess
-                    int valid=cv::aruco::estimatePoseBoard(corners,ids,board,
-                                                           cam_intrinsic,cam_distortion,
-                                                           rvec,tvec);
-
-                    //if at least one board marker detected
-                    if(valid>0)
+                    //if at least one marker detected
+                    if(ids.size()>0)
                     {
-                        cv::aruco::drawAxis(inImgMat,cam_intrinsic,cam_distortion,rvec,tvec,0.5);
-                        cv::Mat Rmat;
-                        cv::Rodrigues(rvec,Rmat);
-                        yarp::sig::Matrix R(3,3);
-                        for(int i=0;i<Rmat.rows;i++)
+                        cv::aruco::drawDetectedMarkers(inImgMat,corners,ids);
+
+                        //estimate pose
+                        //use cv::Mat and not cv::Vec3d to avoid issues with
+                        //cv::aruco::estimatePoseBoard() initial guess
+                        int valid=cv::aruco::estimatePoseBoard(corners,ids,board,
+                                                               cam_intrinsic,cam_distortion,
+                                                               rvec,tvec);
+
+                        //if at least one board marker detected
+                        if(valid>0)
                         {
-                            for(int j=0;j<Rmat.cols;j++)
+                            cv::aruco::drawAxis(inImgMat,cam_intrinsic,cam_distortion,rvec,tvec,0.5);
+                            cv::Mat Rmat;
+                            cv::Rodrigues(rvec,Rmat);
+                            yarp::sig::Matrix R(3,3);
+                            for(int i=0;i<Rmat.rows;i++)
                             {
-                                R(i,j)=Rmat.at<double>(i,j);
+                                for(int j=0;j<Rmat.cols;j++)
+                                {
+                                    R(i,j)=Rmat.at<double>(i,j);
+                                }
+                            }
+                            yarp::sig::Vector rot=yarp::math::dcm2axis(R);
+                            yarp::sig::Vector est_pose_camera(7),est_pose_root(7);
+                            est_pose_camera[0]=tvec.at<double>(0);
+                            est_pose_camera[1]=tvec.at<double>(1);
+                            est_pose_camera[2]=tvec.at<double>(2);
+                            est_pose_camera[3]=rot[0];
+                            est_pose_camera[4]=rot[1];
+                            est_pose_camera[5]=rot[2];
+                            est_pose_camera[6]=rot[3];
+
+                            yarp::sig::Vector pose=est_pose_camera.subVector(0,2);
+                            pose.push_back(1.0);
+                            est_pose_root.setSubvector(0,gaze_frame*pose);
+                            yarp::sig::Vector rot_root=yarp::math::dcm2axis(R*gaze_frame.submatrix(0,2,0,2));
+                            est_pose_root[3]=rot_root[0];
+                            est_pose_root[4]=rot_root[1];
+                            est_pose_root[5]=rot_root[2];
+                            est_pose_root[6]=rot_root[3];
+
+                            yInfo() << "Pose wrt camera" << est_pose_camera.toString();
+                            yInfo() << "Pose wrt root" << est_pose_root.toString();
+
+                            opcAdd(est_pose_camera,est_pose_root,add);
+                            if(add && opc_id!=-1)
+                            {
+                                add=false;
                             }
                         }
-                        yarp::sig::Vector rot=yarp::math::dcm2axis(R);
-                        est_pose[0]=tvec.at<double>(0);
-                        est_pose[1]=tvec.at<double>(1);
-                        est_pose[2]=tvec.at<double>(2);
-                        est_pose[3]=rot[0];
-                        est_pose[4]=rot[1];
-                        est_pose[5]=rot[2];
-                        est_pose[6]=rot[3];
-                    
-                        yInfo() << "Estimated pose" << est_pose.toString();
- 
-                        yarp::os::Bottle &pose=posePort.prepare();
-                        pose.clear();
-                        pose.addList().read(est_pose);
-                        posePort.write();
                     }
+                    outImg=yarp::cv::fromCvMat<yarp::sig::PixelRgb>(inImgMat);
+                    imgOutPort.write();
                 }
-                outImg=yarp::cv::fromCvMat<yarp::sig::PixelRgb>(inImgMat);
-                imgOutPort.write();				
-			}
-
+            }
         }
         return true;
     }
 
     /****************************************************************/
+    bool opcAdd(const yarp::sig::Vector &pose_camera, const yarp::sig::Vector &pose_root,
+                const bool &add)
+    {
+        if (opcPort.getOutputCount())
+        {
+            Bottle cmd,rep;
+            cmd.addVocab(Vocab::encode("add"));
+
+            Bottle bPoseCam;
+            Property poseProp;
+            bPoseCam.addList().read(pose_camera);
+            poseProp.put("pose_camera",bPoseCam.get(0));
+
+            Bottle bPoseRoot;
+            bPoseRoot.addList().read(pose_root);
+            poseProp.put("pose_root",bPoseRoot.get(0));
+
+            Property prop;
+            Bottle line;
+            line.addList().read(poseProp);
+            prop.put("finish-line",line.get(0));
+
+            if(add)
+            {
+                cmd.addList().read(prop);
+                if (opcPort.write(cmd,rep))
+                {
+                    if (rep.get(0).asVocab()==Vocab::encode("ack"))
+                    {
+                        opc_id=rep.get(1).asList()->get(1).asInt();
+                        return opcSet(prop);
+                    }
+                }
+            }
+            else
+            {
+                return opcSet(prop);
+            }
+        }
+
+        return false;
+    }
+
+    /****************************************************************/
+    bool opcSet(const yarp::os::Property &prop)
+    {
+        if (opcPort.getOutputCount())
+        {
+            Bottle cmd,rep;
+            cmd.addVocab(Vocab::encode("set"));
+            Bottle &pl=cmd.addList();
+            pl.read(prop);
+            Bottle id;
+            Bottle &id_pl=id.addList();
+            id_pl.addString("id");
+            id_pl.addInt(opc_id);
+            pl.append(id);
+            if (opcPort.write(cmd,rep))
+            {
+                return (rep.get(0).asVocab()==Vocab::encode("ack"));
+            }
+        }
+
+        return false;
+    }
+
+    /****************************************************************/
+    bool opcDel()
+    {
+        if (opcPort.getOutputCount())
+        {
+            Bottle cmd,rep;
+            cmd.addVocab(Vocab::encode("del"));
+            Bottle &pl=cmd.addList().addList();
+            pl.addString("id");
+            pl.addInt(opc_id);
+            if (opcPort.write(cmd,rep))
+            {
+                return (rep.get(0).asVocab()==Vocab::encode("ack"));
+            }
+        }
+
+        return false;
+    }
+
+    /****************************************************************/
     bool interruptModule() override
     {
+        opcDel();
+
         imgInPort.interrupt();
         imgOutPort.interrupt();
-        posePort.interrupt();
         camPort.interrupt();
-
+        opcPort.interrupt();
+        gazeStatePort.interrupt();
         return true;
     }
 
@@ -160,9 +271,9 @@ class Detector : public RFModule
     {
         imgInPort.close();
         imgOutPort.close();
-        posePort.close();
         camPort.close();
-
+        opcPort.close();
+        gazeStatePort.close();
         return true;
     }
 
