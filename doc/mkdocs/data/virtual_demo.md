@@ -46,6 +46,7 @@ A virtual R1 appears within the simulation environment.
     By default, `Gazebo` has the origin and the external gui visible. To remove the origin, you can click on `View` and deselect `Origin`. To remove the gui, you can click on `Window` and `Full screen`.
 
 When the demo is launched, the `interactionManager` waits for the command `start_observation` to start the exercise session. Specifically, the following commands should be sent _in this order_ to the rpc port `/interactionManager/cmd:rpc`:
+
 - `start_observation`: to start the observation phase, where the robot looks for a user and, when it founds her/him, starts showing the exercise to be performed;
 - `start_imitation`: to start the direct imitation phase, where the robot performs the exercise together with the user, while providing her/him with verbal feedback;
 - `start_occlusion`: to start the occluded imitation phase, where the robot keeps performing the exercise behind a panel and stops providing the verbal feedback;

@@ -1,7 +1,7 @@
 # Assistive-rehab
 
 !!! quote ""
-    Assistive-rehab is a framework for developing the assistive intelligence of [R1 robot](https://www.youtube.com/watch?v=TBphNGW6m4o) for clinical rehabilitation. The project is being developed within the Joint Lab between [IIT](https://www.iit.it) and [Fondazionce Don Carlo Gnocchi Onlus](https://www.dongnocchi.it).
+    Assistive-rehab is a framework for developing the assistive intelligence of [R1 robot](https://www.youtube.com/watch?v=TBphNGW6m4o) for clinical rehabilitation. The project is being developed within the Joint Lab between [IIT](https://www.iit.it) and [Fondazione Don Carlo Gnocchi Onlus](https://www.dongnocchi.it).
 
 ## Scenario
 

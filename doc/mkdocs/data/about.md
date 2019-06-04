@@ -1,4 +1,4 @@
-`assistive-rehab` has been developed within the Joint Lab between [IIT](https://www.iit.it) and [Fondazionce Don Carlo Gnocchi Onlus](https://www.dongnocchi.it).
+`assistive-rehab` has been developed within the Joint Lab between [IIT](https://www.iit.it) and [Fondazione Don Carlo Gnocchi Onlus](https://www.dongnocchi.it).
 
 ### Maintainer
 | | |
