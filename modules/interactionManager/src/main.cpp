@@ -56,15 +56,16 @@ public:
     {
         while(!isStopping())
         {
-            if(startmoving)
+            for(int i=0;i<nrep;i++)
             {
-                yInfo()<<"Loading"<<file;
-                yInfo()<<"Repeat exercise"<<nrep<<"times";
-                for(int i=0;i<nrep;i++)
+                if(startmoving)
                 {
                     if(system(file.c_str()))
                         yError()<<"Processor not available";
                 }
+            }
+            if(startmoving)
+            {
                 stopMoving();
             }
         }
@@ -85,6 +86,8 @@ public:
     {
         file=file_;
         nrep=nrep_;
+        yInfo()<<"Loading"<<file;
+        yInfo()<<"Repeat exercise"<<nrep<<"times";
     }
 
     bool setInitialPosition(const string & initialpos)
@@ -132,7 +135,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     bool occluded,keepmoving;
     string partrob;
     string motion_type_robot,script_starting,script_move;
-    bool imitate;
+    bool imitate,observe;
 
     Mutex mutex;
 
@@ -157,6 +160,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     {
         LockGuard lg(mutex);
         disengage();
+        observe=true;
         return true;
     }
 
@@ -172,50 +176,54 @@ class Interaction : public RFModule, public interactionManager_IDL
     bool start_occlusion() override
     {
         LockGuard lg(mutex);
-
-        //add box in gazebo
-        Bottle cmd,rep;
-        cmd.addString("makeBox");
-        cmd.addDouble(panel_size[0]); //width
-        cmd.addDouble(panel_size[1]); //height
-        cmd.addDouble(panel_size[2]); //thickness
-        if(partrob=="left")
+        occluded=true;
+        if(virtual_mode)
         {
-            cmd.addDouble(panel_pose_left[0]); //pose.x
-            cmd.addDouble(panel_pose_left[1]); //pose.y
-            cmd.addDouble(panel_pose_left[2]); //pose.z
-            cmd.addDouble(panel_pose_left[3]); //pose.roll
-            cmd.addDouble(panel_pose_left[4]); //pose.pitch
-            cmd.addDouble(panel_pose_left[5]); //pose.yaw
-        }
-        else
-        {
-            cmd.addDouble(panel_pose_right[0]); //pose.x
-            cmd.addDouble(panel_pose_right[1]); //pose.y
-            cmd.addDouble(panel_pose_right[2]); //pose.z
-            cmd.addDouble(panel_pose_right[3]); //pose.roll
-            cmd.addDouble(panel_pose_right[4]); //pose.pitch
-            cmd.addDouble(panel_pose_right[5]); //pose.yaw
-        }
-        cmd.addInt(panel_color[0]); //color.r
-        cmd.addInt(panel_color[1]); //color.g
-        cmd.addInt(panel_color[2]); //color.b
-        if(worldGazeboPort.write(cmd,rep))
-        {
-            if (!rep.get(0).asString().empty())
+            //add box in gazebo
+            occluded=false;
+            Bottle cmd,rep;
+            cmd.addString("makeBox");
+            cmd.addDouble(panel_size[0]); //width
+            cmd.addDouble(panel_size[1]); //height
+            cmd.addDouble(panel_size[2]); //thickness
+            if(partrob=="left")
             {
-                //time for the object to be created
-                Time::delay(0.2);
-                panelid=rep.get(0).asString();
-                cmd.clear();
-                rep.clear();
-                cmd.addString("enableGravity");
-                cmd.addString(panelid);
-                cmd.addInt(1);
-                worldGazeboPort.write(cmd,rep);
-                if(rep.get(0).asVocab()==ok)
+                cmd.addDouble(panel_pose_left[0]); //pose.x
+                cmd.addDouble(panel_pose_left[1]); //pose.y
+                cmd.addDouble(panel_pose_left[2]); //pose.z
+                cmd.addDouble(panel_pose_left[3]); //pose.roll
+                cmd.addDouble(panel_pose_left[4]); //pose.pitch
+                cmd.addDouble(panel_pose_left[5]); //pose.yaw
+            }
+            else
+            {
+                cmd.addDouble(panel_pose_right[0]); //pose.x
+                cmd.addDouble(panel_pose_right[1]); //pose.y
+                cmd.addDouble(panel_pose_right[2]); //pose.z
+                cmd.addDouble(panel_pose_right[3]); //pose.roll
+                cmd.addDouble(panel_pose_right[4]); //pose.pitch
+                cmd.addDouble(panel_pose_right[5]); //pose.yaw
+            }
+            cmd.addInt(panel_color[0]); //color.r
+            cmd.addInt(panel_color[1]); //color.g
+            cmd.addInt(panel_color[2]); //color.b
+            if(worldGazeboPort.write(cmd,rep))
+            {
+                if (!rep.get(0).asString().empty())
                 {
-                    occluded=true;
+                    //time for the object to be created
+                    Time::delay(0.2);
+                    panelid=rep.get(0).asString();
+                    cmd.clear();
+                    rep.clear();
+                    cmd.addString("enableGravity");
+                    cmd.addString(panelid);
+                    cmd.addInt(1);
+                    worldGazeboPort.write(cmd,rep);
+                    if(rep.get(0).asVocab()==ok)
+                    {
+                        occluded=true;
+                    }
                 }
             }
         }
@@ -253,7 +261,12 @@ class Interaction : public RFModule, public interactionManager_IDL
             }
         }
 
-        if(occluded)
+        if(imitate)
+        {
+            imitate=false;
+        }
+
+        if(occluded && virtual_mode)
         {
             ret=false;
             cmd.clear();
@@ -266,6 +279,10 @@ class Interaction : public RFModule, public interactionManager_IDL
                 occluded=false;
                 ret=true;
             }
+        }
+        if(movethr->isMoving())
+        {
+            movethr->stopMoving();
         }
 
         state=State::stopped;
@@ -422,6 +439,11 @@ class Interaction : public RFModule, public interactionManager_IDL
                     }
                 }
             }
+        }
+
+        if(imitate)
+        {
+            imitate=false;
         }
 
         if(occluded)
@@ -608,6 +630,7 @@ class Interaction : public RFModule, public interactionManager_IDL
         interrupting=false;
         occluded=false;
         imitate=false;
+        observe=false;
         keepmoving=false;
         t0=Time::now();
 
@@ -675,7 +698,7 @@ class Interaction : public RFModule, public interactionManager_IDL
 
         if (state==State::idle)
         {
-            if (Time::now()-t0>10.0)
+            if (Time::now()-t0>3.0)
             {
                 state=State::seek;
             }
@@ -743,90 +766,94 @@ class Interaction : public RFModule, public interactionManager_IDL
 
         if (state==State::show)
         {
-            Bottle cmd,rep;
-            cmd.addString("listMetrics");
-            if (analyzerPort.write(cmd,rep))
+            if(observe)
             {
-                Bottle &metrics=*rep.get(0).asList();
-                if (metrics.size()>0)
+                Bottle cmd,rep;
+                cmd.addString("listMetrics");
+                if (analyzerPort.write(cmd,rep))
                 {
-                    string metric=select_metric(metrics);
-                    yInfo()<<"Selected metric:"<<metric;
-
-                    cmd.clear();
-                    cmd.addString("loadMetric");
-                    cmd.addString(metric);
-                    if (analyzerPort.write(cmd,rep))
+                    Bottle &metrics=*rep.get(0).asList();
+                    if (metrics.size()>0)
                     {
-                        bool ack=rep.get(0).asBool();
-                        if (ack)
+                        string metric=select_metric(metrics);
+                        yInfo()<<"Selected metric:"<<metric;
+
+                        cmd.clear();
+                        cmd.addString("loadMetric");
+                        cmd.addString(metric);
+                        if (analyzerPort.write(cmd,rep))
                         {
-                            cmd.clear();
-                            cmd.addString("getMotionType");
-                            if(analyzerPort.write(cmd,rep))
+                            bool ack=rep.get(0).asBool();
+                            if (ack)
                             {
-                                motion_type=rep.get(0).asString();
-                                size_t found=motion_type.find_last_of("_");
-                                string part=motion_type.substr(found+1,motion_type.size());
-                                string partspeech;
-                                if(mirror_exercise)
-                                {
-                                    if(part=="left")
-                                    {
-                                        partrob="right";
-                                        partspeech=parttomove[1];
-                                    }
-                                    if(part=="right")
-                                    {
-                                        partrob="left";
-                                        partspeech=parttomove[0];
-                                    }
-                                }
-                                else
-                                {
-                                    if(part=="left")
-                                    {
-                                        partrob="left";
-                                        partspeech=parttomove[1];
-                                    }
-                                    if(part=="right")
-                                    {
-                                        partrob="right";
-                                        partspeech=parttomove[0];
-                                    }
-                                }
-
                                 cmd.clear();
-                                rep.clear();
-                                cmd.addString("setPart");
-                                cmd.addString(part);
-
-                                motion_type_robot=motion_type.substr(0,found)+"_"+partrob;
-                                script_starting=move_file+" "+"startingpos_"+motion_type_robot;
-                                script_move=move_file+" "+motion_type_robot;
-
-                                cmd.clear();
-                                cmd.addString("selectSkel");
-                                cmd.addString(tag);
-                                yInfo()<<"Selecting skeleton"<<tag;
-                                if (analyzerPort.write(cmd,rep))
+                                cmd.addString("getMotionType");
+                                if(analyzerPort.write(cmd,rep))
                                 {
-                                    if (rep.get(0).asVocab()==ok)
+                                    motion_type=rep.get(0).asString();
+                                    size_t found=motion_type.find_last_of("_");
+                                    string part=motion_type.substr(found+1,motion_type.size());
+                                    string partspeech;
+                                    if(mirror_exercise)
                                     {
-                                        speak("welcome",true);
-                                        vector<SpeechParam> p;
-                                        p.push_back(SpeechParam(partspeech));
-                                        speak("show",true,p);
-                                        movethr->setInitialPosition(script_starting);
-                                        movethr->init(script_move,nrep_show);
-                                        movethr->startMoving();
-                                        history[tag].push_back(metric);
-                                        while(movethr->isMoving())
+                                        if(part=="left")
                                         {
-                                            //wait until it finishes
-                                            Time::yield();
+                                            partrob="right";
+                                            partspeech=parttomove[1];
                                         }
-                                        state=State::imitated;
+                                        if(part=="right")
+                                        {
+                                            partrob="left";
+                                            partspeech=parttomove[0];
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if(part=="left")
+                                        {
+                                            partrob="left";
+                                            partspeech=parttomove[1];
+                                        }
+                                        if(part=="right")
+                                        {
+                                            partrob="right";
+                                            partspeech=parttomove[0];
+                                        }
+                                    }
+
+                                    cmd.clear();
+                                    rep.clear();
+                                    cmd.addString("setPart");
+                                    cmd.addString(part);
+
+                                    motion_type_robot=motion_type.substr(0,found)+"_"+partrob;
+                                    script_starting=move_file+" "+"startingpos_"+motion_type_robot;
+                                    script_move=move_file+" "+motion_type_robot;
+
+                                    cmd.clear();
+                                    cmd.addString("selectSkel");
+                                    cmd.addString(tag);
+                                    yInfo()<<"Selecting skeleton"<<tag;
+                                    if (analyzerPort.write(cmd,rep))
+                                    {
+                                        if (rep.get(0).asVocab()==ok)
+                                        {
+                                            speak("welcome",true);
+                                            vector<SpeechParam> p;
+                                            p.push_back(SpeechParam(partspeech));
+                                            speak("show",true,p);
+                                            movethr->setInitialPosition(script_starting);
+                                            movethr->init(script_move,nrep_show);
+                                            movethr->startMoving();
+                                            history[tag].push_back(metric);
+                                            while(movethr->isMoving())
+                                            {
+                                                //wait until it finishes
+                                                Time::yield();
+                                            }
+                                            state=State::imitated;
+                                            observe=false;
+                                        }
                                     }
                                 }
                             }
