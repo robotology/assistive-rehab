@@ -1,0 +1,78 @@
+<application>
+<name>Assistive Rehabilitation finishLineDetector App</name>
+
+    <module>
+        <name>yarpdev</name>
+        <parameters>--context AssistiveRehab --from realsense2.ini</parameters>
+        <node>localhost</node>
+    </module>
+
+    <module>
+       <name>cer_gaze-controller</name>
+       <parameters>--cameras::context cameraCalibration --cameras::file cerEyes_320x240.ini --joints-limits::pitch "(-20.0 20.0)" --joints-limits::yaw "(-40.0 40.0)"</parameters>
+       <ensure>
+          <wait when="stop">3</wait>
+       </ensure>
+       <node>r1-base</node>
+    </module>
+
+    <module>
+       <name>objectsPropertiesCollector</name>
+       <parameters>--name opc --no-load-db --no-save-db --sync-bc 0.1</parameters>
+       <node>localhost</node>
+    </module>
+
+    <module>
+       <name>finishLineDetector</name>
+       <parameters></parameters>
+       <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpview</name>
+        <parameters>--name /viewer/depth --x 10 --y 40 --p 50 --compact</parameters>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpview</name>
+        <parameters>--name /viewer/finishline --x 380 --y 40 --p 50 --compact</parameters>
+        <node>localhost</node>
+    </module>
+
+    <connection>
+        <from>/depthCamera/rgbImage:o</from>
+        <to>/finishLineDetector/img:i</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/finishLineDetector/cam:rpc</from>
+        <to>/depthCamera/rpc:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/depthCamera/depthImage:o</from>
+        <to>/viewer/depth</to>
+        <protocol>fast_tcp+recv.portmonitor+type.dll+file.depthimage</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer_gaze-controller/state:o</from>
+        <to>/finishLineDetector/gaze/state:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/finishLineDetector/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/finishLineDetector/img:o</from>
+        <to>/viewer/finishline</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+</application>
