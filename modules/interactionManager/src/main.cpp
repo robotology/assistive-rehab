@@ -825,34 +825,40 @@ class Interaction : public RFModule, public interactionManager_IDL
                                     rep.clear();
                                     cmd.addString("setPart");
                                     cmd.addString(part);
-
-                                    motion_type_robot=motion_type.substr(0,found)+"_"+partrob;
-                                    script_starting=move_file+" "+"startingpos_"+motion_type_robot;
-                                    script_move=move_file+" "+motion_type_robot;
-
-                                    cmd.clear();
-                                    cmd.addString("selectSkel");
-                                    cmd.addString(tag);
-                                    yInfo()<<"Selecting skeleton"<<tag;
                                     if (analyzerPort.write(cmd,rep))
                                     {
                                         if (rep.get(0).asVocab()==ok)
                                         {
-                                            speak("welcome",true);
-                                            vector<SpeechParam> p;
-                                            p.push_back(SpeechParam(partspeech));
-                                            speak("show",true,p);
-                                            movethr->setInitialPosition(script_starting);
-                                            movethr->init(script_move,nrep_show);
-                                            movethr->startMoving();
-                                            history[tag].push_back(metric);
-                                            while(movethr->isMoving())
+                                            motion_type_robot=motion_type.substr(0,found)+"_"+partrob;
+                                            script_starting=move_file+" "+"startingpos_"+motion_type_robot;
+                                            script_move=move_file+" "+motion_type_robot;
+
+                                            cmd.clear();
+                                            rep.clear();
+                                            cmd.addString("selectSkel");
+                                            cmd.addString(tag);
+                                            yInfo()<<"Selecting skeleton"<<tag;
+                                            if (analyzerPort.write(cmd,rep))
                                             {
-                                                //wait until it finishes
-                                                Time::yield();
+                                                if (rep.get(0).asVocab()==ok)
+                                                {
+                                                    speak("welcome",true);
+                                                    vector<SpeechParam> p;
+                                                    p.push_back(SpeechParam(partspeech));
+                                                    speak("show",true,p);
+                                                    movethr->setInitialPosition(script_starting);
+                                                    movethr->init(script_move,nrep_show);
+                                                    movethr->startMoving();
+                                                    history[tag].push_back(metric);
+                                                    while(movethr->isMoving())
+                                                    {
+                                                        //wait until it finishes
+                                                        Time::yield();
+                                                    }
+                                                    state=State::imitated;
+                                                    observe=false;
+                                                }
                                             }
-                                            state=State::imitated;
-                                            observe=false;
                                         }
                                     }
                                 }
