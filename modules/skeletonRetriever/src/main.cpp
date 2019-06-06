@@ -748,8 +748,8 @@ class Retriever : public RFModule
         Bottle &gSkeleton=rf.findGroup("skeleton");
         if (!gSkeleton.isNull())
         {
-            keys_recognition_confidence=gSkeleton.check("key-recognition-confidence",Value(keys_recognition_confidence)).asDouble();
-            keys_recognition_percentage=gSkeleton.check("key-recognition-percentage",Value(keys_recognition_percentage)).asDouble();
+            keys_recognition_confidence=gSkeleton.check("keys-recognition-confidence",Value(keys_recognition_confidence)).asDouble();
+            keys_recognition_percentage=gSkeleton.check("keys-recognition-percentage",Value(keys_recognition_percentage)).asDouble();
             keys_acceptable_misses=gSkeleton.check("keys-acceptable-misses",Value(keys_acceptable_misses)).asInt();
             min_acceptable_path=gSkeleton.check("min-acceptable-path",Value(min_acceptable_path)).asDouble();
             tracking_threshold=gSkeleton.check("tracking-threshold",Value(tracking_threshold)).asInt();
