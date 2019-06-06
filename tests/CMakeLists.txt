@@ -34,5 +34,5 @@ set_property(TARGET test-tracker PROPERTY FOLDER "Tests")
 
 add_executable(test-linecrossing test-linecrossing.cpp)
 target_compile_definitions(test-linecrossing PRIVATE _USE_MATH_DEFINES)
-target_link_libraries(test-linecrossing ${YARP_LIBRARIES} AssistiveRehab)
+target_link_libraries(test-linecrossing ${OpenCV_LIBRARIES} ${YARP_LIBRARIES} AssistiveRehab)
 set_property(TARGET test-linecrossing PROPERTY FOLDER "Tests")
