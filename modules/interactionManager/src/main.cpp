@@ -871,7 +871,7 @@ class Interaction : public RFModule, public interactionManager_IDL
                 movethr->setInitialPosition(script_starting);
                 movethr->init(script_move,nrep_perform);
                 movethr->startMoving();
-                Time::delay(1.0);
+                Time::delay(3.0);
 
                 Bottle cmd,rep;
                 cmd.addString("start");
