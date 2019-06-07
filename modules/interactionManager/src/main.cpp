@@ -105,6 +105,59 @@ public:
     
 };
 
+/****************************************************************/
+class Trigger : public BufferedPort<Bottle>
+{
+    BufferedPort<Bottle> triggerPortOut;
+
+public:
+
+    /********************************************************/
+    Trigger()
+    {
+    }
+
+    /********************************************************/
+    ~Trigger()
+    {
+    };
+
+    /********************************************************/
+    bool open(){
+
+        this->useCallback();
+        BufferedPort<yarp::os::Bottle >::open("/interactionManager/trigger:i");
+        triggerPortOut.open("/interactionManager/trigger:o");
+        return true;
+    }
+
+    /********************************************************/
+    void close()
+    {
+        BufferedPort<yarp::os::Bottle >::close();
+        triggerPortOut.close();
+    }
+
+    /********************************************************/
+    void interrupt()
+    {
+        BufferedPort<yarp::os::Bottle >::interrupt();
+        triggerPortOut.close();
+    }
+
+    /********************************************************/
+    void onRead( yarp::os::Bottle &trigger )
+    {
+        if(!trigger.isNull())
+        {
+            Bottle &output=triggerPortOut.prepare();
+            output=trigger;
+            triggerPortOut.writeStrict();
+        }
+    }
+
+};
+
 
 /****************************************************************/
 class Interaction : public RFModule, public interactionManager_IDL
@@ -147,6 +200,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     RpcClient speechRpcPort;
     RpcServer cmdPort;
     bool interrupting;
+    Trigger *trigger;
 
     /****************************************************************/
     bool start() override
@@ -623,6 +677,10 @@ class Interaction : public RFModule, public interactionManager_IDL
         speechStreamPort.open("/interactionManager/speech:o");
         speechRpcPort.open("/interactionManager/speech:rpc");
         cmdPort.open("/interactionManager/cmd:rpc");
+
+        trigger=new Trigger();
+        trigger->open();
+
         attach(cmdPort);
 
         Rand::init();
@@ -1132,6 +1190,11 @@ class Interaction : public RFModule, public interactionManager_IDL
     {
         movethr->stop();
         delete movethr;
+
+        trigger->interrupt();
+        trigger->close();
+        delete trigger;
+
         attentionPort.close();
         worldGazeboPort.close();
         analyzerPort.close();
