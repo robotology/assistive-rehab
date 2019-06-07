@@ -50,6 +50,7 @@ class Synthetizer : public BufferedPort<Bottle>
     string moduleName;
     BufferedPort<Bottle> speechPort;
     BufferedPort<Bottle> scorePort;
+    BufferedPort<Bottle> triggerPort;
 
     map<string,string> bodypart2verbal;
     map<string,pair<vector<string>,vector<string>>> speak_map;
@@ -131,6 +132,7 @@ public:
         BufferedPort<Bottle>::open("/" + moduleName + "/dtw:i");
         speechPort.open("/" + moduleName + "/speech:o");
         scorePort.open("/" + moduleName + "/score:o");
+        triggerPort.open("/" + moduleName + "/trigger:o");
 
         return true;
     }
@@ -454,6 +456,11 @@ public:
             out.clear();
             out.addString(value);
             speechPort.writeStrict();
+
+            Bottle &trigger=triggerPort.prepare();
+            trigger.clear();
+            trigger.addString("onset_feedback");
+            triggerPort.writeStrict();
         }
     }
 
@@ -469,6 +476,7 @@ public:
         BufferedPort<Bottle >::close();
         speechPort.close();
         scorePort.close();
+        triggerPort.close();
     }
 
 

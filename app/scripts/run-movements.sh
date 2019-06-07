@@ -12,11 +12,12 @@ startingpos_abduction_left() {
 }
 
 abduction_left() {
-    
+
+    echo "onset_movement" | yarp write ... /interactionManager/trigger:i
     echo "ctpq time $TIME off 1 pos (70.0)" | yarp rpc /ctpservice/left_arm/rpc
     sleep $SLEEP
     echo "ctpq time $TIME off 1 pos (16.5)" | yarp rpc /ctpservice/left_arm/rpc
-    sleep $SLEEP    
+    sleep $SLEEP
 }
 
 #########################
@@ -29,10 +30,11 @@ startingpos_abduction_right() {
 
 abduction_right() {
 
+    echo "onset_movement" | yarp write ... /interactionManager/trigger:i
     echo "ctpq time $TIME off 1 pos (85.0)" | yarp rpc /ctpservice/right_arm/rpc
     sleep $SLEEP
     echo "ctpq time $TIME off 1 pos (16.5)" | yarp rpc /ctpservice/right_arm/rpc
-    sleep $SLEEP    
+    sleep $SLEEP   
 }
 
 ##################################
