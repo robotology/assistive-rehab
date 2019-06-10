@@ -3,6 +3,40 @@
 TIME=2.5
 SLEEP=2.5
 
+wait_motion_done() {
+   
+   local port="$1"
+   joint="$2"
+   port_sim="/SIM_CER_ROBOT$port"
+   port_robot="/cer$port"
+   
+   if yarp ping $port_robot > /dev/null; then
+     port=$port_robot
+   elif yarp ping $port_sim > /dev/null; then
+     port=$port_sim
+   else
+     echo "unable to find any port to talk to"
+     exit 1
+   fi
+   echo "talking to $port"
+
+  timeout=10
+  t0=$(date +%s)
+  while true; do
+    check=$(echo "get don $joint" | yarp rpc $port | awk '{print $4}')
+    if [ $check -eq "1" ]; then
+      echo "motion done!"
+      break
+    fi
+    t1=$(date +%s)
+    if [ $(($t1-$t0)) -gt "$timeout" ]; then
+      echo "timeout has just expired!"
+      break
+    fi
+    sleep 0.5
+  done
+}
+
 #########################
 #    ABDUCTION LEFT     #
 #########################
@@ -13,11 +47,15 @@ startingpos_abduction_left() {
 
 abduction_left() {
 
+    port=/left_arm/rpc:i
     echo "onset_movement" | yarp write ... /interactionManager/trigger:i
     echo "ctpq time $TIME off 1 pos (70.0)" | yarp rpc /ctpservice/left_arm/rpc
-    sleep $SLEEP
+    sleep 1.0
+    wait_motion_done "$port" "1"
     echo "ctpq time $TIME off 1 pos (16.5)" | yarp rpc /ctpservice/left_arm/rpc
-    sleep $SLEEP
+    sleep 1.0
+    wait_motion_done "$port" "1"
+    echo "end_movement" | yarp write ... /interactionManager/trigger:i
 }
 
 #########################
@@ -29,12 +67,16 @@ startingpos_abduction_right() {
 }
 
 abduction_right() {
-
+    
+    port=/right_arm/rpc:i
     echo "onset_movement" | yarp write ... /interactionManager/trigger:i
     echo "ctpq time $TIME off 1 pos (85.0)" | yarp rpc /ctpservice/right_arm/rpc
-    sleep $SLEEP
+    sleep 1.0
+    wait_motion_done "$port" "1"
     echo "ctpq time $TIME off 1 pos (16.5)" | yarp rpc /ctpservice/right_arm/rpc
-    sleep $SLEEP   
+    sleep 1.0
+    wait_motion_done "$port" "1"
+    echo "end_movement" | yarp write ... /interactionManager/trigger:i
 }
 
 ##################################
