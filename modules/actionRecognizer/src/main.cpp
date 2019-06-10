@@ -42,6 +42,7 @@ class Recognizer : public RFModule, public actionRecognizer_IDL
     int nframes,nsteps,nclasses,nfeatures;
     string part;
     string skel_tag;
+    string model_name;
     SkeletonStd skeletonIn;
 
     bool predict,updated;
@@ -88,6 +89,7 @@ public:
         nclasses=bGroup.find("num-classes").asInt();
         nfeatures=bGroup.find("num-features").asInt();
         nsteps=bGroup.find("num-steps").asInt();
+        model_name=bGroup.find("model-name").asString();
         for (int i=0; i<nclasses; i++)
         {
             ostringstream class_i;
@@ -127,8 +129,8 @@ public:
         idx_step=0;
 
         // Set up input paths
-        pathToGraph = rf.findFileByName("model_"+part+".meta");
-        checkpointPath = pathToGraph.substr(0, pathToGraph.find_last_of("/\\")) + "/model_"+part;
+        pathToGraph = rf.findFileByName(model_name+"_"+part+".meta");
+        checkpointPath = pathToGraph.substr(0, pathToGraph.find_last_of("/\\")) + "/" + model_name + "_" + part;
         if(predict)
         {
             yInfo() << "Loading model from:" << pathToGraph;
@@ -187,8 +189,8 @@ public:
 
         // Set up input paths
         part = part_;
-        pathToGraph = rf.findFileByName("model_"+part+".meta");
-        checkpointPath = pathToGraph.substr(0, pathToGraph.find_last_of("/\\")) + "/model_"+part;
+        pathToGraph = rf.findFileByName(model_name+"_"+part+".meta");
+        checkpointPath = pathToGraph.substr(0, pathToGraph.find_last_of("/\\")) + "/" + model_name + "_" +part;
         if(predict)
         {
             yInfo() << "Loading model from:" << pathToGraph;

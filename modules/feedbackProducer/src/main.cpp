@@ -52,6 +52,7 @@ private:
     bool updated,started;
     vector<string> joint_list;
     Matrix feedback_thresholds;
+    double action_threshold;
     vector<double> target;
     Matrix T;
 
@@ -231,6 +232,7 @@ public:
         win = rf.check("win",Value(-1)).asDouble();
         period = rf.check("period",Value(0.01)).asDouble();
         filter_order = rf.check("filter_order",Value(3)).asInt();
+        action_threshold = rf.check("action-threshold",Value(0.6)).asDouble();
 
         opcPort.open("/feedbackProducer/opc");
         outPort.open("/feedbackProducer:o");
@@ -649,7 +651,7 @@ public:
                     string action = target->get(1).asString();
                     double confidence = target->get(2).asDouble();
                     yInfo() << exercise << action << confidence;
-                    if(action == exercise && confidence > 0.0)
+                    if(action == exercise && confidence > action_threshold)
                     {
                         //analysis for ROM
                         if(metric_tag.find("ROM") != std::string::npos)
