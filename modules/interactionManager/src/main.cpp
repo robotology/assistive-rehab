@@ -185,7 +185,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     unordered_map<string,string> speak_map;
     vector<double> assess_values;
     vector<string> parttomove;
-    bool occluded,keepmoving;
+    bool occluded;
     string partrob;
     string motion_type_robot,script_starting,script_move;
     bool imitate,observe;
@@ -689,7 +689,6 @@ class Interaction : public RFModule, public interactionManager_IDL
         occluded=false;
         imitate=false;
         observe=false;
-        keepmoving=false;
         t0=Time::now();
 
         movethr=new MoveThread();
@@ -904,15 +903,15 @@ class Interaction : public RFModule, public interactionManager_IDL
                                                     vector<SpeechParam> p;
                                                     p.push_back(SpeechParam(partspeech));
                                                     speak("show",true,p);
-                                                    movethr->setInitialPosition(script_starting);
+                                                    //movethr->setInitialPosition(script_starting);
                                                     movethr->init(script_move,nrep_show);
                                                     movethr->startMoving();
                                                     history[tag].push_back(metric);
-                                                    while(movethr->isMoving())
-                                                    {
-                                                        //wait until it finishes
-                                                        Time::yield();
-                                                    }
+//                                                    while(movethr->isMoving())
+//                                                    {
+//                                                        //wait until it finishes
+//                                                        Time::yield();
+//                                                    }
                                                     state=State::imitated;
                                                     observe=false;
                                                 }
@@ -932,30 +931,10 @@ class Interaction : public RFModule, public interactionManager_IDL
             if(imitate)
             {
                 speak("start",true);
-                movethr->setInitialPosition(script_starting);
+//                movethr->setInitialPosition(script_starting);
                 movethr->init(script_move,nrep_perform);
                 movethr->startMoving();
                 Time::delay(3.0);
-
-                Bottle cmd,rep;
-                cmd.addString("start");
-                if (analyzerPort.write(cmd,rep))
-                {
-                    if (rep.get(0).asVocab()==ok)
-                    {
-                        state=State::move;
-
-                        assess_values.clear();
-                        t0=Time::now();
-                    }
-                }
-            }
-            if(occluded)
-            {
-                movethr->setInitialPosition(script_starting);
-                movethr->init(script_move,nrep_perform);
-                movethr->startMoving();
-                Time::delay(1.0);
 
                 Bottle cmd,rep;
                 cmd.addString("start");
@@ -1129,7 +1108,7 @@ class Interaction : public RFModule, public interactionManager_IDL
         {
             if(movethr->isMoving())
             {
-                if(occluded && !keepmoving)
+                if(occluded)
                 {
                     Bottle cmd,rep;
                     cmd.addString("stop_feedback");
@@ -1138,7 +1117,6 @@ class Interaction : public RFModule, public interactionManager_IDL
                         if (rep.get(0).asVocab()==ok)
                         {
                             yInfo()<<"Stopping feedback";
-                            keepmoving=true;
                         }
                     }
                 }
