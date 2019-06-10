@@ -319,6 +319,10 @@ class Interaction : public RFModule, public interactionManager_IDL
         {
             imitate=false;
         }
+        if(occluded)
+        {
+            occluded=false;
+        }
 
         if(occluded && virtual_mode)
         {
@@ -934,7 +938,7 @@ class Interaction : public RFModule, public interactionManager_IDL
 //                movethr->setInitialPosition(script_starting);
                 movethr->init(script_move,nrep_perform);
                 movethr->startMoving();
-                Time::delay(3.0);
+                Time::delay(0.5);
 
                 Bottle cmd,rep;
                 cmd.addString("start");
