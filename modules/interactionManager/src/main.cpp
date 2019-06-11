@@ -90,8 +90,17 @@ public:
         yInfo()<<"Repeat exercise"<<nrep<<"times";
     }
 
+    bool setHomePosition(const string & initialpos)
+    {
+        yInfo()<<"Home position";
+        if(system(initialpos.c_str()))
+            yError()<<"Processor not available";
+        return true;
+    }
+
     bool setInitialPosition(const string & initialpos)
     {
+        yInfo()<<"Starting position";
         if(system(initialpos.c_str()))
             yError()<<"Processor not available";
         return true;
@@ -187,7 +196,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     vector<string> parttomove;
     bool occluded;
     string partrob;
-    string motion_type_robot,script_starting,script_move;
+    string motion_type_robot,script_starting,script_move,script_home;
     bool imitate,observe;
 
     Mutex mutex;
@@ -319,28 +328,35 @@ class Interaction : public RFModule, public interactionManager_IDL
         {
             imitate=false;
         }
+
         if(occluded)
         {
-            occluded=false;
-        }
-
-        if(occluded && virtual_mode)
-        {
-            ret=false;
-            cmd.clear();
-            rep.clear();
-            cmd.addString("deleteObject");
-            cmd.addString(panelid);
-            worldGazeboPort.write(cmd,rep);
-            if(rep.get(0).asVocab()==ok)
+            if(virtual_mode)
+            {
+                ret=false;
+                cmd.clear();
+                rep.clear();
+                cmd.addString("deleteObject");
+                cmd.addString(panelid);
+                worldGazeboPort.write(cmd,rep);
+                if(rep.get(0).asVocab()==ok)
+                {
+                    occluded=false;
+                    ret=true;
+                }
+            }
+            else
             {
                 occluded=false;
                 ret=true;
             }
         }
+
+        movethr->setHomePosition(script_home);
         if(movethr->isMoving())
         {
             movethr->stopMoving();
+            ret=true;
         }
 
         state=State::stopped;
@@ -893,6 +909,7 @@ class Interaction : public RFModule, public interactionManager_IDL
                                             motion_type_robot=motion_type.substr(0,found)+"_"+partrob;
                                             script_starting=move_file+" "+"startingpos_"+motion_type_robot;
                                             script_move=move_file+" "+motion_type_robot;
+                                            script_home=move_file+" "+"home_"+motion_type_robot;
 
                                             cmd.clear();
                                             rep.clear();
@@ -906,16 +923,12 @@ class Interaction : public RFModule, public interactionManager_IDL
                                                     speak("welcome",true);
                                                     vector<SpeechParam> p;
                                                     p.push_back(SpeechParam(partspeech));
+                                                    movethr->setInitialPosition(script_starting);
                                                     speak("show",true,p);
-                                                    //movethr->setInitialPosition(script_starting);
                                                     movethr->init(script_move,nrep_show);
                                                     movethr->startMoving();
                                                     history[tag].push_back(metric);
-//                                                    while(movethr->isMoving())
-//                                                    {
-//                                                        //wait until it finishes
-//                                                        Time::yield();
-//                                                    }
+
                                                     state=State::imitated;
                                                     observe=false;
                                                 }
