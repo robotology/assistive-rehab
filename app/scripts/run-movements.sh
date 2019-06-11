@@ -40,6 +40,11 @@ wait_motion_done() {
 #########################
 #    ABDUCTION LEFT     #
 #########################
+home_abduction_left() {
+    
+    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 35.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/left_arm/rpc
+}
+
 startingpos_abduction_left() {
     
     echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 15.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/left_arm/rpc
@@ -49,7 +54,7 @@ abduction_left() {
 
     port=/left_arm/rpc:i
     echo "onset_movement" | yarp write ... /interactionManager/trigger:i
-    echo "ctpq time $TIME off 1 pos (70.0)" | yarp rpc /ctpservice/left_arm/rpc
+    echo "ctpq time $TIME off 1 pos (85.0)" | yarp rpc /ctpservice/left_arm/rpc
     sleep 1.0
     wait_motion_done "$port" "1"
     echo "ctpq time $TIME off 1 pos (16.5)" | yarp rpc /ctpservice/left_arm/rpc
@@ -61,6 +66,11 @@ abduction_left() {
 #########################
 #    ABDUCTION RIGHT    #
 #########################
+home_abduction_right() {
+    
+    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 35.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/right_arm/rpc
+}
+
 startingpos_abduction_right() {
 
     echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 15.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/right_arm/rpc
