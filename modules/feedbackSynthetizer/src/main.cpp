@@ -361,7 +361,7 @@ public:
         {
             vector<SpeechParam> params;
             vector<string> speak_buffer;
-            int priority=2;
+            int priority=3;
             yInfo() << feedb->toString();
             for(size_t j=0; j<feedb->size(); j++)
             {
@@ -370,41 +370,48 @@ public:
                 {
                     string joint=f->get(0).asString();
                     string key=f->get(1).asString();
-                    if(f->size()>2)
+                    if(priority_map[key]<=priority)
                     {
-                        params.clear();
-                        params.push_back(joint);
-                        speak_buffer.clear();
-                        string val=f->get(2).asString();
-                        for(size_t j=0; j<speak_map[key].first.size(); j++)
-                        {
-                            if(speak_map[key].first[j]==val)
-                                speak_buffer.push_back(speak_map[key].second[j]);
-                        }
-                    }
-                    else
-                    {
-                        speak_buffer.clear();
-                        for(size_t j=0; j<speak_map[key].second.size(); j++)
-                        {
-                            speak_buffer.push_back(speak_map[key].second[j]);
-                        }
-                    }
-                    if(priority_map[key]<priority)
                         priority=priority_map[key];
+                        params.clear();
+                        if(key == "speed" || key == "position-rom")
+                        {
+                            params.push_back(joint);
+                        }
+
+                        speak_buffer.clear();
+                        for(size_t i=0; i<speak_map[key].second.size(); i++)
+                        {
+                            if(speak_map[key].second.size()>1)
+                            {
+                                string val=f->get(2).asString();
+                                if(speak_map[key].first[i]==val)
+                                {
+                                    speak_buffer.push_back(speak_map[key].second[i]);
+                                }
+                            }
+                            else
+                            {
+                                speak_buffer.push_back(speak_map[key].second[i]);
+                            }
+                        }
+                    }
                     if(priority==maxpriority)
+                    {
                         break;
+                    }
                 }
                 else
                 {
                     //wrong exercise or static or random
                     priority=-1;
                     string key=f->get(0).asString();
+
                     params.clear();
                     speak_buffer.clear();
-                    for(size_t j=0; j<speak_map[key].second.size(); j++)
+                    for(size_t i=0; i<speak_map[key].second.size(); i++)
                     {
-                        speak_buffer.push_back(speak_map[key].second[j]);
+                        speak_buffer.push_back(speak_map[key].second[i]);
                     }
                 }
             }
@@ -427,6 +434,7 @@ public:
             }
             yInfo() << "score:" << score;
         }
+
         Bottle &outscore = scorePort.prepare();
         outscore.clear();
         outscore.addDouble(score);
@@ -439,7 +447,9 @@ public:
         for(size_t i=0; i<buffer.size(); i++)
         {
             if(i>=speak_length)
+            {
                 break;
+            }
 
             string value = buffer[i];
             if(p.size() > 0)
