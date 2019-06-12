@@ -2,7 +2,7 @@
 <name>Assistive Rehabilitation skeletonDumper with Faces App</name>
 
     <module>
-        <name>yarpdatadumper --name /skeletonDumper/skeletons-img --type image</name>
+        <name>yarpdatadumper --name /skeletonDumper/skeletons-img --type image_jpg</name>
         <node>localhost</node>
     </module>
 
@@ -17,7 +17,7 @@
     </module>
 
     <module>
-        <name>yarpdatadumper --name /skeletonDumper/faces --type image</name>
+        <name>yarpdatadumper --name /skeletonDumper/faces --type image_jpg</name>
         <node>localhost</node>
     </module>
 
