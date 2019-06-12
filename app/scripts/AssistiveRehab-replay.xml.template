@@ -10,6 +10,9 @@
     <module>
        <name>skeletonRetriever</name>
        <parameters>--camera::fov "(54 42)"</parameters>
+       <dependencies>
+          <port timeout="5">/opc/rpc</port>
+       </dependencies>
        <node>localhost</node>
     </module>
 

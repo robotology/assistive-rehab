@@ -45,6 +45,9 @@
     <module>
        <name>skeletonRetriever</name>
        <parameters></parameters>
+       <dependencies>
+          <port timeout="5">/opc/rpc</port>
+       </dependencies>
        <node>r1-console-linux</node>
     </module>
 

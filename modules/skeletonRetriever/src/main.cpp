@@ -884,8 +884,10 @@ class Retriever : public RFModule
                             }
                         }
 
-                        opcAdd(n,stamp);
-                        skeletons.push_back(n);
+                        if (opcAdd(n,stamp))
+                        {
+                            skeletons.push_back(n);
+                        }
                     }
 
                     enforce_tag_uniqueness_pending(pending);
