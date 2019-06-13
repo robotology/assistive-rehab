@@ -726,7 +726,7 @@ class Retriever : public RFModule
         keys_recognition_confidence=0.3;
         keys_recognition_percentage=0.3;
         keys_acceptable_misses=5;
-        min_acceptable_path=1.0;
+        min_acceptable_path=0.5;
         tracking_threshold=50;
         time_to_live=1.0;
         depth_enable=true;
