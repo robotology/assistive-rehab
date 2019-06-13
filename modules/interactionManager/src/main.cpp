@@ -275,7 +275,7 @@ class Interaction : public RFModule, public interactionManager_IDL
                 if (!rep.get(0).asString().empty())
                 {
                     //time for the object to be created
-                    Time::delay(0.2);
+                    Time::delay(1.0);
                     panelid=rep.get(0).asString();
                     cmd.clear();
                     rep.clear();
