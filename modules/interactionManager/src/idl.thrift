@@ -18,10 +18,10 @@
 service interactionManager_IDL
 {
    /**
-    * Start the interaction.
+    * Start the interaction with raising hand.
     * @return true/false on success/failure.
     */
-   bool start();
+   bool start_with_hand();
 
    /**
     * Stop the interaction.
@@ -46,11 +46,5 @@ service interactionManager_IDL
    * @return true/false on success/failure.
    */
    bool start_imitation();
-
-  /**
-   * Raise hand to start the interaction.
-   * @return true/false on success/failure.
-   */
-   bool set_raise_hand();
 
 }

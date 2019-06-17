@@ -188,7 +188,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     vector<int> panel_color;
     string panelid;
     int nrep_show,nrep_perform;
-    bool virtual_mode,show_once,raise_hand;
+    bool virtual_mode,engage_with_hand,wait_for_imitation;
 
     unordered_map<string,vector<string>> history;
     unordered_map<string,string> speak_map;
@@ -198,6 +198,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     string partrob;
     string motion_type_robot,script_starting,script_move,script_home;
     bool imitate,observe;
+    string partspeech;
 
     Mutex mutex;
 
@@ -212,9 +213,11 @@ class Interaction : public RFModule, public interactionManager_IDL
     Trigger *trigger;
 
     /****************************************************************/
-    bool start() override
+    bool start_with_hand() override
     {
         LockGuard lg(mutex);
+        engage_with_hand=true;
+        wait_for_imitation=false;
         return disengage();
     }
 
@@ -222,9 +225,10 @@ class Interaction : public RFModule, public interactionManager_IDL
     bool start_observation() override
     {
         LockGuard lg(mutex);
-        disengage();
+        engage_with_hand=false;
+        wait_for_imitation=true;
         observe=true;
-        return true;
+        return disengage();
     }
 
     /****************************************************************/
@@ -292,14 +296,6 @@ class Interaction : public RFModule, public interactionManager_IDL
         }
 
         return occluded;
-    }
-
-    /****************************************************************/
-    bool set_raise_hand() override
-    {
-        LockGuard lg(mutex);
-        raise_hand=true;
-        return true;
     }
 
     /****************************************************************/
@@ -477,6 +473,13 @@ class Interaction : public RFModule, public interactionManager_IDL
         bool ret=false;
         state=State::idle;
 
+        if(imitate)
+        {
+            imitate=false;
+            //a new interaction can only start when next start_observation is given
+            state=State::stopped;
+        }
+
         if(movethr->isMoving())
         {
             movethr->stopMoving();
@@ -515,16 +518,10 @@ class Interaction : public RFModule, public interactionManager_IDL
             }
         }
 
-        if(imitate)
-        {
-            imitate=false;
-        }
-
         if(occluded)
         {
             ret=false;
-            cmd.clear();
-            rep.clear();
+            Bottle cmd,rep;
             cmd.addString("deleteObject");
             cmd.addString(panelid);
             worldGazeboPort.write(cmd,rep);
@@ -679,8 +676,8 @@ class Interaction : public RFModule, public interactionManager_IDL
         nrep_show=rf.check("nrep-show",Value(2)).asInt();
         nrep_perform=rf.check("nrep-perform",Value(7)).asInt();
         virtual_mode=rf.check("virtual-mode",Value(false)).asBool();
-        show_once=rf.check("show-once",Value(false)).asBool();
-        raise_hand=rf.check("raise-hand",Value(true)).asBool();
+        engage_with_hand=rf.check("engage-with-hand",Value(true)).asBool();
+        wait_for_imitation=rf.check("wait-for-imitation",Value(false)).asBool();
 
         if (!load_speak(rf.getContext(),speak_file))
         {
@@ -782,9 +779,9 @@ class Interaction : public RFModule, public interactionManager_IDL
         }
 
         if (state==State::seek)
-        {
+        {            
             if (!follow_tag.empty() && is_follow_tag_ahead)
-            {
+            {                
                 tag=follow_tag;
                 Bottle cmd,rep;
                 cmd.addString("look");
@@ -795,17 +792,13 @@ class Interaction : public RFModule, public interactionManager_IDL
                 {
                     vector<SpeechParam> p;
                     p.push_back(SpeechParam(tag[0]!='#'?tag:string("")));
-                    if(raise_hand)
+                    if(engage_with_hand)
                     {
                         speak(history.find(tag)==end(history)?
                               "invite-start":"invite-cont",true,p);
                         speak("engage",true);
-                        state=State::follow;
                     }
-                    else
-                    {
-                        state=State::show;
-                    }
+                    state=State::follow;
                     reinforce_engage_cnt=0;
                     t0=Time::now();
                 }
@@ -814,157 +807,37 @@ class Interaction : public RFModule, public interactionManager_IDL
 
         if (state==State::follow)
         {
-            Bottle cmd,rep;
-            cmd.addString("is_with_raised_hand");
-            cmd.addString(tag);
-
-            if (attentionPort.write(cmd,rep))
-            {
-                if (rep.get(0).asVocab()==ok)
-                {
-                    speak("accepted",true);
-                    state=State::engaged;
-                }
-                else if (Time::now()-t0>10.0)
-                {
-                    if (++reinforce_engage_cnt<=1)
-                    {
-                        speak("reinforce-engage",true);
-                        t0=Time::now();
-                    }
-                    else
-                    {
-                        speak("disengaged",true);
-                        disengage();
-                    }
-                }
-            }
-        }
-
-        if (state==State::show)
-        {
-            if(observe)
+            if(engage_with_hand)
             {
                 Bottle cmd,rep;
-                cmd.addString("listMetrics");
-                if (analyzerPort.write(cmd,rep))
+                cmd.addString("is_with_raised_hand");
+                cmd.addString(tag);
+
+                if (attentionPort.write(cmd,rep))
                 {
-                    Bottle &metrics=*rep.get(0).asList();
-                    if (metrics.size()>0)
+                    if (rep.get(0).asVocab()==ok)
                     {
-                        string metric=select_metric(metrics);
-                        yInfo()<<"Selected metric:"<<metric;
-
-                        cmd.clear();
-                        cmd.addString("loadMetric");
-                        cmd.addString(metric);
-                        if (analyzerPort.write(cmd,rep))
+                        speak("accepted",true);
+                        state=State::engaged;
+                    }
+                    else if (Time::now()-t0>10.0)
+                    {
+                        if (++reinforce_engage_cnt<=1)
                         {
-                            bool ack=rep.get(0).asBool();
-                            if (ack)
-                            {
-                                cmd.clear();
-                                cmd.addString("getMotionType");
-                                if(analyzerPort.write(cmd,rep))
-                                {
-                                    motion_type=rep.get(0).asString();
-                                    size_t found=motion_type.find_last_of("_");
-                                    string part=motion_type.substr(found+1,motion_type.size());
-                                    string partspeech;
-                                    if(mirror_exercise)
-                                    {
-                                        if(part=="left")
-                                        {
-                                            partrob="right";
-                                            partspeech=parttomove[1];
-                                        }
-                                        if(part=="right")
-                                        {
-                                            partrob="left";
-                                            partspeech=parttomove[0];
-                                        }
-                                    }
-                                    else
-                                    {
-                                        if(part=="left")
-                                        {
-                                            partrob="left";
-                                            partspeech=parttomove[1];
-                                        }
-                                        if(part=="right")
-                                        {
-                                            partrob="right";
-                                            partspeech=parttomove[0];
-                                        }
-                                    }
-
-                                    cmd.clear();
-                                    rep.clear();
-                                    cmd.addString("setPart");
-                                    cmd.addString(part);
-                                    if (analyzerPort.write(cmd,rep))
-                                    {
-                                        if (rep.get(0).asVocab()==ok)
-                                        {
-                                            motion_type_robot=motion_type.substr(0,found)+"_"+partrob;
-                                            script_starting=move_file+" "+"startingpos_"+motion_type_robot;
-                                            script_move=move_file+" "+motion_type_robot;
-                                            script_home=move_file+" "+"home_"+motion_type_robot;
-
-                                            cmd.clear();
-                                            rep.clear();
-                                            cmd.addString("selectSkel");
-                                            cmd.addString(tag);
-                                            yInfo()<<"Selecting skeleton"<<tag;
-                                            if (analyzerPort.write(cmd,rep))
-                                            {
-                                                if (rep.get(0).asVocab()==ok)
-                                                {
-                                                    speak("welcome",true);
-                                                    vector<SpeechParam> p;
-                                                    p.push_back(SpeechParam(partspeech));
-                                                    movethr->setInitialPosition(script_starting);
-                                                    speak("show",true,p);
-                                                    movethr->init(script_move,nrep_show);
-                                                    movethr->startMoving();
-                                                    history[tag].push_back(metric);
-
-                                                    state=State::imitated;
-                                                    observe=false;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                            speak("reinforce-engage",true);
+                            t0=Time::now();
+                        }
+                        else
+                        {
+                            speak("disengaged",true);
+                            disengage();
                         }
                     }
                 }
             }
-        }
-
-        if (state==State::imitated)
-        {
-            if(imitate)
+            else
             {
-                speak("start",true);
-//                movethr->setInitialPosition(script_starting);
-                movethr->init(script_move,nrep_perform);
-                movethr->startMoving();
-                Time::delay(0.5);
-
-                Bottle cmd,rep;
-                cmd.addString("start");
-                if (analyzerPort.write(cmd,rep))
-                {
-                    if (rep.get(0).asVocab()==ok)
-                    {
-                        state=State::move;
-
-                        assess_values.clear();
-                        t0=Time::now();
-                    }
-                }
+                state=State::engaged;
             }
         }
 
@@ -995,7 +868,6 @@ class Interaction : public RFModule, public interactionManager_IDL
                                 motion_type=rep.get(0).asString();
                                 size_t found=motion_type.find_last_of("_");
                                 string part=motion_type.substr(found+1,motion_type.size());
-                                string partspeech;
                                 if(mirror_exercise)
                                 {
                                     if(part=="left")
@@ -1040,19 +912,22 @@ class Interaction : public RFModule, public interactionManager_IDL
                                 {
                                     if (rep.get(0).asVocab()==ok)
                                     {
-                                        if (history.find(tag)==end(history))
+                                        //imitation and observation phases are not separated
+                                        //the robot shows the exercise and then the user imitates
+                                        //we don't wait for the imitation to be started externally
+                                        if(!wait_for_imitation)
                                         {
-                                            speak("explain",true);
-                                        }
-                                        else
-                                        {
-                                            vector<SpeechParam> p;
-                                            p.push_back(SpeechParam(tag[0]!='#'?(tag+","):string("")));
-                                            speak("in-the-know",true,p);
-                                        }
+                                            if (history.find(tag)==end(history))
+                                            {
+                                                speak("explain",true);
+                                            }
+                                            else
+                                            {
+                                                vector<SpeechParam> p;
+                                                p.push_back(SpeechParam(tag[0]!='#'?(tag+","):string("")));
+                                                speak("in-the-know",true,p);
+                                            }
 
-                                        if(!show_once)
-                                        {
                                             vector<SpeechParam> p;
                                             p.push_back(SpeechParam(partspeech));
                                             speak("show",true,p);
@@ -1064,44 +939,33 @@ class Interaction : public RFModule, public interactionManager_IDL
                                                 //wait until it finishes
                                                 Time::yield();
                                             }
-                                        }
-                                        else
-                                        {
-                                            if(history.find(tag)==end(history))
+
+                                            Time::delay(3.0);
+                                            speak("start",true);
+                                            history[tag].push_back(metric);
+                                            movethr->init(script_move,nrep_perform);
+                                            movethr->startMoving();
+                                            Time::delay(1.0);
+
+                                            cmd.clear();
+                                            cmd.addString("start");
+                                            if (analyzerPort.write(cmd,rep))
                                             {
-                                                vector<SpeechParam> p;
-                                                p.push_back(SpeechParam(partspeech));
-                                                speak("show",true,p);
-                                                movethr->setInitialPosition(script_starting);
-                                                movethr->init(script_move,nrep_show);
-                                                movethr->startMoving();
-                                                while(movethr->isMoving())
+                                                if (rep.get(0).asVocab()==ok)
                                                 {
-                                                    //wait until it finishes
-                                                    Time::yield();
+                                                    state=State::move;
+
+                                                    assess_values.clear();
+                                                    t0=Time::now();
                                                 }
                                             }
                                         }
-                                        
-                                        Time::delay(3.0);
-                                        speak("start",true);
-                                        history[tag].push_back(metric);
-                                        movethr->setInitialPosition(script_starting);
-                                        movethr->init(script_move,nrep_perform);
-                                        movethr->startMoving();
-                                        Time::delay(1.0);
-
-                                        cmd.clear();
-                                        cmd.addString("start");
-                                        if (analyzerPort.write(cmd,rep))
+                                        else
                                         {
-                                            if (rep.get(0).asVocab()==ok)
-                                            {
-                                                state=State::move;
-                                                                                                                                            
-                                                assess_values.clear();
-                                                t0=Time::now();
-                                            }
+                                            //we have two phases: observation and imitation
+                                            //observation starts when the command start_observation is given
+                                            //imitation starts when the command start_imitation is given
+                                            state=State::show;
                                         }
                                     }
                                 }
@@ -1110,14 +974,46 @@ class Interaction : public RFModule, public interactionManager_IDL
                     }
                 }
             }
-            if (state!=State::move)
-            {
-                Bottle cmd,rep;
-                cmd.addString("stop");
-                analyzerPort.write(cmd,rep);
+        }
 
-                speak("ouch",true);
-                disengage();
+        if (state==State::show)
+        {
+            if(observe)
+            {
+                speak("welcome",true);
+                vector<SpeechParam> p;
+                p.push_back(SpeechParam(partspeech));
+                movethr->setInitialPosition(script_starting);
+                speak("show",true,p);
+                movethr->init(script_move,nrep_show);
+                movethr->startMoving();
+
+                state=State::imitated;
+                observe=false;
+            }
+        }
+
+        if (state==State::imitated)
+        {
+            if(imitate)
+            {
+                speak("start",true);
+                movethr->init(script_move,nrep_perform);
+                movethr->startMoving();
+                Time::delay(0.5);
+
+                Bottle cmd,rep;
+                cmd.addString("start");
+                if (analyzerPort.write(cmd,rep))
+                {
+                    if (rep.get(0).asVocab()==ok)
+                    {
+                        state=State::move;
+
+                        assess_values.clear();
+                        t0=Time::now();
+                    }
+                }
             }
         }
 
@@ -1152,21 +1048,13 @@ class Interaction : public RFModule, public interactionManager_IDL
                 analyzerPort.write(cmd,rep);
 
                 speak("end",true);
-                if(imitate)
+                if(engage_with_hand)
                 {
-                    imitate=false;
-                }
-                if(!occluded)
                     assess("final");
+                }
+
                 speak("greetings",true);
-                if(occluded || raise_hand)
-                {
-                    disengage();
-                }
-                else if(!raise_hand)
-                {
-                    state=State::imitated;
-                }
+                disengage();
             }
         }
 
