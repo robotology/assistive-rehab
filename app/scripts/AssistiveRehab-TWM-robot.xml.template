@@ -1,170 +1,185 @@
 <application>
-<name>Assistive Rehabilitation Virtual App</name>
+<name>Assistive Rehabilitation Train With Me Robot App</name>
 
     <module>
-        <name>gazebo</name>
-        <workdir>$ENV{ROBOT_CODE}/assistive-rehab/app/conf</workdir>
-        <parameters>virtual-scenario.sdf</parameters>
+        <name>yarpdev</name>
+        <parameters>--device speech --lingware-context speech --default-language it-IT --robot r1 --pitch 80 --speed 110</parameters>
         <node>localhost</node>
     </module>
 
     <module>
         <name>yarpdev</name>
-        <parameters>--device speech --lingware-context speech --default-language it-IT --robot SIM_CER_ROBOT --pitch 80 --speed 110</parameters>
-        <node>localhost</node>
+        <parameters>--device faceDisplayServer</parameters>
+        <node>r1-face</node>
     </module>
 
     <module>
         <name>yarpdev</name>
-        <parameters>--context AssistiveRehab --from realsense2.ini --name /depthCameraExt</parameters>
-        <node>localhost</node>
-    </module>
-
-    <module>
-        <name>iSpeak</name>
-        <parameters>--package speech-dev --name iSpeakSIM</parameters>
-        <node>localhost</node>
+        <parameters>--context AssistiveRehab --from realsense2.ini</parameters>
+        <node>r1-torso1</node>
     </module>
 
      <module>
         <name>faceExpressionImage</name>
+        <node>r1-face</node>
+    </module>
+
+    <module>
+        <name>iSpeak</name>
+        <parameters>--package speech-dev</parameters>
         <node>localhost</node>
     </module>
 
     <module>
         <name>yarpOpenPose</name>
-        <parameters></parameters>
-        <node>cuda-machine</node>
+        <parameters>--model_name COCO</parameters>
+        <node>r1-console-cuda</node>
     </module>
 
     <module>
        <name>objectsPropertiesCollector</name>
        <parameters>--name opc --no-load-db --no-save-db --sync-bc 0.1</parameters>
-       <node>localhost</node>
+       <node>r1-console-linux</node>
     </module>
 
     <module>
        <name>skeletonRetriever</name>
-       <parameters></parameters>
-       <node>localhost</node>
+       <parameters>--context train-with-me --from SkeletonRetriever.ini</parameters>
+       <dependencies>
+          <port timeout="5">/opc/rpc</port>
+       </dependencies>
+       <node>r1-console-linux</node>
     </module>
 
     <module>
        <name>attentionManager</name>
        <parameters></parameters>
-       <node>localhost</node>
+       <node>r1-console-linux</node>
     </module>
 
     <module>
        <name>cer_gaze-controller</name>
-       <parameters>--robot SIM_CER_ROBOT --cameras::context cameraCalibration --cameras::file cerEyes_320x240.ini --joints-limits::pitch "(-20.0 20.0)" --joints-limits::yaw "(-40.0 40.0)"</parameters>
-        <dependencies>
-          <port timeout="180">/SIM_CER_ROBOT/torso_tripod/rpc:i</port>
-          <port timeout="180">/SIM_CER_ROBOT/torso_tripod/command:i</port>
-          <port timeout="180">/SIM_CER_ROBOT/torso_tripod/stateExt:o</port>
-        </dependencies>
-        <node>localhost</node>
+       <parameters>--cameras::context cameraCalibration --cameras::file cerEyes_320x240.ini --joints-limits::pitch "(-20.0 20.0)" --joints-limits::yaw "(-40.0 40.0)"</parameters>
+       <ensure>
+          <wait when="stop">3</wait>
+       </ensure>
+       <node>r1-base</node>
     </module>
 
     <module>
        <name>motionAnalyzer</name>
-       <parameters>--from motion-repertoire-abductionleft.ini</parameters>
-       <node>localhost</node>
+       <parameters>--context train-with-me --from motionAnalyzer.ini</parameters>
+       <node>r1-console-linux</node>
     </module>
 
     <module>
        <name>skeletonPlayer</name>
        <parameters></parameters>
-       <node>localhost</node>
+       <node>r1-console-linux</node>
     </module>
 
     <module>
        <name>skeletonScaler</name>
-       <node>localhost</node>
+       <node>r1-console-linux</node>
     </module>
 
     <module>
        <name>feedbackProducer</name>
-       <node>localhost</node>
+       <node>r1-console-linux</node>
     </module>
 
     <module>
        <name>actionRecognizer</name>
-       <node>cuda-machine</node>
+       <parameters>--context train-with-me --from actionRecognizer.ini</parameters>       
+       <node>r1-console-cuda</node>
     </module>
 
     <module>
        <name>feedbackSynthetizer</name>
-       <node>localhost</node>
+       <node>r1-console-linux</node>
+    </module>
+
+    <module>
+        <name>yarpview</name>
+        <parameters>--name /viewer/depth --x 10 --y 40 --p 50 --compact</parameters>
+        <node>r1-console-cuda</node>
+    </module>
+
+    <module>
+        <name>yarpview</name>
+        <parameters>--name /viewer/skeleton --x 380 --y 40 --p 50 --compact</parameters>
+        <node>r1-console-cuda</node>
+    </module>
+
+    <module>
+        <name>skeletonViewer</name>
+        <parameters>--x 1120 --y 10</parameters>
+        <node>r1-console-cuda</node>
+    </module>
+
+    <module>
+       <name>yarpscope</name>
+       <parameters>--x 100 --y 400 --dx 1000 --dy 600 --context AssistiveRehab --xml motionAnalyzer-scope.xml</parameters>
+       <node>r1-console-cuda</node>
     </module>
 
     <module>
         <name>interactionManager</name>
-        <parameters>--virtual-mode true --explain-exercise-once true --nrep-show 12 --nrep-perform 24 --raise-hand false</parameters>
-        <node>localhost</node>
+        <parameters>--context train-with-me --from interactionManager.ini</parameters>
+        <node>r1-console-linux</node>
     </module>
 
     <module>
         <name>ctpService</name>
-        <parameters>--robot SIM_CER_ROBOT --part right_arm</parameters>
-        <dependencies>
-          <port timeout="180">/SIM_CER_ROBOT/right_arm/rpc:i</port>
-          <port timeout="180">/SIM_CER_ROBOT/right_arm/command:i</port>
-          <port timeout="180">/SIM_CER_ROBOT/right_arm/stateExt:o</port>
-        </dependencies>
-        <node>localhost</node>
+        <parameters>--robot cer --part right_arm</parameters>
+        <node>r1-console-linux</node>
     </module>
 
     <module>
         <name>ctpService</name>
-        <parameters>--robot SIM_CER_ROBOT --part left_arm</parameters>
-        <dependencies>
-          <port timeout="180">/SIM_CER_ROBOT/left_arm/rpc:i</port>
-          <port timeout="180">/SIM_CER_ROBOT/left_arm/command:i</port>
-          <port timeout="180">/SIM_CER_ROBOT/left_arm/stateExt:o</port>
-        </dependencies>
-        <node>localhost</node>
+        <parameters>--robot cer --part left_arm</parameters>
+        <node>r1-console-linux</node>
     </module>
 
     <connection>
-        <from>/iSpeakSIM/speech-dev/rpc</from>
-        <to>/SIM_CER_ROBOT/speech:rpc</to>
+        <from>/faceExpressionImage/image:o</from>
+        <to>/robot/faceDisplay/image:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
-        <from>/iSpeakSIM/r1:rpc</from>
+        <from>/iSpeak/speech-dev/rpc</from>
+        <to>/r1/speech:rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/iSpeak/r1:rpc</from>
         <to>/faceExpressionImage/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
-        <from>/faceExpressionImage/image:o</from>
-        <to>/SIM_CER_ROBOT::SIM_CER_ROBOT::head_link::head_link_visual</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/depthCameraExt/rgbImage:o</from>
+        <from>/depthCamera/rgbImage:o</from>
         <to>/yarpOpenPose/image:i</to>
         <protocol>mjpeg</protocol>
     </connection>
 
     <connection>
-        <from>/depthCameraExt/depthImage:o</from>
+        <from>/depthCamera/depthImage:o</from>
         <to>/yarpOpenPose/float:i</to>
-        <protocol>fast_tcp+send.portmonitor+file.zfp+recv.portmonitor+file.zfp+type.dll</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/yarpOpenPose/float:o</from>
         <to>/skeletonRetriever/depth:i</to>
-        <protocol>fast_tcp+send.portmonitor+file.zfp+recv.portmonitor+file.zfp+type.dll</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/skeletonRetriever/cam:rpc</from>
-        <to>/depthCameraExt/rpc:i</to>
+        <to>/depthCamera/rpc:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
@@ -235,8 +250,38 @@
     </connection>
 
     <connection>
+        <from>/depthCamera/depthImage:o</from>
+        <to>/viewer/depth</to>
+        <protocol>fast_tcp+recv.portmonitor+type.dll+file.depthimage</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/image:o</from>
+        <to>/viewer/skeleton</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonRetriever/viewer:o</from>
+        <to>/skeletonViewer:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonPlayer/viewer:o</from>
+        <to>/skeletonViewer:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
         <from>/skeletonScaler/player:rpc</from>
         <to>/skeletonPlayer/cmd:rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonScaler/viewer:rpc</from>
+        <to>/skeletonViewer:rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
@@ -272,7 +317,7 @@
 
     <connection>
         <from>/feedbackSynthetizer/speech:o</from>
-        <to>/iSpeakSIM</to>
+        <to>/iSpeak</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
@@ -295,20 +340,14 @@
     </connection>
 
     <connection>
-        <from>/interactionManager/gazebo:rpc</from>
-        <to>/world_input_port</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
         <from>/interactionManager/speech:o</from>
-        <to>/iSpeakSIM</to>
+        <to>/iSpeak</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/interactionManager/speech:rpc</from>
-        <to>/iSpeakSIM/rpc</to>
+        <to>/iSpeak/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
 </application>

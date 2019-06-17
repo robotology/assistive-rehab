@@ -24,6 +24,15 @@
     <param default="(2.0,4.0)" desc="User engaged within this distance (m).">engage-distance</param>
     <param default="(-15.0 15.0)" desc="User engaged within this field of view (degrees).">engage-azimuth</param>
     <param default="true" desc="If true, the user has to move the opposite arm with respect to the robot.">mirror-exercise</param>
+    <param default="(0.1 0.9 1.13)" desc="Size of the panel that appears in the virtual scenario.">panel-size</param>
+    <param default="(3.0 -1.5 0.0 0.0 0.0 0.0)" desc="Position of the panel that appears in the virtual scenario occluding the right arm.">panel-pose-right</param>
+    <param default="(3.0 -0.6 0.0 0.0 0.0 0.0)" desc="Position of the panel that appears in the virtual scenario occluding the left arm.">panel-pose-left</param>
+    <param default="(22 25 29)" desc="Color of the panel that appears in the virtual scenario.">panel-color</param>
+    <param default="2" desc="Number of repetitions of the movement during the observation phase.">nrep-show</param>
+    <param default="7" desc="Number of repetitions of the movement during the imitation phase.">nrep-perform</param>
+    <param default="false" desc="Enables the virtual modality.">virtual-mode</param>
+    <param default="true" desc="Starts the interaction when the user rises the hand.">engage-with-hand</param>
+    <param default="false" desc="If true, the imitation phase starts only by providing start_imitation command.">wait-for-imitation</param>
   </arguments>
 
   <authors>
@@ -37,6 +46,13 @@
           <port>/interactionManager/synthetizer:i</port>
           <description>
             Receives the score associated to the performed exercise. To be connected to /feedbackSynthetizer/score:o.
+          </description>
+      </input>
+      <input>
+          <type>Bottle</type>
+          <port>/interactionManager/trigger:i</port>
+          <description>
+            Receives triggers when the movement starts/ends.
           </description>
       </input>
       <output>
@@ -65,6 +81,20 @@
           <port>/interactionManager/speech:o</port>
           <description>
             Streams out the verbal interaction. To be connected to \ref iSpeak.
+          </description>
+      </output>
+      <output>
+          <type>rpc</type>
+          <port>/interactionManager/gazebo:rpc</port>
+          <description>
+            Sends commands to \ref world_input_port to create/delete panel in gazebo.
+          </description>
+      </output>
+      <output>
+          <type>Bottle</type>
+          <port>/interactionManager/trigger:o</port>
+          <description>
+            Sends triggers when the movement starts/ends.
           </description>
       </output>
   </data>
