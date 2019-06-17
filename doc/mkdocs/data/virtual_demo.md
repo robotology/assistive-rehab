@@ -5,14 +5,16 @@ The virtual demo replicates the [demo](https://robotology.github.io/assistive-re
 
 ![virtual-r1](https://user-images.githubusercontent.com/9716288/58802764-4104ab80-860e-11e9-868f-fce8e7708d49.png)
 
-The virtual R1 is shown on a screen with a RealSense on the top (indicated by the red arrow in the picture). The demo includes three phases:
+The virtual R1 is shown on a screen with a RealSense on the top (indicated by the red arrow in the picture).
+In this demo, the user in the field of view is automatically engaged and the interaction includes three phases:
 
-1. **observation phase**: the virtual robot welcomes the user and _shows_ the exercise to perform;
-2. **direct imitation phase**: the virtual robot performs the exercise together with the user, while _providing a verbal feedback_ on how the exercise is being performed;
-3. **occluded imitation phase**: the virtual robot keeps performing the exercise _behind a panel_ and _stops providing the verbal feedback_.
+  1. **observation phase**: the virtual robot welcomes the user and _shows_ the exercise to perform;
+  2. **direct imitation phase**: the virtual robot performs the exercise together with the user, while _providing a verbal feedback_ on how the exercise is being performed;
+  3. **occluded imitation phase**: the virtual robot keeps performing the exercise _behind a panel_ and _stops providing the verbal feedback_.
+
 Features like facial expressions, gazing the user and a verbal feedback are also included, such that the interaction is as close as possible to the real one.
 
-The demo is currently available in the branch [**`feat/virtual-robot`**](https://github.com/robotology/assistive-rehab/tree/feat/virtual-robot) and the related application can be found [here](https://github.com/robotology/assistive-rehab/tree/feat/virtual-robot/app/scripts), named _AssistiveRehab-virtual.xml.template_.
+The related application can be found [here](https://github.com/robotology/assistive-rehab/tree/master/app/scripts), named _AssistiveRehab-TWM-virtual.xml.template_.
 
 ## Dependencies
 
@@ -39,7 +41,7 @@ The following hardware is required:
 
 To run the demo, first run `yarpserver`.
 Connect the RealSense to your laptop.
-Open `yarpmanager`, run the `Assistive_Rehabilitation_Virtual_App` and connect.
+Open `yarpmanager`, run the `Assistive_Rehabilitation_Train_With_Me_Virtual_ App` and connect.
 A virtual R1 appears within the simulation environment.
 
 !!! note
@@ -52,6 +54,9 @@ When the demo is launched, the `interactionManager` waits for the command `start
 - `start_occlusion`: to start the occluded imitation phase, where the robot keeps performing the exercise behind a panel and stops providing the verbal feedback;
 - `stop`: to stop the interaction.
 
+!!! tip
+    A different kind of interaction is also allowed, requiring the user to raise her/his hand to start the interaction. Such interaction includes the observation and the direct imitation phases, with the virtual robot _showing_ the exercise to perform and, right after, _performing_ the exercise while _providing a verbal feedback_ (this is the virtual version of the demo [Y1M5](Y1M5.md)). In this configuration, the command `start_with_hand` starts the interaction and, when the user raises her/his hand, the two phases are run in a row, one after the other, without waiting any additional command.
+
 The following picture shows an _example_ of interaction during the _direct_ and _occluded_ imitation phase:
 
 ![virtual-r1](https://user-images.githubusercontent.com/9716288/58812028-45868f80-8621-11e9-8c06-95df4f0a4d7e.gif)
@@ -62,5 +67,4 @@ During the _direct_ imitation phase, the robot moves while providing verbal feed
 !!! note
     The shown interaction is just an example and the number of repetitions of the exercise is higher by default.
 
-
-Parameters that control the repetitions of the arm movements are defined in the  `interactionManager` [config file](https://github.com/robotology/assistive-rehab/tree/feat/virtual-robot/modules/interactionManager/app/conf) as `nrep-show` and `nrep-perform`, respectively for the observation phase (set to `12` by default) and the imitation phase, both direct and occluded (set to `24` by default). The command `start_occlusion` can be sent after the twelfth repetition of the movement within the direct phase, to have `12` repetitions for each phase.
+The parameters used for this application can be found in the context [`train-with-me`](https://github.com/robotology/assistive-rehab/tree/master/app/conf/train-with-me). Specifically, parameters that control the repetitions of the arm movements are defined in the  `interactionManager.ini` as `nrep-show` and `nrep-perform`, respectively for the observation phase (set to `8` by default) and the imitation phase, both direct and occluded (set to `16` by default). The command `start_occlusion` can be sent after the eighth  repetition of the movement within the direct phase, to have `8` repetitions for each phase.

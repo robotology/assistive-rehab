@@ -1,6 +1,0 @@
-model_checkpoint_path: "/home/vvasco/dev/action-recognition/lstm/fdg-model-skeleton/normalized/2d/optimized/model-chevalier/nsteps=30/seated/right/abduction-right/upper/two_views/overlap=0.5/train_noise-test/model"
-all_model_checkpoint_paths: "/home/vvasco/dev/action-recognition/lstm/fdg-model-skeleton/normalized/2d/optimized/model-chevalier/nsteps=30/seated/right/abduction-right/upper/two_views/overlap=0.5/train_noise-test/model_23125"
-all_model_checkpoint_paths: "/home/vvasco/dev/action-recognition/lstm/fdg-model-skeleton/normalized/2d/optimized/model-chevalier/nsteps=30/seated/right/abduction-right/upper/two_views/overlap=0.5/train_noise-test/model_23750"
-all_model_checkpoint_paths: "/home/vvasco/dev/action-recognition/lstm/fdg-model-skeleton/normalized/2d/optimized/model-chevalier/nsteps=30/seated/right/abduction-right/upper/two_views/overlap=0.5/train_noise-test/model_24375"
-all_model_checkpoint_paths: "/home/vvasco/dev/action-recognition/lstm/fdg-model-skeleton/normalized/2d/optimized/model-chevalier/nsteps=30/seated/right/abduction-right/upper/two_views/overlap=0.5/train_noise-test/model_25000"
-all_model_checkpoint_paths: "/home/vvasco/dev/action-recognition/lstm/fdg-model-skeleton/normalized/2d/optimized/model-chevalier/nsteps=30/seated/right/abduction-right/upper/two_views/overlap=0.5/train_noise-test/model"
