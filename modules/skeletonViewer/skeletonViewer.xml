@@ -19,7 +19,7 @@
     <param default="600" desc="Viewer's width in screen coordinates pixels.">w</param>
     <param default="600" desc="Viewer's height in screen coordinates pixels.">h</param>
     <param default="1.0" desc="Periodicity of the module (s)">gc-period</param>
-    <param default="(0.1,0.2,0.2)" desc="Viewer's background color using rgb color specification.">bg-color</param>
+    <param default="(0.7,0.7,0.7)" desc="Viewer's background color using rgb color specification.">bg-color</param>
 
   </arguments>
 

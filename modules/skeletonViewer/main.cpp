@@ -506,7 +506,7 @@ class Viewer : public RFModule
         int h=rf.check("h",Value(600)).asInt();
         double gc_period=rf.check("gc-period",Value(1.0)).asDouble();
 
-        vector<double> bg_color={0.1,0.2,0.2};
+        vector<double> bg_color={0.7,0.7,0.7};
         if (rf.check("bg-color"))
         {
             if (const Bottle *ptr=rf.find("bg-color").asList())
