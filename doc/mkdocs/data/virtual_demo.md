@@ -24,7 +24,7 @@ After [installing](https://robotology.github.io/assistive-rehab/doc/mkdocs/site/
 - [cer](https://github.com/robotology/cer): for running the gaze-controller and face expressions;
 - [gazebo](http://gazebosim.org/tutorials?cat=install): for running the virtual environment;
 - [gazebo-yarp-plugins](https://github.com/robotology/gazebo-yarp-plugins): for exposing YARP interfaces in `Gazebo`;
-- [cer-sim](https://github.com/robotology/cer-sim/tree/feat/face-expressions): which has the model loaded by `Gazebo` in _AssistiveRehab-virtual.xml.template_;
+- [cer-sim](https://github.com/robotology/cer-sim/tree/feat/face-expressions): which has the model loaded by `Gazebo` in _AssistiveRehab-TWM-virtual.xml.template_;
 
     !!! warning
         `cer-sim` is currently under fix for including face expressions in the official model of R1. **Please checkout to the branch `feat/face-expressions`**, containing the correct model to be loaded.
@@ -41,7 +41,7 @@ The following hardware is required:
 
 To run the demo, first run `yarpserver`.
 Connect the RealSense to your laptop.
-Open `yarpmanager`, run the `Assistive_Rehabilitation_Train_With_Me_Virtual_ App` and connect.
+Open `yarpmanager`, run the `AssistiveRehab-TWM-virtual App` and connect.
 A virtual R1 appears within the simulation environment.
 
 !!! note
