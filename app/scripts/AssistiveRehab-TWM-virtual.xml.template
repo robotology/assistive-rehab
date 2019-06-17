@@ -45,7 +45,7 @@
 
     <module>
        <name>skeletonRetriever</name>
-       <parameters>--context AssistiveRehab --from train-with-me/skeletonRetriever.ini</parameters>
+       <parameters>--context AssistiveRehab/train-with-me --from skeletonRetriever.ini</parameters>
        <dependencies>
           <port timeout="5">/opc/rpc</port>
        </dependencies>
@@ -71,7 +71,7 @@
 
     <module>
        <name>motionAnalyzer</name>
-       <parameters>--context AssistiveRehab --from train-with-me/motionAnalyzer.ini</parameters>
+       <parameters>--context AssistiveRehab/train-with-me --from motionAnalyzer.ini</parameters>
        <node>r1-console-linux</node>
     </module>
 
@@ -93,7 +93,7 @@
 
     <module>
        <name>actionRecognizer</name>
-       <parameters>--context AssistiveRehab --from train-with-me/actionRecognizer.ini</parameters>
+       <parameters>--context AssistiveRehab/train-with-me --from actionRecognizer.ini</parameters>
        <node>r1-console-cuda</node>
     </module>
 
@@ -104,7 +104,7 @@
 
     <module>
         <name>interactionManager</name>
-        <parameters>--context AssistiveRehab --from train-with-me/interactionManager.ini --virtual-mode true</parameters>
+        <parameters>--context AssistiveRehab/train-with-me --from interactionManager.ini --virtual-mode true</parameters>
         <node>r1-console-linux</node>
     </module>
 
