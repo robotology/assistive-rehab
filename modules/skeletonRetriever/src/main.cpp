@@ -902,11 +902,15 @@ class Retriever : public RFModule
     /****************************************************************/
     bool close() override
     {
+        // remove all skeletons from OPC
+        gc(numeric_limits<double>::infinity());
+
         skeletonsPort.close();
         depthPort.close();
         viewerPort.close();
         opcPort.close();
         camPort.close();
+
         return true;
     }
 };
