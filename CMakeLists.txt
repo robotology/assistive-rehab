@@ -33,8 +33,11 @@ find_package(ICUBcontrib REQUIRED)
 find_package(YARP 3.1.100 REQUIRED COMPONENTS OS sig dev math cv)
 find_package(ICUB REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(VTK 8.1.0 REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})
 list(APPEND CMAKE_MODULE_PATH ${ICUBCONTRIB_MODULE_PATH})
+
+find_package(IPOPT REQUIRED)
 
 include(ICUBcontribOptions)
 include(ICUBcontribHelpers)
