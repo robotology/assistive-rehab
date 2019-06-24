@@ -296,12 +296,15 @@ class Publisher : public RFModule
     /**************************************************************************/
     bool updateModule()
     {
+        // retrieve joints state
         Vector stamps(3);
         Vector encs_head=getHeadEncs(ienc_head,stamps[0]);
         Vector encs_left_arm=getArmEncs(ienc_left_arm,stamps[1]);
         Vector encs_right_arm=getArmEncs(ienc_right_arm,stamps[2]);
         double stamp=findMax(stamps);
 
+        // compute fkin + update the skeleton info:
+        // root frame is "depth_center"
         Matrix root,hee;
         head.fkin(encs_head,root);
         root=SE3inv(root);
