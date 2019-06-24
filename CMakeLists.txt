@@ -26,12 +26,13 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-# ICUBcontrib shall come first as it includes find_package(YARP)
-# otherwise, it might cause conflicts when selecting specific YARP components
+# packages that shall come first as they include find_package(YARP)
+# otherwise, we might have conflicts when selecting specific YARP components
 find_package(ICUBcontrib REQUIRED)
 
-find_package(YARP 3.1.100 REQUIRED COMPONENTS OS sig dev math cv)
+find_package(YARP 3.1.100 REQUIRED COMPONENTS OS sig dev math cv rosmsg)
 find_package(ICUB REQUIRED)
+find_package(CER REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(VTK 8.1.0 REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})

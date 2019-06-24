@@ -11,6 +11,7 @@
 - [icub-contrib-common](https://github.com/robotology/icub-contrib-common)
 - [yarp](https://github.com/robotology/yarp) (3.1.100 or higher)
 - [iCub](https://github.com/robotology/icub-main)
+- [cer](https://github.com/robotology/cer)
 - [OpenCV](https://github.com/opencv/opencv) (3.4.0 or higher)
 - [yarpOpenPose](https://github.com/robotology/human-sensing)
 
