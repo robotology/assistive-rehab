@@ -24,9 +24,7 @@
 #include <yarp/os/Bottle.h>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/RpcClient.h>
-
-#include <yarp/dev/PolyDriver.h>
-#include <yarp/dev/IEncodersTimed.h>
+#include <yarp/os/Stamp.h>
 
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
@@ -42,7 +40,6 @@
 
 using namespace std;
 using namespace yarp::os;
-using namespace yarp::dev;
 using namespace yarp::sig;
 using namespace yarp::math;
 using namespace iCub::iKin;
@@ -51,12 +48,21 @@ using namespace assistive_rehab;
 
 
 /******************************************************************************/
+struct PortHandler
+{
+    BufferedPort<Vector> port;
+    Vector encs;
+    double stamp;
+};
+
+
+/******************************************************************************/
 class Publisher : public RFModule
 {
-    PolyDriver drivers[7];
-    vector<IEncodersTimed*> ienc_head;
-    vector<IEncodersTimed*> ienc_left_arm;
-    vector<IEncodersTimed*> ienc_right_arm;
+    vector<shared_ptr<PortHandler>> phdl_encs;
+    vector<shared_ptr<PortHandler>> phdl_head;
+    vector<shared_ptr<PortHandler>> phdl_left_arm;
+    vector<shared_ptr<PortHandler>> phdl_right_arm;
     double period;
 
     BufferedPort<Bottle> viewerPort;
@@ -72,73 +78,54 @@ class Publisher : public RFModule
     ArmSolver  right_arm;
 
     /**************************************************************************/
-    bool openDriver(PolyDriver &driver, const string robot, const string part)
+    bool openPort(const string& robot, const string& part,
+                  vector<shared_ptr<PortHandler>> &handlers)
     {
-        Property option;
-        option.put("device","remote_controlboard");
-        option.put("remote","/"+robot+"/"+part);
-        option.put("local","/robotSkeletonPublisher/"+part);
-        option.put("writeStrict","on");
-        if (!driver.open(option))
+        shared_ptr<PortHandler> handler(new PortHandler);
+        string remote_name="/"+robot+"/"+part+"/state:o";
+        handler->port.open("/robotSkeletonPublisher/"+part+"/state:i");
+        if (!Network::connect(remote_name,handler->port.getName(),"udp"))
         {
-            yError("Unable to connect to %s",string("/"+robot+"/"+part).c_str());
+            yError()<<"Unable to connect to"<<remote_name;
             return false;
         }
+        handlers.push_back(handler);
         return true;
     }
 
     /**************************************************************************/
-    Vector getHeadEncs(const vector<IEncodersTimed*> &lienc, double &stamp)
+    bool readHandler(shared_ptr<PortHandler> handler)
     {
-        Vector encs(6,0.0);
-        Vector stamps(encs.length());
-
-        Vector encs_=encs;
-        Vector stamps_=stamps;
-
-        lienc[0]->getEncodersTimed(&encs_[0],&stamps_[0]);
-        encs.setSubvector(0,encs_.subVector(0,2));
-        stamps.setSubvector(0,stamps_.subVector(0,2));
-
-        lienc[1]->getEncodersTimed(&encs_[0],&stamps_[0]);
-        encs[3]=encs_[3];
-        stamps[3]=stamps_[3];
-
-        lienc[2]->getEncodersTimed(&encs_[0],&stamps_[0]);
-        encs.setSubvector(4,encs_.subVector(0,1));
-        stamps.setSubvector(4,stamps_.subVector(0,1));
-
-        stamp=findMax(stamps);
-        return encs;
-
+        bool wait=(handler->encs.length()==0);
+        Vector *v=handler->port.read(wait);
+        if (v)
+        {
+            Stamp stamp_;
+            handler->port.getEnvelope(stamp_);
+            handler->encs=*v;
+            handler->stamp=stamp_.getTime();
+        }
+        return (!wait || v);
     }
 
     /**************************************************************************/
-    Vector getArmEncs(const vector<IEncodersTimed*> &lienc, double &stamp)
+    Vector getHeadEncs(const vector<shared_ptr<PortHandler>> &handlers)
     {
-        Vector encs(12,0.0);
-        Vector stamps(encs.length());
+        Vector encs(6,0.0);
+        encs.setSubvector(0,handlers[0]->encs.subVector(0,2));
+        encs[3]=handlers[1]->encs[3];
+        encs.setSubvector(4,handlers[2]->encs.subVector(0,1));
+        return encs;
+    }
 
-        Vector encs_=encs;
-        Vector stamps_=stamps;
-
-        lienc[0]->getEncodersTimed(&encs_[0],&stamps_[0]);
-        encs.setSubvector(0,encs_.subVector(0,2));
-        stamps.setSubvector(0,stamps_.subVector(0,2));
-
-        lienc[1]->getEncodersTimed(&encs_[0],&stamps_[0]);
-        encs[3]=encs_[3];
-        stamps[3]=stamps_[3];
-
-        lienc[2]->getEncodersTimed(&encs_[0],&stamps_[0]);
-        encs.setSubvector(4,encs_.subVector(0,4));
-        stamps.setSubvector(4,stamps_.subVector(0,4));
-
-        lienc[3]->getEncodersTimed(&encs_[0],&stamps_[0]);
-        encs.setSubvector(9,encs_.subVector(0,2));
-        stamps.setSubvector(9,stamps_.subVector(0,2));
-
-        stamp=findMax(stamps);
+    /**************************************************************************/
+    Vector getArmEncs(const vector<shared_ptr<PortHandler>> &handlers)
+    {
+        Vector encs(12, 0.0);
+        encs.setSubvector(0,handlers[0]->encs.subVector(0,2));
+        encs[3]=handlers[1]->encs[3];
+        encs.setSubvector(4,handlers[2]->encs.subVector(0,4));
+        encs.setSubvector(9,handlers[3]->encs.subVector(0,2));
         return encs;
     }
 
@@ -156,7 +143,7 @@ class Publisher : public RFModule
     }
 
     /**************************************************************************/
-    void opcUpdate(shared_ptr<SkeletonStd> skeleton, const double &stamp)
+    bool opcUpdate(shared_ptr<SkeletonStd> skeleton, const double &stamp)
     {
         if (opcPort.getOutputCount())
         {
@@ -172,6 +159,7 @@ class Publisher : public RFModule
                     if (rep.get(0).asVocab()==Vocab::encode("ack"))
                     {
                         opc_id=rep.get(1).asList()->get(1).asInt();
+                        return true;
                     }
                 }
             }
@@ -187,9 +175,13 @@ class Publisher : public RFModule
                 id_pl.addString("id");
                 id_pl.addInt(opc_id);
                 pl.append(id);
-                opcPort.write(cmd,rep);
+                if (opcPort.write(cmd,rep))
+                {
+                    return (rep.get(0).asVocab()==Vocab::encode("ack"));
+                }
             }
         }
+        return false;
     }
 
     /**************************************************************************/
@@ -211,7 +203,7 @@ class Publisher : public RFModule
     }
 
     /**************************************************************************/
-    bool configure(ResourceFinder &rf)
+    bool configure(ResourceFinder &rf) override
     {
         string robot=rf.check("robot",Value("cer")).asString();
         skeleton_name=rf.check("skeleton-name",Value("robot")).asString();
@@ -232,41 +224,35 @@ class Publisher : public RFModule
         Bottle &b1=b_sk_color.addList();
         b1.addString("color");
         Bottle &b2=b1.addList();
-        for (size_t i=0; i<skeleton_color.size(); i++)
+        for (auto &c:skeleton_color)
         {
-            b2.addDouble(skeleton_color[i]);
+            b2.addDouble(c);
         }
 
-        if (!openDriver(drivers[0],robot,"torso_tripod")      ||
-            !openDriver(drivers[1],robot,"torso")             ||
-            !openDriver(drivers[2],robot,"head")              ||
-            !openDriver(drivers[3],robot,"left_arm")          ||
-            !openDriver(drivers[4],robot,"left_wrist_tripod") ||
-            !openDriver(drivers[5],robot,"right_arm")         ||
-            !openDriver(drivers[6],robot,"right_wrist_tripod"))
+        if (!openPort(robot,"torso_tripod",phdl_encs)      ||
+            !openPort(robot,"torso",phdl_encs)             ||
+            !openPort(robot,"head",phdl_encs)              ||
+            !openPort(robot,"left_arm",phdl_encs)          ||
+            !openPort(robot,"left_wrist_tripod",phdl_encs) ||
+            !openPort(robot,"right_arm",phdl_encs)         ||
+            !openPort(robot,"right_wrist_tripod",phdl_encs))
         {
             close();
         }
 
-        IEncodersTimed *ienc[7];
-        for (int i=0; i<7; i++)
-        {
-            drivers[i].view(ienc[i]);
-        }
+        phdl_head.push_back(phdl_encs[0]);
+        phdl_head.push_back(phdl_encs[1]);
+        phdl_head.push_back(phdl_encs[2]);
 
-        ienc_head.push_back(ienc[0]);
-        ienc_head.push_back(ienc[1]);
-        ienc_head.push_back(ienc[2]);
+        phdl_left_arm.push_back(phdl_encs[0]);
+        phdl_left_arm.push_back(phdl_encs[1]);
+        phdl_left_arm.push_back(phdl_encs[3]);
+        phdl_left_arm.push_back(phdl_encs[4]);
 
-        ienc_left_arm.push_back(ienc[0]);
-        ienc_left_arm.push_back(ienc[1]);
-        ienc_left_arm.push_back(ienc[3]);
-        ienc_left_arm.push_back(ienc[4]);
-
-        ienc_right_arm.push_back(ienc[0]);
-        ienc_right_arm.push_back(ienc[1]);
-        ienc_right_arm.push_back(ienc[5]);
-        ienc_right_arm.push_back(ienc[6]);
+        phdl_right_arm.push_back(phdl_encs[0]);
+        phdl_right_arm.push_back(phdl_encs[1]);
+        phdl_right_arm.push_back(phdl_encs[5]);
+        phdl_right_arm.push_back(phdl_encs[6]);
 
         viewerPort.open("/robotSkeletonPublisher/viewer:o");
         opcPort.open("/robotSkeletonPublisher/opc:rpc");
@@ -288,21 +274,31 @@ class Publisher : public RFModule
     }
 
     /**************************************************************************/
-    double getPeriod()
+    double getPeriod() override
     {
         return period;
     }
 
     /**************************************************************************/
-    bool updateModule()
+    bool updateModule() override
     {
-        // retrieve joints state
-        Vector stamps(3);
-        Vector encs_head=getHeadEncs(ienc_head,stamps[0]);
-        Vector encs_left_arm=getArmEncs(ienc_left_arm,stamps[1]);
-        Vector encs_right_arm=getArmEncs(ienc_right_arm,stamps[2]);
+        // update joints state and time stamps
+        Vector stamps;
+        for (auto &h:phdl_encs)
+        {
+            if (!readHandler(h))
+            {
+                return false;
+            }
+            stamps.push_back(h->stamp);
+        }
         double stamp=findMax(stamps);
 
+        // prepare joints state for single chains
+        Vector encs_head=getHeadEncs(phdl_head);
+        Vector encs_left_arm=getArmEncs(phdl_left_arm);
+        Vector encs_right_arm=getArmEncs(phdl_right_arm);
+        
         // compute fkin + update the skeleton info:
         // root frame is "depth_center"
         Matrix root,hee;
@@ -353,18 +349,33 @@ class Publisher : public RFModule
     }
 
     /**************************************************************************/
-    bool close()
+    bool interruptModule() override
     {
-        opcDel();
-        opcPort.close();
-        viewerPort.close();
-
-        for (int i=0; i<7; i++)
+        for (auto &h:phdl_encs)
         {
-           if (drivers[i].isValid())
-           {
-               drivers[i].close();
-           }
+            h->port.interrupt();
+        }
+        return true;
+    }
+
+    /**************************************************************************/
+    bool close() override
+    {
+        if (opcPort.asPort().isOpen())
+        {
+            opcDel();
+            opcPort.close();
+        }
+        if (!viewerPort.isClosed())
+        {
+            viewerPort.close();
+        }
+        for (auto &h:phdl_encs)
+        {
+            if (!h->port.isClosed())
+            {
+                h->port.close();
+            }
         }
         return true;
     }
