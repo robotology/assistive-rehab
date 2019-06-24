@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <algorithm>
 
 #include <yarp/os/Network.h>
 #include <yarp/os/LogStream.h>
@@ -22,6 +23,7 @@
 #include <yarp/os/Property.h>
 #include <yarp/os/Bottle.h>
 #include <yarp/os/BufferedPort.h>
+#include <yarp/os/RpcClient.h>
 
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/IEncodersTimed.h>
@@ -58,7 +60,12 @@ class Publisher : public RFModule
     double period;
 
     BufferedPort<Bottle> viewerPort;
-    Bottle color;
+    string skeleton_name;
+    vector<double> skeleton_color;
+    Bottle b_sk_color;
+
+    RpcClient opcPort;
+    int opc_id;
 
     HeadSolver head;
     ArmSolver  left_arm;
@@ -135,12 +142,100 @@ class Publisher : public RFModule
         return encs;
     }
 
-public:
+    /**************************************************************************/
+    void viewerUpdate(shared_ptr<SkeletonStd> skeleton)
+    {
+        if (viewerPort.getOutputCount()>0)
+        {
+            Bottle msg;
+            msg.read(skeleton->toProperty());
+            msg.append(b_sk_color);
+            viewerPort.prepare().addList()=msg;
+            viewerPort.writeStrict();
+        }
+    }
+
+    /**************************************************************************/
+    void opcUpdate(shared_ptr<SkeletonStd> skeleton, const double &stamp)
+    {
+        if (opcPort.getOutputCount())
+        {
+            Bottle cmd,rep;
+            if (opc_id<0)
+            {
+                cmd.addVocab(Vocab::encode("add"));
+                Property prop=skeleton->toProperty();
+                prop.put("stamp",stamp);
+                cmd.addList().read(prop);
+                if (opcPort.write(cmd,rep))
+                {
+                    if (rep.get(0).asVocab()==Vocab::encode("ack"))
+                    {
+                        opc_id=rep.get(1).asList()->get(1).asInt();
+                    }
+                }
+            }
+            else
+            {
+                cmd.addVocab(Vocab::encode("set"));
+                Bottle &pl=cmd.addList();
+                Property prop=skeleton->toProperty();
+                prop.put("stamp",stamp);
+                pl.read(prop);
+                Bottle id;
+                Bottle &id_pl=id.addList();
+                id_pl.addString("id");
+                id_pl.addInt(opc_id);
+                pl.append(id);
+                opcPort.write(cmd,rep);
+            }
+        }
+    }
+
+    /**************************************************************************/
+    bool opcDel()
+    {
+        if (opcPort.getOutputCount())
+        {
+            Bottle cmd,rep;
+            cmd.addVocab(Vocab::encode("del"));
+            Bottle &pl=cmd.addList().addList();
+            pl.addString("id");
+            pl.addInt(opc_id);
+            if (opcPort.write(cmd,rep))
+            {
+                return (rep.get(0).asVocab()==Vocab::encode("ack"));
+            }
+        }
+        return false;
+    }
+
     /**************************************************************************/
     bool configure(ResourceFinder &rf)
     {
         string robot=rf.check("robot",Value("cer")).asString();
+        skeleton_name=rf.check("skeleton-name",Value("robot")).asString();
         period=rf.check("period",Value(0.05)).asDouble();
+
+        skeleton_color={0.23,0.7,0.44};
+        if (rf.check("skeleton-color"))
+        {
+            if (const Bottle *ptr=rf.find("skeleton-color").asList())
+            {
+                size_t len=std::min(skeleton_color.size(),ptr->size());
+                for (size_t i=0; i<len; i++)
+                {
+                    skeleton_color[i]=ptr->get(i).asDouble();
+                }
+            }
+        }
+        Bottle &b1=b_sk_color.addList();
+        b1.addString("color");
+        Bottle &b2=b1.addList();
+        for (size_t i=0; i<skeleton_color.size(); i++)
+        {
+            b2.addDouble(skeleton_color[i]);
+        }
 
         if (!openDriver(drivers[0],robot,"torso_tripod")      ||
             !openDriver(drivers[1],robot,"torso")             ||
@@ -174,6 +269,8 @@ public:
         ienc_right_arm.push_back(ienc[6]);
 
         viewerPort.open("/robotSkeletonPublisher/viewer:o");
+        opcPort.open("/robotSkeletonPublisher/opc:rpc");
+        opc_id=-1;
 
         HeadParameters params_head("depth_center");
         params_head.head.setAllConstraints(false);
@@ -186,8 +283,6 @@ public:
         ArmParameters params_right_arm("right");
         params_right_arm.upper_arm.setAllConstraints(false);
         right_arm.setArmParameters(params_right_arm);
-
-        color=Bottle("(color (0.23 0.7 0.44))");
 
         return true;
     }
@@ -244,18 +339,12 @@ public:
         right_arm.fkin(encs_right_arm,hee); hee=root*hee;
         unordered.push_back(make_pair(KeyPointTag::hand_right,hee.getCol(3).subVector(0,2)));
 
-        SkeletonStd skeleton;
-        skeleton.setTag("robot");
-        skeleton.update(unordered);
+        shared_ptr<SkeletonStd> skeleton(new SkeletonStd());
+        skeleton->setTag(skeleton_name);
+        skeleton->update(unordered);
 
-        if (viewerPort.getOutputCount()>0)
-        {
-            Bottle msg;
-            msg.read(skeleton.toProperty());
-            msg.append(color);
-            viewerPort.prepare().addList()=msg;
-            viewerPort.writeStrict();
-        }
+        viewerUpdate(skeleton);
+        opcUpdate(skeleton,stamp);
 
         return true;
     }
@@ -263,7 +352,10 @@ public:
     /**************************************************************************/
     bool close()
     {
+        opcDel();
+        opcPort.close();
         viewerPort.close();
+
         for (int i=0; i<7; i++)
         {
            if (drivers[i].isValid())

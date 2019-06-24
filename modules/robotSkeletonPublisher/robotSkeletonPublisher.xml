@@ -10,10 +10,12 @@
 
   <description-long>
    This module connects to robot's state ports to retrieve the joints and then uses such information to compute the 
-   3D configuration of the limbs. The resulting skeleton is sent to the viewer.
+   3D configuration of the limbs. The resulting skeleton is sent to the viewer and to the OPC.
   </description-long>
 
   <arguments>
+    <param default="robot" desc="Name of the skeleton to be displayed.">skeleton-name</param>
+    <param default="(0.23 0.7 0.44)" desc="Skeleton's color using rgb color specification.">skeleton-color</param>
     <param default="0.05" desc="Periodicity of the module (s).">period</param>
     <param default="cer" desc="Name of the robot to connect to.">robot</param>
   </arguments>
@@ -30,6 +32,13 @@
             Outputs 3D skeletons to send to \ref skeletonViewer for visualization.
           </description>
       </output>
+      <output>
+          <type>rpc</type>
+          <port>/robotSkeletonPublisher/opc:rpc</port>
+          <description>
+              Sends commands to \ref objectsPropertiesCollector to add the skeleton to the database.
+          </description>
+      </output>      
   </data>
 
 </module>
