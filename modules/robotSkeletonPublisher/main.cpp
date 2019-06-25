@@ -134,10 +134,13 @@ class Publisher : public RFModule
     {
         if (viewerPort.getOutputCount()>0)
         {
-            Bottle msg;
-            msg.read(skeleton->toProperty());
-            msg.append(b_sk_color);
-            viewerPort.prepare().addList()=msg;
+            Bottle payLoad;
+            payLoad.read(skeleton->toProperty());
+            payLoad.append(b_sk_color);
+
+            Bottle &msg=viewerPort.prepare();
+            msg.clear();
+            msg.addList()=payLoad;
             viewerPort.writeStrict();
         }
     }
