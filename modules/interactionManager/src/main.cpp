@@ -990,12 +990,12 @@ class Interaction : public RFModule, public interactionManager_IDL
                                                                     partspeech=parttomove[0];
                                                                 }
                                                             }
-
                                                             cmd.clear();
                                                             rep.clear();
                                                             cmd.addString("setPart");
                                                             cmd.addString(part);
-                                                            if(analyzerPort.write(cmd,rep))
+                                                            yInfo()<<"Analyzing"<<part<<"arm";
+                                                            if (analyzerPort.write(cmd,rep))
                                                             {
 	                                                        script_starting=move_file+" "+"startingpos_"+motion_type_robot;
                                                                 script_move=move_file+" "+motion_type_robot;

@@ -822,6 +822,25 @@ bool Manager::stop_feedback()
 }
 
 /********************************************************/
+bool Manager::stop_feedback()
+{
+    LockGuard lg(mutex);
+
+    yInfo() << "Stop feedback!";
+
+    //stop skeletonScaler
+    Bottle cmd,reply;
+    cmd.addVocab(Vocab::encode("stop"));
+    dtwPort.write(cmd,reply);
+    actionPort.write(cmd,reply);
+    if(reply.get(0).asVocab()==Vocab::encode("ok"))
+    {
+        return true;
+    }
+    return false;
+}
+
+/********************************************************/
 bool Manager::stop()
 {
     LockGuard lg(mutex);

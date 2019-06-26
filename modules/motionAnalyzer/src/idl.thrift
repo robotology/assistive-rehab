@@ -65,6 +65,38 @@ service motionAnalyzer_IDL
    list<string> listJoints()
 
    /**
+   * Select property to visualize.
+   * @param prop_ property to visualize
+   * @return true/false on success/failure.
+   */
+   bool selectMetricProp(1:string prop_tag_);
+
+   /**
+   * List the available properties computable for the current metric.
+   * @return the list of the available properties computable for the current metric.
+   */
+   list<string> listMetricProps()
+
+   /**
+   * Select metric to analyze.
+   * @param metric_tag_ metric to analyze
+   * @return true/false on success/failure.
+   */
+   bool selectMetric(1:string metric_tag_);
+
+   /**
+   * List the available metrics for the current exercise.
+   * @return the list of the available metrics for the current exercise.
+   */
+   list<string> listMetrics()
+
+   /**
+   * Get the metric to visualise.
+   * @return metric to visualise.
+   */
+   string getCurrMetricProp();
+
+   /**
    * Select the part to move.
    * @return true/false on success/failure.
    */
@@ -81,6 +113,6 @@ service motionAnalyzer_IDL
    * @param robot_skeleton_mirror if true, robot template has to be mirrored.
    * @return true/false on success/failure.
    */
-   bool mirrorTemplate(1:bool robot_skeleton_mirror)
+   bool mirrorTemplate(1:bool robot_skeleton_mirror);
 
 }

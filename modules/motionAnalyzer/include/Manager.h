@@ -86,6 +86,8 @@ class Manager : public yarp::os::RFModule,
     std::string getExercise() override;
     bool start() override;
     bool stop() override;
+    bool setPart(const std::string &part) override;
+    bool stop_feedback() override;
 
     bool writeStructToMat(const std::string& name, const std::vector< std::vector< std::pair<std::string,yarp::sig::Vector> > >& keypoints_skel, mat_t *matfp);
     bool writeStructToMat(const std::string& name, const Exercise *ex, mat_t *matfp);
