@@ -146,7 +146,7 @@ class Publisher : public RFModule
     }
 
     /**************************************************************************/
-    bool opcUpdate(shared_ptr<SkeletonStd> skeleton, const double &stamp)
+    bool opcUpdate(shared_ptr<SkeletonStd> skeleton, const double stamp)
     {
         if (opcPort.getOutputCount())
         {
