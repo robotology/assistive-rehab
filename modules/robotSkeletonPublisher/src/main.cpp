@@ -24,7 +24,10 @@
 #include <yarp/os/Bottle.h>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/RpcClient.h>
+#include <yarp/os/RpcServer.h>
 #include <yarp/os/Stamp.h>
+#include <yarp/os/LockGuard.h>
+#include <yarp/os/Mutex.h>
 
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
@@ -37,6 +40,7 @@
 #include <cer_kinematics/arm.h>
 
 #include "AssistiveRehab/skeleton.h"
+#include "src/robotSkeletonPublisher_IDL.h"
 
 using namespace std;
 using namespace yarp::os;
@@ -57,7 +61,7 @@ struct PortHandler
 
 
 /******************************************************************************/
-class Publisher : public RFModule
+class Publisher : public RFModule, public robotSkeletonPublisher_IDL
 {
     vector<shared_ptr<PortHandler>> phdl_encs;
     vector<shared_ptr<PortHandler>> phdl_head;
@@ -72,6 +76,10 @@ class Publisher : public RFModule
 
     RpcClient opcPort;
     int opc_id;
+
+    RpcServer cmdPort;
+    Mutex mutex;
+    bool visibility;
 
     HeadSolver head;
     ArmSolver  left_arm;
@@ -130,9 +138,17 @@ class Publisher : public RFModule
     }
 
     /**************************************************************************/
+    bool set_visibility(const bool flag) override
+    {
+        LockGuard lg(mutex);
+        visibility=flag;
+        return true;
+    }
+
+    /**************************************************************************/
     void viewerUpdate(shared_ptr<SkeletonStd> skeleton)
     {
-        if (viewerPort.getOutputCount()>0)
+        if (visibility && (viewerPort.getOutputCount()>0))
         {
             Bottle payLoad;
             payLoad.read(skeleton->toProperty());
@@ -206,11 +222,18 @@ class Publisher : public RFModule
     }
 
     /**************************************************************************/
+    bool attach(RpcServer &source) override
+    {
+        return yarp().attachAsServer(source);
+    }
+
+    /**************************************************************************/
     bool configure(ResourceFinder &rf) override
     {
         string robot=rf.check("robot",Value("cer")).asString();
         skeleton_name=rf.check("skeleton-name",Value("robot")).asString();
         period=rf.check("period",Value(0.05)).asDouble();
+        visibility=rf.check("visibility",Value(true)).asBool();
 
         skeleton_color={0.23,0.7,0.44};
         if (rf.check("skeleton-color"))
@@ -261,6 +284,9 @@ class Publisher : public RFModule
         opcPort.open("/robotSkeletonPublisher/opc:rpc");
         opc_id=-1;
 
+        cmdPort.open("/robotSkeletonPublisher/cmd:rpc");
+        attach(cmdPort);
+
         HeadParameters params_head("depth_center");
         params_head.head.setAllConstraints(false);
         head.setHeadParameters(params_head);
@@ -285,6 +311,8 @@ class Publisher : public RFModule
     /**************************************************************************/
     bool updateModule() override
     {
+        LockGuard lg(mutex);
+
         // update joints state and time stamps
         Vector stamps;
         for (auto &h:phdl_encs)
@@ -364,6 +392,10 @@ class Publisher : public RFModule
     /**************************************************************************/
     bool close() override
     {
+        if (cmdPort.asPort().isOpen())
+        {
+            cmdPort.close();
+        }
         if (opcPort.asPort().isOpen())
         {
             opcDel();

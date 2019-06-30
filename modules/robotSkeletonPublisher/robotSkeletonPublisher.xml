@@ -18,6 +18,7 @@
     <param default="(0.23 0.7 0.44)" desc="Skeleton's color using rgb color specification.">skeleton-color</param>
     <param default="0.05" desc="Periodicity of the module (s).">period</param>
     <param default="cer" desc="Name of the robot to connect to.">robot</param>
+    <param default="true" desc="Flag to set/unset visibility in the viewer.">visibility</param>
   </arguments>
 
   <authors>
@@ -40,5 +41,14 @@
           </description>
       </output>      
   </data>
+
+  <services>
+    <server>
+      <type>robotSkeletonPublisher_IDL</type>
+      <idl>idl.thrift</idl>
+      <port>/robotSkeletonPublisher/cmd:rpc</port>
+      <description>service port</description>
+    </server>
+  </services>
 
 </module>
