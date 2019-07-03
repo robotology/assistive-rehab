@@ -232,7 +232,7 @@ public:
         win = rf.check("win",Value(-1)).asDouble();
         period = rf.check("period",Value(0.01)).asDouble();
         filter_order = rf.check("filter_order",Value(3)).asInt();
-        action_threshold = rf.check("action-threshold",Value(0.6)).asDouble();
+        action_threshold = rf.check("action-threshold",Value(0.3)).asDouble();
 
         opcPort.open("/feedbackProducer/opc");
         outPort.open("/feedbackProducer:o");
