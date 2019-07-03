@@ -92,21 +92,36 @@ abduction_right() {
 ##################################
 #    EXTERNAL ROTATION  LEFT     #
 ##################################
+home_external_rotation_left() {
+    
+    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 35.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/left_arm/rpc
+}
+
 startingpos_external_rotation_left() {
     
     echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 80.0)" | yarp rpc /ctpservice/left_arm/rpc
 }
 external_rotation_left() {
 
+    port=/left_arm/rpc:i
+    echo "onset_movement" | yarp write ... /interactionManager/trigger:i
     echo "ctpq time $TIME off 0 pos (80.0 83.0 0.0 80.0)" | yarp rpc /ctpservice/left_arm/rpc
-    sleep $SLEEP
+    sleep 1.0
+    wait_motion_done "$port" "0"
     echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 80.0)" | yarp rpc /ctpservice/left_arm/rpc
-    sleep $SLEEP
+    sleep 1.0
+    wait_motion_done "$port" "0"
+    echo "end_movement" | yarp write ... /interactionManager/trigger:i
 }
 
 ##################################
 #    EXTERNAL ROTATION  RIGHT    #
 ##################################
+home_external_rotation_right() {
+    
+    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 35.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/right_arm/rpc
+}
+
 startingpos_external_rotation_right() {
 
     echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 80.0)" | yarp rpc /ctpservice/right_arm/rpc
@@ -114,31 +129,50 @@ startingpos_external_rotation_right() {
 
 external_rotation_right() {
 
+    port=/right_arm/rpc:i
+    echo "onset_movement" | yarp write ... /interactionManager/trigger:i
     echo "ctpq time $TIME off 0 pos (80.0 83.0 0.0 80.0)" | yarp rpc /ctpservice/right_arm/rpc
-    sleep $SLEEP
+    sleep 1.0
+    wait_motion_done "$port" "0"
     echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 80.0)" | yarp rpc /ctpservice/right_arm/rpc
-    sleep $SLEEP    
+    sleep 1.0
+    wait_motion_done "$port" "0"
+    echo "end_movement" | yarp write ... /interactionManager/trigger:i
 }
 
 ##################################
 #    INTERNAL ROTATION  LEFT     #
 ##################################
+home_internal_rotation_left() {
+    
+    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 35.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/left_arm/rpc
+}
+
 startingpos_internal_rotation_left() {
 
     echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 85.0)" | yarp rpc /ctpservice/left_arm/rpc
 }
 
 internal_rotation_left() {
-
+    
+    port=/left_arm/rpc:i
     echo "ctpq time $TIME off 0 pos (-60.0 83.0 0.0 85.0)" | yarp rpc /ctpservice/left_arm/rpc
-    sleep $SLEEP
+    sleep 1.0
+    wait_motion_done "$port" "0"
     echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 85.0)" | yarp rpc /ctpservice/left_arm/rpc
-    sleep $SLEEP    
+    sleep 1.0
+    wait_motion_done "$port" "0"
+    echo "end_movement" | yarp write ... /interactionManager/trigger:i
 }
 
 ##################################
 #    INTERNAL ROTATION  RIGHT    #
 ##################################
+home_internal_rotation_right() {
+    
+    echo "ctpq time $TIME off 0 pos (1.5 16.5 0.0 35.0 0.0 0.0 0.0 0.0)" | yarp rpc /ctpservice/right_arm/rpc
+}
+
 startingpos_internal_rotation_right() {
 
     echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 85.0)" | yarp rpc /ctpservice/right_arm/rpc
@@ -146,10 +180,14 @@ startingpos_internal_rotation_right() {
 
 internal_rotation_right() {
 
+    port=/right_arm/rpc:i
     echo "ctpq time $TIME off 0 pos (-60.0 83.0 0.0 85.0)" | yarp rpc /ctpservice/right_arm/rpc
-    sleep $SLEEP    
+    sleep 1.0
+    wait_motion_done "$port" "0"
     echo "ctpq time $TIME off 0 pos (0.0 83.0 0.0 85.0)" | yarp rpc /ctpservice/right_arm/rpc
-    sleep $SLEEP    
+    sleep 1.0
+    wait_motion_done "$port" "0"
+    echo "end_movement" | yarp write ... /interactionManager/trigger:i
 }
 
 #########################
