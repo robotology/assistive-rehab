@@ -47,7 +47,7 @@ class MoveThread : public Thread
 {
     string file;
     int nrep;
-    bool startmoving;
+    bool startmoving,motiondone;
 
 public:
     MoveThread() : startmoving(false) { }
@@ -60,8 +60,10 @@ public:
             {
                 if(startmoving)
                 {
+                    motiondone=false;
                     if(system(file.c_str()))
                         yError()<<"Processor not available";
+                    motiondone=true;
                 }
             }
             if(startmoving)
@@ -77,7 +79,7 @@ public:
         startmoving=false;
     }
 
-    bool isMoving() const
+    bool hasStarted() const
     {
         return startmoving;
     }
@@ -92,7 +94,7 @@ public:
 
     bool setHomePosition(const string & initialpos)
     {
-        yInfo()<<"Home position";
+        yInfo()<<"Home position"<<initialpos;
         if(system(initialpos.c_str()))
             yError()<<"Processor not available";
         return true;
@@ -110,6 +112,11 @@ public:
     {
         yInfo()<<"Start moving";
         startmoving=true;
+    }
+
+    bool hasStoppedMoving() const
+    {
+        return (!startmoving && motiondone);
     }
     
 };
@@ -348,12 +355,16 @@ class Interaction : public RFModule, public interactionManager_IDL
             }
         }
 
-        movethr->setHomePosition(script_home);
-        if(movethr->isMoving())
+        if(movethr->hasStarted())
         {
             movethr->stopMoving();
-            ret=true;
         }
+        while(!movethr->hasStoppedMoving())
+        {
+            Time::yield();
+        }
+        ret=true;
+        movethr->setHomePosition(script_home);
 
         state=State::stopped;
         return ret;
@@ -480,12 +491,6 @@ class Interaction : public RFModule, public interactionManager_IDL
             state=State::stopped;
         }
 
-        movethr->setHomePosition(script_home);
-        if(movethr->isMoving())
-        {
-            movethr->stopMoving();
-        }
-
         Bottle cmd,rep;
         cmd.addString("stop");
         if (attentionPort.write(cmd,rep))
@@ -532,6 +537,18 @@ class Interaction : public RFModule, public interactionManager_IDL
                 occluded=false;
             }
         }
+
+        if(movethr->hasStarted())
+        {
+            ret=false;
+            movethr->stopMoving();
+        }
+        while(!movethr->hasStoppedMoving())
+        {
+            Time::yield();
+        }
+        ret=true;
+        movethr->setHomePosition(script_home);
 
         t0=Time::now();
         return ret;
@@ -759,12 +776,9 @@ class Interaction : public RFModule, public interactionManager_IDL
         {
             if (follow_tag!=tag)
             {
-                if (state==State::move)
-                {
-                    Bottle cmd,rep;
-                    cmd.addString("stop");
-                    analyzerPort.write(cmd,rep);
-                }
+                Bottle cmd,rep;
+                cmd.addString("stop");
+                analyzerPort.write(cmd,rep);
                 speak("disengaged",true);
                 disengage();
                 return true;
@@ -937,14 +951,28 @@ class Interaction : public RFModule, public interactionManager_IDL
                                                 movethr->setInitialPosition(script_starting);
                                                 movethr->init(script_move,nrep_show);
                                                 movethr->startMoving();
-                                                while(movethr->isMoving())
+                                                while(!movethr->hasStoppedMoving())
                                                 {
                                                     //wait until it finishes
                                                     Time::yield();
                                                 }
+
+                                                cmd.clear();
+                                                rep.clear();
+                                                cmd.addString("is_following");
+                                                if (attentionPort.write(cmd,rep))
+                                                {
+                                                    follow_tag=rep.get(0).asString();
+                                                    if (follow_tag!=tag)
+                                                    {
+                                                        speak("disengaged",true);
+                                                        disengage();
+                                                        return true;
+                                                    }
+                                                }
+
                                                 movethr->setHomePosition(script_home);
                                                 movethr->setInitialPosition(script_starting);
-
                                                 Time::delay(3.0);
                                                 speak("start",true);
                                                 history[tag].push_back(metric);
@@ -1025,7 +1053,7 @@ class Interaction : public RFModule, public interactionManager_IDL
 
         if(state==State::move)
         {
-            if(movethr->isMoving())
+            if(!movethr->hasStoppedMoving())
             {
                 if(occluded)
                 {
@@ -1047,8 +1075,8 @@ class Interaction : public RFModule, public interactionManager_IDL
             }
             else
             {
-                movethr->setHomePosition(script_home);
                 yInfo()<<"Stopping";
+                movethr->setHomePosition(script_home);
                 Time::delay(1.0);
                 Bottle cmd,rep;
                 cmd.addString("stop");
