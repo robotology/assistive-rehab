@@ -74,6 +74,21 @@ service feedbackProducer_IDL
    bool setTransformation(1:Matrix T_);
 
    /**
+    * Use robot template.
+    * @param use_robot_template_ if 1 robot template is used.
+    * @param mirror_robot_template_ if 1 robot template is used.
+    * @return true/false on success/failure.
+    */
+   bool setRobotTemplate(1:i32 use_robot_template_,2:i32 mirror_robot_template_);
+
+   /**
+    * Set the part under analysis.
+    * @param part_ part to analyze.
+    * @return true/false on success/failure.
+    */
+   bool setPart(1:string part_);
+
+   /**
     * Start analysis.
     * @return true/false on success/failure.
     */

@@ -96,4 +96,11 @@ service attentionManager_IDL
     */
    bool set_virtual();
 
+   /**
+    * Set the name of the robot skeleton to avoid following it.
+    * @param robot_skeleton_name name of the robot skeleton.
+    * @return true/false on success/failure.
+    */
+   bool set_robot_skeleton_name(1:string robot_skeleton_name);
+
 }

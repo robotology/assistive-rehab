@@ -239,6 +239,26 @@ bool Manager::loadMotionList()
 }
 
 /********************************************************/
+bool Manager::setTemplateTag(const string &template_tag_)
+{
+    LockGuard lg(mutex);
+
+    template_tag=template_tag_;
+    Bottle cmd,reply;
+    cmd.clear();
+    reply.clear();
+    cmd.addString("setTemplateTag");
+    cmd.addString(template_tag);
+    dtwPort.write(cmd,reply);
+    if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+    {
+        yError() << "feedbackProducer could not load the template tag";
+        return false;
+    }
+
+}
+
+/********************************************************/
 bool Manager::loadMetric(const string &metric_tag)
 {
     LockGuard lg(mutex);
@@ -260,44 +280,6 @@ bool Manager::loadMetric(const string &metric_tag)
         if(reply.get(0).asVocab()!=Vocab::encode("ok"))
         {
             yError() << "actionRecognizer could not load motion type" << f;
-            return false;
-        }
-        cmd.clear();
-        reply.clear();
-        cmd.addVocab(Vocab::encode("load"));
-        f = f + ".log";
-        cmd.addString(f);
-        string context = rf->getContext();
-        cmd.addString(context);
-        scalerPort.write(cmd,reply);
-        if(reply.get(0).asVocab()!=Vocab::encode("ok"))
-        {
-            yError() << "skeletonScaler could not load" << f << "file";
-            return false;
-        }
-
-        cmd.clear();
-        reply.clear();
-        cmd.addVocab(Vocab::encode("rot"));
-        Vector cp = metric->getCameraPos();
-        Vector fp = metric->getFocalPoint();
-        cmd.addList().read(cp);
-        cmd.addList().read(fp);
-        scalerPort.write(cmd,reply);
-        if(reply.get(0).asVocab()!=Vocab::encode("ok"))
-        {
-            yWarning() << "skeletonScaler could not rotate properly the camera";
-        }
-
-        cmd.clear();
-        reply.clear();
-        cmd.addString("setTemplateTag");
-        string tag_template = metric->getMotionType();
-        cmd.addString(tag_template);
-        dtwPort.write(cmd,reply);
-        if(reply.get(0).asVocab()!=Vocab::encode("ok"))
-        {
-            yError() << "feedbackProducer could not load the template tag";
             return false;
         }
 
@@ -401,7 +383,6 @@ bool Manager::selectSkel(const string &skel_tag)
     cmd.addString(this->skel_tag);
     yInfo() << cmd.toString();
 
-    scalerPort.write(cmd,reply);
     actionPort.write(cmd,reply);
 
     cmd.clear();
@@ -447,26 +428,104 @@ bool Manager::setPart(const string &part)
         return false;
     }
 
+    cmd.clear();
+    reply.clear();
+    cmd.addString("setPart");
+    cmd.addString(part);
+    dtwPort.write(cmd,reply);
+    if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+    {
+        yError() << "Could not set part to feedbackProducer";
+        return false;
+    }
+
     return true;
 
 }
 
 /********************************************************/
-bool Manager::start()
+bool Manager::setRobotSkeleton(const int robot_skeleton_mirror_)
+{
+    LockGuard lg(mutex);
+    robot_skeleton_mirror=robot_skeleton_mirror_;
+    return true;
+}
+
+/********************************************************/
+bool Manager::start(const int use_robot_template_)
 {
     LockGuard lg(mutex);
                 
+    use_robot_template = use_robot_template_;
     yInfo() << "Start!";
-
     Bottle cmd,reply;
-    cmd.addVocab(Vocab::encode("run"));
-    cmd.addDouble(metric->getTwarp());
-    scalerPort.write(cmd,reply);
-    if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+
+    if(use_robot_template == 0)
     {
-		yError() << "Could not run skeletonScaler";
-		return false;		
-	}
+        yInfo() << "Using pre-recorded template";
+
+        cmd.addVocab(Vocab::encode("rot"));
+        Vector cp = metric->getCameraPos();
+        Vector fp = metric->getFocalPoint();
+        cmd.addList().read(cp);
+        cmd.addList().read(fp);
+        scalerPort.write(cmd,reply);
+        if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+        {
+            yWarning() << "skeletonScaler could not rotate properly the camera";
+        }
+
+        cmd.clear();
+        reply.clear();
+        cmd.addVocab(Vocab::encode("load"));
+        string file = template_tag + ".log";
+        cmd.addString(file);
+        string context = rf->getContext();
+        cmd.addString(context);
+        scalerPort.write(cmd,reply);
+        if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+        {
+            yError() << "skeletonScaler could not load" << file << "file";
+            return false;
+        }
+
+        cmd.clear();
+        reply.clear();
+        cmd.addVocab(Vocab::encode("tags"));
+        cmd.addString(skel_tag);
+        scalerPort.write(cmd,reply);
+        if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+        {
+            yError() << "skeletonScaler could not select" << skel_tag;
+            return false;
+        }
+
+        cmd.clear();
+        reply.clear();
+        cmd.addVocab(Vocab::encode("run"));
+        cmd.addDouble(metric->getTwarp());
+        scalerPort.write(cmd,reply);
+        if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+        {
+            yError() << "Could not run skeletonScaler";
+            return false;
+        }
+    }
+    else
+    {
+        yInfo() << "Using robot template";
+        cmd.clear();
+        reply.clear();
+        cmd.addString("setRobotTemplate");
+        cmd.addInt(use_robot_template);
+        cmd.addInt(robot_skeleton_mirror);
+        dtwPort.write(cmd,reply);
+        if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+        {
+            yError() << "Could not set robot template to feedbackProducer";
+            return false;
+        }
+    }
 	
 	Time::delay(1.0);
 	
@@ -546,7 +605,6 @@ bool Manager::stop_feedback()
 
     yInfo() << "Stop feedback!";
 
-    //stop skeletonScaler
     Bottle cmd,reply;
     cmd.addVocab(Vocab::encode("stop"));
     dtwPort.write(cmd,reply);
@@ -563,21 +621,23 @@ bool Manager::stop()
 {
     LockGuard lg(mutex);
 
-    //stop skeletonScaler
     Bottle cmd, reply;
     cmd.addVocab(Vocab::encode("stop"));
-    scalerPort.write(cmd,reply);
     dtwPort.write(cmd,reply);
     actionPort.write(cmd,reply);
     if(reply.get(0).asVocab()==Vocab::encode("ok") && starting)
     {
-        cmd.clear();
-        reply.clear();
-        cmd.addVocab(Vocab::encode("rot"));
-        cmd.addList().read(cameraposinit);
-        cmd.addList().read(focalpointinit);
-        yInfo() << cmd.toString();
-        scalerPort.write(cmd, reply);
+        if(use_robot_template == 0)
+        {
+            yInfo()<<"Stopping skeletonScaler";
+            scalerPort.write(cmd,reply);
+            cmd.clear();
+            reply.clear();
+            cmd.addVocab(Vocab::encode("rot"));
+            cmd.addList().read(cameraposinit);
+            cmd.addList().read(focalpointinit);
+            scalerPort.write(cmd, reply);
+        }
 
 //        yInfo() << "stopping";
         starting = false;
