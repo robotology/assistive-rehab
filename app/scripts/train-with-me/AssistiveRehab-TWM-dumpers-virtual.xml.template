@@ -1,0 +1,179 @@
+<application>
+<name>Assistive Rehabilitation Train With Me Dumpers Virtual App</name>
+
+   <!--> Camera <!-->
+    <module>
+        <name>yarpdatadumper --name /train_with_me/virtual/skeletons-img --type image_jpg --rxTime --txTime</name>
+        <workdir>/media/vvasco/ugo-passport</workdir>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdatadumper --name /train_with_me/virtual/skeletons-data --rxTime --txTime</name>
+        <workdir>/media/vvasco/ugo-passport</workdir>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdatadumper --name /train_with_me/virtual/depth --type image --rxTime --txTime</name>
+        <workdir>/media/vvasco/ugo-passport</workdir>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdatadumper --name /train_with_me/virtual/opc-save --rxTime --txTime</name>
+        <workdir>/media/vvasco/ugo-passport</workdir>
+        <node>localhost</node>
+    </module>
+
+   <!--> Robot joints <!-->
+    <module>
+        <name>yarpdatadumper --name /train_with_me/virtual/robot-left-arm --rxTime --txTime</name>
+        <workdir>/media/vvasco/ugo-passport</workdir>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdatadumper --name /train_with_me/virtual/robot-left-wrist-tripod --rxTime --txTime</name>
+        <workdir>/media/vvasco/ugo-passport</workdir>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdatadumper --name /train_with_me/virtual/robot-right-arm --rxTime --txTime</name>
+        <workdir>/media/vvasco/ugo-passport</workdir>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdatadumper --name /train_with_me/virtual/robot-right-wrist-tripod --rxTime --txTime</name>
+        <workdir>/media/vvasco/ugo-passport</workdir>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdatadumper --name /train_with_me/virtual/robot-head --rxTime --txTime</name>
+        <workdir>/media/vvasco/ugo-passport</workdir>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdatadumper --name /train_with_me/virtual/robot-torso --rxTime --txTime</name>
+        <workdir>/media/vvasco/ugo-passport</workdir>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdatadumper --name /train_with_me/virtual/robot-torso-tripod --rxTime --txTime</name>
+        <workdir>/media/vvasco/ugo-passport</workdir>
+        <node>localhost</node>
+    </module>
+
+   <!--> Experiment data <!-->
+    <module>
+        <name>yarpdatadumper --name /train_with_me/virtual/trigger --rxTime --txTime</name>
+        <workdir>/media/vvasco/ugo-passport</workdir>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdatadumper --name /train_with_me/virtual/experimental-data --rxTime --txTime</name>
+        <workdir>/media/vvasco/ugo-passport</workdir>
+        <node>localhost</node>
+    </module>
+
+   <!--> Feedback <!-->
+    <module>
+        <name>yarpdatadumper --name /train_with_me/virtual/verbal-feedback --rxTime --txTime</name>
+        <workdir>/media/vvasco/ugo-passport</workdir>
+        <node>localhost</node>
+    </module>
+
+   <!--> Connection Camera <!-->
+    <connection>
+        <from>/yarpOpenPose/image:o</from>
+        <to>/train_with_me/virtual/skeletons-img</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/target:o</from>
+        <to>/train_with_me/virtual/skeletons-data</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/float:o</from>
+        <to>/train_with_me/virtual/depth</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/opc/broadcast:o</from>
+        <to>/train_with_me/virtual/opc-save</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <!--> Connection Robot <!-->
+    <connection>
+        <from>/SIM_CER_ROBOT/left_arm/state:o</from>
+        <to>/train_with_me/virtual/robot-left-arm</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/SIM_CER_ROBOT/left_wrist_tripod/state:o</from>
+        <to>/train_with_me/virtual/robot-left-wrist-tripod</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/SIM_CER_ROBOT/right_arm/state:o</from>
+        <to>/train_with_me/virtual/robot-right-arm</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/SIM_CER_ROBOT/right_wrist_tripod/state:o</from>
+        <to>/train_with_me/virtual/robot-right-wrist-tripod</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/SIM_CER_ROBOT/head/state:o</from>
+        <to>/train_with_me/virtual/robot-head</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/SIM_CER_ROBOT/torso/state:o</from>
+        <to>/train_with_me/virtual/robot-torso</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/SIM_CER_ROBOT/torso_tripod/state:o</from>
+        <to>/train_with_me/virtual/robot-torso-tripo</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <!--> Connection Experimental data <!-->
+    <connection>
+        <from>/feedbackSynthetizer/trigger:o</from>
+        <to>/train_with_me/virtual/trigger</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/interactionManager/trigger:o</from>
+        <to>/train_with_me/virtual/trigger</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+   <!--> Connection Verbal feedback <!-->
+    <connection>
+        <from>/feedbackSynthetizer/speech:o</from>
+        <to>/train_with_me/virtual/verbal-feedback</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+</application>
