@@ -65,7 +65,7 @@ class Manager : public yarp::os::RFModule,
     bool starting;
 
     std::string skel_tag,template_tag;
-    int use_robot_template,robot_skeleton_mirror;
+    bool use_robot_template,robot_skeleton_mirror;
 
     int nsession;
     std::string out_folder;
@@ -92,11 +92,11 @@ class Manager : public yarp::os::RFModule,
     std::vector<std::string> listMetrics();
     bool selectSkel(const std::string &skel_tag);
     std::string getMotionType();
-    bool start(const int use_robot_template_);
+    bool start(const bool use_robot_template_);
     bool stop();
     bool setPart(const std::string &part);
     bool setTemplateTag(const std::string &template_tag_);
-    bool setRobotSkeleton(const int robot_skeleton_mirror_);
+    bool mirrorTemplate(const bool robot_skeleton_mirror_);
     bool stop_feedback();
 
     bool writeStructToMat(const std::string& name, const std::vector< std::vector< std::pair<std::string,yarp::sig::Vector> > >& keypoints_skel, mat_t *matfp);

@@ -29,5 +29,5 @@ service robotSkeletonPublisher_IDL
     * @param skeleton_name name of the robot skeleton.
     * @return true/false on success/failure.
     */
-   bool set_robot_skeleton_name(1:string skeleton_name_);
+   bool set_robot_skeleton_name(1:string skeleton_name);
 }

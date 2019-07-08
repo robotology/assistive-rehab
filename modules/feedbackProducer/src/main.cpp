@@ -46,7 +46,7 @@ private:
     int win,filter_order;
     double period;
     bool first;
-    int use_robot_template,mirror_robot_template;
+    bool use_robot_template,mirror_robot_template;
 
     Mutex mutex;
 
@@ -138,8 +138,8 @@ public:
     }
 
     /****************************************************************/
-    bool setRobotTemplate(const int use_robot_template_,
-                          const int mirror_robot_template_) override
+    bool setRobotTemplate(const bool use_robot_template_,
+                          const bool mirror_robot_template_) override
     {
         LockGuard lg(mutex);
         use_robot_template = use_robot_template_;

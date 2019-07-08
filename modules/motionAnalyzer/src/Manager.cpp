@@ -444,7 +444,7 @@ bool Manager::setPart(const string &part)
 }
 
 /********************************************************/
-bool Manager::setRobotSkeleton(const int robot_skeleton_mirror_)
+bool Manager::mirrorTemplate(const bool robot_skeleton_mirror_)
 {
     LockGuard lg(mutex);
     robot_skeleton_mirror=robot_skeleton_mirror_;
@@ -452,7 +452,7 @@ bool Manager::setRobotSkeleton(const int robot_skeleton_mirror_)
 }
 
 /********************************************************/
-bool Manager::start(const int use_robot_template_)
+bool Manager::start(const bool use_robot_template_)
 {
     LockGuard lg(mutex);
                 
