@@ -40,9 +40,10 @@ service motionAnalyzer_IDL
 
    /**
    * Start processing.
+   * @param use_robot_template true if robot template is used.
    * @return true/false on success/failure.
    */
-   bool start();
+   bool start(1:bool use_robot_template);
 
    /**
    * Stop feedback.
@@ -74,5 +75,18 @@ service motionAnalyzer_IDL
    * @return true/false on success/failure.
    */
    bool setPart(1:string part);
+
+   /**
+   * Select the template for the analysis.
+   * @return true/false on success/failure.
+   */
+   bool setTemplateTag(1:string template_tag);
+
+   /**
+   * Mirror the skeleton template.
+   * @param robot_skeleton_mirror if true, robot template has to be mirrored.
+   * @return true/false on success/failure.
+   */
+   bool mirrorTemplate(1:bool robot_skeleton_mirror)
 
 }

@@ -133,7 +133,7 @@ class Scaler : public RFModule
         if(command.get(0).asString() == "tags")
         {
             selectByTag(command.get(1).asString());
-            reply.addString("Selecting skeleton" + command.get(1).asString());
+            reply.addVocab(Vocab::encode("ok"));
         }
         if(command.get(0).asString() == "stop")
         {

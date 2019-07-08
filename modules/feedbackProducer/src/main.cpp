@@ -19,6 +19,7 @@
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
 #include <iCub/ctrl/filters.h>
+#include <locale>
 #include "AssistiveRehab/dtw.h"
 #include "AssistiveRehab/skeleton.h"
 #include "src/feedbackProducer_IDL.h"
@@ -26,6 +27,7 @@
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
+using namespace yarp::math;
 using namespace iCub::ctrl;
 using namespace assistive_rehab;
 
@@ -43,6 +45,8 @@ private:
     //parameters
     int win,filter_order;
     double period;
+    bool first;
+    bool use_robot_template,mirror_robot_template;
 
     Mutex mutex;
 
@@ -54,7 +58,8 @@ private:
     Matrix feedback_thresholds;
     double action_threshold;
     vector<double> target;
-    Matrix T;
+    Matrix T,T2;
+    string part;
 
 public:
 
@@ -65,70 +70,90 @@ public:
     }
 
     /****************************************************************/
-    bool setFeedbackThresh(const Matrix &feedback_thresholds_) override
+    bool setFeedbackThresh(const Matrix &feedback_thresholds) override
     {
         LockGuard lg(mutex);
-        feedback_thresholds = feedback_thresholds_;
+        this->feedback_thresholds = feedback_thresholds;
         yInfo() << "Feedback thresholds" << feedback_thresholds.toString();
         return true;
     }
 
     /****************************************************************/
-    bool setTarget(const vector<double> &target_) override
+    bool setTarget(const vector<double> &target) override
     {
         LockGuard lg(mutex);
-        target = target_;
+        this->target = target;
         yInfo() << "Target to reach" << target;
         return true;
     }
 
     /****************************************************************/
-    bool setTransformation(const Matrix &T_) override
+    bool setTransformation(const Matrix &T) override
     {
         LockGuard lg(mutex);
-        T = T_;
+        this->T = T;
         yInfo() << "Transformation matrix" << T.toString();
         return true;
     }
 
     /****************************************************************/
-    bool setTemplateTag(const string &template_tag_) override
+    bool setTemplateTag(const string &template_tag) override
     {
         LockGuard lg(mutex);
-        template_tag = template_tag_;
+        this->template_tag = template_tag;
         yInfo() << "Template skeleton" << template_tag;
         return true;
     }
 
     /****************************************************************/
-    bool setSkelTag(const string &skel_tag_) override
+    bool setSkelTag(const string &skel_tag) override
     {
         LockGuard lg(mutex);
-        skel_tag = skel_tag_;
+        this->skel_tag = skel_tag;
         yInfo() << "Tag skeleton" << skel_tag;
         return true;
     }
 
     /****************************************************************/
-    bool setMetric(const string &metric_tag_) override
+    bool setMetric(const string &metric_tag) override
     {
         LockGuard lg(mutex);
-        metric_tag = metric_tag_;
+        this->metric_tag = metric_tag;
         yInfo() << "Metric tag" << metric_tag;
         return true;
     }
 
     /****************************************************************/
-    bool setJoints(const vector<string> &joint_list_) override
+    bool setJoints(const vector<string> &joint_list) override
     {
         LockGuard lg(mutex);
         yInfo() << "Joint list";
-        joint_list.resize(joint_list_.size());
-        for(size_t i=0; i<joint_list_.size(); i++)
+        this->joint_list.resize(joint_list.size());
+        for(size_t i=0; i<joint_list.size(); i++)
         {
-            joint_list[i] = joint_list_[i];
-            yInfo() << joint_list[i];
+            this->joint_list[i] = joint_list[i];
+            yInfo() << this->joint_list[i];
         }
+        return true;
+    }
+
+    /****************************************************************/
+    bool setRobotTemplate(const bool use_robot_template,
+                          const bool mirror_robot_template) override
+    {
+        LockGuard lg(mutex);
+        this->use_robot_template = use_robot_template;
+        this->mirror_robot_template = mirror_robot_template;
+        yInfo() << "Using robot template";
+        return true;
+    }
+
+    /****************************************************************/
+    bool setPart(const string &part) override
+    {
+        LockGuard lg(mutex);
+        this->part=part;
+        yInfo() << "Analyzing"<<part<<"part";
         return true;
     }
 
@@ -138,6 +163,7 @@ public:
         LockGuard lg(mutex);
         yInfo() << "Start!";
         started = true;
+        first = true;
         return true;
     }
 
@@ -201,9 +227,6 @@ public:
                                         {
                                             Skeleton* skeleton = skeleton_factory(prop);
                                             skeletonIn.update(skeleton->toProperty());
-                                            skeletonIn.setTransformation(T);
-                                            skeletonIn.update();
-                                            skeletonIn.normalize(); //we normalize to avoid differences due to different physiques
                                             updated = true;
                                             delete skeleton;
                                         }
@@ -211,9 +234,6 @@ public:
                                         {
                                             Skeleton* skeleton = skeleton_factory(prop);
                                             skeletonTemplate.update(skeleton->toProperty());
-                                            skeletonTemplate.setTransformation(T);
-                                            skeletonTemplate.update();
-                                            skeletonTemplate.normalize();
                                             delete skeleton;
                                         }
                                     }
@@ -242,6 +262,9 @@ public:
         attach(rpcPort);
 
         started = false;
+        first = true;
+        use_robot_template = 0;
+        T = T2 = eye(4);
 
         return true;
     }
@@ -277,25 +300,39 @@ public:
     }
 
     /********************************************************/
-    void fill(const SkeletonStd& skeleton, vector<Vector>& temp)
-    {
-        for(size_t i=0; i<joint_list.size(); i++)
-        {
-            temp.push_back(skeleton[joint_list[i]]->getPoint());
-        }
-    }
-
-    /********************************************************/
     void updateVec()
     {
-        vector<Vector> temp1;
+        vector<Vector> temp1,temp2;
         temp1.clear();
-        fill(skeletonTemplate,temp1);
-        skeleton_template.push_back(temp1);
-
-        vector<Vector> temp2;
         temp2.clear();
-        fill(skeletonIn,temp2);
+        for(size_t i=0; i<joint_list.size(); i++)
+        {
+            string tag_joint=joint_list[i];
+            if(mirror_robot_template)
+            {
+                string mirrored_tag_joint;
+                locale loc;
+                string p=(toupper(part[0],loc))+part.substr(1,part.size());
+                size_t found=tag_joint.find(p);
+                if(part=="left")
+                {
+                    mirrored_tag_joint=tag_joint.substr(0,found)+"Right";
+                }
+                else
+                {
+                    mirrored_tag_joint=tag_joint.substr(0,found)+"Left";
+                }
+                temp1.push_back(skeletonTemplate[mirrored_tag_joint]->getPoint());
+            }
+            else
+            {
+                temp1.push_back(skeletonTemplate[tag_joint]->getPoint());
+            }
+
+            temp2.push_back(skeletonIn[tag_joint]->getPoint());
+        }
+
+        skeleton_template.push_back(temp1);
         skeleton_candidate.push_back(temp2);
     }
 
@@ -341,6 +378,10 @@ public:
             bool fxy_neg = dfx < -range_freq && dfy < -range_freq;
             bool fxz_neg = dfx < -range_freq && dfz < -range_freq;
             bool fyz_neg = dfy < -range_freq && dfz < -range_freq;
+
+            yDebug() << "fx:" << fcx << ftx;
+            yDebug() << "fy:" << fcy << fty;
+            yDebug() << "fz:" << fcz << ftz;
 
             if(fxy_pos || fxz_pos || fyz_pos)
             {
@@ -524,10 +565,12 @@ public:
                 /*    Difference in position    */
                 /********************************/
                 double errpos[warped_template.size()];
+
                 for(int k=0; k<warped_template.size(); k++)
                 {
                     errpos[k] = warped_candidate[k]-warped_template[k];
                 }
+
                 double sdev = gsl_stats_sd(errpos,1,warped_template.size());
                 double skwns = gsl_stats_skew(errpos,1,warped_template.size());
                 stats.push_back(sdev);
@@ -631,6 +674,42 @@ public:
         {
             //get skeleton
             getSkeleton();
+
+            if(!skeletonIn.getTag().empty() && !skeletonTemplate.getTag().empty()
+                    && first && use_robot_template == 1)
+            {
+                Vector p1=skeletonIn[KeyPointTag::shoulder_center]->getPoint();
+                Vector c1=skeletonIn.getCoronal();
+                Vector t1=skeletonIn.getTransverse();
+                Vector s1=skeletonIn.getSagittal();
+                Matrix Temp1 =zeros(4,4);
+                Temp1.setSubcol(c1,0,0);
+                Temp1.setSubcol(s1,0,1);
+                Temp1.setSubcol(t1,0,2);
+                Temp1.setSubcol(p1,0,3);
+                Temp1(3,3)=1.0;
+
+                Vector p2=skeletonTemplate[KeyPointTag::shoulder_center]->getPoint();
+                Vector c2=skeletonTemplate.getCoronal();
+                Vector t2=skeletonTemplate.getTransverse();
+                Vector s2=skeletonTemplate.getSagittal();
+                Matrix Temp2 =zeros(4,4);
+                Temp2.setSubcol(c2,0,0);
+                Temp2.setSubcol(s2,0,1);
+                Temp2.setSubcol(t2,0,2);
+                Temp2.setSubcol(p2,0,3);
+                Temp2(3,3)=1.0;
+                T2 =Temp1*SE3inv(Temp2);
+                first=false;
+            }
+
+            skeletonIn.setTransformation(T);
+            skeletonIn.update();
+            skeletonIn.normalize(); //we normalize to avoid differences due to different physiques
+
+            skeletonTemplate.setTransformation(T*T2);
+            skeletonTemplate.update();
+            skeletonTemplate.normalize();
 
             //if the skeleton has been updated
             if(updated)

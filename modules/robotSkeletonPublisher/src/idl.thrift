@@ -23,4 +23,11 @@ service robotSkeletonPublisher_IDL
     * @return true/false on success/failure.
     */
    bool set_visibility(1:bool flag);
+
+   /**
+    * Set the name of the robot skeleton.
+    * @param skeleton_name name of the robot skeleton.
+    * @return true/false on success/failure.
+    */
+   bool set_robot_skeleton_name(1:string skeleton_name);
 }

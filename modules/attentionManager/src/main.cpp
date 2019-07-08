@@ -56,6 +56,7 @@ class Attention : public RFModule, public attentionManager_IDL
     vector<double> activity;
     string tag;
     string keypoint;
+    string robot_skeleton_name;
 
     Mutex mutex;
     BufferedPort<Bottle> opcPort;
@@ -230,6 +231,14 @@ class Attention : public RFModule, public attentionManager_IDL
                 return true;
         }
         return false;
+    }
+
+    /****************************************************************/
+    bool set_robot_skeleton_name(const string &robot_skeleton_name_) override
+    {
+        LockGuard lg(mutex);
+        robot_skeleton_name=robot_skeleton_name_;
+        return true;
     }
 
     /****************************************************************/
@@ -412,6 +421,7 @@ class Attention : public RFModule, public attentionManager_IDL
         gaze_seek_T=rf.check("gaze-seek-T",Value(2.0)).asDouble();
         inactivity_thres=rf.check("inactivity-thres",Value(0.05)).asDouble();
         virtual_mode=rf.check("virtual-mode",Value(false)).asBool();
+        robot_skeleton_name=rf.check("robot-skeleton-name",Value("robot")).asString();
 
         opcPort.open("/attentionManager/opc:i");
         gazeCmdPort.open("/attentionManager/gaze/cmd:rpc");
@@ -471,7 +481,10 @@ class Attention : public RFModule, public attentionManager_IDL
                 {
                     Property prop;
                     prop.fromString(b->get(i).asList()->toString());
-                    skeletons.push_back(shared_ptr<Skeleton>(skeleton_factory(prop)));
+                    if(prop.find("tag").asString()!=robot_skeleton_name)
+                    {
+                        skeletons.push_back(shared_ptr<Skeleton>(skeleton_factory(prop)));
+                    }
                 }
             }
         }

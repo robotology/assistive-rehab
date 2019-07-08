@@ -146,6 +146,14 @@ class Publisher : public RFModule, public robotSkeletonPublisher_IDL
     }
 
     /**************************************************************************/
+    bool set_robot_skeleton_name(const string &skeleton_name) override
+    {
+        LockGuard lg(mutex);
+        this->skeleton_name=skeleton_name;
+        return true;
+    }
+
+    /**************************************************************************/
     void viewerUpdate(shared_ptr<SkeletonStd> skeleton)
     {
         if (visibility && (viewerPort.getOutputCount()>0))
