@@ -239,11 +239,11 @@ bool Manager::loadMotionList()
 }
 
 /********************************************************/
-bool Manager::setTemplateTag(const string &template_tag_)
+bool Manager::setTemplateTag(const string &template_tag)
 {
     LockGuard lg(mutex);
 
-    template_tag=template_tag_;
+    this->template_tag=template_tag;
     Bottle cmd,reply;
     cmd.clear();
     reply.clear();
@@ -444,23 +444,23 @@ bool Manager::setPart(const string &part)
 }
 
 /********************************************************/
-bool Manager::mirrorTemplate(const bool robot_skeleton_mirror_)
+bool Manager::mirrorTemplate(const bool robot_skeleton_mirror)
 {
     LockGuard lg(mutex);
-    robot_skeleton_mirror=robot_skeleton_mirror_;
+    this->robot_skeleton_mirror=robot_skeleton_mirror;
     return true;
 }
 
 /********************************************************/
-bool Manager::start(const bool use_robot_template_)
+bool Manager::start(const bool use_robot_template)
 {
     LockGuard lg(mutex);
                 
-    use_robot_template = use_robot_template_;
+    this->use_robot_template = use_robot_template;
     yInfo() << "Start!";
     Bottle cmd,reply;
 
-    if(use_robot_template == 0)
+    if(this->use_robot_template == 0)
     {
         yInfo() << "Using pre-recorded template";
 
@@ -517,7 +517,7 @@ bool Manager::start(const bool use_robot_template_)
         cmd.clear();
         reply.clear();
         cmd.addString("setRobotTemplate");
-        cmd.addInt(use_robot_template);
+        cmd.addInt(this->use_robot_template);
         cmd.addInt(robot_skeleton_mirror);
         dtwPort.write(cmd,reply);
         if(reply.get(0).asVocab()!=Vocab::encode("ok"))

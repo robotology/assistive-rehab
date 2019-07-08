@@ -70,89 +70,89 @@ public:
     }
 
     /****************************************************************/
-    bool setFeedbackThresh(const Matrix &feedback_thresholds_) override
+    bool setFeedbackThresh(const Matrix &feedback_thresholds) override
     {
         LockGuard lg(mutex);
-        feedback_thresholds = feedback_thresholds_;
+        this->feedback_thresholds = feedback_thresholds;
         yInfo() << "Feedback thresholds" << feedback_thresholds.toString();
         return true;
     }
 
     /****************************************************************/
-    bool setTarget(const vector<double> &target_) override
+    bool setTarget(const vector<double> &target) override
     {
         LockGuard lg(mutex);
-        target = target_;
+        this->target = target;
         yInfo() << "Target to reach" << target;
         return true;
     }
 
     /****************************************************************/
-    bool setTransformation(const Matrix &T_) override
+    bool setTransformation(const Matrix &T) override
     {
         LockGuard lg(mutex);
-        T = T_;
+        this->T = T;
         yInfo() << "Transformation matrix" << T.toString();
         return true;
     }
 
     /****************************************************************/
-    bool setTemplateTag(const string &template_tag_) override
+    bool setTemplateTag(const string &template_tag) override
     {
         LockGuard lg(mutex);
-        template_tag = template_tag_;
+        this->template_tag = template_tag;
         yInfo() << "Template skeleton" << template_tag;
         return true;
     }
 
     /****************************************************************/
-    bool setSkelTag(const string &skel_tag_) override
+    bool setSkelTag(const string &skel_tag) override
     {
         LockGuard lg(mutex);
-        skel_tag = skel_tag_;
+        this->skel_tag = skel_tag;
         yInfo() << "Tag skeleton" << skel_tag;
         return true;
     }
 
     /****************************************************************/
-    bool setMetric(const string &metric_tag_) override
+    bool setMetric(const string &metric_tag) override
     {
         LockGuard lg(mutex);
-        metric_tag = metric_tag_;
+        this->metric_tag = metric_tag;
         yInfo() << "Metric tag" << metric_tag;
         return true;
     }
 
     /****************************************************************/
-    bool setJoints(const vector<string> &joint_list_) override
+    bool setJoints(const vector<string> &joint_list) override
     {
         LockGuard lg(mutex);
         yInfo() << "Joint list";
-        joint_list.resize(joint_list_.size());
-        for(size_t i=0; i<joint_list_.size(); i++)
+        this->joint_list.resize(joint_list.size());
+        for(size_t i=0; i<joint_list.size(); i++)
         {
-            joint_list[i] = joint_list_[i];
-            yInfo() << joint_list[i];
+            this->joint_list[i] = joint_list[i];
+            yInfo() << this->joint_list[i];
         }
         return true;
     }
 
     /****************************************************************/
-    bool setRobotTemplate(const bool use_robot_template_,
-                          const bool mirror_robot_template_) override
+    bool setRobotTemplate(const bool use_robot_template,
+                          const bool mirror_robot_template) override
     {
         LockGuard lg(mutex);
-        use_robot_template = use_robot_template_;
-        mirror_robot_template = mirror_robot_template_;
+        this->use_robot_template = use_robot_template;
+        this->mirror_robot_template = mirror_robot_template;
         yInfo() << "Using robot template";
         return true;
     }
 
     /****************************************************************/
-    bool setPart(const string &part_) override
+    bool setPart(const string &part) override
     {
         LockGuard lg(mutex);
-        part=part_;
+        this->part=part;
         yInfo() << "Analyzing"<<part<<"part";
         return true;
     }

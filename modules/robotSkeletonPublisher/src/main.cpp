@@ -146,10 +146,10 @@ class Publisher : public RFModule, public robotSkeletonPublisher_IDL
     }
 
     /**************************************************************************/
-    bool set_robot_skeleton_name(const string &skeleton_name_) override
+    bool set_robot_skeleton_name(const string &skeleton_name) override
     {
         LockGuard lg(mutex);
-        this->skeleton_name=skeleton_name_;
+        this->skeleton_name=skeleton_name;
         return true;
     }
 
