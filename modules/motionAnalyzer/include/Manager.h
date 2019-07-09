@@ -78,6 +78,7 @@ class Manager : public yarp::os::RFModule,
     bool loadExercise(const std::string &exercise_tag) override;
     std::vector<std::string> listExercises() override;
     std::vector<std::string> listMetricProps() override;
+    std::vector<std::string> listJoints() override;
     bool selectSkel(const std::string &skel_tag) override;
     bool selectMetricProp(const std::string &prop_tag) override;
     bool selectMetric(const std::string &metric_tag) override;

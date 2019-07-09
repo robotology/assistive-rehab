@@ -388,6 +388,7 @@ bool Manager::loadExercise(const string &exercise_tag)
     else
     {
         yWarning() << "The selected exercise is not in the repertoire";
+        yWarning() << "The available exercises can be listed using the listExercises command";
         return false;
     }
 }
@@ -419,7 +420,30 @@ vector<string> Manager::listExercises()
 vector<string> Manager::listMetricProps()
 {
     LockGuard lg(mutex);
-    return curr_metric->getProperties();
+    if(curr_metric!=NULL)
+        return curr_metric->getProperties();
+    else
+        return vector<string>();
+}
+
+/********************************************************/
+vector<string> Manager::listJoints()
+{
+    LockGuard lg(mutex);
+    vector<string> reply;
+    if(curr_exercise!=NULL && curr_exercise->getType()==ExerciseType::rehabilitation)
+    {
+        Property feedparams=curr_exercise->getFeedbackParams();
+        Bottle t=feedparams.findGroup("thresh");
+        Bottle jnt=t.findGroup("joint");
+        for(int i=0;i<jnt.size()-1;i++)
+        {
+            Bottle *t1=jnt.get(i+1).asList();
+            reply.push_back(t1->get(1).asString());
+        }
+    }
+
+    return reply;
 }
 
 /********************************************************/
@@ -503,7 +527,6 @@ bool Manager::mirrorTemplate(const bool robot_skeleton_mirror)
 {
     LockGuard lg(mutex);
     this->robot_skeleton_mirror=robot_skeleton_mirror;
-    yDebug()<<__LINE__;
     return true;
 }
 
@@ -519,7 +542,7 @@ bool Manager::selectMetricProp(const string &prop_tag)
     }
     else
     {
-        yInfo()<<"You need to select the exercise first";
+        yWarning()<<"You need to select an exercise first";
         return false;
     }
 }
@@ -541,8 +564,8 @@ vector<string> Manager::listMetrics()
     }
     else
     {
-        yInfo()<<"You need to select an exercise first";
-        return vector<string>(1,"");
+        yWarning()<<"You need to select an exercise first";
+        return vector<string>();
     }
 }
 
@@ -915,6 +938,7 @@ bool Manager::configure(ResourceFinder &rf)
     skel_tag="";
     prop_tag="";
     curr_exercise=NULL;
+    curr_metric=NULL;
 
     return true;
 }
@@ -976,7 +1000,7 @@ bool Manager::updateModule()
     if(opcPort.getOutputCount()>0 && starting)
     {
         //if no metric has been defined we do not analyze motion
-        if(curr_exercise!=NULL)
+        if(curr_exercise!=NULL && curr_metric!=NULL)
         {
             //get skeleton and normalize
             getSkeleton();
@@ -993,7 +1017,8 @@ bool Manager::updateModule()
                     processors[i]->update(skeletonIn);
                     processors[i]->estimate();
                     Property result=processors[i]->getResult();
-                    if(result.check(prop_tag))
+                    if(result.check(prop_tag) &&
+                            processors[i]->getProcessedMetric()==curr_metric->getParams().find("name").asString())
                     {
                         double res=result.find(prop_tag).asDouble();
                         scopebottleout.addDouble(res);

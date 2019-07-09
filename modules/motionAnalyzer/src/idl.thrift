@@ -66,7 +66,7 @@ service motionAnalyzer_IDL
 
    /**
    * Select property to visualize.
-   * @param prop_ property to visualize
+   * @param prop property to visualize
    * @return true/false on success/failure.
    */
    bool selectMetricProp(1:string prop_tag);
@@ -79,7 +79,7 @@ service motionAnalyzer_IDL
 
    /**
    * Select metric to analyze.
-   * @param metric_tag_ metric to analyze
+   * @param metric_tag metric to analyze
    * @return true/false on success/failure.
    */
    bool selectMetric(1:string metric_tag);

@@ -52,6 +52,7 @@ public:
     yarp::sig::Vector getPlaneNormal() const { return plane_normal; }
     virtual void estimate() = 0;
     virtual yarp::os::Property getResult() = 0;
+    virtual std::string getProcessedMetric() const = 0;
 
 };
 
@@ -66,6 +67,7 @@ public:
     Rom_Processor(const Metric *rom_);
     void estimate() override;
     yarp::os::Property getResult() override;
+    std::string getProcessedMetric() const { return rom->getParams().find("name").asString(); }
 
 };
 
@@ -91,6 +93,7 @@ public:
 
     void estimate() override;
     yarp::os::Property getResult() override;
+    std::string getProcessedMetric() const { return step->getParams().find("name").asString(); }
 
     std::pair<std::vector<double>,std::vector<int> > findPeaks(const yarp::sig::Vector &d);
     void estimateSpatialParams(const yarp::sig::Vector &dist, const yarp::sig::Vector &width);
@@ -132,6 +135,7 @@ public:
 
     void estimate() override;
     yarp::os::Property getResult() override;
+    std::string getProcessedMetric() const { return ep->getParams().find("name").asString(); }
 
     double getVel() { return vel; }
     double getSmoothness() { return smoothness; }
