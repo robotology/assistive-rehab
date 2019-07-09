@@ -99,7 +99,7 @@
     </module>
 
     <module>
-       <name>robotSkeletonPubisher</name>
+       <name>robotSkeletonPublisher</name>
        <node>r1-console-linux</node>
     </module>
 
