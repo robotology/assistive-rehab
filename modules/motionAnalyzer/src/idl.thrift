@@ -43,7 +43,7 @@ service motionAnalyzer_IDL
    * Stop feedback.
    * @return true/false on success/failure.
    */
-   bool stop_feedback();
+   bool stopFeedback();
 
    /**
    * Stop processing.
@@ -69,7 +69,7 @@ service motionAnalyzer_IDL
    * @param prop_ property to visualize
    * @return true/false on success/failure.
    */
-   bool selectMetricProp(1:string prop_tag_);
+   bool selectMetricProp(1:string prop_tag);
 
    /**
    * List the available properties computable for the current metric.
@@ -82,7 +82,7 @@ service motionAnalyzer_IDL
    * @param metric_tag_ metric to analyze
    * @return true/false on success/failure.
    */
-   bool selectMetric(1:string metric_tag_);
+   bool selectMetric(1:string metric_tag);
 
    /**
    * List the available metrics for the current exercise.

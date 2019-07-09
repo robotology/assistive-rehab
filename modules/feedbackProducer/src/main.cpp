@@ -385,18 +385,12 @@ public:
 
             if(fxy_pos || fxz_pos || fyz_pos)
             {
-                yDebug() << "fx:" << fcx << ftx;
-                yDebug() << "fy:" << fcy << fty;
-                yDebug() << "fz:" << fcz << ftz;
                 feedback.addString("speed");
                 feedback.addString("pos");
                 return;
             }
             else if(fxy_neg || fxz_neg || fyz_neg)
             {
-                yDebug() << "fx:" << fcx << ftx;
-                yDebug() << "fy:" << fcy << fty;
-                yDebug() << "fz:" << fcz << ftz;
                 feedback.addString("speed");
                 feedback.addString("neg");
                 return;

@@ -79,15 +79,17 @@ class Manager : public yarp::os::RFModule,
     std::vector<std::string> listExercises() override;
     std::vector<std::string> listMetricProps() override;
     bool selectSkel(const std::string &skel_tag) override;
-    bool selectMetricProp(const std::string &prop_tag_) override;
-    bool selectMetric(const std::string &metric_tag_) override;
+    bool selectMetricProp(const std::string &prop_tag) override;
+    bool selectMetric(const std::string &metric_tag) override;
     std::string getCurrMetricProp() override;
     std::vector<std::string> listMetrics() override;
     std::string getExercise() override;
-    bool start() override;
+    bool start(const bool use_robot_template) override;
     bool stop() override;
-    bool setPart(const std::string &part) override;
-    bool stop_feedback() override;
+    bool setPart(const std::string &part);
+    bool setTemplateTag(const std::string &template_tag);
+    bool mirrorTemplate(const bool robot_skeleton_mirror);
+    bool stopFeedback();
 
     bool writeStructToMat(const std::string& name, const std::vector< std::vector< std::pair<std::string,yarp::sig::Vector> > >& keypoints_skel, mat_t *matfp);
     bool writeStructToMat(const std::string& name, const Exercise *ex, mat_t *matfp);
