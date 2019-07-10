@@ -74,6 +74,8 @@ class Manager : public yarp::os::RFModule,
     bool updated;
     std::string prop_tag;
     std::mutex mtx;
+    yarp::sig::Vector shoulder_height;
+    iCub::ctrl::AWLinEstimator *lin_est_shoulder;
 
     bool loadMotionList(yarp::os::ResourceFinder &rf);
     bool loadExercise(const std::string &exercise_tag) override;
@@ -88,10 +90,13 @@ class Manager : public yarp::os::RFModule,
     std::string getExercise() override;
     bool start(const bool use_robot_template) override;
     bool stop() override;
-    bool setPart(const std::string &part);
-    bool setTemplateTag(const std::string &template_tag);
-    bool mirrorTemplate(const bool robot_skeleton_mirror);
-    bool stopFeedback();
+    bool setPart(const std::string &part) override;
+    bool setTemplateTag(const std::string &template_tag) override;
+    bool mirrorTemplate(const bool robot_skeleton_mirror) override;
+    bool stopFeedback() override;
+    bool isStanding(const double standing_thresh) override;
+    bool isSitting(const double standing_thresh) override;
+    bool hasCrossedFinishLine(const double finishline_thresh) override;
 
     bool writeStructToMat(const std::string& name, const std::vector< std::vector< std::pair<std::string,yarp::sig::Vector> > >& keypoints_skel, mat_t *matfp);
     bool writeStructToMat(const std::string& name, const Exercise *ex, mat_t *matfp);
@@ -99,6 +104,7 @@ class Manager : public yarp::os::RFModule,
     bool writeKeypointsToFile(mat_t *matfp);
     void print(const std::vector< std::vector< std::pair<std::string,yarp::sig::Vector> > >& keypoints_skel);
 
+    bool getLinePose(yarp::sig::Vector &line_pose);
     void getSkeleton();
     bool attach(yarp::os::RpcServer &source) override;
 

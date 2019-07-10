@@ -29,6 +29,8 @@
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
+using namespace yarp::math;
+using namespace iCub::ctrl;
 using namespace assistive_rehab;
 
 bool Manager::loadMotionList(ResourceFinder &rf)
@@ -834,6 +836,112 @@ bool Manager::stop()
 }
 
 /********************************************************/
+bool Manager::isStanding(const double standing_thresh)
+{
+    LockGuard lg(mutex);
+
+    AWPolyElement el(shoulder_height,Time::now());
+    double vel=*lin_est_shoulder->estimate(el).end();
+    if(vel>standing_thresh)
+    {
+        yInfo()<<"Person standing";
+        return true;
+    }
+    return false;
+}
+
+/********************************************************/
+bool Manager::isSitting(const double standing_thresh)
+{
+    LockGuard lg(mutex);
+
+    AWPolyElement el(shoulder_height,Time::now());
+    double vel=*lin_est_shoulder->estimate(el).end();
+    if(vel<-standing_thresh)
+    {
+        yInfo()<<"Person sitting";
+        return true;
+    }
+    return false;
+}
+
+/********************************************************/
+bool Manager::hasCrossedFinishLine(const double finishline_thresh)
+{
+    LockGuard lg(mutex);
+    Vector line_pose(3);
+    getLinePose(line_pose);
+    Vector foot_right=skeletonIn[KeyPointTag::foot_right]->getPoint();
+    Vector foot_left=skeletonIn[KeyPointTag::foot_left]->getPoint();
+    double dist_fr_line=fabs(line_pose[2]-foot_right[2]);
+    double dist_fl_line=fabs(line_pose[2]-foot_left[2]);
+    if(dist_fr_line<finishline_thresh && dist_fl_line<finishline_thresh)
+    {
+        yInfo()<<"Line crossed!";
+        return true;
+    }
+    else
+    {
+        yInfo()<<"Line not crossed!";
+        return false;
+    }
+}
+
+/********************************************************/
+bool Manager::getLinePose(Vector &line_pose)
+{
+    //ask for the property id
+    Bottle cmd,reply;
+    cmd.addVocab(Vocab::encode("ask"));
+    Bottle &content = cmd.addList().addList();
+    content.addString("finish-line");
+
+    opcPort.write(cmd,reply);
+    if(reply.size()>1)
+    {
+        if(reply.get(0).asVocab() == Vocab::encode("ack"))
+        {
+            if(Bottle *idField=reply.get(1).asList())
+            {
+                if(Bottle *idVal=idField->get(1).asList())
+                {
+                    int id=idVal->get(0).asInt();
+
+                    //given the id, get the value of the property
+                    cmd.clear();
+                    cmd.addVocab(Vocab::encode("get"));
+                    Bottle &content = cmd.addList().addList();
+                    Bottle replyProp;
+                    content.addString("id");
+                    content.addInt(id);
+                    opcPort.write(cmd,replyProp);
+                    if(replyProp.get(0).asVocab() == Vocab::encode("ack"))
+                    {
+                        if(Bottle *propField = replyProp.get(1).asList())
+                        {
+                            if(Bottle *subProp=propField->get(0).asList())
+                            {
+                                if(Bottle *subPropField=subProp->get(1).asList())
+                                {
+                                    if(Bottle *bPose=subPropField->find("pose_camera").asList())
+                                    {
+                                        line_pose[0]=bPose->get(0).asDouble();
+                                        line_pose[1]=bPose->get(1).asDouble();
+                                        line_pose[2]=bPose->get(2).asDouble();
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
+/********************************************************/
 void Manager::getSkeleton()
 {
     //ask for the property id
@@ -886,7 +994,13 @@ void Manager::getSkeleton()
                                             Skeleton* skeleton = skeleton_factory(prop);
                                             skeletonIn.update(skeleton->toProperty());
                                             if(skeleton->update_planes())
+                                            {
                                                 all_keypoints.push_back(skeletonIn.get_unordered());
+                                            }
+                                            if(skeletonIn[KeyPointTag::shoulder_center]->isUpdated())
+                                            {
+                                                shoulder_height.push_back(skeletonIn[KeyPointTag::shoulder_center]->getPoint()[1]);
+                                            }
                                             updated=true;
                                             delete skeleton;
                                         }
@@ -939,6 +1053,7 @@ bool Manager::configure(ResourceFinder &rf)
     prop_tag="";
     curr_exercise=NULL;
     curr_metric=NULL;
+    lin_est_shoulder=new AWLinEstimator(16,0.5);
 
     return true;
 }
@@ -970,6 +1085,7 @@ bool Manager::close()
     {
         delete processors[i];
     }
+    delete lin_est_shoulder;
 
     yInfo() << "Freed memory";
 

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="yarpmanifest.xsl"?>
+
+<module>
+  <name>managerTUG</name>
+  <doxygen-group>managerTUG</doxygen-group>
+  <description>This module supervises the all the modules involved in the Timed Up and Go (TUG).</description>
+  <copypolicy>Released under the terms of the BSD 3-Clause License.</copypolicy>
+  <version></version>
+
+  <description-long>
+
+  </description-long>
+
+  <arguments>
+    <param default="managerTUG" desc="Name of the module. All the open ports will be tagged with the prefix /module_name.">module_name</param>
+    <param default="0.1" desc="Periodicity of the module.">period</param>
+    <param default="speak-it" desc="Configuration file name for the speak.">speak-file</param>
+    <param default="0.1" desc="Threshold on the distance between foot and finish line [m].">finish-line-thresh</param>
+    <param default="0.1" desc="Threshold on the speed of the shoulder center height [m/s].">standing-thresh</param>
+  </arguments>
+
+  <authors>
+    <author email="valentina.vasco@iit.it"> Valentina Vasco </author>
+  </authors>
+
+  <data>
+    <output>
+        <type>rpc</type>
+        <port>/managerTUG/attention:rpc</port>
+        <description>
+          Sends commands to \ref attentionManager to redirect the robot's gaze toward the engaged user.
+        </description>
+    </output>
+    <output>
+        <type>rpc</type>
+        <port>/managerTUG/analyzer:rpc</port>
+        <description>
+          Sends commands to \ref motionAnalyzer for starting/stopping the real-time motion analysis.
+        </description>
+    </output>
+    <output>
+        <type>rpc</type>
+        <port>/managerTUG/speech:rpc</port>
+        <description>
+          Sends commands to \ref iSpeak to wait until the sentence is spoken.
+        </description>
+    </output>
+    <output>
+        <type>Bottle</type>
+        <port>/managerTUG/speech:o</port>
+        <description>
+          Streams out the verbal interaction. To be connected to \ref iSpeak.
+        </description>
+    </output>
+  </data>
+
+  <services>
+    <server>
+      <type>managerTUG_IDL</type>
+      <idl>idl.thrift</idl>
+      <port>/managerTUG/cmd:rpc</port>
+      <description>service port</description>
+    </server>
+  </services>
+
+</module>
