@@ -1,5 +1,29 @@
 # Latest news
 
+__July 10, 2019__ : Checkout our latest [release v0.4.0](https://github.com/robotology/assistive-rehab/releases/tag/v0.4.0)!
+
+What's new?
+
+- the feedback can be provided now using the **robot skeleton template**, rather than the pre-recorded one. The new module `robotSkeletonPublisher` publishes the robot skeleton, which represents R1 limbs configuration, as following:
+
+![robot-skeleton](https://user-images.githubusercontent.com/9716288/61035621-cd517d80-a3c7-11e9-9721-df0247da77d2.gif)
+
+  The robot skeleton is remapped onto the observed skeleton internally within `feedbackProducer` for the further analysis (`skeletonScaler` and `skeletonPlayer` are thus bypassed). Such modality insures a full synchronization between the robot movement and the skeleton template, which was not guaranteed with the pre-recorded template.
+
+!!! note
+    The modality with the pre-recorded template is still available and can be set through `interactionManager` by setting the flag `use-robot-template` to `false`. In such case, the pipeline including `skeletonScaler` and `skeletonPlayer` is used.
+
+!!! tip
+    The robot skeleton can be replayed offline by saving the robot joints specified in [this app](https://github.com/robotology/assistive-rehab/blob/master/app/scripts/AssistiveRehab-dumpers-real.xml.template). A tutorial for replaying a full experiment can be found in the [Tutorial](https://robotology.github.io/assistive-rehab/doc/mkdocs/site/replay_an_experiment/) section.
+
+- the Train With Me study aims at comparing users' engagement during a physical training session with a real robot and a virtual agent. Preliminary experiments were designed for comparing R1 with its virtual counterpart and the developed infrastructure is now available. `interactionManager` can deal with the following three phases:
+
+    1. *observation*: the real/virtual robot shows the exercise and the user observes it;
+    2. *imitation*: the real/virtual robot performs the exercise and the user imitates it,
+    3. *occlusion*: the real/virtual robot keeps performing the exercise behind a panel and the user keeps imitating it, without having any feedback.
+
+    The scripts used during experiments can be found [here](https://github.com/robotology/assistive-rehab/tree/master/app/scripts/train-with-me), namely `AssistiveRehab-TWM-robot.xml.template` and `AssistiveRehab-TWM-virtual.xml.template`, which load parameters defined in the [`train-with-me`](https://github.com/robotology/assistive-rehab/tree/master/app/conf/train-with-me) context. A tutorial for running the demo with the virtual R1 can be found in the [Tutorial](https://robotology.github.io/assistive-rehab/doc/mkdocs/site/virtual_demo/) section.
+
 __May 6, 2019__ : Checkout our latest [release v0.3.0](https://github.com/robotology/assistive-rehab/releases/tag/v0.3.0)!
 
 This is a major change which refactors the entire framework to deal also with feet, following up the use of [`BODY_25`](https://github.com/CMU-Perceptual-Computing-Lab/openpose/blob/master/doc/output.md) model of `OpenPose`.
