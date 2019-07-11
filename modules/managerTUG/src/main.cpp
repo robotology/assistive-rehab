@@ -240,7 +240,7 @@ class Manager : public RFModule, public managerTUG_IDL
             return false;
         }
 
-        analyzerPort.open("/"+module_name+"/analyer:rpc");
+        analyzerPort.open("/"+module_name+"/analyzer:rpc");
         speechRpcPort.open("/"+module_name+"/speech:rpc");
         attentionPort.open("/"+module_name+"/attention:rpc");
         speechStreamPort.open("/"+module_name+"/speech:o");
@@ -267,7 +267,7 @@ class Manager : public RFModule, public managerTUG_IDL
                 (speechRpcPort.getOutputCount()==0) || (attentionPort.getOutputCount()==0))
         {
             yInfo()<<"not connected";
-            return false;
+            return true;
         }
 
         string follow_tag("");
@@ -312,7 +312,9 @@ class Manager : public RFModule, public managerTUG_IDL
                 cmd.addString(KeyPointTag::shoulder_center);
                 if (attentionPort.write(cmd,rep))
                 {
-                    speak("invite-start",true);
+                    vector<SpeechParam> p;
+                    p.push_back(SpeechParam(tag[0]!='#'?tag:string("")));
+                    speak("invite-start",true,p);
                     speak("engage",true);
                     state=State::follow;
                     encourage_cnt=0;
