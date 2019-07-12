@@ -30,6 +30,8 @@ class Detector : public RFModule
     yarp::sig::Matrix gaze_frame;
     int opc_id;
     bool add;
+    bool camera_configured;
+    double fx,fy,px,py;
 
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > imgInPort;
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > imgOutPort;
@@ -48,7 +50,7 @@ class Detector : public RFModule
         nx = rf.check("nx",Value(6)).asInt();
         ny = rf.check("ny",Value(1)).asInt();
         marker_size = rf.check("marker-size",Value(0.13)).asDouble();
-        marker_dist = rf.check("marker-dist",Value(0.05)).asDouble();;
+        marker_dist = rf.check("marker-dist",Value(0.05)).asDouble();
 
         //create dictionary
         dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::PREDEFINED_DICTIONARY_NAME::DICT_6X6_50);
@@ -60,6 +62,40 @@ class Detector : public RFModule
 
         add=true;
         opc_id=-1;
+        camera_configured=false;
+
+        cam_intrinsic=cv::Mat::eye(3,3,CV_64F);
+        cam_distortion=cv::Mat::zeros(1,5,CV_64F);
+        Bottle &gCamera=rf.findGroup("camera");
+        if (!gCamera.isNull())
+        {
+            if (Bottle *intrinsics=gCamera.find("intrinsics").asList())
+            {
+                if (intrinsics->size()>=4)
+                {
+                    camera_configured=true;
+                    fx=intrinsics->get(0).asDouble();
+                    fy=intrinsics->get(1).asDouble();
+                    px=intrinsics->get(2).asDouble();
+                    py=intrinsics->get(3).asDouble();
+                    yInfo()<<"camera fx (from file) ="<<fx;
+                    yInfo()<<"camera fy (from file) ="<<fy;
+                    yInfo()<<"camera px (from file) ="<<px;
+                    yInfo()<<"camera py (from file) ="<<py;
+
+                    cam_intrinsic.at<double>(0,0)=fx;
+                    cam_intrinsic.at<double>(0,2)=px;
+                    cam_intrinsic.at<double>(1,1)=fy;
+                    cam_intrinsic.at<double>(1,2)=py;
+
+                    cam_distortion.at<double>(0,0)=0.0; //k1;
+                    cam_distortion.at<double>(0,1)=0.0; //k2;
+                    cam_distortion.at<double>(0,2)=0.0; //t1;
+                    cam_distortion.at<double>(0,3)=0.0; //t2;
+                    cam_distortion.at<double>(0,4)=0.0; //k3;
+                }
+            }
+        }
 
         imgInPort.open("/" + getName() + "/img:i");
         imgOutPort.open("/" + getName() + "/img:o");
@@ -97,71 +133,82 @@ class Detector : public RFModule
                 std::vector<std::vector<cv::Point2f> > corners,rejected;
                 cv::aruco::detectMarkers(inImgMat,dictionary,corners,ids);
 
-                //read camera params
-                if(getCameraOptions(cam_intrinsic,cam_distortion))
+                //configure camera
+                if(!camera_configured)
                 {
-                    //perform refinement
-                    cv::aruco::refineDetectedMarkers(inImgMat,board,corners,ids,rejected,
-                                                     cam_intrinsic,cam_distortion);
+                    camera_configured=getCameraOptions(cam_intrinsic,cam_distortion);
+                }
 
-                    //if at least one marker detected
-                    if(ids.size()>0)
+                //perform refinement
+                cv::aruco::refineDetectedMarkers(inImgMat,board,corners,ids,rejected,
+                                                 cam_intrinsic,cam_distortion);
+
+                //if at least one marker detected
+                if(ids.size()>0)
+                {
+                    cv::aruco::drawDetectedMarkers(inImgMat,corners,ids);
+
+                    //estimate pose
+                    //use cv::Mat and not cv::Vec3d to avoid issues with
+                    //cv::aruco::estimatePoseBoard() initial guess
+                    int valid=cv::aruco::estimatePoseBoard(corners,ids,board,
+                                                           cam_intrinsic,cam_distortion,
+                                                           rvec,tvec);
+
+                    //if at least one board marker detected
+                    if(valid>0)
                     {
-                        cv::aruco::drawDetectedMarkers(inImgMat,corners,ids);
-
-                        //estimate pose
-                        //use cv::Mat and not cv::Vec3d to avoid issues with
-                        //cv::aruco::estimatePoseBoard() initial guess
-                        int valid=cv::aruco::estimatePoseBoard(corners,ids,board,
-                                                               cam_intrinsic,cam_distortion,
-                                                               rvec,tvec);
-
-                        //if at least one board marker detected
-                        if(valid>0)
+                        cv::aruco::drawAxis(inImgMat,cam_intrinsic,cam_distortion,rvec,tvec,0.5);
+                        cv::Mat Rmat;
+                        cv::Rodrigues(rvec,Rmat);
+                        yarp::sig::Matrix R(3,3);
+                        for(int i=0;i<Rmat.rows;i++)
                         {
-                            cv::aruco::drawAxis(inImgMat,cam_intrinsic,cam_distortion,rvec,tvec,0.5);
-                            cv::Mat Rmat;
-                            cv::Rodrigues(rvec,Rmat);
-                            yarp::sig::Matrix R(3,3);
-                            for(int i=0;i<Rmat.rows;i++)
+                            for(int j=0;j<Rmat.cols;j++)
                             {
-                                for(int j=0;j<Rmat.cols;j++)
-                                {
-                                    R(i,j)=Rmat.at<double>(i,j);
-                                }
-                            }
-                            yarp::sig::Vector rot=yarp::math::dcm2axis(R);
-                            yarp::sig::Vector est_pose_camera(7),est_pose_root(7);
-                            est_pose_camera[0]=tvec.at<double>(0);
-                            est_pose_camera[1]=tvec.at<double>(1);
-                            est_pose_camera[2]=tvec.at<double>(2);
-                            est_pose_camera[3]=rot[0];
-                            est_pose_camera[4]=rot[1];
-                            est_pose_camera[5]=rot[2];
-                            est_pose_camera[6]=rot[3];
-
-                            yarp::sig::Vector pose=est_pose_camera.subVector(0,2);
-                            pose.push_back(1.0);
-                            est_pose_root.setSubvector(0,gaze_frame*pose);
-                            yarp::sig::Vector rot_root=yarp::math::dcm2axis(R*gaze_frame.submatrix(0,2,0,2));
-                            est_pose_root[3]=rot_root[0];
-                            est_pose_root[4]=rot_root[1];
-                            est_pose_root[5]=rot_root[2];
-                            est_pose_root[6]=rot_root[3];
-
-                            yInfo() << "Pose wrt camera" << est_pose_camera.toString();
-                            yInfo() << "Pose wrt root" << est_pose_root.toString();
-
-                            opcAdd(est_pose_camera,est_pose_root,add);
-                            if(add && opc_id!=-1)
-                            {
-                                add=false;
+                                R(i,j)=Rmat.at<double>(i,j);
                             }
                         }
+                        yarp::sig::Vector rot=yarp::math::dcm2axis(R);
+                        yarp::sig::Vector est_pose_camera(7),est_pose_root(7);
+                        est_pose_camera[0]=tvec.at<double>(0);
+                        est_pose_camera[1]=tvec.at<double>(1);
+                        est_pose_camera[2]=tvec.at<double>(2);
+                        est_pose_camera[3]=rot[0];
+                        est_pose_camera[4]=rot[1];
+                        est_pose_camera[5]=rot[2];
+                        est_pose_camera[6]=rot[3];
+
+                        yarp::sig::Vector pose=est_pose_camera.subVector(0,2);
+                        pose.push_back(1.0);
+                        est_pose_root.setSubvector(0,gaze_frame*pose);
+                        yarp::sig::Vector rot_root=yarp::math::dcm2axis(R*gaze_frame.submatrix(0,2,0,2));
+                        est_pose_root[3]=rot_root[0];
+                        est_pose_root[4]=rot_root[1];
+                        est_pose_root[5]=rot_root[2];
+                        est_pose_root[6]=rot_root[3];
+
+                        yInfo() << "Pose wrt camera" << est_pose_camera.toString();
+                        yInfo() << "Pose wrt root" << est_pose_root.toString();
+
+                        opcAdd(est_pose_camera,est_pose_root,add);
+                        if(add && opc_id!=-1)
+                        {
+                            add=false;
+                        }
                     }
-                    outImg=yarp::cv::fromCvMat<yarp::sig::PixelRgb>(inImgMat);
-                    imgOutPort.write();
+                    else
+                    {
+                        yInfo()<<"No board marker detected";
+                    }
                 }
+                else
+                {
+                    yInfo()<<"No marker detected";
+                }
+
+                outImg=yarp::cv::fromCvMat<yarp::sig::PixelRgb>(inImgMat);
+                imgOutPort.write();
             }
         }
         return true;
@@ -282,6 +329,7 @@ class Detector : public RFModule
     {
         if (camPort.getOutputCount()>0)
         {
+            yInfo()<<"Reading intrinsics from camera";
             Bottle cmd,rep;
             cmd.addVocab(VOCAB_RGB_VISUAL_PARAMS);
             cmd.addVocab(VOCAB_GET);
@@ -301,23 +349,20 @@ class Detector : public RFModule
                     yarp::os::Bottle *tangential_1 = intrinsics->get(9).asList();
                     yarp::os::Bottle *tangential_2 = intrinsics->get(10).asList();
 
-                    double fx = focal_x->get(1).asDouble();
-                    double fy = focal_y->get(1).asDouble();
+                    fx = focal_x->get(1).asDouble();
+                    fy = focal_y->get(1).asDouble();
                     double k1 = radial_1->get(1).asDouble();
                     double k2 = radial_2->get(1).asDouble();
                     double k3 = radial_3->get(1).asDouble();
                     double t1 = tangential_1->get(1).asDouble();
                     double t2 = tangential_2->get(1).asDouble();
-                    double px = principal_x->get(1).asDouble();
-                    double py = principal_y->get(1).asDouble();
+                    px = principal_x->get(1).asDouble();
+                    py = principal_y->get(1).asDouble();
 
-                    cam_intrinsic = cv::Mat::eye(3,3,CV_64F);
-                    cam_distortion = cv::Mat::zeros(1,5,CV_64F);
                     cam_intrinsic.at<double>(0,0)=fx;
                     cam_intrinsic.at<double>(0,2)=px;
                     cam_intrinsic.at<double>(1,1)=fy;
                     cam_intrinsic.at<double>(1,2)=py;
-
 
                     cam_distortion.at<double>(0,0)=0.0; //k1;
                     cam_distortion.at<double>(0,1)=0.0; //k2;
@@ -329,7 +374,6 @@ class Detector : public RFModule
                 }
             }
         }
-
         return false;
     }
 
