@@ -482,7 +482,7 @@ class Attention : public RFModule, public attentionManager_IDL
                 {
                     Property prop;
                     prop.fromString(b->get(i).asList()->toString());
-                    if(prop.find("tag").asString()!=robot_skeleton_name)
+                    if(prop.find("tag").asString()!=robot_skeleton_name && !prop.check("finish-line"))
                     {
                         skeletons.push_back(shared_ptr<Skeleton>(skeleton_factory(prop)));
                     }
