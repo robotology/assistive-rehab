@@ -19,6 +19,8 @@
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/RpcClient.h>
 
+#include <cmath>
+
 #include <AssistiveRehab/skeleton.h>
 
 #include "src/managerTUG_IDL.h"
@@ -49,7 +51,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
     const int ok=Vocab::encode("ok");
     const int fail=Vocab::encode("fail");
-    enum class State { idle, seek, follow, engaged, assess, line_crossed, not_passed, finished, stopped } state;
+    enum class State { idle, seek, follow, engaged, assess_standing, assess_crossing, line_crossed, not_passed, finished, stopped } state;
     string tag;
     double t0,tstart,t;
     int encourage_cnt;
@@ -228,7 +230,7 @@ class Manager : public RFModule, public managerTUG_IDL
         period=rf.check("period",Value(0.1)).asDouble();
         speak_file=rf.check("speak-file",Value("speak-it")).asString();
         finish_line_thresh=rf.check("finish-line-thresh",Value(0.1)).asDouble();
-        standing_thresh=rf.check("standing-thresh",Value(0.4)).asDouble();
+        standing_thresh=rf.check("standing-thresh",Value(0.1)).asDouble();
 
         this->setName(module_name.c_str());
 
@@ -282,7 +284,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::idle)
         {
-            if (Time::now()-t0>3.0)
+            if (Time::now()-t0>10.0)
             {
                 state=State::seek;
             }
@@ -406,8 +408,8 @@ class Manager : public RFModule, public managerTUG_IDL
                                                             {
                                                                 if (rep.get(0).asVocab()==ok)
                                                                 {
-                                                                    state=State::assess;
-                                                                    tstart=Time::now();
+                                                                    state=State::assess_standing;
+                                                                    t0=tstart=Time::now();
                                                                 }
                                                             }
                                                         }
@@ -424,47 +426,74 @@ class Manager : public RFModule, public managerTUG_IDL
             }
         }
 
-        if (state==State::assess)
+        if (state==State::assess_standing)
         {
-            Bottle cmd,rep;
-
             //check if the person stands up
+            Bottle cmd,rep;
             cmd.addString("isStanding");
             cmd.addDouble(standing_thresh);
             if (analyzerPort.write(cmd,rep))
             {
-                //check if the line was crossed
-                cmd.clear();
-                rep.clear();
-                cmd.addString("hasCrossedFinishLine");
-                cmd.addDouble(finish_line_thresh);
-                if (analyzerPort.write(cmd,rep))
+                if(rep.get(0).asVocab()==ok)
                 {
-                    state=State::line_crossed;
+                    yInfo()<<"Person standing";
+                    state=State::assess_crossing;
                 }
                 else
                 {
-                    cmd.clear();
-                    rep.clear();
-                    cmd.addString("isSitting");
-                    cmd.addDouble(standing_thresh);
-                    if (analyzerPort.write(cmd,rep))
+                    if((Time::now()-t0)>10.0)
                     {
-                        bool ack=rep.get(0).asBool();
-                        if(ack)
+                        if(++encourage_cnt<=1)
                         {
-                            yInfo()<<"Test finished but line not crossed";
-                            speak("not-crossed",true);
+                            speak("encourage",true);
+                            t0=Time::now();
+                        }
+                        else
+                        {
                             state=State::not_passed;
                         }
                     }
+                }
+            }
+        }
+
+        if (state==State::assess_crossing)
+        {
+            t0=Time::now();
+            encourage_cnt=0;
+            Bottle cmd,rep;
+            cmd.addString("hasCrossedFinishLine");
+            cmd.addDouble(finish_line_thresh);
+            if (analyzerPort.write(cmd,rep))
+            {
+                if(rep.get(0).asVocab()==ok)
+                {
+                    yInfo()<<"Line crossed!";
+                    state=State::line_crossed;
+                }
+            }
+            else
+            {
+                cmd.clear();
+                rep.clear();
+                cmd.addString("isSitting");
+                cmd.addDouble(standing_thresh);
+                if (analyzerPort.write(cmd,rep))
+                {
+                    if(rep.get(0).asVocab()==ok)
+                    {
+                        yInfo()<<"Test finished but line not crossed";
+                        speak("not-crossed",true);
+                        state=State::not_passed;
+                    }
                     else
                     {
-                        if((Time::now()-tstart)>10.0)
+                        if((Time::now()-t0)>120.0)
                         {
                             if(++encourage_cnt<=1)
                             {
                                 speak("encourage",true);
+                                t0=Time::now();
                             }
                             else
                             {
@@ -474,13 +503,33 @@ class Manager : public RFModule, public managerTUG_IDL
                     }
                 }
             }
+        }
+
+        if (state==State::line_crossed)
+        {
+            //detect when the person seats down
+            t0=Time::now();
+            encourage_cnt=0;
+            Bottle cmd,rep;
+            cmd.addString("isSitting");
+            cmd.addDouble(standing_thresh);
+            if (analyzerPort.write(cmd,rep))
+            {
+                if(rep.get(0).asVocab()==ok)
+                {
+                    t=Time::now()-tstart;
+                    yInfo()<<"Test finished in"<<t<<"seconds";
+                    state=State::finished;
+                }
+            }
             else
             {
-                if((Time::now()-tstart)>10.0)
+                if((Time::now()-t0)>120.0)
                 {
                     if(++encourage_cnt<=1)
                     {
                         speak("encourage",true);
+                        t0=Time::now();
                     }
                     else
                     {
@@ -490,29 +539,13 @@ class Manager : public RFModule, public managerTUG_IDL
             }
         }
 
-        if (state==State::line_crossed)
-        {
-            //detect when the person seats down
-            Bottle cmd,rep;
-            cmd.addString("isSitting");
-            cmd.addDouble(standing_thresh);
-            if (analyzerPort.write(cmd,rep))
-            {
-                bool ack=rep.get(0).asBool();
-                if(ack)
-                {
-                    t=Time::now()-tstart;
-                    yInfo()<<"Test finished";
-                    state=State::finished;
-                }
-            }
-        }
-
         if (state==State::finished)
         {
             vector<SpeechParam> p;
-            p.push_back(t);
-            speak("end",true);
+            p.push_back(round(t*10.0)/10.0);
+            Bottle cmd,rep;
+            cmd.addString("stop");
+            analyzerPort.write(cmd,rep);
             speak("assess-high",true,p);
             speak("greetings",true);
             disengage();
@@ -520,6 +553,9 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::not_passed)
         {
+            Bottle cmd,rep;
+            cmd.addString("stop");
+            analyzerPort.write(cmd,rep);
             speak("end",true);
             speak("assess-low",true);
             speak("greetings",true);

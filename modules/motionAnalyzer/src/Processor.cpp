@@ -253,7 +253,7 @@ void Step_Processor::estimate()
         cadence=prev_cadence;
         speed=prev_speed;
     }
-    yInfo()<<"Step parameters:"<<Time::now()-t0<<steplen<<stepwidth<<cadence<<speed<<numsteps;
+//    yInfo()<<"Step parameters:"<<Time::now()-t0<<steplen<<stepwidth<<cadence<<speed<<numsteps;
 }
 
 /********************************************************/

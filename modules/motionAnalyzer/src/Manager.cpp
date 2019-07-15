@@ -783,55 +783,58 @@ bool Manager::stopFeedback()
 bool Manager::stop()
 {
     lock_guard<mutex> lg(mtx);
-    yInfo()<<"stopping";
-
-    if(curr_exercise->getType()==ExerciseType::rehabilitation)
+    if(starting)
     {
-        Bottle cmd, reply;
-        cmd.addVocab(Vocab::encode("stop"));
-        dtwPort.write(cmd,reply);
-        actionPort.write(cmd,reply);
-        if(reply.get(0).asVocab()==Vocab::encode("ok") && starting)
+        yInfo()<<"stopping";
+        if(curr_exercise->getType()==ExerciseType::rehabilitation)
         {
-            if(use_robot_template == 0)
+            Bottle cmd, reply;
+            cmd.addVocab(Vocab::encode("stop"));
+            dtwPort.write(cmd,reply);
+            actionPort.write(cmd,reply);
+            if(reply.get(0).asVocab()==Vocab::encode("ok") && starting)
             {
-                yInfo()<<"Stopping skeletonScaler";
-                scalerPort.write(cmd,reply);
-                cmd.clear();
-                reply.clear();
-                cmd.addVocab(Vocab::encode("rot"));
-                cmd.addList().read(cameraposinit);
-                cmd.addList().read(focalpointinit);
-                scalerPort.write(cmd, reply);
+                if(use_robot_template == 0)
+                {
+                    yInfo()<<"Stopping skeletonScaler";
+                    scalerPort.write(cmd,reply);
+                    cmd.clear();
+                    reply.clear();
+                    cmd.addVocab(Vocab::encode("rot"));
+                    cmd.addList().read(cameraposinit);
+                    cmd.addList().read(focalpointinit);
+                    scalerPort.write(cmd, reply);
+                }
             }
         }
+
+        tend_session=Time::now()-tstart;
+
+        // Use MATIO to write the results in a .mat file
+        string filename_report=out_folder+"/user-"+skeletonIn.getTag()+
+                "-"+curr_exercise->getName()+"-"+to_string(nsession)+".mat";
+        mat_t *matfp=Mat_CreateVer(filename_report.c_str(),NULL,MAT_FT_MAT5);
+        if (matfp==NULL)
+            yError()<<"Error creating MAT file";
+
+        yInfo() << "Writing to file";
+        if(writeKeypointsToFile(matfp))
+        {
+            time_samples.clear();
+            all_keypoints.clear();
+        }
+        else
+            yError() << "Could not save to file";
+
+        yInfo() << "Keypoints saved to file" << filename_report.c_str();
+        Mat_Close(matfp);
+
+        nsession++;
+        starting=false;
+        skel_tag="";
+
+        return true;
     }
-
-    starting=false;
-    skel_tag="";
-    tend_session=Time::now()-tstart;
-
-    // Use MATIO to write the results in a .mat file
-    string filename_report=out_folder+"/user-"+skeletonIn.getTag()+
-            "-"+curr_exercise->getName()+"-"+to_string(nsession)+".mat";
-    mat_t *matfp=Mat_CreateVer(filename_report.c_str(),NULL,MAT_FT_MAT5);
-    if (matfp==NULL)
-        yError()<<"Error creating MAT file";
-
-    yInfo() << "Writing to file";
-    if(writeKeypointsToFile(matfp))
-    {
-        time_samples.clear();
-        all_keypoints.clear();
-    }
-    else
-        yError() << "Could not save to file";
-
-    yInfo() << "Keypoints saved to file" << filename_report.c_str();
-    Mat_Close(matfp);
-
-    nsession++;
-
     return true;
 }
 
@@ -839,52 +842,27 @@ bool Manager::stop()
 bool Manager::isStanding(const double standing_thresh)
 {
     LockGuard lg(mutex);
-
-    AWPolyElement el(shoulder_height,Time::now());
-    double vel=*lin_est_shoulder->estimate(el).end();
-    if(vel>standing_thresh)
-    {
-        yInfo()<<"Person standing";
-        return true;
-    }
-    return false;
+    return (hip_center_height_vel<-standing_thresh);
 }
 
 /********************************************************/
 bool Manager::isSitting(const double standing_thresh)
 {
     LockGuard lg(mutex);
-
-    AWPolyElement el(shoulder_height,Time::now());
-    double vel=*lin_est_shoulder->estimate(el).end();
-    if(vel<-standing_thresh)
-    {
-        yInfo()<<"Person sitting";
-        return true;
-    }
-    return false;
+    return (hip_center_height_vel>standing_thresh);
 }
 
 /********************************************************/
 bool Manager::hasCrossedFinishLine(const double finishline_thresh)
 {
     LockGuard lg(mutex);
-    Vector line_pose(3);
+    Vector line_pose(7);
     getLinePose(line_pose);
     Vector foot_right=skeletonIn[KeyPointTag::foot_right]->getPoint();
     Vector foot_left=skeletonIn[KeyPointTag::foot_left]->getPoint();
-    double dist_fr_line=fabs(line_pose[2]-foot_right[2]);
-    double dist_fl_line=fabs(line_pose[2]-foot_left[2]);
-    if(dist_fr_line<finishline_thresh && dist_fl_line<finishline_thresh)
-    {
-        yInfo()<<"Line crossed!";
-        return true;
-    }
-    else
-    {
-        yInfo()<<"Line not crossed!";
-        return false;
-    }
+    double dist_fr_line=fabs(line_pose[1]-foot_right[0]);
+    double dist_fl_line=fabs(line_pose[1]-foot_left[0]);
+    return (dist_fr_line<finishline_thresh && dist_fl_line<finishline_thresh);
 }
 
 /********************************************************/
@@ -928,6 +906,10 @@ bool Manager::getLinePose(Vector &line_pose)
                                         line_pose[0]=bPose->get(0).asDouble();
                                         line_pose[1]=bPose->get(1).asDouble();
                                         line_pose[2]=bPose->get(2).asDouble();
+                                        line_pose[3]=bPose->get(3).asDouble();
+                                        line_pose[4]=bPose->get(4).asDouble();
+                                        line_pose[5]=bPose->get(5).asDouble();
+                                        line_pose[6]=bPose->get(6).asDouble();
                                         return true;
                                     }
                                 }
@@ -999,7 +981,9 @@ void Manager::getSkeleton()
                                             }
                                             if(skeletonIn[KeyPointTag::shoulder_center]->isUpdated())
                                             {
-                                                shoulder_height.push_back(skeletonIn[KeyPointTag::shoulder_center]->getPoint()[1]);
+                                                Vector hip_center=skeletonIn[KeyPointTag::hip_center]->getPoint();
+                                                AWPolyElement el(hip_center,Time::now());
+                                                hip_center_height_vel=lin_est_shoulder->estimate(el)[1];
                                             }
                                             updated=true;
                                             delete skeleton;
@@ -1053,7 +1037,7 @@ bool Manager::configure(ResourceFinder &rf)
     prop_tag="";
     curr_exercise=NULL;
     curr_metric=NULL;
-    lin_est_shoulder=new AWLinEstimator(16,0.5);
+    lin_est_shoulder=new AWLinEstimator(5,0.5);
 
     return true;
 }
