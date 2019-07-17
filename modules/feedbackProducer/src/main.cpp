@@ -700,6 +700,15 @@ public:
                 Temp2.setSubcol(p2,0,3);
                 Temp2(3,3)=1.0;
                 T2 =Temp1*SE3inv(Temp2);
+
+                if(mirror_robot_template)
+                {
+                    Vector rot=t1;
+                    rot.push_back(M_PI);
+                    Matrix R=axis2dcm(rot);
+                    T2 =T2*R;
+                }
+
                 first=false;
             }
 
