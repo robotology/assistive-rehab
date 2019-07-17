@@ -136,4 +136,17 @@ service motionAnalyzer_IDL
    */
    bool hasCrossedFinishLine(1:double finishline_thresh);
 
+   /**
+   * Get the pose of the finish line.
+   * @return pose of the finish line with respect to the camera.
+   */
+   list<double> getLinePose();
+
+   /**
+   * Set the pose of the finish line.
+   * @param pose of the finish line.
+   * @return true/false on success/failure.
+   */
+   bool setLinePose(1:list<double> line_pose);
+
 }

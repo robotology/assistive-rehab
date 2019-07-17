@@ -27,6 +27,7 @@
 
 using namespace std;
 using namespace yarp::os;
+using namespace yarp::sig;
 using namespace assistive_rehab;
 
 /****************************************************************/
@@ -51,7 +52,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
     const int ok=Vocab::encode("ok");
     const int fail=Vocab::encode("fail");
-    enum class State { idle, seek, follow, engaged, assess_standing, assess_crossing, line_crossed, not_passed, finished, stopped } state;
+    enum class State { idle, seek_line, seek_skeleton, follow, engaged, assess_standing, assess_crossing, line_crossed, not_passed, finished, stopped } state;
     string tag;
     double t0,tstart,t;
     int encourage_cnt;
@@ -286,7 +287,7 @@ class Manager : public RFModule, public managerTUG_IDL
         {
             if (Time::now()-t0>10.0)
             {
-                state=State::seek;
+                state=State::seek_line;
             }
         }
 
@@ -303,7 +304,40 @@ class Manager : public RFModule, public managerTUG_IDL
             }
         }
 
-        if (state==State::seek)
+        if (state==State::seek_line)
+        {
+            //search for finish line
+            Bottle cmd,rep;
+            cmd.addString("getLinePose");
+            if(analyzerPort.write(cmd,rep))
+            {
+                if(Bottle* line_pose_bottle=rep.get(0).asList())
+                {
+                    if(line_pose_bottle->size()>=7)
+                    {
+                        yInfo()<<"Found finish line at"<<line_pose_bottle->toString();
+                        Vector line_pose(7);
+                        line_pose[0]=line_pose_bottle->get(0).asDouble();
+                        line_pose[1]=line_pose_bottle->get(1).asDouble();
+                        line_pose[2]=line_pose_bottle->get(2).asDouble();
+                        line_pose[3]=line_pose_bottle->get(3).asDouble();
+                        line_pose[4]=line_pose_bottle->get(4).asDouble();
+                        line_pose[5]=line_pose_bottle->get(5).asDouble();
+                        line_pose[6]=line_pose_bottle->get(6).asDouble();
+                        cmd.clear();
+                        cmd.addString("setLinePose");
+                        cmd.addList().read(line_pose);
+                        rep.clear();
+                        if(analyzerPort.write(cmd,rep))
+                        {
+                            state=State::seek_skeleton;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (state==State::seek_skeleton)
         {
             if (!follow_tag.empty())
             {
@@ -314,6 +348,7 @@ class Manager : public RFModule, public managerTUG_IDL
                 cmd.addString(KeyPointTag::shoulder_center);
                 if (attentionPort.write(cmd,rep))
                 {
+                    yInfo()<<"Following"<<follow_tag;
                     vector<SpeechParam> p;
                     p.push_back(SpeechParam(tag[0]!='#'?tag:string("")));
                     speak("invite-start",true,p);

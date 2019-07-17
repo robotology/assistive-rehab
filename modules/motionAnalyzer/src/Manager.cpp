@@ -856,8 +856,6 @@ bool Manager::isSitting(const double standing_thresh)
 bool Manager::hasCrossedFinishLine(const double finishline_thresh)
 {
     LockGuard lg(mutex);
-    Vector line_pose(7);
-    getLinePose(line_pose);
     Vector foot_right=skeletonIn[KeyPointTag::foot_right]->getPoint();
     Vector foot_left=skeletonIn[KeyPointTag::foot_left]->getPoint();
     double dist_fr_line=fabs(line_pose[1]-foot_right[0]);
@@ -866,9 +864,11 @@ bool Manager::hasCrossedFinishLine(const double finishline_thresh)
 }
 
 /********************************************************/
-bool Manager::getLinePose(Vector &line_pose)
+vector<double> Manager::getLinePose()
 {
     //ask for the property id
+    LockGuard lg(mutex);
+
     Bottle cmd,reply;
     cmd.addVocab(Vocab::encode("ask"));
     Bottle &content = cmd.addList().addList();
@@ -903,6 +903,7 @@ bool Manager::getLinePose(Vector &line_pose)
                                 {
                                     if(Bottle *bPose=subPropField->find("pose_camera").asList())
                                     {
+                                        vector<double> line_pose(7);
                                         line_pose[0]=bPose->get(0).asDouble();
                                         line_pose[1]=bPose->get(1).asDouble();
                                         line_pose[2]=bPose->get(2).asDouble();
@@ -910,7 +911,7 @@ bool Manager::getLinePose(Vector &line_pose)
                                         line_pose[4]=bPose->get(4).asDouble();
                                         line_pose[5]=bPose->get(5).asDouble();
                                         line_pose[6]=bPose->get(6).asDouble();
-                                        return true;
+                                        return line_pose;
                                     }
                                 }
                             }
@@ -920,7 +921,15 @@ bool Manager::getLinePose(Vector &line_pose)
             }
         }
     }
-    return false;
+    return {};
+}
+
+/********************************************************/
+bool Manager::setLinePose(const vector<double> &line_pose)
+{
+    LockGuard lg(mutex);
+    this->line_pose=line_pose;
+    return true;
 }
 
 /********************************************************/
