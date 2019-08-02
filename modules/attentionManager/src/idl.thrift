@@ -86,9 +86,10 @@ service attentionManager_IDL
 
    /**
     * Enable autonomous mode.
+    * @param seek_for_finish_line set this to true for TUG.
     * @return true/false on success/failure.
     */
-   bool set_auto();
+   bool set_auto(1:bool seek_for_finish_line=false);
 
    /**
     * Enable virtual scenario mode.
@@ -102,5 +103,11 @@ service attentionManager_IDL
     * @return true/false on success/failure.
     */
    bool set_robot_skeleton_name(1:string robot_skeleton_name);
+
+   /**
+    * Get the pose of the finish line.
+    * @return pose of the finish line with respect to the camera.
+    */
+    list<double> getLinePose();
 
 }

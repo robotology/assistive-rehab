@@ -26,7 +26,7 @@ class Detector : public RFModule
     cv::Ptr<cv::aruco::GridBoard> board;
     cv::Ptr<cv::aruco::DetectorParameters> detector_params;
     cv::Mat cam_intrinsic,cam_distortion;
-    cv::Mat rvec,tvec; // Rodrigues coefficients wrt cam
+    cv::Vec3d rvec,tvec; // Rodrigues coefficients wrt cam
     yarp::sig::Matrix gaze_frame;
     int opc_id;
     bool add;
@@ -50,7 +50,7 @@ class Detector : public RFModule
         nx = rf.check("nx",Value(6)).asInt();
         ny = rf.check("ny",Value(1)).asInt();
         marker_size = rf.check("marker-size",Value(0.13)).asDouble();
-        marker_dist = rf.check("marker-dist",Value(0.05)).asDouble();
+        marker_dist = rf.check("marker-dist",Value(0.005)).asDouble();
 
         //create dictionary
         dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::PREDEFINED_DICTIONARY_NAME::DICT_6X6_50);
@@ -102,7 +102,6 @@ class Detector : public RFModule
         camPort.open("/" + getName() + "/cam:rpc");
         opcPort.open("/" + getName() + "/opc:rpc");
         gazeStatePort.open("/" + getName() + "/gaze/state:i");
-
         return true;
     }
 
@@ -153,7 +152,7 @@ class Detector : public RFModule
                     //cv::aruco::estimatePoseBoard() initial guess
                     int valid=cv::aruco::estimatePoseBoard(corners,ids,board,
                                                            cam_intrinsic,cam_distortion,
-                                                           rvec,tvec);
+                                                           rvec,tvec,true);
 
                     //if at least one board marker detected
                     if(valid>0)
@@ -171,9 +170,9 @@ class Detector : public RFModule
                         }
                         yarp::sig::Vector rot=yarp::math::dcm2axis(R);
                         yarp::sig::Vector est_pose_camera(7),est_pose_root(7);
-                        est_pose_camera[0]=tvec.at<double>(0);
-                        est_pose_camera[1]=tvec.at<double>(1);
-                        est_pose_camera[2]=tvec.at<double>(2);
+                        est_pose_camera[0]=tvec[0];
+                        est_pose_camera[1]=tvec[1];
+                        est_pose_camera[2]=tvec[2];
                         est_pose_camera[3]=rot[0];
                         est_pose_camera[4]=rot[1];
                         est_pose_camera[5]=rot[2];
@@ -182,7 +181,7 @@ class Detector : public RFModule
                         yarp::sig::Vector pose=est_pose_camera.subVector(0,2);
                         pose.push_back(1.0);
                         est_pose_root.setSubvector(0,gaze_frame*pose);
-                        yarp::sig::Vector rot_root=yarp::math::dcm2axis(R*gaze_frame.submatrix(0,2,0,2));
+                        yarp::sig::Vector rot_root=yarp::math::dcm2axis(gaze_frame.submatrix(0,2,0,2)*R.submatrix(0,2,0,2));
                         est_pose_root[3]=rot_root[0];
                         est_pose_root[4]=rot_root[1];
                         est_pose_root[5]=rot_root[2];
@@ -344,10 +343,10 @@ class Detector : public RFModule
                     yarp::os::Bottle *radial_1 = intrinsics->get(3).asList();
                     yarp::os::Bottle *radial_2 = intrinsics->get(4).asList();
                     yarp::os::Bottle *radial_3 = intrinsics->get(5).asList();
-                    yarp::os::Bottle *principal_x = intrinsics->get(6).asList();
-                    yarp::os::Bottle *principal_y = intrinsics->get(7).asList();
-                    yarp::os::Bottle *tangential_1 = intrinsics->get(9).asList();
-                    yarp::os::Bottle *tangential_2 = intrinsics->get(10).asList();
+                    yarp::os::Bottle *principal_x = intrinsics->get(7).asList();
+                    yarp::os::Bottle *principal_y = intrinsics->get(8).asList();
+                    yarp::os::Bottle *tangential_1 = intrinsics->get(10).asList();
+                    yarp::os::Bottle *tangential_2 = intrinsics->get(11).asList();
 
                     fx = focal_x->get(1).asDouble();
                     fy = focal_y->get(1).asDouble();
@@ -358,6 +357,8 @@ class Detector : public RFModule
                     double t2 = tangential_2->get(1).asDouble();
                     px = principal_x->get(1).asDouble();
                     py = principal_y->get(1).asDouble();
+
+                    yInfo()<<"Camera intrinsics:"<<fx<<fy<<px<<py;
 
                     cam_intrinsic.at<double>(0,0)=fx;
                     cam_intrinsic.at<double>(0,2)=px;

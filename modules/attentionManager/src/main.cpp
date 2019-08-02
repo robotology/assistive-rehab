@@ -36,8 +36,11 @@ using namespace assistive_rehab;
 /****************************************************************/
 class Attention : public RFModule, public attentionManager_IDL
 {
-    enum class State { unconnected, connection_trigger, idle, seek, follow } state;
+    enum class State { unconnected, connection_trigger, idle, seek_skeleton, seek_finishline, follow } state;
     bool auto_mode,virtual_mode;
+
+    vector<double> line_pose;
+    bool line_found;
 
     const int ack=Vocab::encode("ack");
     const double T=3.0;
@@ -95,7 +98,7 @@ class Attention : public RFModule, public attentionManager_IDL
         else
         {
             this->tag=tag;
-            return switch_to(State::seek);
+            return switch_to(State::seek_skeleton);
         }
     }
 
@@ -182,7 +185,7 @@ class Attention : public RFModule, public attentionManager_IDL
     }
 
     /****************************************************************/
-    bool set_auto() override
+    bool set_auto(const bool seek_for_finish_line) override
     {
         lock_guard<mutex> lg(mtx);
         if (state<State::idle)
@@ -190,7 +193,14 @@ class Attention : public RFModule, public attentionManager_IDL
             return false;
         }
         auto_mode=true;
-        return switch_to(State::seek);
+        if (seek_for_finish_line)
+        {
+            return switch_to(State::seek_finishline);
+        }
+        else
+        {
+            return switch_to(State::seek_skeleton);
+        }
     }
 
     /****************************************************************/
@@ -199,6 +209,20 @@ class Attention : public RFModule, public attentionManager_IDL
         lock_guard<mutex> lg(mtx);
         virtual_mode=true;
         return true;
+    }
+
+    /****************************************************************/
+    vector<double> getLinePose() override
+    {
+        LockGuard lg(mutex);
+        if (line_pose.empty())
+        {
+            return {};
+        }
+        else
+        {
+            return line_pose;
+        }
     }
 
     /****************************************************************/
@@ -296,7 +320,7 @@ class Attention : public RFModule, public attentionManager_IDL
     bool switch_to(const State &next_state)
     {
         state=next_state;
-        if (state==State::seek)
+        if (state==State::seek_skeleton)
         {
             first_seek_look=true;
         }
@@ -438,6 +462,7 @@ class Attention : public RFModule, public attentionManager_IDL
         first_follow_look=false;
         first_seek_look=false;
         first_gaze_frame=true;
+        line_found=false;
 
         Rand::init();
         return true;
@@ -492,10 +517,68 @@ class Attention : public RFModule, public attentionManager_IDL
 
         if (state==State::connection_trigger)
         {
-            switch_to(auto_mode?State::seek:State::idle);
+            switch_to(auto_mode?State::seek_skeleton:State::idle);
         }
-        else if (state==State::seek)
+        else if (state==State::seek_finishline)
         {
+            if(!line_found)
+            {
+                yInfo()<<"Looking for finish line";
+                Vector target(2);
+                target[0]=Rand::scalar(10.0,30.0);
+                target[1]=Rand::scalar(-35.0,-30.0);
+                look("angular",target);
+                wait_motion_done();
+            }
+
+            if (Bottle *b=opcPort.read())
+            {
+                if (!b->get(1).isString())
+                {
+                    for (int i=1; i<b->size(); i++)
+                    {
+                        Property prop;
+                        prop.fromString(b->get(i).asList()->toString());
+                        if(prop.check("finish-line"))
+                        {
+                            Bottle *bi=b->get(i).asList();
+                            if(Bottle *propField=bi->get(0).asList())
+                            {
+                                if(Bottle *subProp=propField->get(1).asList())
+                                {
+                                    if(Bottle *subPropField=subProp->get(1).asList())
+                                    {
+                                        if(Bottle *bPose=subPropField->find("pose_root").asList())
+                                        {
+                                            yInfo()<<"Line found!";
+                                            line_found=true;
+                                            yInfo()<<"Enforcing z-axis up";
+                                            double z_axis=bPose->get(3).asDouble();
+                                            if(z_axis>0.0)
+                                            {
+                                                line_pose.resize(7);
+                                                line_pose[0]=bPose->get(0).asDouble();
+                                                line_pose[1]=bPose->get(1).asDouble();
+                                                line_pose[2]=bPose->get(2).asDouble();
+                                                line_pose[3]=bPose->get(3).asDouble();
+                                                line_pose[4]=bPose->get(4).asDouble();
+                                                line_pose[5]=bPose->get(5).asDouble();
+                                                line_pose[6]=bPose->get(6).asDouble();
+                                                yInfo()<<"Found finish line at"<<bPose->toString();
+                                                switch_to(State::seek_skeleton);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else if (state==State::seek_skeleton)
+        {
+            yInfo()<<"Looking for skeletons";
             if (seek())
             {
                 activity.clear();
@@ -580,7 +663,7 @@ class Attention : public RFModule, public attentionManager_IDL
                     if (is_inactive(s))
                     {
                         yInfo()<<"[Auto]: detected inactivity => seek mode";
-                        switch_to(State::seek);
+                        switch_to(State::seek_skeleton);
                     }
                 }
 
@@ -589,7 +672,7 @@ class Attention : public RFModule, public attentionManager_IDL
             else if (Time::now()-lost_t0>=T)
             {
                 yInfo()<<"Lost track => seek mode";
-                switch_to(State::seek);
+                switch_to(State::seek_skeleton);
             }
         }
 
