@@ -48,8 +48,8 @@ Processor *createProcessor(const string& metric_type, const Metric* metric_)
 Processor::Processor()
 {
     plane_normal.resize(3);
-    invT.resize(4,4);
-    invT.zero();
+    inv_reference_system.resize(4,4);
+    inv_reference_system=eye(4,4);
 }
 
 void print(const Matrix& m)
@@ -73,9 +73,9 @@ void Processor::setInitialConf(SkeletonStd &skeleton_, Matrix &T)
     if(!first_skeleton.update_planes())
         yError() << "Not all planes are updated";
 
-    coronal = first_skeleton.getCoronal();
-    sagittal = first_skeleton.getSagittal();
-    transverse = first_skeleton.getTransverse();
+    Vector coronal = first_skeleton.getCoronal();
+    Vector sagittal = first_skeleton.getSagittal();
+    Vector transverse = first_skeleton.getTransverse();
     Vector p = first_skeleton[KeyPointTag::shoulder_center]->getPoint();
     Matrix T1(4,4);
     T1.setSubcol(coronal,0,0);
@@ -90,8 +90,9 @@ void Processor::setInitialConf(SkeletonStd &skeleton_, Matrix &T)
 }
 
 /****************************************************************/
-void Processor::update(SkeletonStd &curr_skeleton_)
+void Processor::update(SkeletonStd &curr_skeleton_,const Matrix &gaze_frame)
 {
+    this->gaze_frame=gaze_frame;
     curr_skeleton.update(curr_skeleton_.toProperty());
 }
 
@@ -103,11 +104,11 @@ Vector Processor::projectOnPlane(const Vector &v,const Vector &plane)
 }
 
 /****************************************************************/
-Vector Processor::getKeypointSkel(const string &tag)
+Vector Processor::getKeypointRoot(const string &tag)
 {
     Vector k=curr_skeleton[tag]->getPoint();
     k.push_back(1.0);
-    return (inv_reference_system*k).subVector(0,2);
+    return (gaze_frame*inv_reference_system*k).subVector(0,2);
 }
 
 /****************************************/
@@ -141,24 +142,18 @@ void Rom_Processor::estimate()
         {
             if(rom->getTagPlane()=="coronal")
             {
-                Vector cor(3,0.0);
-                cor[0]=1.0;
-                plane_normal=cor;
+                plane_normal=curr_skeleton.getCoronal();
             }
             else if(rom->getTagPlane()=="sagittal")
             {
-                Vector sag(3,0.0);
-                sag[1]=1.0;
-                plane_normal=sag;
+                plane_normal=curr_skeleton.getSagittal();
             }
             else if(rom->getTagPlane()=="transverse")
             {
-                Vector trans(3,0.0);
-                trans[2]=1.0;
-                plane_normal=trans;
+                plane_normal=curr_skeleton.getTransverse();
             }
-            Vector k1=getKeypointSkel(tag_joint);
-            Vector k2=getKeypointSkel(curr_skeleton[tag_joint]->getChild(0)->getTag());
+            Vector k1=getKeypointRoot(tag_joint);
+            Vector k2=getKeypointRoot(curr_skeleton[tag_joint]->getChild(0)->getTag());
             v1=k2-k1;
             v1=projectOnPlane(v1,plane_normal);
             double n1=norm(v1);
@@ -166,7 +161,7 @@ void Rom_Processor::estimate()
                 v1/=n1;
             if(!rom->getRefJoint().empty())
             {
-                Vector k_dir=getKeypointSkel(rom->getRefJoint());
+                Vector k_dir=getKeypointRoot(rom->getRefJoint());
                 ref_dir=k1-k_dir;
             }
             else
@@ -227,8 +222,8 @@ void Step_Processor::estimate()
     if(curr_skeleton[KeyPointTag::ankle_left]->isUpdated() &&
             curr_skeleton[KeyPointTag::ankle_right]->isUpdated())
     {
-        Vector k1=getKeypointSkel(KeyPointTag::ankle_left);
-        Vector k2=getKeypointSkel(KeyPointTag::ankle_right);
+        Vector k1=getKeypointRoot(KeyPointTag::ankle_left);
+        Vector k2=getKeypointRoot(KeyPointTag::ankle_right);
         Vector v=k1-k2;
         double dist=norm(v);
         feetdist.push_back(dist);

@@ -13,6 +13,7 @@
 #include <iostream>
 #include <vector>
 #include <list>
+#include <iomanip>
 
 #include <yarp/os/all.h>
 #include <yarp/sig/Vector.h>
@@ -642,14 +643,14 @@ bool Manager::start(const bool use_robot_template)
         Time::yield();
     }
 
-    Matrix T;
-    for(int i=0; i<processors.size(); i++)
-    {
-        processors[i]->setInitialConf(skeletonIn,T);
-    }
-
     if(curr_exercise->getType()==ExerciseType::rehabilitation)
     {
+        Matrix T;
+        for(int i=0; i<processors.size(); i++)
+        {
+            processors[i]->setInitialConf(skeletonIn,T);
+        }
+
         Property params=curr_exercise->getFeedbackParams();
         Bottle cmd,reply;
         if(this->use_robot_template == 0)
@@ -842,86 +843,55 @@ bool Manager::stop()
 bool Manager::isStanding(const double standing_thresh)
 {
     LockGuard lg(mutex);
-    return (hip_center_height_vel<-standing_thresh);
+    yInfo()<<"shoulder height speed"<<shoulder_center_height_vel;
+    return (shoulder_center_height_vel>standing_thresh);
 }
 
 /********************************************************/
 bool Manager::isSitting(const double standing_thresh)
 {
     LockGuard lg(mutex);
-    return (hip_center_height_vel>standing_thresh);
+    yInfo()<<"shoulder height speed"<<shoulder_center_height_vel;
+    return (shoulder_center_height_vel<-standing_thresh);
 }
 
 /********************************************************/
 bool Manager::hasCrossedFinishLine(const double finishline_thresh)
 {
     LockGuard lg(mutex);
-    Vector foot_right=skeletonIn[KeyPointTag::foot_right]->getPoint();
-    Vector foot_left=skeletonIn[KeyPointTag::foot_left]->getPoint();
-    double dist_fr_line=fabs(line_pose[1]-foot_right[0]);
-    double dist_fl_line=fabs(line_pose[1]-foot_left[0]);
+    Vector foot_right=skeletonIn[KeyPointTag::ankle_right]->getPoint();
+    Vector foot_left=skeletonIn[KeyPointTag::ankle_left]->getPoint();
+    foot_right.push_back(1.0);
+    foot_right=gaze_frame*foot_right;
+    foot_right.pop_back();
+    foot_left.push_back(1.0);
+    foot_left=gaze_frame*foot_left;
+    foot_left.pop_back();
+
+    Vector lp_root(3);
+    lp_root[0]=line_pose[0];
+    lp_root[1]=line_pose[1];
+    lp_root[2]=line_pose[2];
+
+    Vector line_ori(4);
+    line_ori[0]=line_pose[3];
+    line_ori[1]=line_pose[4];
+    line_ori[2]=line_pose[5];
+    line_ori[3]=line_pose[6];
+    Matrix lOri=axis2dcm(line_ori);
+    Vector line_x=lOri.getCol(0);
+    line_x.pop_back();
+
+    Vector fr_lp=lp_root-foot_right;
+    Vector fl_lp=lp_root-foot_left;
+    Vector pline=lp_root+line_x;
+    Vector v1=lp_root-pline;
+    double dist_fr_line=norm(cross(v1,fr_lp))/norm(v1);
+    double dist_fl_line=norm(cross(v1,fl_lp))/norm(v1);
+    yInfo()<<"dist foot right line"<<dist_fr_line;
+    yInfo()<<"dist foot left line"<<dist_fl_line;
+
     return (dist_fr_line<finishline_thresh && dist_fl_line<finishline_thresh);
-}
-
-/********************************************************/
-vector<double> Manager::getLinePose()
-{
-    //ask for the property id
-    LockGuard lg(mutex);
-
-    Bottle cmd,reply;
-    cmd.addVocab(Vocab::encode("ask"));
-    Bottle &content = cmd.addList().addList();
-    content.addString("finish-line");
-
-    opcPort.write(cmd,reply);
-    if(reply.size()>1)
-    {
-        if(reply.get(0).asVocab() == Vocab::encode("ack"))
-        {
-            if(Bottle *idField=reply.get(1).asList())
-            {
-                if(Bottle *idVal=idField->get(1).asList())
-                {
-                    int id=idVal->get(0).asInt();
-
-                    //given the id, get the value of the property
-                    cmd.clear();
-                    cmd.addVocab(Vocab::encode("get"));
-                    Bottle &content = cmd.addList().addList();
-                    Bottle replyProp;
-                    content.addString("id");
-                    content.addInt(id);
-                    opcPort.write(cmd,replyProp);
-                    if(replyProp.get(0).asVocab() == Vocab::encode("ack"))
-                    {
-                        if(Bottle *propField = replyProp.get(1).asList())
-                        {
-                            if(Bottle *subProp=propField->get(0).asList())
-                            {
-                                if(Bottle *subPropField=subProp->get(1).asList())
-                                {
-                                    if(Bottle *bPose=subPropField->find("pose_camera").asList())
-                                    {
-                                        vector<double> line_pose(7);
-                                        line_pose[0]=bPose->get(0).asDouble();
-                                        line_pose[1]=bPose->get(1).asDouble();
-                                        line_pose[2]=bPose->get(2).asDouble();
-                                        line_pose[3]=bPose->get(3).asDouble();
-                                        line_pose[4]=bPose->get(4).asDouble();
-                                        line_pose[5]=bPose->get(5).asDouble();
-                                        line_pose[6]=bPose->get(6).asDouble();
-                                        return line_pose;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return {};
 }
 
 /********************************************************/
@@ -986,13 +956,26 @@ void Manager::getSkeleton()
                                             skeletonIn.update(skeleton->toProperty());
                                             if(skeleton->update_planes())
                                             {
-                                                all_keypoints.push_back(skeletonIn.get_unordered());
+                                                vector<pair<string,Vector>> keyps=skeletonIn.get_unordered();
+                                                for(int j=0;j<keyps.size();j++)
+                                                {
+                                                    Vector temp;
+                                                    temp=keyps[j].second;
+                                                    temp.push_back(1.0);
+                                                    temp=gaze_frame*temp;
+                                                    temp.pop_back();
+                                                    keyps[j].second=temp;
+                                                }
+                                                all_keypoints.push_back(keyps);
                                             }
-                                            if(skeletonIn[KeyPointTag::shoulder_center]->isUpdated())
+                                            if(skeletonIn[KeyPointTag::hip_center]->isUpdated())
                                             {
-                                                Vector hip_center=skeletonIn[KeyPointTag::hip_center]->getPoint();
-                                                AWPolyElement el(hip_center,Time::now());
-                                                hip_center_height_vel=lin_est_shoulder->estimate(el)[1];
+                                                Vector shoulder_center=skeletonIn[KeyPointTag::shoulder_center]->getPoint();
+                                                shoulder_center.push_back(1.0);
+                                                shoulder_center=gaze_frame*shoulder_center;
+                                                shoulder_center.pop_back();
+                                                AWPolyElement el(shoulder_center,Time::now());
+                                                shoulder_center_height_vel=lin_est_shoulder->estimate(el)[2];
                                             }
                                             updated=true;
                                             delete skeleton;
@@ -1029,6 +1012,7 @@ bool Manager::configure(ResourceFinder &rf)
     dtwPort.open(("/" + getName() + "/dtw:cmd").c_str());
     actionPort.open(("/" + getName() + "/action:cmd").c_str());
     rpcPort.open(("/" + getName() + "/cmd").c_str());
+    gazePort.open(("/" + getName() + "/gaze:i").c_str());
     attach(rpcPort);
 
     cameraposinit.resize(3);
@@ -1046,8 +1030,7 @@ bool Manager::configure(ResourceFinder &rf)
     prop_tag="";
     curr_exercise=NULL;
     curr_metric=NULL;
-    lin_est_shoulder=new AWLinEstimator(5,0.5);
-
+    lin_est_shoulder=new AWLinEstimator(16,0.01);
     return true;
 }
 
@@ -1060,6 +1043,7 @@ bool Manager::interruptModule()
     dtwPort.interrupt();
     actionPort.interrupt();
     rpcPort.interrupt();
+    gazePort.interrupt();
     yInfo() << "Interrupted module";
 
     return true;
@@ -1068,18 +1052,15 @@ bool Manager::interruptModule()
 /********************************************************/
 bool Manager::close()
 {
-    delete curr_exercise;
     for(int i=0; i<exercises.size(); i++)
     {
         delete exercises[i];
     }
-
     for(int i=0; i<processors.size(); i++)
     {
         delete processors[i];
     }
     delete lin_est_shoulder;
-
     yInfo() << "Freed memory";
 
     opcPort.close();
@@ -1088,7 +1069,7 @@ bool Manager::close()
     dtwPort.close();
     actionPort.close();
     rpcPort.close();
-
+    gazePort.close();
     yInfo() << "Closed ports";
 
     return true;
@@ -1104,6 +1085,14 @@ double Manager::getPeriod()
 bool Manager::updateModule()
 {
     lock_guard<mutex> lg(mtx);
+
+    if (Property *p=gazePort.read(false))
+    {
+        Vector pose;
+        p->find("depth_rgb").asList()->write(pose);
+        gaze_frame=axis2dcm(pose.subVector(3,6));
+        gaze_frame.setSubcol(pose.subVector(0,2),0,3);
+    }
 
     //if we query the database
     if(opcPort.getOutputCount()>0 && starting)
@@ -1123,7 +1112,7 @@ bool Manager::updateModule()
                 scopebottleout.clear();
                 for(int i=0; i<processors.size(); i++)
                 {
-                    processors[i]->update(skeletonIn);
+                    processors[i]->update(skeletonIn,gaze_frame);
                     processors[i]->estimate();
                     Property result=processors[i]->getResult();
                     if(result.check(prop_tag) &&

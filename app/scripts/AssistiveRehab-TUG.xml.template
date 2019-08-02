@@ -44,7 +44,7 @@
 
     <module>
        <name>skeletonRetriever</name>
-       <parameters></parameters>
+       <parameters>--depth::enable false --filtering::optimize-limblength false</parameters>
        <dependencies>
           <port timeout="5">/opc/rpc</port>
        </dependencies>
@@ -80,7 +80,7 @@
 
     <module>
         <name>managerTUG</name>
-        <parameters></parameters>
+        <parameters>--standing-thresh 0.3 --finish-line-thresh 0.2</parameters>
         <node>r1-console-linux</node>
     </module>
 
@@ -183,6 +183,12 @@
     <connection>
         <from>/cer_gaze-controller/state:o</from>
         <to>/attentionManager/gaze/state:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer_gaze-controller/state:o</from>
+        <to>/motionAnalyzer/gaze:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
 

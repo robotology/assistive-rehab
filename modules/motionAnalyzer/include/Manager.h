@@ -41,6 +41,7 @@ class Manager : public yarp::os::RFModule,
     yarp::os::RpcClient dtwPort;
     yarp::os::RpcClient actionPort;
     yarp::os::BufferedPort<yarp::os::Bottle> scopePort;
+    yarp::os::BufferedPort<yarp::os::Property> gazePort;
 
     yarp::os::ResourceFinder *rf;
 
@@ -58,6 +59,7 @@ class Manager : public yarp::os::RFModule,
     Exercise* curr_exercise;
     std::vector<Processor*> processors;
     const Metric* curr_metric;
+    yarp::sig::Matrix gaze_frame;
 
     double tstart;
     double tstart_session;
@@ -76,6 +78,7 @@ class Manager : public yarp::os::RFModule,
     std::mutex mtx;
     yarp::sig::Vector shoulder_height;
     iCub::ctrl::AWLinEstimator *lin_est_shoulder;
+    double shoulder_center_height_vel;
     std::vector<double> line_pose;
 
     bool loadMotionList(yarp::os::ResourceFinder &rf);
@@ -99,7 +102,6 @@ class Manager : public yarp::os::RFModule,
     bool isSitting(const double standing_thresh) override;
     bool hasCrossedFinishLine(const double finishline_thresh) override;
     bool setLinePose(const std::vector<double> &line_pose) override;
-    std::vector<double> getLinePose() override;
 
     bool writeStructToMat(const std::string& name, const std::vector< std::vector< std::pair<std::string,yarp::sig::Vector> > >& keypoints_skel, mat_t *matfp);
     bool writeStructToMat(const std::string& name, const Exercise *ex, mat_t *matfp);
