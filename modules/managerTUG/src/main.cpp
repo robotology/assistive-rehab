@@ -30,6 +30,100 @@ using namespace yarp::os;
 using namespace yarp::sig;
 using namespace assistive_rehab;
 
+class SpeechInterpApi : public BufferedPort<Bottle>
+{
+    string module_name;
+    BufferedPort<Bottle> speechPortOut;
+    unordered_map<string,string> speak_map;
+    double t;
+    string answer;
+
+public:
+
+    /********************************************************/
+    SpeechInterpApi(const string &module_name, const unordered_map<string,string> &speak_map)
+    {
+        this->module_name=module_name;
+        this->speak_map=speak_map;
+    }
+
+    /********************************************************/
+    ~SpeechInterpApi()
+    {
+    };
+
+    /********************************************************/
+    bool open()
+    {
+        this->useCallback();
+        BufferedPort<yarp::os::Bottle >::open("/"+module_name+"/speech-interp:i");
+        speechPortOut.open("/"+module_name+"/speech-interp:o");
+        return true;
+    }
+
+    /********************************************************/
+    void close()
+    {
+        BufferedPort<yarp::os::Bottle >::close();
+        speechPortOut.close();
+    }
+
+    /********************************************************/
+    void interrupt()
+    {
+        BufferedPort<yarp::os::Bottle >::interrupt();
+        speechPortOut.interrupt();
+    }
+
+    /********************************************************/
+    void setTime(const double &t)
+    {
+        this->t=t;
+    }
+
+    /********************************************************/
+    string getAnswer() const
+    {
+        return answer;
+    }
+
+    /********************************************************/
+    void onRead( yarp::os::Bottle &speech_interpretation )
+    {
+        if(!speech_interpretation.isNull())
+        {
+            string keyword=speech_interpretation.get(0).asString();
+            answer.clear();
+            if(keyword=="speed" || keyword=="aid" || keyword=="repetition"
+                    || keyword=="unclear" || keyword=="not-known")
+            {
+                answer=speak_map[keyword];
+            }
+            else if(keyword=="feedback")
+            {
+                if(t<=10.0)
+                {
+                    answer=speak_map[keyword+"-high"];
+                }
+                else if(t<=20.0)
+                {
+                    answer=speak_map[keyword+"-medium"];
+                }
+                else if(t<=30.0)
+                {
+                    answer=speak_map[keyword+"-low"];
+                }
+            }
+
+            Bottle &output=speechPortOut.prepare();
+            output.clear();
+            output.addString(answer);
+            speechPortOut.writeStrict();
+        }
+    }
+
+};
+
 /****************************************************************/
 class SpeechParam
 {
@@ -66,6 +160,8 @@ class Manager : public RFModule, public managerTUG_IDL
     RpcClient attentionPort;
     BufferedPort<Bottle> speechStreamPort;
     RpcServer cmdPort;
+
+    SpeechInterpApi *speech_interp;
 
     /****************************************************************/
     bool attach(RpcServer &source) override
@@ -249,6 +345,9 @@ class Manager : public RFModule, public managerTUG_IDL
         speechStreamPort.open("/"+module_name+"/speech:o");
         cmdPort.open("/"+module_name+"/cmd:rpc");
         attach(cmdPort);
+
+        speech_interp=new SpeechInterpApi(module_name,speak_map);
+        speech_interp->open();
 
         state=State::idle;
         interrupting=false;
@@ -443,6 +542,14 @@ class Manager : public RFModule, public managerTUG_IDL
                                                             if (attentionPort.write(cmd,rep))
                                                             {
                                                                 speak("explain",true);
+                                                                speak("questions",true);
+                                                                double t1=Time::now();
+                                                                while(speech_interp->getAnswer().empty())
+                                                                {
+                                                                    double timeout=Time::now()-t1;
+                                                                    if(timeout>10.0)
+                                                                        break;
+                                                                }
                                                                 speak("start",true);
                                                                 cmd.clear();
                                                                 cmd.addString("start");
@@ -470,6 +577,7 @@ class Manager : public RFModule, public managerTUG_IDL
             }
         }
 
+        speech_interp->setTime(Time::now()-tstart);
         if (state==State::assess_standing)
         {
             //check if the person stands up
@@ -619,6 +727,9 @@ class Manager : public RFModule, public managerTUG_IDL
     /****************************************************************/
     bool close() override
     {
+        speech_interp->interrupt();
+        speech_interp->close();
+        delete speech_interp;
         analyzerPort.close();
         speechRpcPort.close();
         attentionPort.close();
