@@ -795,6 +795,17 @@ class Interaction : public RFModule, public interactionManager_IDL
                         }
                     }
                 }
+                else
+                {
+                    cmd.clear();
+                    rep.clear();
+                    cmd.addString("set_visibility");
+                    cmd.addInt(0);
+                    if(robotSkeletonPort.write(cmd,rep))
+                    {
+                        yInfo()<<"Turn off robot template visibility";
+                    }
+                }
             }
             first_run=false;
         }
