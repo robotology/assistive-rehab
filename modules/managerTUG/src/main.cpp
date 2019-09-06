@@ -590,6 +590,7 @@ class Manager : public RFModule, public managerTUG_IDL
                 {
                     yInfo()<<"Person standing";
                     state=State::assess_crossing;
+                    encourage_cnt=0;
                     t0=Time::now();
                 }
                 else
@@ -598,7 +599,7 @@ class Manager : public RFModule, public managerTUG_IDL
                     {
                         if(++encourage_cnt<=1)
                         {
-                            speak("encourage",true);
+                            speak("encourage",false);
                             t0=Time::now();
                         }
                         else
@@ -612,7 +613,6 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::assess_crossing)
         {
-            encourage_cnt=0;
             Bottle cmd,rep;
             cmd.addString("hasCrossedFinishLine");
             cmd.addDouble(finish_line_thresh);
@@ -622,6 +622,7 @@ class Manager : public RFModule, public managerTUG_IDL
                 {
                     yInfo()<<"Line crossed!";
                     state=State::line_crossed;
+                    encourage_cnt=0;
                     t0=Time::now();
                 }
                 else
@@ -644,7 +645,7 @@ class Manager : public RFModule, public managerTUG_IDL
                             {
                                 if(++encourage_cnt<=1)
                                 {
-                                    speak("encourage",true);
+                                    speak("encourage",false);
                                     t0=Time::now();
                                 }
                                 else
@@ -661,7 +662,6 @@ class Manager : public RFModule, public managerTUG_IDL
         if (state==State::line_crossed)
         {
             //detect when the person seats down
-            encourage_cnt=0;
             Bottle cmd,rep;
             cmd.addString("isSitting");
             cmd.addDouble(standing_thresh);
@@ -679,7 +679,7 @@ class Manager : public RFModule, public managerTUG_IDL
                     {
                         if(++encourage_cnt<=1)
                         {
-                            speak("encourage",true);
+                            speak("encourage",false);
                             t0=Time::now();
                         }
                         else
