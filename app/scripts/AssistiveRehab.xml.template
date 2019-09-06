@@ -68,7 +68,7 @@
 
     <module>
        <name>motionAnalyzer</name>
-       <parameters>--from motion-repertoire-rom12.ini</parameters>
+       <parameters>--from motion-repertoire-rom-left.ini</parameters>
        <node>r1-console-linux</node>
     </module>
 

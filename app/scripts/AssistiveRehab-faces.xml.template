@@ -90,7 +90,7 @@
 
     <module>
        <name>motionAnalyzer</name>
-       <parameters>--from motion-repertoire-rom12.ini</parameters>
+       <parameters>--from motion-repertoire-rom-left.ini</parameters>
        <node>r1-console-linux</node>
     </module>
 
@@ -117,6 +117,11 @@
 
     <module>
        <name>feedbackSynthetizer</name>
+       <node>r1-console-linux</node>
+    </module>
+
+    <module>
+       <name>robotSkeletonPublisher</name>
        <node>r1-console-linux</node>
     </module>
 
@@ -459,6 +464,24 @@
     <connection>
         <from>/interactionManager/speech:rpc</from>
         <to>/iSpeak/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/robotSkeletonPublisher/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/robotSkeletonPublisher/viewer:o</from>
+        <to>/skeletonViewer:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/interactionManager/robotskeleton:rpc</from>
+        <to>/robotSkeletonPublisher/cmd:rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
 

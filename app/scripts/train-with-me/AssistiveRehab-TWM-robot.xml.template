@@ -100,6 +100,11 @@
     </module>
 
     <module>
+       <name>robotSkeletonPublisher</name>
+       <node>r1-console-linux</node>
+    </module>
+
+    <module>
         <name>yarpview</name>
         <parameters>--name /viewer/depth --x 10 --y 40 --p 50 --compact</parameters>
         <node>r1-console-cuda</node>
@@ -348,6 +353,24 @@
     <connection>
         <from>/interactionManager/speech:rpc</from>
         <to>/iSpeak/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/robotSkeletonPublisher/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/robotSkeletonPublisher/viewer:o</from>
+        <to>/skeletonViewer:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/interactionManager/robotskeleton:rpc</from>
+        <to>/robotSkeletonPublisher/cmd:rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
 </application>
