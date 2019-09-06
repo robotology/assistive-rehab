@@ -14,29 +14,23 @@ service motionAnalyzer_IDL
 {
 
    /**
-   * Load motion repertoire from file.
-   * @return true/false on success/failure.
-   */
-   bool loadMotionList();
-
-   /**
-   * Load metric to analyze.
-   * @param metric_tag name of the metric to analyze
+   * Load exercise to analyze.
+   * @param exercise_tag name of the exercise to analyze
    * @return true/false on failure.
    */
-   bool loadMetric(1:string metric_tag);
+   bool loadExercise(1:string exercise_tag);
 
    /**
-   * Get the type of motion.
-   * @return string containing the type of motion / empty string on failure.
+   * Get the name of the exercise begin performed.
+   * @return string containing the name of the exercise begin performed / empty string on failure.
    */
-   string getMotionType();
+   string getExercise();
 
    /**
-   * List available metrics.
-   * @return the list of the available metrics as defined in the motion-repertoire.
+   * List available exercises.
+   * @return the list of the available exercises as defined in the motion-repertoire.
    */
-   list<string> listMetrics();
+   list<string> listExercises();
 
    /**
    * Start processing.
@@ -49,7 +43,7 @@ service motionAnalyzer_IDL
    * Stop feedback.
    * @return true/false on success/failure.
    */
-   bool stop_feedback();
+   bool stopFeedback();
 
    /**
    * Stop processing.
@@ -71,6 +65,38 @@ service motionAnalyzer_IDL
    list<string> listJoints()
 
    /**
+   * Select property to visualize.
+   * @param prop property to visualize
+   * @return true/false on success/failure.
+   */
+   bool selectMetricProp(1:string prop_tag);
+
+   /**
+   * List the available properties computable for the current metric.
+   * @return the list of the available properties computable for the current metric.
+   */
+   list<string> listMetricProps()
+
+   /**
+   * Select metric to analyze.
+   * @param metric_tag metric to analyze
+   * @return true/false on success/failure.
+   */
+   bool selectMetric(1:string metric_tag);
+
+   /**
+   * List the available metrics for the current exercise.
+   * @return the list of the available metrics for the current exercise.
+   */
+   list<string> listMetrics()
+
+   /**
+   * Get the metric to visualise.
+   * @return metric to visualise.
+   */
+   string getCurrMetricProp();
+
+   /**
    * Select the part to move.
    * @return true/false on success/failure.
    */
@@ -87,6 +113,6 @@ service motionAnalyzer_IDL
    * @param robot_skeleton_mirror if true, robot template has to be mirrored.
    * @return true/false on success/failure.
    */
-   bool mirrorTemplate(1:bool robot_skeleton_mirror)
+   bool mirrorTemplate(1:bool robot_skeleton_mirror);
 
 }

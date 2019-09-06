@@ -4,46 +4,136 @@
 <module>
   <name>motionAnalyzer</name>
   <doxygen-group>motionAnalyzer</doxygen-group>
-  <description>This module is responsible for analyzing the performed movement in real-time.</description>
+  <description>This module is responsible for analyzing the performed exercise in real-time.</description>
   <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
   <version>0.3.0</version>
 
   <description-long>
-   This module is responsible for analyzing the performed movement in real-time.
-   It computes the range of motion (ROM) for range of motion movements and the speed of the end-point for reaching movements, which can be visualized on a yarpscope.
-   Each movement is identified by a group (ROM for range of motion and EP for end-point) and a tag, and described through a reference joint, a reference direction and a plane.
-   The ROM is computed as angle between the vector formed by the reference joint and its child (projected onto the projection plane) and the reference direction.
-   These information are avaliable in the config file motion-repertoire.ini, which contains relevant information for \ref skeletonScaler, \ref actionRecognizer and \feedbackProducer.
-   The tag of the movment has to match the name of the file loaded by \ref skeletonPlayer and the label of the classed predicted by \ref actionRecognizer.
+   This module is responsible for analyzing the performed exercise in real-time.
+   A single exercise has its own metrics and feedback, defined in the related config file, for example abduction left is described in `abduction_left.ini` file.
+   All the available exercises with related config files are included in the config file `motion-repertoire.ini`.
+   The available metrics are the range of motion (ROM), end-point (EP) parameters (trajectory, speed and smoothness) and step parameters (step length, step width, cadence and speed),
+   which can be visualized on a yarpscope through the provided API.
    The module is also responsible for generating matio files in order to produce an offline report.
    It makes use of matio and hdf5 libraries.
+
+   @subsection sec-conf Configuration files
+   Each exercise has its configuration file which is included in the general config file motion-repertoire.ini.
+   Configuration files are described in the following sections.
+
+   @subsubsection sec-motion-rep motion-repertoire.ini
+   This section describes the conf file motion-repertoire.ini.
+   This file includes all the configuration files of the single exercises, which are defined by `exercises`.
+   The labels of the `rehabilitation` exercises have to match the names of the files loaded by \ref skeletonPlayer and the labels of the classed predicted by \ref actionRecognizer.
+
+   Each specific file inlcudes the following sections:
+
+   \code
+   [general]
+   type                           rehabilitation
+
+   [metrics]
+   tag                            (ROM)
+   nmetrics                       (1)
+   \endcode
+
+   The `[general]` section describes the kind of exercise (test or rehabilitation).
+   The `[metrics]` section defines the metrics to be computed for the specific exercise.
+   Exercises tagged as `rehabilitation` also include an additional `[feedback]` section, which defines the parameters sent to \ref feedbackProducer for providing a feedback to the user.
+
+   @subsubsection sec-abduction abduction_left.ini, internal_rotation_left.ini, external_rotation_left.ini
+   This section describes the conf file abduction-left.ini, internal_rotation_left.ini, external_rotation_left.ini.
+   For this exercises we compute the range of motion, as angle between the vector formed by the reference joint (`tag_joint`) and its child (projected onto the projection plane defined by `tag_plane`) and the reference direction `ref_dir`, described as following:
+
+   \code
+   [ROM_0]
+   tag_joint                      shoulderLeft
+   ref_dir                        (0.0 0.0 -1.0)
+   tag_plane                      coronal
+   min                            0.0
+   max                            100.0
+   \endcode
+
+   The `[feedback]` section contains the thresholds required for producing the feedback:
+
+   \code
+   [feedback]
+   duration                       30
+   twarp                          0.9
+   joint_list                     (elbowLeft handLeft)
+   sx_thresh                      (0.5 0.5)
+   sy_thresh                      (0.5 0.5)
+   sz_thresh                      (0.2 0.3)
+   range_freq                     (2 2)
+   psd_thresh                     (10000.0 10000.0)
+   \endcode
+
+    The joints of the skeleton under analysis are defined by `joint_list`.
+    They are compared to those of a template skeleton, which is reproduced by the \ref skeletonPlayer with a warping factor of `twarp`.
+    The skeleton is also analyzed by the \ref actionRecognizer, which predicts a label for the exercise every `duration` frames.
+    Such exercises can produce two feedbacks, i.e. on the speed and on the range of motion:
+
+    - range of motion: the error between the observed and template joints under analysis is computed.
+    A statistical analysis is carried out, which looks for tails in the error distribution.
+    `sx_thresh`, `sy_thresh` and `sz_thresh` define, for each joint in `joint_list`, the thresholds on the standard deviation of the error in position along x, y and z respectively.
+    - speed: we compute the Fourier transform of each component of the joints under analysis in a predefined temporal window, for both the observed and the template skeleton. The difference in speed is proportional to the difference in frequency.
+    `range_freq` and `psd_thresh` define, for each joint in `joint_list`, the thresholds on the difference in frequency and on the power spectrum density between template and observed joints respectively.
+
+   @subsubsection sec-reaching reaching-left.ini
+   This section describes the conf file reaching-left.ini.
+   For this exercise we compute the end point parameters, specifically trajectory, speed and smoothness.
+   The section describing the metric includes the same parameters defined in \ref sec-abduction, plus an additional `target`, which defines the target to reach in the skeleton reference system.
+
+   \code
+   [EP_0]
+   tag_joint                      handLeft
+   ref_dir                        (0.0 0.0 -1.0)
+   tag_plane                      sagittal
+   min                            0.0
+   max                            5.0
+   target                         (2.0 1.0 0.0)
+   \endcode
+
+   The feedback section differs from the one defined in \ref sec-abduction:
+
+   \code
+   [feedback]
+   duration                       30
+   twarp                          1.0
+   joint_list                     (handLeft)
+   radius                         (1.0)
+   zscore_thresh                  (2)
+   inliers_thresh                 (0.3)
+   \endcode
+
+   As in \ref sec-abduction, the joints under analysis are defined by `joint_list` and compared to those of a template skeleton, which is reproduced by the \ref skeletonPlayer with a warping factor of `twarp`.
+   The skeleton is also analyzed by the \ref actionRecognizer, which predicts a label for the exercise every `duration` frames.
+
+   Differently than \ref sec-abduction, such exercise produces a single feedback, related to how well a predefined target is reached.
+   The target distribution is statistically described by the template points falling inside a sphere around the `target`, defined by `radius`.
+   Statistics of the distribution of the observed points are extracted and points whose score is below the `zscore_thresh` are considered inliers.
+   Finally, if the number of inliers have to be higher than `inliers_thresh`, the target is considered reached.
+
+   @subsubsection sec-tug tug.ini
+   This section describes the conf file tug.ini.
+   For this exercise we compute the range of motion of six joints and the step parameters, specifically step length, step width, cadence and speed.
+   The sections describing the range of motion metrics are the same defined in \ref sec-abduction.
+   There is an additional section for extracting the step parameters:
+
+   \code
+   [step_0]
+   num                            (0.0219 0.1097 0.2194 0.2194 0.1097 0.0219)
+   den                            (1 -0.9853 0.9738 -0.3864 0.1112 -0.0113)
+   \endcode
+
+   `num` and `den` define the filter applied to the distance between feet for computing the step parameters.
+
   </description-long>
 
   <arguments>
-    <param default="motionAnalyzer" desc="The module's name; all the open ports will be tagged with the prefix /name">name</param>
-    <param default="motion-repertoire.ini" desc="Configuration file name with the list of movements that can be analyzed.">from</param>
-    <param default="(ROM EP)" desc="List of the groups specifying the movements (range of motion and end-point).">GENERAL::metric_tag</param>
-    <param default="(14 2)" desc="List containing how many movements are available for the corresponding group (corresponding to metric_tag).">GENERAL::number_metrics</param>
-    <param default="(0.0 0.0 -2.0)" desc="Position of the camera in world coordinates sent to \ref skeletonViewer.">GENERAL::cameraposinit</param>
-    <param default="(0.0 0.0 0.0)" desc="Focal point of the camera in world coordinates sent to \ref skeletonViewer.">GENERAL::focalpointinit</param>
-    <param default="abduction_right" desc="Tag of the movement.">ROM_0::motion_type</param>
-    <param default="shoulderRight" desc="Tag of the reference joint.">ROM_0::tag_joint</param>
-    <param default="(0.0 0.0 -1.0)" desc="Reference direction for computing the ROM in skeleton coordinates.">ROM_0::ref_dir</param>
-    <param default="coronal" desc="Tag of the plane for projecting the vector for computing the ROM.">ROM_0::tag_plane</param>
-    <param default="0.0" desc="Minimum value acceptable for the movement (degrees).">ROM_0::min</param>
-    <param default="100.0" desc="Maximum value acceptable for the movement (degrees).">ROM_0::max</param>
-    <param default="30" desc="Number of frames used in the action recognition for this movement. Sent to \ref actionRecognizer.">ROM_0::duration</param>
-    <param default="1.0" desc="Warping factor for squeezing (dilating) in time the template skeleton if less than 1 (greater than 1). Sent to \ref skeletonScaler.">ROM_0::twarp</param>
-    <param default="(elbowRight handRight)" desc="List of joints under analysis for producing final feedback, provided to \feedbackProducer.">ROM_0::joint_list</param>
-    <param default="(0.5 0.5)" desc="List of thresholds (corresponding to joint_list) on the standard deviation of the error in position along x direction. Sent to \feedbackProducer.">ROM_0::sx_thresh</param>
-    <param default="(0.5 0.5)" desc="List of thresholds (corresponding to joint_list) on the standard deviation of the error in position along y direction. Sent to \feedbackProducer.">ROM_0::sy_thresh</param>
-    <param default="(0.2 0.3)" desc="List of thresholds (corresponding to joint_list) on the standard deviation of the error in position along z direction. Sent to to \feedbackProducer.">ROM_0::sz_thresh</param>
-    <param default="(1 1)" desc="List of thresholds (corresponding to joint_list) on the difference in frequency between template and observed joints. Sent to to \feedbackProducer.">ROM_0::range_freq</param>
-    <param default="(10000.0 10000.0)" desc="List of thresholds (corresponding to joint_list) on the power spectrum density of the observed joints. Sent to to \feedbackProducer.">ROM_0::psd_thresh</param>
-    <param default="(2.0 -1.0 0.0)" desc="Target to reach in skeleton coordinates.">EP_0::target</param>
-    <param default="1.0" desc="Radius of the sphere defined around the template target.">EP_0::radius</param>
-    <param default="2" desc="Threshold on the statistics of the distribution of the observed points. Points whose score is below this threshold are considered inliers.">EP_0::zscore_thresh</param>
-    <param default="0.3" desc="Threshold on the number of inliers which fall within the template distribution.">EP_0::inliers_thresh</param>
+   <param default="motionAnalyzer" desc="The module's name; all the open ports will be tagged with the prefix /name">name</param>
+   <param default="motion-repertoire.ini" desc="Configuration file name with the list of exercises that can be analyzed.">from</param>
+   <param default="(abduction_left internal_rotation_left external_rotation_left reaching_left tug)" desc="List of exercises that can be analyzed.">general::exercises</param>
   </arguments>
 
   <authors>

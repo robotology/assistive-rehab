@@ -103,6 +103,11 @@
     </module>
 
     <module>
+       <name>robotSkeletonPublisher</name>
+       <node>r1-console-linux</node>
+    </module>
+
+    <module>
         <name>interactionManager</name>
         <parameters>--context AssistiveRehab/train-with-me --from interactionManager.ini --virtual-mode true</parameters>
         <node>r1-console-linux</node>
@@ -355,6 +360,24 @@
     <connection>
         <from>/interactionManager/speech:rpc</from>
         <to>/iSpeak/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/robotSkeletonPublisher/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/robotSkeletonPublisher/viewer:o</from>
+        <to>/skeletonViewer:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/interactionManager/robotskeleton:rpc</from>
+        <to>/robotSkeletonPublisher/cmd:rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
 </application>

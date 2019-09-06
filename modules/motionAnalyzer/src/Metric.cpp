@@ -13,8 +13,16 @@
 #include "Metric.h"
 
 using namespace std;
+using namespace yarp::os;
 using namespace yarp::sig;
 using namespace assistive_rehab;
+
+namespace MetricType
+{
+const string rom="ROM";
+const string end_point="EP";
+const string step="step";
+}
 
 Metric::Metric()
 {
@@ -26,109 +34,225 @@ Metric::~Metric()
 
 }
 
-void Metric::initialize(const string &name_, const string &motion_type_, const string &tag_joint_, const Vector &ref_dir_,
-                        const string &tag_plane_, const double &min_, const double &max_, const int &duration_,
-                        const double &twarp_, const Vector &camerapos_, const Vector &focalpoint_,
-                        const vector<string> &joint_list_)
-{
-    name = name_;
-    motion_type = motion_type_;
-    tag_joint = tag_joint_;
-    ref_dir = ref_dir_;
-    tag_plane = tag_plane_;
-    min = min_;
-    max = max_;
-    duration = duration_;
-    twarp = twarp_;
-    camerapos = camerapos_;
-    focalpoint = focalpoint_;
-    joint_list = joint_list_;
-}
-
-void Metric::print()
-{   
-    yInfo() << "Metric = " << name;
-    yInfo() << "Motion type = " << motion_type;
-    yInfo() << "Tag joint = " << tag_joint;
-    yInfo() << "Joint list for feedback = ";
-    for(size_t i=0; i<joint_list.size(); i++)
-        cout << joint_list[i] << " ";
-    cout << endl;
-}
-
 /************************/
 /*        ROM           */
 /************************/
-Rom::Rom()
+Rom::Rom(const string &type_, const string &name_, const string &tag_joint_,
+         const string &tag_plane_, const Vector &ref_dir_, const string &ref_joint_,
+         const double &minv_, const double &maxv_)
 {
-
+    type=type_;
+    name=name_;
+    tag_joint=tag_joint_;
+    tag_plane=tag_plane_;
+    ref_dir=ref_dir_;
+    ref_joint=ref_joint_;
+    minv=minv_;
+    maxv=maxv_;
+    properties.push_back("range");
 }
 
-void Rom::setFeedbackThresholds(const yarp::sig::Vector &sx_thresh_, const yarp::sig::Vector &sy_thresh_,
-                                const yarp::sig::Vector &sz_thresh_, const yarp::sig::Vector &range_freq_,
-                                const yarp::sig::Vector &psd_thresh_)
+Rom::Rom(const Rom &r)
 {
-    sx_thresh = sx_thresh_;
-    sy_thresh = sy_thresh_;
-    sz_thresh = sz_thresh_;
-    range_freq = range_freq_;
-    psd_thresh = psd_thresh_;
+    name=r.name;
+    tag_joint=r.tag_joint;
+    tag_plane=r.tag_plane;
+    ref_dir=r.ref_dir;
+    ref_joint=r.ref_joint;
+    minv=r.minv;
+    maxv=r.maxv;
+    properties=r.properties;
 }
 
-Matrix Rom::getFeedbackThresholds()
+Rom& Rom::operator = (const Rom &r)
 {
-    thresholds.resize(5,joint_list.size());
-    for(size_t i=0; i<joint_list.size(); i++)
-    {
-        thresholds[0][i]=sx_thresh[i];
-        thresholds[1][i]=sy_thresh[i];
-        thresholds[2][i]=sz_thresh[i];
-        thresholds[3][i]=range_freq[i];
-        thresholds[4][i]=psd_thresh[i];
-    }
+    name=r.name;
+    tag_joint=r.tag_joint;
+    tag_plane=r.tag_plane;
+    ref_dir=r.ref_dir;
+    ref_joint=r.ref_joint;
+    minv=r.minv;
+    maxv=r.maxv;
+    properties=r.properties;
+    return *this;
+}
 
-    return thresholds;
+void Rom::print(ostream &os) const
+{
+    os<<"\t"<< "type= "<<type<<endl<<"\t";
+    os<<"name= "<<name<<endl<<"\t";
+    os<<"tag_joint= "<<tag_joint<<endl<<"\t";
+    os<<"tag_plane= "<<tag_plane<<endl<<"\t";
+    os<<"ref_dir= "<<ref_dir.toString(3,1)<<endl<<"\t";
+    os<<"ref_joint= "<<ref_joint<<endl<<"\t";
+    os<<"min= "<<minv<<endl<<"\t";
+    os<<"max= "<<maxv<<endl;
+}
+
+yarp::os::Property Rom::getParams() const
+{
+    Property params;
+    params.put("type",type);
+    params.put("name",name);
+    params.put("tag_joint",tag_joint);
+    params.put("tag_plane",tag_plane);
+
+    Bottle bRefDir;
+    bRefDir.addList().read(ref_dir);
+    params.put("ref_dir",bRefDir.get(0));
+
+    params.put("ref_joint",ref_joint);
+    params.put("min",minv);
+    params.put("max",maxv);
+    return params;
+}
+
+/************************/
+/*        Step          */
+/************************/
+Step::Step(const string &type_, const string &name_, const yarp::sig::Vector &num_,
+           const yarp::sig::Vector &den_, const double &minv_, const double &maxv_)
+{
+    type=type_;
+    name=name_;
+    num=num_;
+    den=den_;
+    minv=minv_;
+    maxv=maxv_;
+
+    properties.push_back("step_length");
+    properties.push_back("step_width");
+    properties.push_back("cadence");
+    properties.push_back("speed");
+}
+
+Step::Step(const Step &r)
+{
+    type=r.type;
+    name=r.name;
+    num=r.num;
+    den=r.den;
+    minv=r.minv;
+    maxv=r.maxv;
+    properties=r.properties;
+}
+
+Step& Step::operator = (const Step &r)
+{
+    type=r.type;
+    name=r.name;
+    num=r.num;
+    den=r.den;
+    minv=r.minv;
+    maxv=r.maxv;
+    return *this;
+}
+
+void Step::print(ostream &os) const
+{
+    os<<"\t"<<"type= "<<type<<endl<<"\t";
+    os<<"name= "<<name<<endl<<"\t";
+    os<<"min= "<<minv<<endl<<"\t";
+    os<<"max= "<<maxv<<endl;
+}
+
+yarp::os::Property Step::getParams() const
+{
+    Property params;
+    params.put("type",type);
+    params.put("name",name);
+
+    Bottle bNum;
+    bNum.addList().read(num);
+    params.put("num",bNum.get(0));
+
+    Bottle bDen;
+    bDen.addList().read(den);
+    params.put("den",bDen.get(0));
+
+    params.put("min",minv);
+    params.put("max",maxv);
+    return params;
 }
 
 /************************/
 /*      END POINT       */
 /************************/
-EndPoint::EndPoint()
+EndPoint::EndPoint(const string &type_, const string &name_, const string &tag_joint_,
+                   const string &tag_plane_, const Vector &ref_dir_, const double &minv_,
+                   const double &maxv_, const Vector &target_)
 {
+    type=type_;
+    name=name_;
+    tag_joint=tag_joint_;
+    tag_plane=tag_plane_;
+    ref_dir=ref_dir_;
+    minv=minv_;
+    maxv=maxv_;
+    target=target_;
 
+    properties.push_back("trajectory");
+    properties.push_back("speed");
+    properties.push_back("smoothness");
 }
 
-void EndPoint::setVel(const double &vel_)
+EndPoint::EndPoint(const EndPoint &ep)
 {
-    vel = vel_;
+    type=ep.type;
+    name=ep.name;
+    tag_joint=ep.tag_joint;
+    tag_plane=ep.tag_plane;
+    ref_dir=ep.ref_dir;
+    minv=ep.minv;
+    maxv=ep.maxv;
+    target=ep.target;
+    properties=ep.properties;
 }
 
-void EndPoint::setSmoothness(const double &smoothness_)
+EndPoint& EndPoint::operator = (const EndPoint &ep)
 {
-    smoothness = smoothness_;
+    type=ep.type;
+    name=ep.name;
+    tag_joint=ep.tag_joint;
+    tag_plane=ep.tag_plane;
+    ref_dir=ep.ref_dir;
+    minv=ep.minv;
+    maxv=ep.maxv;
+    target=ep.target;
+    properties=ep.properties;
+    return *this;
 }
 
-void EndPoint::setFeedbackThresholds(const double &radius_,const int zscore_thresh_,const double &inliers_thresh_)
+void EndPoint::print(ostream &os) const
 {
-    radius = radius_;
-    zscore_thresh = zscore_thresh_;
-    inliers_thresh = inliers_thresh_;
+    os<<"\t"<<"type= "<<type<<endl<<"\t";
+    os<<"name= "<<name<<endl<<"\t";
+    os<<"tag_joint= "<<tag_joint<<endl<<"\t";
+    os<<"tag_plane= "<<tag_plane<<endl<<"\t";
+    os<<"ref_dir= "<<ref_dir.toString(3,1)<<endl<<"\t";
+    os<<"min= "<<minv<<endl<<"\t";
+    os<<"max= "<<maxv<<endl<<"\t";
+    os<<"target= "<<target.toString(3,1)<<endl;
 }
 
-void EndPoint::setTarget(const Vector &target_)
+yarp::os::Property EndPoint::getParams() const
 {
-    target = target_;
-}
+    Property params;
+    params.put("type",type);
+    params.put("name",name);
+    params.put("tag_joint",tag_joint);
+    params.put("tag_plane",tag_plane);
 
-yarp::sig::Matrix EndPoint::getFeedbackThresholds()
-{
-    thresholds.resize(3,joint_list.size());
-    for(size_t i=0; i<joint_list.size(); i++)
-    {
-        thresholds[0][i]=radius;
-        thresholds[1][i]=zscore_thresh;
-        thresholds[2][i]=inliers_thresh;
-    }
+    Bottle bRefDir;
+    bRefDir.addList().read(ref_dir);
+    params.put("ref_dir",bRefDir.get(0));
 
-    return thresholds;
+    params.put("min",minv);
+    params.put("max",maxv);
+
+    Bottle bTarget;
+    bTarget.addList().read(target);
+    params.put("target",bTarget.get(0));
+
+    return params;
 }
