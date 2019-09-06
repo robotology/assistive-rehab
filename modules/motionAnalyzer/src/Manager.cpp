@@ -968,7 +968,7 @@ void Manager::getSkeleton()
                                                 }
                                                 all_keypoints.push_back(keyps);
                                             }
-                                            if(skeletonIn[KeyPointTag::hip_center]->isUpdated())
+                                            if(skeletonIn[KeyPointTag::shoulder_center]->isUpdated())
                                             {
                                                 Vector shoulder_center=skeletonIn[KeyPointTag::shoulder_center]->getPoint();
                                                 shoulder_center.push_back(1.0);
@@ -1095,38 +1095,42 @@ bool Manager::updateModule()
     }
 
     //if we query the database
-    if(opcPort.getOutputCount()>0 && starting)
+    if(opcPort.getOutputCount()>0)
     {
-        //if no metric has been defined we do not analyze motion
-        if(curr_exercise!=NULL && curr_metric!=NULL)
-        {
-            //get skeleton and normalize
-            getSkeleton();
-            if(updated)
-            {
-                //update time array
-                time_samples.push_back(Time::now()-tstart);
+        //get skeleton and normalize
+        getSkeleton();
 
-                //write on output port
-                Bottle &scopebottleout=scopePort.prepare();
-                scopebottleout.clear();
-                for(int i=0; i<processors.size(); i++)
+        //if no metric has been defined we do not analyze motion
+        if(starting)
+        {
+            if(curr_exercise!=NULL && curr_metric!=NULL)
+            {
+                if(updated)
                 {
-                    processors[i]->update(skeletonIn,gaze_frame);
-                    processors[i]->estimate();
-                    Property result=processors[i]->getResult();
-                    if(result.check(prop_tag) &&
-                            processors[i]->getProcessedMetric()==curr_metric->getParams().find("name").asString())
+                    //update time array
+                    time_samples.push_back(Time::now()-tstart);
+
+                    //write on output port
+                    Bottle &scopebottleout=scopePort.prepare();
+                    scopebottleout.clear();
+                    for(int i=0; i<processors.size(); i++)
                     {
-                        double res=result.find(prop_tag).asDouble();
-                        scopebottleout.addDouble(res);
+                        processors[i]->update(skeletonIn,gaze_frame);
+                        processors[i]->estimate();
+                        Property result=processors[i]->getResult();
+                        if(result.check(prop_tag) &&
+                                processors[i]->getProcessedMetric()==curr_metric->getParams().find("name").asString())
+                        {
+                            double res=result.find(prop_tag).asDouble();
+                            scopebottleout.addDouble(res);
+                        }
                     }
+                    scopePort.write();
                 }
-                scopePort.write();
             }
+            else
+                yInfo() << "Please specify metric";
         }
-        else
-            yInfo() << "Please specify metric";
     }
 
     return true;
