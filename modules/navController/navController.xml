@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="yarpmanifest.xsl"?>
+
+<module>
+  <name>navController</name>
+  <doxygen-group>navController</doxygen-group>
+  <description>This module is responsible for interfacing with the robot's base to implement the navigation part.</description>
+  <copypolicy>Released under the terms of the BSD 3-Clause License.</copypolicy>
+  <version>0.4.0</version>
+
+  <description-long>
+   This moudule aims to keep the distance from a specified skeleton fixed. To this end, the robot will be navigating along an imaginary straight track.
+  </description-long>
+
+  <arguments>
+    <param default="0.05" desc="Periodicity of the module (s).">period</param>
+    <param default="0.3" desc="The magnitude of the velocity used in the bang-bang control (m/s).">velocity_magnitude</param>
+    <param default="2.0" desc="The target distance from the skeleton that the controller will attempt to keep (m).">distance_target</param>
+    <param default="0.2" desc="The low threshold of the hsyteresis on the distance error (m).">distance_hysteresis_low</param>
+    <param default="0.3" desc="The high threshold of the hsyteresis on the distance error (m).">distance_hysteresis_high</param>
+  </arguments>
+
+  <authors>
+    <author email="ugo.pattacini@iit.it"> Ugo Pattacini </author>
+  </authors>
+
+  <data>
+      <input>
+          <type>Bottle</type>
+          <port>/navController/opc:i</port>
+          <description>
+            Receives the OPC broadcast.
+          </description>
+      </input>
+      <output>
+          <type>Bottle</type>
+          <port>/navController/state:o</port>
+          <description>
+            Outputs the navigation state in terms of location and velocity of the base according to the format: x y theta v_x v_theta.
+          </description>
+      </output>
+  </data>
+
+  <services>
+    <server>
+      <type>navController_IDL</type>
+      <idl>idl.thrift</idl>
+      <port>/navController/rpc</port>
+      <description>service port</description>
+    </server>
+  </services>
+
+</module>
