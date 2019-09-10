@@ -11,6 +11,7 @@
  */
 
 #include <cstdlib>
+#include <mutex>
 #include <memory>
 #include <cmath>
 #include <limits>
@@ -338,7 +339,7 @@ public:
 };
 
 
-Mutex mutex;
+mutex mtx;
 vector<Bottle> inputs;
 bool rpc_command_rx;
 Vector camera_position,camera_focalpoint,camera_viewup;
@@ -374,7 +375,7 @@ public:
     void Execute(vtkObject *caller, unsigned long vtkNotUsed(eventId), 
                  void *vtkNotUsed(callData))
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         vtkRenderWindowInteractor* iren=static_cast<vtkRenderWindowInteractor*>(caller);
 
         if (closing!=nullptr)
@@ -578,14 +579,14 @@ class Viewer : public RFModule
     /****************************************************************/
     void process(const Bottle &input)
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         inputs.push_back(input);
     }
 
     /****************************************************************/
     void gc()
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         double t=Time::now();
         double deadline=skeletonsGC.getPeriod();
 
@@ -597,7 +598,7 @@ class Viewer : public RFModule
     /****************************************************************/
     bool respond(const Bottle &command, Bottle &reply) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         if (command.size()>0)
         {
             string cmd=command.get(0).asString();

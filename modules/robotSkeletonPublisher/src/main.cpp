@@ -11,6 +11,7 @@
  */
 
 #include <cstdlib>
+#include <mutex>
 #include <string>
 #include <vector>
 #include <utility>
@@ -26,8 +27,6 @@
 #include <yarp/os/RpcClient.h>
 #include <yarp/os/RpcServer.h>
 #include <yarp/os/Stamp.h>
-#include <yarp/os/LockGuard.h>
-#include <yarp/os/Mutex.h>
 
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
@@ -78,7 +77,7 @@ class Publisher : public RFModule, public robotSkeletonPublisher_IDL
     int opc_id;
 
     RpcServer cmdPort;
-    Mutex mutex;
+    mutex mtx;
     bool visibility;
 
     HeadSolver head;
@@ -140,7 +139,7 @@ class Publisher : public RFModule, public robotSkeletonPublisher_IDL
     /**************************************************************************/
     bool set_visibility(const bool flag) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         visibility=flag;
         return true;
     }
@@ -148,7 +147,7 @@ class Publisher : public RFModule, public robotSkeletonPublisher_IDL
     /**************************************************************************/
     bool set_robot_skeleton_name(const string &skeleton_name) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         this->skeleton_name=skeleton_name;
         return true;
     }
@@ -319,7 +318,7 @@ class Publisher : public RFModule, public robotSkeletonPublisher_IDL
     /**************************************************************************/
     bool updateModule() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
 
         // update joints state and time stamps
         Vector stamps;

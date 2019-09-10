@@ -11,6 +11,7 @@
  */
 
 #include <cstdlib>
+#include <mutex>
 #include <cmath>
 #include <iterator>
 #include <unordered_map>
@@ -210,7 +211,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     bool imitate,observe;
     string partspeech;
 
-    Mutex mutex;
+    mutex mtx;
 
     RpcClient attentionPort;
     RpcClient analyzerPort;
@@ -226,7 +227,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     /****************************************************************/
     bool start_with_hand() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         engage_with_hand=true;
         wait_for_imitation=false;
         return disengage();
@@ -235,7 +236,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     /****************************************************************/
     bool start_observation() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         engage_with_hand=false;
         wait_for_imitation=true;
         observe=true;
@@ -245,7 +246,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     /****************************************************************/
     bool start_imitation() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         imitate=true;
         return true;
     }
@@ -253,7 +254,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     /****************************************************************/
     bool start_occlusion() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         occluded=true;
         if(virtual_mode)
         {
@@ -312,7 +313,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     /****************************************************************/
     bool stop() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         bool ret=false;
 
         Bottle cmd,rep;
@@ -754,7 +755,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     /****************************************************************/
     bool updateModule() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         if ((attentionPort.getOutputCount()==0) || (analyzerPort.getOutputCount()==0) ||
                 (speechStreamPort.getOutputCount()==0) || (speechRpcPort.getOutputCount()==0) ||
                 (robotSkeletonPort.getOutputCount()==0))

@@ -33,7 +33,7 @@ using namespace assistive_rehab;
 
 bool Manager::loadMotionList(ResourceFinder &rf)
 {
-    LockGuard lg(mutex);
+    lock_guard<mutex> lg(mtx);
 
     rf.setVerbose();
     rf.setDefaultContext(this->rf->getContext().c_str());
@@ -302,7 +302,7 @@ bool Manager::loadMotionList(ResourceFinder &rf)
 /********************************************************/
 bool Manager::setTemplateTag(const string &template_tag)
 {
-    LockGuard lg(mutex);
+    lock_guard<mutex> lg(mtx);
 
     this->template_tag=template_tag;
     Bottle cmd,reply;
@@ -322,7 +322,7 @@ bool Manager::setTemplateTag(const string &template_tag)
 /********************************************************/
 bool Manager::loadExercise(const string &exercise_tag)
 {
-    LockGuard lg(mutex);
+    lock_guard<mutex> lg(mtx);
     if(motion_repertoire.count(exercise_tag))
     {
         curr_exercise=motion_repertoire.at(exercise_tag);
@@ -395,7 +395,7 @@ bool Manager::loadExercise(const string &exercise_tag)
 /********************************************************/
 string Manager::getExercise()
 {
-    LockGuard lg(mutex);
+    lock_guard<mutex> lg(mtx);
     if(curr_exercise!=NULL)
         return curr_exercise->getName();
     else
@@ -406,7 +406,7 @@ string Manager::getExercise()
 /********************************************************/
 vector<string> Manager::listExercises()
 {
-    LockGuard lg(mutex);
+    lock_guard<mutex> lg(mtx);
     vector<string> reply;
     for (auto it=motion_repertoire.begin(); it!=motion_repertoire.end(); it++)
     {
@@ -419,7 +419,7 @@ vector<string> Manager::listExercises()
 /********************************************************/
 vector<string> Manager::listMetricProps()
 {
-    LockGuard lg(mutex);
+    lock_guard<mutex> lg(mtx);
     if(curr_metric!=NULL)
         return curr_metric->getProperties();
     else
@@ -429,7 +429,7 @@ vector<string> Manager::listMetricProps()
 /********************************************************/
 vector<string> Manager::listJoints()
 {
-    LockGuard lg(mutex);
+    lock_guard<mutex> lg(mtx);
     vector<string> reply;
     if(curr_exercise!=NULL && curr_exercise->getType()==ExerciseType::rehabilitation)
     {
@@ -449,7 +449,7 @@ vector<string> Manager::listJoints()
 /********************************************************/
 bool Manager::selectSkel(const string &skel_tag)
 {
-    LockGuard lg(mutex);
+    lock_guard<mutex> lg(mtx);
 
     this->skel_tag=skel_tag;
     yInfo() << "Analyzing skeleton " << this->skel_tag.c_str();
@@ -494,7 +494,7 @@ bool Manager::selectSkel(const string &skel_tag)
 /********************************************************/
 bool Manager::setPart(const string &part)
 {
-    LockGuard lg(mutex);
+    lock_guard<mutex> lg(mtx);
 
     yInfo() << "Moving" << part << "arm";
     Bottle cmd,reply;
@@ -525,7 +525,7 @@ bool Manager::setPart(const string &part)
 /********************************************************/
 bool Manager::mirrorTemplate(const bool robot_skeleton_mirror)
 {
-    LockGuard lg(mutex);
+    lock_guard<mutex> lg(mtx);
     this->robot_skeleton_mirror=robot_skeleton_mirror;
     return true;
 }
@@ -533,7 +533,7 @@ bool Manager::mirrorTemplate(const bool robot_skeleton_mirror)
 /********************************************************/
 bool Manager::selectMetricProp(const string &prop_tag)
 {
-    LockGuard lg(mutex);
+    lock_guard<mutex> lg(mtx);
     if(curr_exercise!=NULL)
     {
         this->prop_tag=prop_tag;
@@ -550,14 +550,14 @@ bool Manager::selectMetricProp(const string &prop_tag)
 /********************************************************/
 string Manager::getCurrMetricProp()
 {
-    LockGuard lg(mutex);
+    lock_guard<mutex> lg(mtx);
     return prop_tag;
 }
 
 /********************************************************/
 vector<string> Manager::listMetrics()
 {
-    LockGuard lg(mutex);
+    lock_guard<mutex> lg(mtx);
     if(curr_exercise!=NULL)
     {
         return curr_exercise->listMetrics();
@@ -572,7 +572,7 @@ vector<string> Manager::listMetrics()
 /********************************************************/
 bool Manager::selectMetric(const string &metric_tag)
 {
-    LockGuard lg(mutex);
+    lock_guard<mutex> lg(mtx);
     if(curr_exercise!=NULL)
     {
         curr_metric=curr_exercise->getCurrMetric(metric_tag);
@@ -619,7 +619,7 @@ bool Manager::selectMetric(const string &metric_tag)
 /********************************************************/
 bool Manager::start(const bool use_robot_template)
 {
-    LockGuard lg(mutex);
+    lock_guard<mutex> lg(mtx);
                 
     this->use_robot_template = use_robot_template;
     yInfo() << "Start!";
@@ -762,7 +762,7 @@ bool Manager::start(const bool use_robot_template)
 /********************************************************/
 bool Manager::stopFeedback()
 {
-    LockGuard lg(mutex);
+    lock_guard<mutex> lg(mtx);
 
     yInfo() << "Stop feedback!";
 
@@ -780,7 +780,7 @@ bool Manager::stopFeedback()
 /********************************************************/
 bool Manager::stop()
 {
-    LockGuard lg(mutex);
+    lock_guard<mutex> lg(mtx);
     yInfo()<<"stopping";
 
     if(curr_exercise->getType()==ExerciseType::rehabilitation)
@@ -994,7 +994,7 @@ double Manager::getPeriod()
 /********************************************************/
 bool Manager::updateModule()
 {
-    LockGuard lg(mutex);
+    lock_guard<mutex> lg(mtx);
 
     //if we query the database
     if(opcPort.getOutputCount()>0 && starting)

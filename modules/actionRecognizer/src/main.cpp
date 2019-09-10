@@ -10,13 +10,14 @@
  * @authors: Valentina Vasco <valentina.vasco@iit.it>
  */
 
-#include <stdio.h>
+#include <cstdio>
+#include <mutex>
 #include <fstream>
-#include <math.h>
+#include <cmath>
+#include <algorithm>
 #include <yarp/os/all.h>
 #include <yarp/sig/Matrix.h>
 #include <yarp/math/Math.h>
-#include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <tensorflow/core/public/session.h>
 #include <tensorflow/core/protobuf/meta_graph.pb.h>
@@ -60,7 +61,7 @@ class Recognizer : public RFModule, public actionRecognizer_IDL
     BufferedPort<Bottle> outPort;
     RpcClient opcPort;
 
-    Mutex mutex;
+    mutex mtx;
     bool starting;
     string action_to_perform;
     ResourceFinder rf;
@@ -185,7 +186,7 @@ public:
     /**********************************************************/
     bool loadModel(const string &part_) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
 
         // Set up input paths
         part = part_;
@@ -268,7 +269,7 @@ public:
     /****************************************************************/
     bool run(const int32_t nframes_) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         nframes = (int)nframes_;
         input = Tensor(DT_FLOAT, TensorShape({1,nframes,nfeatures}));
         idx_frame = 0;
@@ -295,7 +296,7 @@ public:
     /****************************************************************/
     bool tags(const string &skel_tag_) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         skel_tag = skel_tag_;
         return true;
     }
@@ -303,7 +304,7 @@ public:
     /****************************************************************/
     bool load(const string &exercise) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         action_to_perform = exercise;
         yInfo() << "Exercise to perform" << action_to_perform;
         return true;
@@ -312,7 +313,7 @@ public:
     /****************************************************************/
     bool setTransformation(const Matrix &T_) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         T = T_;
         yInfo() << "Transformation matrix" << T.toString();
         return true;
@@ -321,7 +322,7 @@ public:
     /****************************************************************/
     bool stop() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         starting = false;
         skel_tag = " ";
         idx_step = 0;
@@ -400,7 +401,7 @@ public:
     /****************************************************************/
     bool updateModule() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         if(opcPort.getOutputCount() > 0 && starting)
         {
             getSkeleton();
