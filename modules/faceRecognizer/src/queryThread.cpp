@@ -21,7 +21,7 @@
 /********************************************************/
 bool QueryThread::threadInit()
 {
-    yarp::os::LockGuard lg(mutex);
+    std::lock_guard<std::mutex> lg(mtx);
     verbose = rf.check("verbose");
     std::string name = rf.find("name").asString().c_str();
     skip_frames = rf.check("skip_frames",yarp::os::Value(5)).asInt();
@@ -45,7 +45,7 @@ bool QueryThread::threadInit()
 void QueryThread::setImage(const yarp::sig::ImageOf<yarp::sig::PixelRgb> &img,
                            const yarp::os::Stamp &stamp)
 {
-    yarp::os::LockGuard lg(img_mutex);
+    std::lock_guard<std::mutex> lg(img_mtx);
     img_buffer=std::make_pair(img,stamp);
     img_cnt++;
 }
@@ -54,7 +54,7 @@ void QueryThread::setImage(const yarp::sig::ImageOf<yarp::sig::PixelRgb> &img,
 bool QueryThread::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb> &img,
                            yarp::os::Stamp &stamp)
 {
-    yarp::os::LockGuard lg(img_mutex);
+    std::lock_guard<std::mutex> lg(img_mtx);
     if (img_cnt>0)
     {
         img=img_buffer.first;
@@ -71,7 +71,7 @@ void QueryThread::run()
 {
     if (personIndex>-1)
     {
-        yarp::os::LockGuard lg(mutex);
+        std::lock_guard<std::mutex> lg(mtx);
         yarp::sig::ImageOf<yarp::sig::PixelRgb> img;
         yarp::os::Stamp stamp;
         if (!getImage(img,stamp))
@@ -140,7 +140,7 @@ void QueryThread::run()
 /********************************************************/
 yarp::os::Bottle QueryThread::classify(yarp::os::Bottle &persons)
 {
-    yarp::os::LockGuard lg(mutex);
+    std::lock_guard<std::mutex> lg(mtx);
     yarp::os::Bottle reply;
 
     // as classify() gets called within the same thread that calls
@@ -214,7 +214,7 @@ yarp::os::Bottle QueryThread::classify(yarp::os::Bottle &persons)
 /********************************************************/
 bool QueryThread::set_skip_frames(int skip_frames)
 {
-    yarp::os::LockGuard lg(mutex);
+    std::lock_guard<std::mutex> lg(mtx);
     if (skip_frames>=0)
     {
         this->skip_frames = skip_frames;
@@ -227,7 +227,7 @@ bool QueryThread::set_skip_frames(int skip_frames)
 /********************************************************/
 bool QueryThread::set_person(yarp::os::Bottle &person, int personIndex, bool allowTrain)
 {
-    yarp::os::LockGuard lg(mutex);
+    std::lock_guard<std::mutex> lg(mtx);
     if (person.size()>0)
     {
         this->allowedTrain = allowTrain;
@@ -242,7 +242,7 @@ bool QueryThread::set_person(yarp::os::Bottle &person, int personIndex, bool all
 /********************************************************/
 bool QueryThread::clear_hist()
 {
-    yarp::os::LockGuard lg(mutex);
+    std::lock_guard<std::mutex> lg(mtx);
     scores_buffer.clear();
     return true;
 }

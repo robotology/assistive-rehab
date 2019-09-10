@@ -23,8 +23,6 @@
 #include <yarp/os/Time.h>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/PeriodicThread.h>
-#include <yarp/os/Mutex.h>
-#include <yarp/os/LockGuard.h>
 #include <yarp/os/RpcClient.h>
 #include <yarp/os/PortReport.h>
 #include <yarp/os/Stamp.h>
@@ -40,7 +38,8 @@
 #include <opencv2/imgproc.hpp>
 #include <cv.h>
 
-#include <stdio.h>
+#include <cstdio>
+#include <mutex>
 #include <string>
 #include <deque>
 #include <algorithm>
@@ -57,7 +56,7 @@ class QueryThread: public yarp::os::PeriodicThread
 private:
 
     yarp::os::ResourceFinder                    &rf;
-    yarp::os::Mutex                             mutex;
+    std::mutex                                  mtx;
     bool                                        verbose;
     
     yarp::os::BufferedPort<yarp::os::Bottle>    port_in_scores;    
@@ -72,7 +71,7 @@ private:
     bool                                        allowedTrain;
     std::list<yarp::os::Bottle>                 scores_buffer;
 
-    yarp::os::Mutex img_mutex; int img_cnt;
+    std::mutex img_mtx; int img_cnt;
     std::pair<yarp::sig::ImageOf<yarp::sig::PixelRgb>,yarp::os::Stamp> img_buffer;
     bool getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb> &img, yarp::os::Stamp &stamp);
 

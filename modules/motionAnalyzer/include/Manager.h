@@ -13,6 +13,7 @@
 #ifndef __MANAGER_H__
 #define __MANAGER_H__
 
+#include <mutex>
 #include <fstream>
 #include <list>
 
@@ -72,7 +73,7 @@ class Manager : public yarp::os::RFModule,
     std::string out_folder;
     bool updated;
     std::string prop_tag;
-    yarp::os::Mutex mutex;
+    std::mutex mtx;
 
     bool loadMotionList(yarp::os::ResourceFinder &rf);
     bool loadExercise(const std::string &exercise_tag) override;

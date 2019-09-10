@@ -11,6 +11,7 @@
  */
 
 #include <cstdlib>
+#include <mutex>
 #include <algorithm>
 #include <fstream>
 #include <fftw3.h>
@@ -48,7 +49,7 @@ private:
     bool first;
     bool use_robot_template,mirror_robot_template;
 
-    Mutex mutex;
+    mutex mtx;
 
     SkeletonStd skeletonIn,skeletonTemplate;
     string skel_tag,template_tag,metric_tag;
@@ -72,7 +73,7 @@ public:
     /****************************************************************/
     bool setFeedbackThresh(const Matrix &feedback_thresholds) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         this->feedback_thresholds = feedback_thresholds;
         yInfo() << "Feedback thresholds" << feedback_thresholds.toString();
         return true;
@@ -81,7 +82,7 @@ public:
     /****************************************************************/
     bool setTarget(const vector<double> &target) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         this->target = target;
         yInfo() << "Target to reach" << target;
         return true;
@@ -90,7 +91,7 @@ public:
     /****************************************************************/
     bool setTransformation(const Matrix &T) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         this->T = T;
         yInfo() << "Transformation matrix" << T.toString();
         return true;
@@ -99,7 +100,7 @@ public:
     /****************************************************************/
     bool setTemplateTag(const string &template_tag) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         this->template_tag = template_tag;
         yInfo() << "Template skeleton" << template_tag;
         return true;
@@ -108,7 +109,7 @@ public:
     /****************************************************************/
     bool setSkelTag(const string &skel_tag) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         this->skel_tag = skel_tag;
         yInfo() << "Tag skeleton" << skel_tag;
         return true;
@@ -117,7 +118,7 @@ public:
     /****************************************************************/
     bool setMetric(const string &metric_tag) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         this->metric_tag = metric_tag;
         yInfo() << "Metric tag" << metric_tag;
         return true;
@@ -126,7 +127,7 @@ public:
     /****************************************************************/
     bool setJoints(const vector<string> &joint_list) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         yInfo() << "Joint list";
         this->joint_list.resize(joint_list.size());
         for(size_t i=0; i<joint_list.size(); i++)
@@ -141,7 +142,7 @@ public:
     bool setRobotTemplate(const bool use_robot_template,
                           const bool mirror_robot_template) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         this->use_robot_template = use_robot_template;
         this->mirror_robot_template = mirror_robot_template;
         yInfo() << "Using robot template";
@@ -151,7 +152,7 @@ public:
     /****************************************************************/
     bool setPart(const string &part) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         this->part=part;
         yInfo() << "Analyzing"<<part<<"part";
         return true;
@@ -160,7 +161,7 @@ public:
     /****************************************************************/
     bool start() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         yInfo() << "Start!";
         started = true;
         first = true;
@@ -170,7 +171,7 @@ public:
     /****************************************************************/
     bool stop() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         yInfo() << "Stop!";
         skel_tag.clear();
         template_tag.clear();
@@ -661,7 +662,7 @@ public:
     /********************************************************/
     bool updateModule() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
 
         //if we query the database
         if(opcPort.getOutputCount() > 0 && started)

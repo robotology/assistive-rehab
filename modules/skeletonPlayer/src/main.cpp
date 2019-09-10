@@ -11,6 +11,7 @@
  */
 
 #include <cstdlib>
+#include <mutex>
 #include <memory>
 #include <vector>
 #include <iterator>
@@ -42,7 +43,7 @@ struct MetaSkeleton
 /****************************************************************/
 class Player : public RFModule, public skeletonPlayer_IDL
 {
-    Mutex mutex;
+    mutex mtx;
     vector<MetaSkeleton> skeletons;
     vector<MetaSkeleton>::iterator it,it_begin,it_end;
     enum class State { idle, loaded, opced, running } state;
@@ -184,7 +185,7 @@ class Player : public RFModule, public skeletonPlayer_IDL
     /****************************************************************/
     bool load(const string& file, const string& context) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         ResourceFinder rf;
 
         rf.setQuiet();
@@ -261,7 +262,7 @@ class Player : public RFModule, public skeletonPlayer_IDL
     bool start(const int n_sessions, const double t_warp,
                const double t_begin, const double t_end) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         if ((state==State::loaded) || (state==State::opced))
         {
             if (findFrameDirect(begin(skeletons),t_begin,it_begin) &&
@@ -292,7 +293,7 @@ class Player : public RFModule, public skeletonPlayer_IDL
     /****************************************************************/
     bool stop() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         if (state==State::running)
         {
             yInfo()<<"Streaming ended";
@@ -304,14 +305,14 @@ class Player : public RFModule, public skeletonPlayer_IDL
     /****************************************************************/
     bool is_running() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         return (state==State::running);
     }
 
     /****************************************************************/
     bool put_in_opc(const double t_begin) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         if (skeletons.empty())
         {
             yError()<<"No file loaded yet!";
@@ -342,7 +343,7 @@ class Player : public RFModule, public skeletonPlayer_IDL
     /****************************************************************/
     bool remove_from_opc() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         if ((state==State::opced) || (state==State::running))
         {
             if (opcDel())
@@ -359,7 +360,7 @@ class Player : public RFModule, public skeletonPlayer_IDL
     /****************************************************************/
     bool set_tag(const string& new_tag) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         if (skeletons.empty())
         {
             yError()<<"No file loaded yet!";
@@ -376,7 +377,7 @@ class Player : public RFModule, public skeletonPlayer_IDL
     /****************************************************************/
     double get_maxpath(const double t_begin) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         if (skeletons.empty())
         {
             yError()<<"No file loaded yet!";
@@ -408,7 +409,7 @@ class Player : public RFModule, public skeletonPlayer_IDL
     /****************************************************************/
     bool normalize() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         if (skeletons.empty())
         {
             yError()<<"No file loaded yet!";
@@ -425,7 +426,7 @@ class Player : public RFModule, public skeletonPlayer_IDL
     /****************************************************************/
     bool scale(const double s) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         if (skeletons.empty())
         {
             yError()<<"No file loaded yet!";
@@ -442,7 +443,7 @@ class Player : public RFModule, public skeletonPlayer_IDL
     /****************************************************************/
     bool move(const Matrix &T) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         if (skeletons.empty())
         {
             yError()<<"No file loaded yet!";
@@ -464,7 +465,7 @@ class Player : public RFModule, public skeletonPlayer_IDL
     /****************************************************************/
     bool set_opacity(const double new_opacity) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         opacity=new_opacity;
         return true;
     }
@@ -472,7 +473,7 @@ class Player : public RFModule, public skeletonPlayer_IDL
     /****************************************************************/
     bool set_color(const double new_r, const double new_g, const double new_b) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         color.clear();
         Bottle &c=color.addList();
         c.addDouble(new_r);
@@ -512,7 +513,7 @@ class Player : public RFModule, public skeletonPlayer_IDL
     /****************************************************************/
     bool updateModule() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         double t=Time::now()-t_origin;
         if (state==State::running)
         {

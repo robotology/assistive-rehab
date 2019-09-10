@@ -11,6 +11,7 @@
  */
 
 #include <cstdlib>
+#include <mutex>
 #include <memory>
 #include <vector>
 #include <string>
@@ -58,7 +59,7 @@ class Attention : public RFModule, public attentionManager_IDL
     string keypoint;
     string robot_skeleton_name;
 
-    Mutex mutex;
+    mutex mtx;
     BufferedPort<Bottle> opcPort;
     RpcClient gazeCmdPort;
     BufferedPort<Property> gazeStatePort;
@@ -80,7 +81,7 @@ class Attention : public RFModule, public attentionManager_IDL
     /****************************************************************/
     bool look(const string &tag, const string &keypoint) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         if (state<State::idle)
         {
             return false;
@@ -101,7 +102,7 @@ class Attention : public RFModule, public attentionManager_IDL
     /****************************************************************/
     bool stop() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         if (state<State::idle)
         {
             return false;
@@ -116,7 +117,7 @@ class Attention : public RFModule, public attentionManager_IDL
     /****************************************************************/
     bool is_running() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         if (state<State::idle)
         {
             return false;
@@ -127,7 +128,7 @@ class Attention : public RFModule, public attentionManager_IDL
     /****************************************************************/
     FollowedSkeletonInfo is_following() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         FollowedSkeletonInfo info;
         if (state==State::follow)
         {
@@ -147,7 +148,7 @@ class Attention : public RFModule, public attentionManager_IDL
     /****************************************************************/
     vector<string> is_any_raised_hand() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         vector<string> ret;
         if (state>=State::idle)
         {
@@ -165,7 +166,7 @@ class Attention : public RFModule, public attentionManager_IDL
     /****************************************************************/
     bool is_with_raised_hand(const string &tag) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         if (state<State::idle)
         {
             return false;
@@ -183,7 +184,7 @@ class Attention : public RFModule, public attentionManager_IDL
     /****************************************************************/
     bool set_auto() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         if (state<State::idle)
         {
             return false;
@@ -195,7 +196,7 @@ class Attention : public RFModule, public attentionManager_IDL
     /****************************************************************/
     bool set_virtual() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         virtual_mode=true;
         return true;
     }
@@ -236,7 +237,7 @@ class Attention : public RFModule, public attentionManager_IDL
     /****************************************************************/
     bool set_robot_skeleton_name(const string &robot_skeleton_name_) override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         robot_skeleton_name=robot_skeleton_name_;
         return true;
     }
@@ -451,7 +452,7 @@ class Attention : public RFModule, public attentionManager_IDL
     /****************************************************************/
     bool updateModule() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         if (Property *p=gazeStatePort.read(false))
         {
             Vector pose;

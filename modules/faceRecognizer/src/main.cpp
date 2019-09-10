@@ -23,8 +23,6 @@
 #include <yarp/os/Log.h>
 #include <yarp/os/RpcClient.h>
 #include <yarp/os/LogStream.h>
-#include <yarp/os/Mutex.h>
-#include <yarp/os/LockGuard.h>
 #include <yarp/sig/Image.h>
 #include <yarp/cv/Cv.h>
 #include <yarp/os/Stamp.h>
@@ -33,6 +31,7 @@
 #include <opencv2/opencv.hpp>
 
 #include <vector>
+#include <mutex>
 #include <sstream>
 #include <iostream>
 #include <cstring>
@@ -59,7 +58,7 @@ class Module : public yarp::os::RFModule, public recognition_IDL
 
     yarp::os::RpcClient          port_rpc_classifier;
 
-    yarp::os::Mutex     mutex;
+    std::mutex          mtx;
 
     double              lastBlobsArrivalTime;
     double              blobs_detection_timeout;
@@ -99,7 +98,7 @@ public:
     /**********************************************************/
     bool train(const std::string &name) override
     {
-        yarp::os::LockGuard lg(mutex);
+        std::lock_guard<std::mutex> lg(mtx);
         allowedTrain = true;
         gotTime = false;
         label = name;
@@ -111,7 +110,7 @@ public:
     /**********************************************************/
     bool forget(const std::string &label) override
     {
-        yarp::os::LockGuard lg(mutex);
+        std::lock_guard<std::mutex> lg(mtx);
         yarp::os::Bottle cmd, reply;
         cmd.clear();
         reply.clear();
@@ -174,7 +173,7 @@ public:
     /**********************************************************/
     bool setConfidenceThreshold(const double thresh) override
     {
-        yarp::os::LockGuard lg(mutex);
+        std::lock_guard<std::mutex> lg(mtx);
         confidenceThreshold = thresh;
         return true;
     }
@@ -256,7 +255,7 @@ public:
     /********************************************************/
     yarp::os::Bottle getSkeletons()
     {
-        yarp::os::LockGuard lg(mutex);
+        std::lock_guard<std::mutex> lg(mtx);
         yarp::os::Bottle receivedSkeletons;
         if (yarp::os::Bottle *skeletons=targetInPort.read())
         {
@@ -268,7 +267,7 @@ public:
     /********************************************************/
     yarp::os::Bottle getBlobs()
     {
-        yarp::os::LockGuard lg(mutex);
+        std::lock_guard<std::mutex> lg(mtx);
         if (yarp::os::Bottle *pBlobs=blobsPort.read(false))
         {
             lastBlobsArrivalTime=yarp::os::Time::now();
@@ -289,7 +288,7 @@ public:
     /**********************************************************/
     void getImage()
     {
-        yarp::os::LockGuard lg(mutex);
+        std::lock_guard<std::mutex> lg(mtx);
         if (yarp::sig::ImageOf<yarp::sig::PixelRgb> *tmp=imageInPort.read())
         {
             img=*tmp;
@@ -836,7 +835,7 @@ public:
                     thr_query->clear_hist();
                 }
             }
-            yarp::os::LockGuard lg(mutex);
+            std::lock_guard<std::mutex> lg(mtx);
             if (recognition_started)
             {
                 labels.clear();
