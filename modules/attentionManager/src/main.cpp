@@ -214,7 +214,7 @@ class Attention : public RFModule, public attentionManager_IDL
     /****************************************************************/
     vector<double> getLinePose() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         if (line_pose.empty())
         {
             return {};

@@ -10,7 +10,6 @@
  * @authors: Valentina Vasco <valentina.vasco@iit.it>
  */
 
-#include <yarp/os/LockGuard.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/Network.h>
@@ -19,6 +18,7 @@
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/RpcClient.h>
 
+#include <mutex>
 #include <cmath>
 
 #include <AssistiveRehab/skeleton.h>
@@ -152,7 +152,7 @@ class Manager : public RFModule, public managerTUG_IDL
     int encourage_cnt;
     unordered_map<string,string> speak_map;
     bool interrupting;
-    Mutex mutex;
+    mutex mtx;
 
     //ports
     RpcClient analyzerPort;
@@ -297,14 +297,14 @@ class Manager : public RFModule, public managerTUG_IDL
     /****************************************************************/
     bool start() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         return disengage();
     }
 
     /****************************************************************/
     bool stop() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         bool ret=false;
 
         Bottle cmd,rep;
@@ -365,7 +365,7 @@ class Manager : public RFModule, public managerTUG_IDL
     /****************************************************************/
     bool updateModule() override
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         if((analyzerPort.getOutputCount()==0) || (speechStreamPort.getOutputCount()==0) ||
                 (speechRpcPort.getOutputCount()==0) || (attentionPort.getOutputCount()==0))
         {

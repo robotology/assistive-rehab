@@ -842,7 +842,7 @@ bool Manager::stop()
 /********************************************************/
 bool Manager::isStanding(const double standing_thresh)
 {
-    LockGuard lg(mutex);
+    lock_guard<mutex> lg(mtx);
     yInfo()<<"shoulder height speed"<<shoulder_center_height_vel;
     return (shoulder_center_height_vel>standing_thresh);
 }
@@ -850,7 +850,7 @@ bool Manager::isStanding(const double standing_thresh)
 /********************************************************/
 bool Manager::isSitting(const double standing_thresh)
 {
-    LockGuard lg(mutex);
+    lock_guard<mutex> lg(mtx);
     yInfo()<<"shoulder height speed"<<shoulder_center_height_vel;
     return (shoulder_center_height_vel<-standing_thresh);
 }
@@ -858,7 +858,7 @@ bool Manager::isSitting(const double standing_thresh)
 /********************************************************/
 bool Manager::hasCrossedFinishLine(const double finishline_thresh)
 {
-    LockGuard lg(mutex);
+    lock_guard<mutex> lg(mtx);
     Vector foot_right=skeletonIn[KeyPointTag::ankle_right]->getPoint();
     Vector foot_left=skeletonIn[KeyPointTag::ankle_left]->getPoint();
     foot_right.push_back(1.0);
@@ -897,7 +897,7 @@ bool Manager::hasCrossedFinishLine(const double finishline_thresh)
 /********************************************************/
 bool Manager::setLinePose(const vector<double> &line_pose)
 {
-    LockGuard lg(mutex);
+    lock_guard<mutex> lg(mtx);
     this->line_pose=line_pose;
     return true;
 }
