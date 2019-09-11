@@ -61,7 +61,7 @@ class Recognizer : public RFModule, public actionRecognizer_IDL
     BufferedPort<Bottle> outPort;
     RpcClient opcPort;
 
-    mutex mtx;
+    std::mutex mtx;
     bool starting;
     string action_to_perform;
     ResourceFinder rf;
@@ -186,7 +186,7 @@ public:
     /**********************************************************/
     bool loadModel(const string &part_) override
     {
-        lock_guard<mutex> lg(mtx);
+        lock_guard<std::mutex> lg(mtx);
 
         // Set up input paths
         part = part_;
@@ -269,7 +269,7 @@ public:
     /****************************************************************/
     bool run(const int32_t nframes_) override
     {
-        lock_guard<mutex> lg(mtx);
+        lock_guard<std::mutex> lg(mtx);
         nframes = (int)nframes_;
         input = Tensor(DT_FLOAT, TensorShape({1,nframes,nfeatures}));
         idx_frame = 0;
@@ -296,7 +296,7 @@ public:
     /****************************************************************/
     bool tags(const string &skel_tag_) override
     {
-        lock_guard<mutex> lg(mtx);
+        lock_guard<std::mutex> lg(mtx);
         skel_tag = skel_tag_;
         return true;
     }
@@ -304,7 +304,7 @@ public:
     /****************************************************************/
     bool load(const string &exercise) override
     {
-        lock_guard<mutex> lg(mtx);
+        lock_guard<std::mutex> lg(mtx);
         action_to_perform = exercise;
         yInfo() << "Exercise to perform" << action_to_perform;
         return true;
@@ -313,7 +313,7 @@ public:
     /****************************************************************/
     bool setTransformation(const Matrix &T_) override
     {
-        lock_guard<mutex> lg(mtx);
+        lock_guard<std::mutex> lg(mtx);
         T = T_;
         yInfo() << "Transformation matrix" << T.toString();
         return true;
@@ -322,7 +322,7 @@ public:
     /****************************************************************/
     bool stop() override
     {
-        lock_guard<mutex> lg(mtx);
+        lock_guard<std::mutex> lg(mtx);
         starting = false;
         skel_tag = " ";
         idx_step = 0;
@@ -401,7 +401,7 @@ public:
     /****************************************************************/
     bool updateModule() override
     {
-        lock_guard<mutex> lg(mtx);
+        lock_guard<std::mutex> lg(mtx);
         if(opcPort.getOutputCount() > 0 && starting)
         {
             getSkeleton();
