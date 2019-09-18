@@ -616,7 +616,7 @@ class Interaction : public RFModule, public interactionManager_IDL
         {
             grade="low";
         }
-        else if (mean<0.7)
+        else if (mean<0.85)
         {
             grade="medium";
         }
