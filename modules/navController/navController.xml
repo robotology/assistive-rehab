@@ -14,10 +14,10 @@
 
   <arguments>
     <param default="0.05" desc="Periodicity of the module (s).">period</param>
-    <param default="0.3" desc="The magnitude of the velocity used in the bang-bang control (m/s).">velocity_magnitude</param>
-    <param default="2.0" desc="The target distance from the skeleton that the controller will attempt to keep (m).">distance_target</param>
-    <param default="0.2" desc="The low threshold of the hsyteresis on the distance error (m).">distance_hysteresis_low</param>
-    <param default="0.3" desc="The high threshold of the hsyteresis on the distance error (m).">distance_hysteresis_high</param>
+    <param default="0.3" desc="The magnitude of the velocity used in the bang-bang control (m/s).">velocity-magnitude</param>
+    <param default="2.0" desc="The target distance from the skeleton that the controller will attempt to keep (m).">distance-target</param>
+    <param default="0.2" desc="The low threshold of the hsyteresis on the distance error (m).">distance-hysteresis-low</param>
+    <param default="0.3" desc="The high threshold of the hsyteresis on the distance error (m).">distance-hysteresis-high</param>
   </arguments>
 
   <authors>
@@ -36,7 +36,7 @@
           <type>Bottle</type>
           <port>/navController/state:o</port>
           <description>
-            Outputs the navigation state in terms of location and velocity of the base according to the format: x y theta v_x v_theta.
+            Outputs the state as (location (x y theta)) (velocity (v_x v_theta)) (skeleton tag) (distance d).
           </description>
       </output>
   </data>

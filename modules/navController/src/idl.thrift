@@ -31,6 +31,12 @@ service navController_IDL
    bool stop();
 
    /**
+    * Reset odometry.
+    * @return true/false on success/failure.
+    */
+   bool reset_odometry();
+
+   /**
     * Query which skeleton is currently under control.
     * @return the name of the skeleton; empty otherwise.
     */

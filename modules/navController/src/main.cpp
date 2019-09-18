@@ -38,28 +38,29 @@ using namespace assistive_rehab;
 
 /****************************************************************/
 class Navigator : public RFModule, public navController_IDL {
-  double period{0.0}; 
+  double period{0.0};
   double velocity_magnitude{0.0};
-  double distance_target{0.0}; 
-  double distance_hysteresis_low{0.0}; 
-  double distance_hysteresis_high{0.0}; 
-  bool distance_hysteresis_active{false}; 
+  double distance_target{0.0};
+  double distance_hysteresis_low{0.0};
+  double distance_hysteresis_high{0.0};
+  bool distance_hysteresis_active{false};
   string skeleton_tag{""};
+  double skeleton_distance{0.0};
   shared_ptr<Skeleton> skeleton;
 
   RpcClient navCmdPort;
   BufferedPort<Bottle> navLocPort;
   BufferedPort<Bottle> navCtrlPort;
   BufferedPort<Bottle> opcPort;
-  BufferedPort<Bottle> statePort;
+  BufferedPort<Property> statePort;
   RpcServer cmdPort;
 
   mutex mtx;
 
   struct {
-    double x{0.0}; 
-    double y{0.0}; 
-    double theta{0.0}; 
+    double x{0.0};
+    double y{0.0};
+    double theta{0.0};
     bool getFrom(BufferedPort<Bottle>& navLocPort) {
       if (Bottle* b = navLocPort.read(false)) {
         x = b->get(0).asDouble();
@@ -75,8 +76,8 @@ class Navigator : public RFModule, public navController_IDL {
   } location;
 
   struct {
-    double x{0.0}; 
-    double theta{0.0}; 
+    double x{0.0};
+    double theta{0.0};
     void zero() {
       x = theta = 0.0;
     }
@@ -103,10 +104,10 @@ class Navigator : public RFModule, public navController_IDL {
   /****************************************************************/
   bool configure(ResourceFinder& rf)override {
     period = rf.check("period", Value(0.05)).asDouble();
-    velocity_magnitude = rf.check("velocity_magnitude", Value(0.3)).asDouble();
-    distance_target = rf.check("distance_target", Value(2.0)).asDouble();
-    distance_hysteresis_low = rf.check("distance_hysteresis_low", Value(0.2)).asDouble();
-    distance_hysteresis_high = rf.check("distance_hysteresis_high", Value(0.3)).asDouble();
+    velocity_magnitude = rf.check("velocity-magnitude", Value(0.3)).asDouble();
+    distance_target = rf.check("distance-target", Value(2.0)).asDouble();
+    distance_hysteresis_low = rf.check("distance-hysteresis-low", Value(0.2)).asDouble();
+    distance_hysteresis_high = rf.check("distance-hysteresis-high", Value(0.3)).asDouble();
 
     navCmdPort.open("/navController/base/cmd:rpc");
     navLocPort.open("/navController/base/loc:i");
@@ -123,11 +124,7 @@ class Navigator : public RFModule, public navController_IDL {
       cmd.addString("run");
       if (navCmdPort.write(cmd, rep)) {
         if (rep.size() > 0) {
-          cmd.clear();
-          cmd.addString("reset_odometry");
-          if (navCmdPort.write(cmd, rep)) {
-            return (rep.size() > 0);
-          }
+          return reset_odometry();
         }
       }
     }
@@ -187,13 +184,25 @@ class Navigator : public RFModule, public navController_IDL {
   /****************************************************************/
   void publishState() {
     if (statePort.getOutputCount() > 0) {
-      Bottle &b = statePort.prepare();
-      b.clear();
-      b.addDouble(location.x);
-      b.addDouble(location.y);
-      b.addDouble(location.theta);
-      b.addDouble(velocity.x);
-      b.addDouble(velocity.theta);
+      Bottle b_loc, b_vel;
+      Bottle& lb_loc = b_loc.addList();
+      Bottle& lb_vel = b_vel.addList();
+
+      Property& p = statePort.prepare();
+      p.clear();
+
+      lb_loc.addDouble(location.x);
+      lb_loc.addDouble(location.y);
+      lb_loc.addDouble(location.theta);
+      p.put("location", b_loc.get(0));
+
+      lb_vel.addDouble(velocity.x);
+      lb_vel.addDouble(velocity.theta);
+      p.put("velocity", b_vel.get(0));
+
+      p.put("skeleton", skeleton_tag);
+      p.put("distance", skeleton_distance);
+
       statePort.writeStrict();
     }
   }
@@ -206,10 +215,11 @@ class Navigator : public RFModule, public navController_IDL {
     getSkeleton();
 
     velocity.zero();
+    skeleton_distance = 0.0;
     if (skeleton) {
       if ((*skeleton)[KeyPointTag::hip_center]->isUpdated()) {
-        double z = (*skeleton)[KeyPointTag::hip_center]->getPoint()[2];
-        double e = z - distance_target;
+        skeleton_distance = (*skeleton)[KeyPointTag::hip_center]->getPoint()[2];
+        double e = skeleton_distance - distance_target;
         double abs_e = abs(e);
         double command = velocity_magnitude * sign(e);
         if (distance_hysteresis_active) {
@@ -248,9 +258,23 @@ class Navigator : public RFModule, public navController_IDL {
     velocity.zero();
     velocity.sendTo(navCtrlPort);
     skeleton_tag.clear();
+    skeleton_distance = 0.0;
     skeleton.reset();
     yInfo() << "Control stopped";
     return true;
+  }
+
+  /****************************************************************/
+  bool reset_odometry()override {
+    lock_guard<mutex> lck(mtx);
+    Bottle cmd, rep;
+    bool ret = false;
+    yInfo() << "Odometry reset";
+    cmd.addString("reset_odometry");
+    if (navCmdPort.write(cmd, rep)) {
+      ret = (rep.size() > 0);
+    }
+    return ret;
   }
 
   /****************************************************************/
