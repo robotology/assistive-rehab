@@ -13,9 +13,13 @@
 #include <cstdlib>
 #include <mutex>
 #include <memory>
-#include <string>
 #include <cmath>
+#include <limits>
+#include <string>
+#include <vector>
+#include <algorithm>
 #include <yarp/os/Network.h>
+#include <yarp/os/Time.h>
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Value.h>
@@ -26,7 +30,11 @@
 #include <yarp/os/RpcServer.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/sig/Vector.h>
+#include <yarp/sig/Matrix.h>
 #include <yarp/math/Math.h>
+#include <iCub/ctrl/math.h>
+#include <iCub/ctrl/pids.h>
+#include <iCub/ctrl/AdaptWinPolyEstimator.h>
 #include "AssistiveRehab/skeleton.h"
 #include "src/navController_IDL.h"
 
@@ -34,33 +42,48 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
 using namespace yarp::math;
+using namespace iCub::ctrl;
 using namespace assistive_rehab;
 
 /****************************************************************/
 class Navigator : public RFModule, public navController_IDL {
   double period{0.0};
-  double velocity_magnitude{0.0};
+  double velocity_magnitude_linear{0.0};
+  double angular_tolerance{0.0};
   double distance_target{0.0};
   double distance_hysteresis_low{0.0};
   double distance_hysteresis_high{0.0};
   bool distance_hysteresis_active{false};
-  string skeleton_tag{""};
-  double skeleton_distance{0.0};
+  double target_theta{0.0};
+  int heading{1};
+  shared_ptr<parallelPID> pid_controller;
+  shared_ptr<AWLinEstimator> velocity_estimator;
+
   shared_ptr<Skeleton> skeleton;
+  string skeleton_tag{""};
+  Vector skeleton_location{zeros(3)};
+  Matrix gaze{zeros(4, 4)};
 
   RpcClient navCmdPort;
   BufferedPort<Bottle> navLocPort;
   BufferedPort<Bottle> navCtrlPort;
   BufferedPort<Bottle> opcPort;
+  BufferedPort<Property> gazePort;
   BufferedPort<Property> statePort;
   RpcServer cmdPort;
 
   mutex mtx;
 
-  struct {
+  enum class State {
+    idle, track, nav_1, nav_2, nav_3
+  } state;
+
+  struct Location {
     double x{0.0};
     double y{0.0};
     double theta{0.0};
+    Location() = default;
+    Location(const double x_, const double y_, const double theta_) : x(x_), y(y_), theta(theta_) { }
     bool getFrom(BufferedPort<Bottle>& navLocPort) {
       if (Bottle* b = navLocPort.read(false)) {
         x = b->get(0).asDouble();
@@ -70,10 +93,10 @@ class Navigator : public RFModule, public navController_IDL {
       }
       return false;
     }
-    void print() {
-      yInfo() << "Location = (" << x << y << theta << ")";
-    }
-  } location;
+  } robot_location;
+
+  vector<Location> target_locations;
+  vector<Location>::iterator target_location;
 
   struct {
     double x{0.0};
@@ -91,10 +114,7 @@ class Navigator : public RFModule, public navController_IDL {
       b.addDouble(100.0);
       navCtrlPort.writeStrict();
     }
-    void print() {
-      yInfo() << "Velocity = (" << x << theta << ")";
-    }
-  } velocity;
+  } robot_velocity;
 
   /****************************************************************/
   bool attach(RpcServer& source)override {
@@ -104,18 +124,37 @@ class Navigator : public RFModule, public navController_IDL {
   /****************************************************************/
   bool configure(ResourceFinder& rf)override {
     period = rf.check("period", Value(0.05)).asDouble();
-    velocity_magnitude = rf.check("velocity-magnitude", Value(0.3)).asDouble();
-    distance_target = rf.check("distance-target", Value(2.0)).asDouble();
-    distance_hysteresis_low = rf.check("distance-hysteresis-low", Value(0.2)).asDouble();
-    distance_hysteresis_high = rf.check("distance-hysteresis-high", Value(0.3)).asDouble();
+    velocity_magnitude_linear = abs(rf.check("velocity-magnitude-linear", Value(0.3)).asDouble());
+    angular_tolerance = abs(rf.check("angular-tolerance", Value(5.0)).asDouble());
+    distance_target = abs(rf.check("distance-target", Value(2.0)).asDouble());
+    distance_hysteresis_low = abs(rf.check("distance-hysteresis-low", Value(0.2)).asDouble());
+    distance_hysteresis_high = abs(rf.check("distance-hysteresis-high", Value(0.3)).asDouble());
 
     navCmdPort.open("/navController/base/cmd:rpc");
     navLocPort.open("/navController/base/loc:i");
     navCtrlPort.open("/navController/base/ctrl:o");
     opcPort.open("/navController/opc:i");
+    gazePort.open("/navController/gaze:i");
     statePort.open("/navController/state:o");
     cmdPort.open("/navController/rpc");
     attach(cmdPort);
+
+    state = State::idle;
+    gaze = numeric_limits<double>::quiet_NaN();
+
+    double Kp = 1.0;
+    double Ki = 1.0;
+    double Kd = 0.5;
+    double w = 1.0;
+    double N = 1.0;
+    double Tt = 1.0;
+    Matrix sat(1, 2);
+    sat(0, 0) = -20.0;
+    sat(0, 1) = -sat(0, 0);
+    pid_controller = shared_ptr<parallelPID>(new parallelPID(period, Kp * ones(1), Ki * ones(1), Kd * ones(1),
+                                                             w * ones(1), w * ones(1), w * ones(1),
+                                                             N * ones(1), Tt * ones(1), sat));
+    velocity_estimator = shared_ptr<AWLinEstimator>(new AWLinEstimator(16, 0.05));
 
     if (Network::connect(navCmdPort.getName(), "/baseControl/rpc") &&
         Network::connect("/baseControl/odometry:o", navLocPort.getName()) &&
@@ -153,6 +192,8 @@ class Navigator : public RFModule, public navController_IDL {
       navCtrlPort.close();
     if (!opcPort.isClosed())
       opcPort.close();
+    if (!gazePort.isClosed())
+      gazePort.close();
     if (!statePort.isClosed())
       statePort.close();
     if (cmdPort.asPort().isOpen())
@@ -182,85 +223,239 @@ class Navigator : public RFModule, public navController_IDL {
   }
 
   /****************************************************************/
+  void getGaze() {
+    if (Property* p = gazePort.read(false)) {
+      if (Bottle* b = p->find("depth").asList()) {
+        Vector pos(3);
+        for (size_t i = 0; i < pos.length(); i++) {
+          pos[i] = b->get(i).asDouble();
+        }
+        Vector ax(4);
+        for (size_t i = 0; i < ax.length(); i++) {
+          ax[i] = b->get(pos.length() + i).asDouble();
+        }
+        gaze = axis2dcm(ax);
+        gaze.setSubcol(pos, 0, 3);
+      }
+    }
+  }
+
+  /****************************************************************/
   void publishState() {
     if (statePort.getOutputCount() > 0) {
-      Bottle b_loc, b_vel;
-      Bottle& lb_loc = b_loc.addList();
-      Bottle& lb_vel = b_vel.addList();
+      Bottle b_rloc, b_rvel, b_tloc, b_sloc;
+      Bottle& lb_rloc = b_rloc.addList();
+      Bottle& lb_rvel = b_rvel.addList();
+      Bottle& lb_tloc = b_tloc.addList();
+      Bottle& lb_sloc = b_sloc.addList();
 
       Property& p = statePort.prepare();
       p.clear();
 
-      lb_loc.addDouble(location.x);
-      lb_loc.addDouble(location.y);
-      lb_loc.addDouble(location.theta);
-      p.put("location", b_loc.get(0));
+      if (state == State::idle) {
+        p.put("robot-state", "idle");
+      } else if (state == State::track) {
+        p.put("robot-state", "track");
+      } else {
+        p.put("robot-state", "nav");
+      }
 
-      lb_vel.addDouble(velocity.x);
-      lb_vel.addDouble(velocity.theta);
-      p.put("velocity", b_vel.get(0));
+      lb_rloc.addDouble(robot_location.x);
+      lb_rloc.addDouble(robot_location.y);
+      lb_rloc.addDouble(robot_location.theta);
+      p.put("robot-location", b_rloc.get(0));
 
-      p.put("skeleton", skeleton_tag);
-      p.put("distance", skeleton_distance);
+      lb_rvel.addDouble(robot_velocity.x);
+      lb_rvel.addDouble(robot_velocity.theta);
+      p.put("robot-velocity", b_rvel.get(0));
+
+      if (target_locations.size() > 0) {
+        lb_tloc.addDouble(target_location->x);
+        lb_tloc.addDouble(target_location->y);
+        lb_tloc.addDouble(target_location->theta);
+        lb_tloc.addInt(heading);
+        p.put("target-location", b_tloc.get(0));
+      }
+
+      if (state == State::track) {
+        p.put("skeleton-tag", skeleton_tag);
+        Vector v_sloc = skeleton_location;
+        v_sloc.push_back(1.0);
+        v_sloc = gaze * v_sloc;
+        lb_sloc.addDouble(v_sloc[0]);
+        lb_sloc.addDouble(v_sloc[1]);
+        p.put("skeleton-location", b_sloc.get(0));
+      }
 
       statePort.writeStrict();
     }
   }
 
   /****************************************************************/
+  void generate_waypoints(const Location& loc) {
+    double ang = max(angular_tolerance, 1.0);
+    double segment = 0.8 * distance_hysteresis_low / sin(CTRL_DEG2RAD * ang);
+    Vector e(2);
+    e[0] = loc.x - robot_location.x;
+    e[1] = loc.y - robot_location.y;
+    Vector dir = e / norm(e);
+    int n = (int)(norm(e) / segment);
+
+    target_locations.clear();
+    for (int i = 0; i < n; i++) {
+      Location tmp_loc;
+      tmp_loc.x = robot_location.x + (i + 1) * segment * dir[0];
+      tmp_loc.y = robot_location.y + (i + 1) * segment * dir[1];
+      tmp_loc.theta = loc.theta;
+      target_locations.push_back(tmp_loc);
+    }
+    target_locations.push_back(loc);
+  }
+
+  /****************************************************************/
+  double compute_target_theta() {
+    Vector e(2);
+    e[0] = target_location->x - robot_location.x;
+    e[1] = target_location->y - robot_location.y;
+    double theta = robot_location.theta;
+    if (norm(e) > distance_hysteresis_low) {
+      theta = CTRL_RAD2DEG * atan2(e[1], e[0]);
+      if (heading < 0) {
+        theta -= sign(theta) * 180.0;
+      }
+    }
+    return theta;
+  }
+
+  /****************************************************************/
   bool updateModule()override {
     lock_guard<mutex> lck(mtx);
 
-    location.getFrom(navLocPort);
+    robot_location.getFrom(navLocPort);
     getSkeleton();
+    getGaze();
 
-    velocity.zero();
-    skeleton_distance = 0.0;
-    if (skeleton) {
-      if ((*skeleton)[KeyPointTag::hip_center]->isUpdated()) {
-        skeleton_distance = (*skeleton)[KeyPointTag::hip_center]->getPoint()[2];
-        double e = skeleton_distance - distance_target;
-        double abs_e = abs(e);
-        double command = velocity_magnitude * sign(e);
-        if (distance_hysteresis_active) {
-          if (abs_e > distance_hysteresis_high) {
-            velocity.x = command;
-            distance_hysteresis_active = false;
+    robot_velocity.zero();
+    skeleton_location = numeric_limits<double>::quiet_NaN();
+
+    if (state == State::track) {
+      if (skeleton) {
+        if ((*skeleton)[KeyPointTag::hip_center]->isUpdated()) {
+          skeleton_location = (*skeleton)[KeyPointTag::hip_center]->getPoint();
+          double e = norm(skeleton_location) - distance_target;
+          double abs_e = abs(e);
+          double command = velocity_magnitude_linear * sign(e);
+          if (distance_hysteresis_active) {
+            if (abs_e > distance_hysteresis_high) {
+              robot_velocity.x = command;
+              distance_hysteresis_active = false;
+              yInfo() << "Tracking" << skeleton_tag << ": navigation activated";
+            }
+          } else if (abs_e > distance_hysteresis_low) {
+            robot_velocity.x = command;
+          } else {
+            distance_hysteresis_active = true;
+            yInfo() << "Tracking" << skeleton_tag << ": navigation deactivated";
           }
-        } else if (abs_e > distance_hysteresis_low) {
-          velocity.x = command;
-        } else {
-          distance_hysteresis_active = true;
         }
       }
+    } else if (state == State::nav_1) {
+      if (abs(target_theta - robot_location.theta) > angular_tolerance) {
+        robot_velocity.theta = pid_controller->compute(target_theta * ones(1), robot_location.theta * ones(1))[0];
+      } else {
+        velocity_estimator->reset();
+        state = State::nav_2;
+        yInfo() << "Starting nav_2: reaching (" << target_location->x << target_location->y << ") [m]";
+      }
+    } else if (state == State::nav_2) {
+      Vector e(2);
+      e[0] = target_location->x - robot_location.x;
+      e[1] = target_location->y - robot_location.y;
+      double norm_e = norm(e);
+      AWPolyElement el(Vector(1, norm_e), Time::now());
+      double vel_norm_e = velocity_estimator->estimate(el)[0];
+      if ((norm_e > distance_hysteresis_low) && (vel_norm_e <= 0.0)) {
+        double theta_rad = CTRL_DEG2RAD * robot_location.theta;
+        Vector dir(2);
+        dir[0] = cos(theta_rad);
+        dir[1] = sin(theta_rad);
+        robot_velocity.x = sign(dot(dir, e)) * velocity_magnitude_linear;
+      } else {
+        target_theta = (target_location + 1 != target_locations.end() ?
+                        compute_target_theta() : target_location->theta);
+        pid_controller->reset(zeros(1));
+        state = State::nav_3;
+        yInfo() << "Starting nav_3: reaching" << target_theta << "[deg]";
+      }
+    } else if (state == State::nav_3) {
+      if (abs(target_theta - robot_location.theta) > angular_tolerance) {
+        robot_velocity.theta = pid_controller->compute(target_theta * ones(1), robot_location.theta * ones(1))[0];
+      } else if (++target_location != target_locations.end()) {
+        target_theta = compute_target_theta();
+        pid_controller->reset(zeros(1));
+        state = State::nav_1;
+        yInfo() << "Starting nav_1: reaching" << target_theta << "[deg]";
+      } else {
+        state = State::idle;
+        yInfo() << "Target location reached";
+      }
     }
-    velocity.sendTo(navCtrlPort);
 
+    robot_velocity.sendTo(navCtrlPort);
     publishState();
-
-    location.print();
-    velocity.print();
-
     return true;
   }
 
   /****************************************************************/
-  bool start(const string& skeleton_tag)override {
+  bool track_skeleton(const string& skeleton_tag)override {
     lock_guard<mutex> lck(mtx);
-    this->skeleton_tag = skeleton_tag;
-    yInfo() << "Control started over" << this->skeleton_tag;
-    return true;
+    if (state == State::idle) {
+      this->skeleton_tag = skeleton_tag;
+      state = State::track;
+      yInfo() << "Tracking skeleton" << this->skeleton_tag;
+      return true;
+    } else {
+      yWarning() << "The controller is busy";
+      return false;
+    }
+  }
+
+  /****************************************************************/
+  bool go_to(const double x, const double y, const double theta,
+             const bool heading_rear)override {
+    lock_guard<mutex> lck(mtx);
+    if (state == State::idle) {
+      heading = (heading_rear ? -1 : 1);
+      yInfo() << "Navigating to (" << x << y << theta << ") heading =" << heading;
+      generate_waypoints(Location(x, y, theta));
+      target_location = target_locations.begin();
+      target_theta = compute_target_theta();
+      pid_controller->reset(zeros(1));
+      state = State::nav_1;
+      yInfo() << "Starting nav_1: reaching" << target_theta << "[deg]";
+      return true;
+    } else {
+      yWarning() << "The controller is busy";
+      return false;
+    }
+  }
+
+  /****************************************************************/
+  bool is_navigating()override {
+    lock_guard<mutex> lck(mtx);
+    return (state != State::idle);
   }
 
   /****************************************************************/
   bool stop()override {
     lock_guard<mutex> lck(mtx);
-    velocity.zero();
-    velocity.sendTo(navCtrlPort);
+    robot_velocity.zero();
+    robot_velocity.sendTo(navCtrlPort);
     skeleton_tag.clear();
-    skeleton_distance = 0.0;
+    skeleton_location = numeric_limits<double>::quiet_NaN();
     skeleton.reset();
-    yInfo() << "Control stopped";
+    state = State::idle;
+    yInfo() << "Navigation stopped";
     return true;
   }
 

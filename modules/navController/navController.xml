@@ -14,7 +14,8 @@
 
   <arguments>
     <param default="0.05" desc="Periodicity of the module (s).">period</param>
-    <param default="0.3" desc="The magnitude of the velocity used in the bang-bang control (m/s).">velocity-magnitude</param>
+    <param default="0.3" desc="The magnitude of the linear velocity used in the bang-bang controller (m/s).">velocity-magnitude-linear</param>
+    <param default="5.0" desc="Angular tolerance for rotating (deg/s).">angular-tolerance</param>
     <param default="2.0" desc="The target distance from the skeleton that the controller will attempt to keep (m).">distance-target</param>
     <param default="0.2" desc="The low threshold of the hsyteresis on the distance error (m).">distance-hysteresis-low</param>
     <param default="0.3" desc="The high threshold of the hsyteresis on the distance error (m).">distance-hysteresis-high</param>
@@ -32,11 +33,18 @@
             Receives the OPC broadcast.
           </description>
       </input>
+      <input>
+          <type>Bottle</type>
+          <port>/navController/gaze:i</port>
+          <description>
+            Receives the gaze status broadcast.
+          </description>
+      </input>
       <output>
           <type>Bottle</type>
           <port>/navController/state:o</port>
           <description>
-            Outputs the state as (location (x y theta)) (velocity (v_x v_theta)) (skeleton tag) (distance d).
+            Outputs the internal state as (robot-state {idle|track|nav}) (robot-location (x y theta)) (robot-velocity (v_x v_theta)) [(target-location (x y theta heading))] [(skeleton-tag tag) (skeleton-location (x y))]
           </description>
       </output>
   </data>
