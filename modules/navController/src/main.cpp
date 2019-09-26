@@ -179,6 +179,7 @@ class Navigator : public RFModule, public navController_IDL {
     Bottle cmd, rep;
     cmd.addString("idle");
     navCmdPort.write(cmd, rep);
+    opcPort.interrupt(); 
     return true;
   }
 
@@ -207,15 +208,17 @@ class Navigator : public RFModule, public navController_IDL {
   }
 
   /****************************************************************/
-  void getSkeleton() {
-    if (Bottle* b = opcPort.read(false)) {
-      if (!b->get(1).isString()) {
-        skeleton.reset();
-        for (int i = 1; i < b->size(); i++)	{
-          Property prop;
-          prop.fromString(b->get(i).asList()->toString());
-          if (prop.find("tag").asString() == skeleton_tag) {
-            skeleton = shared_ptr<Skeleton>(skeleton_factory(prop));
+  void getSkeleton(const bool wait = false) {
+    if (opcPort.getInputCount() > 0) {
+      if (Bottle* b = opcPort.read(wait)) {
+        if (!b->get(1).isString()) {
+          skeleton.reset();
+          for (int i = 1; i < b->size(); i++)	{
+            Property prop;
+            prop.fromString(b->get(i).asList()->toString());
+            if (prop.find("tag").asString() == skeleton_tag) {
+              skeleton = shared_ptr<Skeleton>(skeleton_factory(prop));
+            }
           }
         }
       }
@@ -407,6 +410,32 @@ class Navigator : public RFModule, public navController_IDL {
   }
 
   /****************************************************************/
+  void go_to_helper(const double x, const double y, const double theta,
+                    const bool heading_rear) {
+    heading = (heading_rear ? -1 : 1);
+    yInfo() << "Navigating to (" << x << y << theta << ") heading =" << heading;
+    generate_waypoints(Location(x, y, theta));
+    target_location = target_locations.begin();
+    target_theta = compute_target_theta();
+    pid_controller->reset(zeros(1));
+    state = State::nav_1;
+    yInfo() << "Starting nav_1: reaching" << target_theta << "[deg]";
+  }
+
+  /****************************************************************/
+  bool go_to(const double x, const double y, const double theta,
+             const bool heading_rear)override {
+    lock_guard<mutex> lck(mtx);
+    if (state == State::idle) {
+      go_to_helper(x, y, theta, heading_rear);
+      return true;
+    } else {
+      yWarning() << "The controller is busy";
+      return false;
+    }
+  }
+
+  /****************************************************************/
   bool track_skeleton(const string& skeleton_tag)override {
     lock_guard<mutex> lck(mtx);
     if (state == State::idle) {
@@ -421,19 +450,41 @@ class Navigator : public RFModule, public navController_IDL {
   }
 
   /****************************************************************/
-  bool go_to(const double x, const double y, const double theta,
-             const bool heading_rear)override {
+  bool align_with_skeleton(const string& skeleton_tag,
+                           const bool heading_rear)override {
     lock_guard<mutex> lck(mtx);
     if (state == State::idle) {
-      heading = (heading_rear ? -1 : 1);
-      yInfo() << "Navigating to (" << x << y << theta << ") heading =" << heading;
-      generate_waypoints(Location(x, y, theta));
-      target_location = target_locations.begin();
-      target_theta = compute_target_theta();
-      pid_controller->reset(zeros(1));
-      state = State::nav_1;
-      yInfo() << "Starting nav_1: reaching" << target_theta << "[deg]";
-      return true;
+      this->skeleton_tag = skeleton_tag;
+      getSkeleton(true);
+      if (skeleton) {
+        if ((*skeleton)[KeyPointTag::hip_center]->isUpdated()) {
+          Vector rot(4, 0.0);
+          rot[2] = 1.0;
+          rot[3] = CTRL_DEG2RAD * robot_location.theta;
+          Matrix T = axis2dcm(rot);
+          T(0, 3) = robot_location.x;
+          T(1, 3) = robot_location.y;
+
+          Vector hip_center = (*skeleton)[KeyPointTag::hip_center]->getPoint();
+          Vector coronal = skeleton->getCoronal();
+          Vector loc = hip_center + distance_target * coronal;
+          loc.push_back(1.0);
+          loc = T * gaze * loc;
+
+          coronal.push_back(1.0);
+          coronal = T * gaze * coronal;
+          double theta = CTRL_RAD2DEG * atan2(-coronal[1], -coronal[0]);
+
+          go_to_helper(loc[0], loc[1], theta, heading_rear);
+          return true;
+        } else {
+          yWarning() << "Unable to get update info";
+          return false;
+        }
+      } else {
+        yWarning() << "Unable to find" << skeleton_tag;
+        return false;
+      }
     } else {
       yWarning() << "The controller is busy";
       return false;

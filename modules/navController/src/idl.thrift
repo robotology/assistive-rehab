@@ -18,13 +18,6 @@
 service navController_IDL
 {
    /**
-    * Start navigation while controlling distance from the specified skeleton.
-    * @param skeleton_tag is the skeleton's tag.
-    * @return true/false on success/failure.
-    */
-   bool track_skeleton(1:string skeleton_tag);
-
-   /**
     * Reach for a target location.
     * @param x is the x-coordinate of the target location (meters).
     * @param y is the y-coordinate of the target location (meters).
@@ -33,6 +26,21 @@ service navController_IDL
     * @return true/false on success/failure.
     */
    bool go_to(1:double x, 2:double y, 3:double theta, 4:bool heading_rear = false);
+
+   /**
+    * Start navigation while controlling distance from the specified skeleton.
+    * @param skeleton_tag is the skeleton's tag.
+    * @return true/false on success/failure.
+    */
+   bool track_skeleton(1:string skeleton_tag);
+
+   /**
+    * Navigate to a location in front of the specified skeleton.
+    * @param skeleton_tag is the skeleton's tag.
+    * @param heading_rear is true to specify if the robot has to drive backward.
+    * @return true/false on success/failure.
+    */
+   bool align_with_skeleton(1:string skeleton_tag, 2:bool heading_rear = false);
 
    /**
     * Query if navigation is underway.
