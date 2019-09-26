@@ -13,7 +13,7 @@
 /*
  * How to launch the test:
  * - load the CER_base_only model within Gazebo 
- * - baseControl --context baseControl_SIM --from baseCtrl_cer_sim.ini --GENERAL::use_ROS false
+ * - baseControl --context baseControl_SIM --from baseCtrl_cer_sim.ini --GENERAL::use_ROS false --skip_robot_interface_check
  * - navController 
  * - test-nav 
  * - echo "start test" | yarp rpc /navController/rpc
