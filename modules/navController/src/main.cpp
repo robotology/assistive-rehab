@@ -272,7 +272,8 @@ class Navigator : public RFModule, public navController_IDL {
       lb_rvel.addDouble(robot_velocity.theta);
       p.put("robot-velocity", b_rvel.get(0));
 
-      if (target_locations.size() > 0) {
+      if ((state == State::nav_angular) ||
+          (state == State::nav_linear)) {
         lb_tloc.addDouble(target_location->x);
         lb_tloc.addDouble(target_location->y);
         lb_tloc.addDouble(target_location->theta);
@@ -376,6 +377,7 @@ class Navigator : public RFModule, public navController_IDL {
           state = State::nav_linear;
           yInfo() << "Starting nav_linear: reaching (" << target_location->x << target_location->y << ") [m]";
         } else {
+          target_locations.clear();
           state = State::idle;
           yInfo() << "Target location reached";
         }
