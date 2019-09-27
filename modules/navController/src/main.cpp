@@ -517,12 +517,16 @@ class Navigator : public RFModule, public navController_IDL {
   /****************************************************************/
   bool reset_odometry()override {
     lock_guard<mutex> lck(mtx);
-    Bottle cmd, rep;
     bool ret = false;
-    yInfo() << "Odometry reset";
-    cmd.addString("reset_odometry");
-    if (navCmdPort.write(cmd, rep)) {
-      ret = (rep.size() > 0);
+    if (state == State::idle) {
+      Bottle cmd, rep;
+      yInfo() << "Odometry reset";
+      cmd.addString("reset_odometry");
+      if (navCmdPort.write(cmd, rep)) {
+        ret = (rep.size() > 0);
+      }
+    } else {
+      yWarning() << "The controller is busy";
     }
     return ret;
   }
