@@ -75,7 +75,7 @@ class Navigator : public RFModule, public navController_IDL {
   mutex mtx;
 
   enum class State {
-    idle, track, nav_1, nav_2, nav_3
+    idle, track, nav_angular, nav_linear
   } state;
 
   struct Location {
@@ -179,7 +179,7 @@ class Navigator : public RFModule, public navController_IDL {
     Bottle cmd, rep;
     cmd.addString("idle");
     navCmdPort.write(cmd, rep);
-    opcPort.interrupt(); 
+    opcPort.interrupt();
     return true;
   }
 
@@ -295,12 +295,18 @@ class Navigator : public RFModule, public navController_IDL {
   }
 
   /****************************************************************/
-  void generate_waypoints(const Location& loc) {
-    double ang = max(angular_tolerance, 1.0);
-    double segment = 0.8 * distance_hysteresis_low / sin(CTRL_DEG2RAD * ang);
+  Vector compute_error(const Location& loc) {
     Vector e(2);
     e[0] = loc.x - robot_location.x;
     e[1] = loc.y - robot_location.y;
+    return e;
+  }
+
+  /****************************************************************/
+  void generate_waypoints(const Location& loc) {
+    double ang = max(angular_tolerance, 1.0);
+    double segment = 0.8 * distance_hysteresis_low / sin(CTRL_DEG2RAD * ang);
+    Vector e = compute_error(loc);
     Vector dir = e / norm(e);
     int n = (int)(norm(e) / segment);
 
@@ -317,9 +323,7 @@ class Navigator : public RFModule, public navController_IDL {
 
   /****************************************************************/
   double compute_target_theta() {
-    Vector e(2);
-    e[0] = target_location->x - robot_location.x;
-    e[1] = target_location->y - robot_location.y;
+    Vector e = compute_error(*target_location);
     double theta = robot_location.theta;
     if (norm(e) > distance_hysteresis_low) {
       theta = CTRL_RAD2DEG * atan2(e[1], e[0]);
@@ -362,18 +366,22 @@ class Navigator : public RFModule, public navController_IDL {
           }
         }
       }
-    } else if (state == State::nav_1) {
+    } else if (state == State::nav_angular) {
       if (abs(target_theta - robot_location.theta) > angular_tolerance) {
         robot_velocity.theta = pid_controller->compute(target_theta * ones(1), robot_location.theta * ones(1))[0];
       } else {
-        velocity_estimator->reset();
-        state = State::nav_2;
-        yInfo() << "Starting nav_2: reaching (" << target_location->x << target_location->y << ") [m]";
+        Vector e = compute_error(*target_location);
+        if (norm(e) > distance_hysteresis_low) {
+          velocity_estimator->reset();
+          state = State::nav_linear;
+          yInfo() << "Starting nav_linear: reaching (" << target_location->x << target_location->y << ") [m]";
+        } else {
+          state = State::idle;
+          yInfo() << "Target location reached";
+        }
       }
-    } else if (state == State::nav_2) {
-      Vector e(2);
-      e[0] = target_location->x - robot_location.x;
-      e[1] = target_location->y - robot_location.y;
+    } else if (state == State::nav_linear) {
+      Vector e = compute_error(*target_location);
       double norm_e = norm(e);
       AWPolyElement el(Vector(1, norm_e), Time::now());
       double vel_norm_e = velocity_estimator->estimate(el)[0];
@@ -384,23 +392,15 @@ class Navigator : public RFModule, public navController_IDL {
         dir[1] = sin(theta_rad);
         robot_velocity.x = sign(dot(dir, e)) * velocity_magnitude_linear;
       } else {
-        target_theta = (target_location + 1 != target_locations.end() ?
-                        compute_target_theta() : target_location->theta);
+        if (target_location + 1 != target_locations.end()) {
+          target_location++;
+          target_theta = compute_target_theta();
+        } else {
+          target_theta = target_location->theta;
+        }
+        state = State::nav_angular;
         pid_controller->reset(zeros(1));
-        state = State::nav_3;
-        yInfo() << "Starting nav_3: reaching" << target_theta << "[deg]";
-      }
-    } else if (state == State::nav_3) {
-      if (abs(target_theta - robot_location.theta) > angular_tolerance) {
-        robot_velocity.theta = pid_controller->compute(target_theta * ones(1), robot_location.theta * ones(1))[0];
-      } else if (++target_location != target_locations.end()) {
-        target_theta = compute_target_theta();
-        pid_controller->reset(zeros(1));
-        state = State::nav_1;
-        yInfo() << "Starting nav_1: reaching" << target_theta << "[deg]";
-      } else {
-        state = State::idle;
-        yInfo() << "Target location reached";
+        yInfo() << "Starting nav_angular: reaching" << target_theta << "[deg]";
       }
     }
 
@@ -416,10 +416,12 @@ class Navigator : public RFModule, public navController_IDL {
     yInfo() << "Navigating to (" << x << y << theta << ") heading =" << heading;
     generate_waypoints(Location(x, y, theta));
     target_location = target_locations.begin();
-    target_theta = compute_target_theta();
+    Vector e = compute_error(*target_location);
+    target_theta = ((target_location + 1 == target_locations.end()) && (norm(e) < distance_hysteresis_low) ?
+                    target_location->theta : compute_target_theta());
     pid_controller->reset(zeros(1));
-    state = State::nav_1;
-    yInfo() << "Starting nav_1: reaching" << target_theta << "[deg]";
+    state = State::nav_angular;
+    yInfo() << "Starting nav_angular: reaching" << target_theta << "[deg]";
   }
 
   /****************************************************************/
