@@ -34,7 +34,7 @@
 #include <yarp/math/Math.h>
 #include <iCub/ctrl/math.h>
 #include <iCub/ctrl/pids.h>
-#include <iCub/ctrl/AdaptWinPolyEstimator.h>
+#include <iCub/ctrl/adaptWinPolyEstimator.h>
 #include "AssistiveRehab/skeleton.h"
 #include "src/navController_IDL.h"
 
