@@ -24,10 +24,7 @@ After [installing](https://robotology.github.io/assistive-rehab/doc/mkdocs/site/
 - [cer](https://github.com/robotology/cer): for running the gaze-controller and face expressions;
 - [gazebo](http://gazebosim.org/tutorials?cat=install): for running the virtual environment;
 - [gazebo-yarp-plugins](https://github.com/robotology/gazebo-yarp-plugins): for exposing YARP interfaces in `Gazebo`;
-- [cer-sim](https://github.com/robotology/cer-sim/tree/feat/face-expressions): which has the model loaded by `Gazebo` in _AssistiveRehab-TWM-virtual.xml.template_;
-
-    !!! warning
-        `cer-sim` is currently under fix for including face expressions in the official model of R1. **Please checkout to the branch `feat/face-expressions`**, containing the correct model to be loaded.
+- [cer-sim](https://github.com/robotology/cer-sim): which includes the model loaded by `Gazebo` in _AssistiveRehab-TWM-virtual.xml.template_;
 - [speech](https://github.com/robotology/speech): for running the `iSpeak` module.
 
 ## Requirements
