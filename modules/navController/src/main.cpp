@@ -12,6 +12,7 @@
 
 #include <cstdlib>
 #include <mutex>
+#include <chrono>
 #include <condition_variable>
 #include <memory>
 #include <cmath>
@@ -447,13 +448,17 @@ class Navigator : public RFModule, public navController_IDL {
 
   /****************************************************************/
   bool go_to_wait(const double x, const double y, const double theta,
-                  const bool heading_rear)override {
+                  const bool heading_rear, const int timeout)override {
     mtx_update.lock();
     if (state == State::idle) {
       go_to_helper(x, y, theta, heading_rear);
       mtx_update.unlock();
       unique_lock<mutex> lck(mtx_nav_done);
-      cv_nav_done.wait(lck);
+      if (timeout > 0) {
+        cv_nav_done.wait_for(lck, chrono::seconds(timeout));
+      } else {
+        cv_nav_done.wait(lck);
+      }
       return true;
     } else {
       yWarning() << "The controller is busy";
