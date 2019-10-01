@@ -75,7 +75,7 @@ class Navigator : public RFModule, public navController_IDL {
 
   mutex mtx_update;
   mutex mtx_nav_done;
-  condition_variable nav_done;
+  condition_variable cv_nav_done;
 
   enum class State {
     idle, track, nav_angular, nav_linear
@@ -183,7 +183,7 @@ class Navigator : public RFModule, public navController_IDL {
     cmd.addString("idle");
     navCmdPort.write(cmd, rep);
     opcPort.interrupt();
-    nav_done.notify_all();
+    cv_nav_done.notify_all();
     return true;
   }
 
@@ -379,7 +379,7 @@ class Navigator : public RFModule, public navController_IDL {
         } else {
           target_locations.clear();
           state = State::idle;
-          nav_done.notify_all();
+          cv_nav_done.notify_all();
           yInfo() << "Target location reached";
         }
       }
@@ -453,7 +453,7 @@ class Navigator : public RFModule, public navController_IDL {
       go_to_helper(x, y, theta, heading_rear);
       mtx_update.unlock();
       unique_lock<mutex> lck(mtx_nav_done);
-      nav_done.wait(lck);
+      cv_nav_done.wait(lck);
       return true;
     } else {
       yWarning() << "The controller is busy";
@@ -491,7 +491,7 @@ class Navigator : public RFModule, public navController_IDL {
     skeleton_location = numeric_limits<double>::quiet_NaN();
     skeleton.reset();
     state = State::idle;
-    nav_done.notify_all();
+    cv_nav_done.notify_all();
     yInfo() << "Navigation stopped";
     return true;
   }
