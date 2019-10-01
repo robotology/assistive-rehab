@@ -34,6 +34,17 @@ service navController_IDL
    bool go_to(1:double x, 2:double y, 3:double theta, 4:bool heading_rear = false);
 
    /**
+    * Blocking version of reach for a target location. The service returns ack only
+    * when navigation is done.
+    * @param x is the x-coordinate of the target location (meters).
+    * @param y is the y-coordinate of the target location (meters).
+    * @param theta is the theta-coordinate of the target location (degrees).
+    * @param heading_rear is true to specify if the robot has to drive backward.
+    * @return true/false on success/failure.
+    */
+   bool go_to_wait(1:double x, 2:double y, 3:double theta, 4:bool heading_rear = false);
+
+   /**
     * Start navigation while controlling distance from the specified skeleton.
     * @param skeleton_tag is the skeleton's tag.
     * @return true/false on success/failure.

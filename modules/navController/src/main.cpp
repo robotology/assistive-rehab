@@ -12,6 +12,7 @@
 
 #include <cstdlib>
 #include <mutex>
+#include <condition_variable>
 #include <memory>
 #include <cmath>
 #include <limits>
@@ -72,7 +73,9 @@ class Navigator : public RFModule, public navController_IDL {
   BufferedPort<Property> statePort;
   RpcServer cmdPort;
 
-  mutex mtx;
+  mutex mtx_update;
+  mutex mtx_nav_done;
+  condition_variable nav_done;
 
   enum class State {
     idle, track, nav_angular, nav_linear
@@ -180,6 +183,7 @@ class Navigator : public RFModule, public navController_IDL {
     cmd.addString("idle");
     navCmdPort.write(cmd, rep);
     opcPort.interrupt();
+    nav_done.notify_all();
     return true;
   }
 
@@ -333,7 +337,7 @@ class Navigator : public RFModule, public navController_IDL {
 
   /****************************************************************/
   bool updateModule()override {
-    lock_guard<mutex> lck(mtx);
+    lock_guard<mutex> lck(mtx_update);
 
     robot_location.getFrom(navLocPort);
     getSkeleton();
@@ -375,6 +379,7 @@ class Navigator : public RFModule, public navController_IDL {
         } else {
           target_locations.clear();
           state = State::idle;
+          nav_done.notify_all();
           yInfo() << "Target location reached";
         }
       }
@@ -430,7 +435,7 @@ class Navigator : public RFModule, public navController_IDL {
   /****************************************************************/
   bool go_to(const double x, const double y, const double theta,
              const bool heading_rear)override {
-    lock_guard<mutex> lck(mtx);
+    lock_guard<mutex> lck(mtx_update);
     if (state == State::idle) {
       go_to_helper(x, y, theta, heading_rear);
       return true;
@@ -441,8 +446,25 @@ class Navigator : public RFModule, public navController_IDL {
   }
 
   /****************************************************************/
+  bool go_to_wait(const double x, const double y, const double theta,
+                  const bool heading_rear)override {
+    mtx_update.lock();
+    if (state == State::idle) {
+      go_to_helper(x, y, theta, heading_rear);
+      mtx_update.unlock();
+      unique_lock<mutex> lck(mtx_nav_done);
+      nav_done.wait(lck);
+      return true;
+    } else {
+      yWarning() << "The controller is busy";
+      mtx_update.unlock();
+      return false;
+    }
+  }
+
+  /****************************************************************/
   bool track_skeleton(const string& skeleton_tag)override {
-    lock_guard<mutex> lck(mtx);
+    lock_guard<mutex> lck(mtx_update);
     if (state == State::idle) {
       this->skeleton_tag = skeleton_tag;
       state = State::track;
@@ -456,26 +478,27 @@ class Navigator : public RFModule, public navController_IDL {
 
   /****************************************************************/
   bool is_navigating()override {
-    lock_guard<mutex> lck(mtx);
+    lock_guard<mutex> lck(mtx_update);
     return (state != State::idle);
   }
 
   /****************************************************************/
   bool stop()override {
-    lock_guard<mutex> lck(mtx);
+    lock_guard<mutex> lck(mtx_update);
     robot_velocity.zero();
     robot_velocity.sendTo(navCtrlPort);
     skeleton_tag.clear();
     skeleton_location = numeric_limits<double>::quiet_NaN();
     skeleton.reset();
     state = State::idle;
+    nav_done.notify_all();
     yInfo() << "Navigation stopped";
     return true;
   }
 
   /****************************************************************/
   bool reset_odometry()override {
-    lock_guard<mutex> lck(mtx);
+    lock_guard<mutex> lck(mtx_update);
     bool ret = false;
     if (state == State::idle) {
       Bottle cmd, rep;
@@ -492,7 +515,7 @@ class Navigator : public RFModule, public navController_IDL {
 
   /****************************************************************/
   string which_skeleton()override {
-    lock_guard<mutex> lck(mtx);
+    lock_guard<mutex> lck(mtx_update);
     return skeleton_tag;
   }
 
