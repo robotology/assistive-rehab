@@ -16,7 +16,7 @@
     <!-- R1 fixed to ground -->
     <model name='SIM_CER_ROBOT'>
       <include>
-    	<uri>model://cer_no_cameras</uri>
+    	<uri>model://cer</uri>
 	<pose>2.51144 -1.02178 0.16 0 -0 0</pose>
       </include>
       <joint name='fixed to ground' type='fixed'>
