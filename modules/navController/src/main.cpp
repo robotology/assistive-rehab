@@ -244,55 +244,51 @@ class Navigator : public RFModule, public navController_IDL {
   }
 
   /****************************************************************/
-  void publishState() {
-    if (statePort.getOutputCount() > 0) {
-      Bottle b_rloc, b_rvel, b_tloc, b_sloc;
-      Bottle& lb_rloc = b_rloc.addList();
-      Bottle& lb_rvel = b_rvel.addList();
-      Bottle& lb_tloc = b_tloc.addList();
-      Bottle& lb_sloc = b_sloc.addList();
+  Property publishState() {
+    Bottle b_rloc, b_rvel, b_tloc, b_sloc;
+    Bottle& lb_rloc = b_rloc.addList();
+    Bottle& lb_rvel = b_rvel.addList();
+    Bottle& lb_tloc = b_tloc.addList();
+    Bottle& lb_sloc = b_sloc.addList();
 
-      Property& p = statePort.prepare();
-      p.clear();
-
-      if (state == State::idle) {
-        p.put("robot-state", "idle");
-      } else if (state == State::track) {
-        p.put("robot-state", "track");
-      } else {
-        p.put("robot-state", "nav");
-      }
-
-      lb_rloc.addDouble(robot_location.x);
-      lb_rloc.addDouble(robot_location.y);
-      lb_rloc.addDouble(robot_location.theta);
-      p.put("robot-location", b_rloc.get(0));
-
-      lb_rvel.addDouble(robot_velocity.x);
-      lb_rvel.addDouble(robot_velocity.theta);
-      p.put("robot-velocity", b_rvel.get(0));
-
-      if ((state == State::nav_angular) ||
-          (state == State::nav_linear)) {
-        lb_tloc.addDouble(target_location->x);
-        lb_tloc.addDouble(target_location->y);
-        lb_tloc.addDouble(target_location->theta);
-        lb_tloc.addInt(heading);
-        p.put("target-location", b_tloc.get(0));
-      }
-
-      if (state == State::track) {
-        p.put("skeleton-tag", skeleton_tag);
-        Vector v_sloc = skeleton_location;
-        v_sloc.push_back(1.0);
-        v_sloc = gaze * v_sloc;
-        lb_sloc.addDouble(v_sloc[0]);
-        lb_sloc.addDouble(v_sloc[1]);
-        p.put("skeleton-location", b_sloc.get(0));
-      }
-
-      statePort.writeStrict();
+    Property p;
+    if (state == State::idle) {
+      p.put("robot-state", "idle");
+    } else if (state == State::track) {
+      p.put("robot-state", "track");
+    } else {
+      p.put("robot-state", "nav");
     }
+
+    lb_rloc.addDouble(robot_location.x);
+    lb_rloc.addDouble(robot_location.y);
+    lb_rloc.addDouble(robot_location.theta);
+    p.put("robot-location", b_rloc.get(0));
+
+    lb_rvel.addDouble(robot_velocity.x);
+    lb_rvel.addDouble(robot_velocity.theta);
+    p.put("robot-velocity", b_rvel.get(0));
+
+    if ((state == State::nav_angular) ||
+        (state == State::nav_linear)) {
+      lb_tloc.addDouble(target_location->x);
+      lb_tloc.addDouble(target_location->y);
+      lb_tloc.addDouble(target_location->theta);
+      lb_tloc.addInt(heading);
+      p.put("target-location", b_tloc.get(0));
+    }
+
+    if (state == State::track) {
+      p.put("skeleton-tag", skeleton_tag);
+      Vector v_sloc = skeleton_location;
+      v_sloc.push_back(1.0);
+      v_sloc = gaze * v_sloc;
+      lb_sloc.addDouble(v_sloc[0]);
+      lb_sloc.addDouble(v_sloc[1]);
+      p.put("skeleton-location", b_sloc.get(0));
+    }
+
+    return p;
   }
 
   /****************************************************************/
@@ -407,7 +403,12 @@ class Navigator : public RFModule, public navController_IDL {
     }
 
     robot_velocity.sendTo(navCtrlPort);
-    publishState();
+
+    if (statePort.getOutputCount() > 0) {
+      statePort.prepare() = publishState();
+      statePort.writeStrict();
+    }
+
     return true;
   }
 
@@ -454,48 +455,6 @@ class Navigator : public RFModule, public navController_IDL {
   }
 
   /****************************************************************/
-  bool align_with_skeleton(const string& skeleton_tag,
-                           const bool heading_rear)override {
-    lock_guard<mutex> lck(mtx);
-    if (state == State::idle) {
-      this->skeleton_tag = skeleton_tag;
-      getSkeleton(true);
-      if (skeleton) {
-        if ((*skeleton)[KeyPointTag::hip_center]->isUpdated()) {
-          Vector rot(4, 0.0);
-          rot[2] = 1.0;
-          rot[3] = CTRL_DEG2RAD * robot_location.theta;
-          Matrix T = axis2dcm(rot);
-          T(0, 3) = robot_location.x;
-          T(1, 3) = robot_location.y;
-
-          Vector hip_center = (*skeleton)[KeyPointTag::hip_center]->getPoint();
-          Vector coronal = skeleton->getCoronal();
-          Vector loc = hip_center + distance_target * coronal;
-          loc.push_back(1.0);
-          loc = T * gaze * loc;
-
-          coronal.push_back(1.0);
-          coronal = T * gaze * coronal;
-          double theta = CTRL_RAD2DEG * atan2(-coronal[1], -coronal[0]);
-
-          go_to_helper(loc[0], loc[1], theta, heading_rear);
-          return true;
-        } else {
-          yWarning() << "Unable to get update info";
-          return false;
-        }
-      } else {
-        yWarning() << "Unable to find" << skeleton_tag;
-        return false;
-      }
-    } else {
-      yWarning() << "The controller is busy";
-      return false;
-    }
-  }
-
-  /****************************************************************/
   bool is_navigating()override {
     lock_guard<mutex> lck(mtx);
     return (state != State::idle);
@@ -520,8 +479,8 @@ class Navigator : public RFModule, public navController_IDL {
     bool ret = false;
     if (state == State::idle) {
       Bottle cmd, rep;
-      yInfo() << "Odometry reset";
       cmd.addString("reset_odometry");
+      yInfo() << "Odometry reset";
       if (navCmdPort.write(cmd, rep)) {
         ret = (rep.size() > 0);
       }
@@ -535,6 +494,11 @@ class Navigator : public RFModule, public navController_IDL {
   string which_skeleton()override {
     lock_guard<mutex> lck(mtx);
     return skeleton_tag;
+  }
+
+  /****************************************************************/
+  Property get_state()override {
+    return publishState();
   }
 };
 

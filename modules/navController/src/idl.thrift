@@ -10,6 +10,12 @@
  * @authors: Ugo Pattacini <ugo.pattacini@iit.it>
  */
 
+struct Property { }
+(
+   yarp.name="yarp::os::Property"
+   yarp.includefile="yarp/os/Property.h"
+)
+
 /**
  * navController_IDL
  *
@@ -35,14 +41,6 @@ service navController_IDL
    bool track_skeleton(1:string skeleton_tag);
 
    /**
-    * Navigate to a location in front of the specified skeleton.
-    * @param skeleton_tag is the skeleton's tag.
-    * @param heading_rear is true to specify if the robot has to drive backward.
-    * @return true/false on success/failure.
-    */
-   bool align_with_skeleton(1:string skeleton_tag, 2:bool heading_rear = false);
-
-   /**
     * Query if navigation is underway.
     * @return true if navigation is being currently performed.
     */
@@ -65,4 +63,13 @@ service navController_IDL
     * @return the name of the skeleton; empty otherwise.
     */
    string which_skeleton();
+
+   /**
+    * Retrieve internal state.
+    * @return a property-like object containing the state
+    *         in the form (robot-state {idle|track|nav}) (robot-location (x y theta))
+    *         (robot-velocity (v_x v_theta)) [(target-location (x y theta heading))]
+    *         [(skeleton-tag tag) (skeleton-location (x y))].
+    */
+   Property get_state();
 }
