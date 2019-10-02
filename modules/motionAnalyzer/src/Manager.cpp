@@ -13,6 +13,7 @@
 #include <iostream>
 #include <vector>
 #include <list>
+#include <iomanip>
 
 #include <yarp/os/all.h>
 #include <yarp/sig/Vector.h>
@@ -29,6 +30,8 @@
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
+using namespace yarp::math;
+using namespace iCub::ctrl;
 using namespace assistive_rehab;
 
 bool Manager::loadMotionList(ResourceFinder &rf)
@@ -640,14 +643,14 @@ bool Manager::start(const bool use_robot_template)
         Time::yield();
     }
 
-    Matrix T;
-    for(int i=0; i<processors.size(); i++)
-    {
-        processors[i]->setInitialConf(skeletonIn,T);
-    }
-
     if(curr_exercise->getType()==ExerciseType::rehabilitation)
     {
+        Matrix T;
+        for(int i=0; i<processors.size(); i++)
+        {
+            processors[i]->setInitialConf(skeletonIn,T);
+        }
+
         Property params=curr_exercise->getFeedbackParams();
         Bottle cmd,reply;
         if(this->use_robot_template == 0)
@@ -781,55 +784,121 @@ bool Manager::stopFeedback()
 bool Manager::stop()
 {
     lock_guard<mutex> lg(mtx);
-    yInfo()<<"stopping";
-
-    if(curr_exercise->getType()==ExerciseType::rehabilitation)
+    if(starting)
     {
-        Bottle cmd, reply;
-        cmd.addVocab(Vocab::encode("stop"));
-        dtwPort.write(cmd,reply);
-        actionPort.write(cmd,reply);
-        if(reply.get(0).asVocab()==Vocab::encode("ok") && starting)
+        yInfo()<<"stopping";
+        if(curr_exercise->getType()==ExerciseType::rehabilitation)
         {
-            if(use_robot_template == 0)
+            Bottle cmd, reply;
+            cmd.addVocab(Vocab::encode("stop"));
+            dtwPort.write(cmd,reply);
+            actionPort.write(cmd,reply);
+            if(reply.get(0).asVocab()==Vocab::encode("ok") && starting)
             {
-                yInfo()<<"Stopping skeletonScaler";
-                scalerPort.write(cmd,reply);
-                cmd.clear();
-                reply.clear();
-                cmd.addVocab(Vocab::encode("rot"));
-                cmd.addList().read(cameraposinit);
-                cmd.addList().read(focalpointinit);
-                scalerPort.write(cmd, reply);
+                if(use_robot_template == 0)
+                {
+                    yInfo()<<"Stopping skeletonScaler";
+                    scalerPort.write(cmd,reply);
+                    cmd.clear();
+                    reply.clear();
+                    cmd.addVocab(Vocab::encode("rot"));
+                    cmd.addList().read(cameraposinit);
+                    cmd.addList().read(focalpointinit);
+                    scalerPort.write(cmd, reply);
+                }
             }
         }
+
+        tend_session=Time::now()-tstart;
+
+        // Use MATIO to write the results in a .mat file
+        string filename_report=out_folder+"/user-"+skeletonIn.getTag()+
+                "-"+curr_exercise->getName()+"-"+to_string(nsession)+".mat";
+        mat_t *matfp=Mat_CreateVer(filename_report.c_str(),NULL,MAT_FT_MAT5);
+        if (matfp==NULL)
+            yError()<<"Error creating MAT file";
+
+        yInfo() << "Writing to file";
+        if(writeKeypointsToFile(matfp))
+        {
+            time_samples.clear();
+            all_keypoints.clear();
+        }
+        else
+            yError() << "Could not save to file";
+
+        yInfo() << "Keypoints saved to file" << filename_report.c_str();
+        Mat_Close(matfp);
+
+        nsession++;
+        starting=false;
+        skel_tag="";
+
+        return true;
     }
+    return true;
+}
 
-    starting=false;
-    skel_tag="";
-    tend_session=Time::now()-tstart;
+/********************************************************/
+bool Manager::isStanding(const double standing_thresh)
+{
+    lock_guard<mutex> lg(mtx);
+    yInfo()<<"shoulder height speed"<<shoulder_center_height_vel;
+    return (shoulder_center_height_vel>standing_thresh);
+}
 
-    // Use MATIO to write the results in a .mat file
-    string filename_report=out_folder+"/user-"+skeletonIn.getTag()+
-            "-"+curr_exercise->getName()+"-"+to_string(nsession)+".mat";
-    mat_t *matfp=Mat_CreateVer(filename_report.c_str(),NULL,MAT_FT_MAT5);
-    if (matfp==NULL)
-        yError()<<"Error creating MAT file";
+/********************************************************/
+bool Manager::isSitting(const double standing_thresh)
+{
+    lock_guard<mutex> lg(mtx);
+    yInfo()<<"shoulder height speed"<<shoulder_center_height_vel;
+    return (shoulder_center_height_vel<-standing_thresh);
+}
 
-    yInfo() << "Writing to file";
-    if(writeKeypointsToFile(matfp))
-    {
-        time_samples.clear();
-        all_keypoints.clear();
-    }
-    else
-        yError() << "Could not save to file";
+/********************************************************/
+bool Manager::hasCrossedFinishLine(const double finishline_thresh)
+{
+    lock_guard<mutex> lg(mtx);
+    Vector foot_right=skeletonIn[KeyPointTag::ankle_right]->getPoint();
+    Vector foot_left=skeletonIn[KeyPointTag::ankle_left]->getPoint();
+    foot_right.push_back(1.0);
+    foot_right=gaze_frame*foot_right;
+    foot_right.pop_back();
+    foot_left.push_back(1.0);
+    foot_left=gaze_frame*foot_left;
+    foot_left.pop_back();
 
-    yInfo() << "Keypoints saved to file" << filename_report.c_str();
-    Mat_Close(matfp);
+    Vector lp_root(3);
+    lp_root[0]=line_pose[0];
+    lp_root[1]=line_pose[1];
+    lp_root[2]=line_pose[2];
 
-    nsession++;
+    Vector line_ori(4);
+    line_ori[0]=line_pose[3];
+    line_ori[1]=line_pose[4];
+    line_ori[2]=line_pose[5];
+    line_ori[3]=line_pose[6];
+    Matrix lOri=axis2dcm(line_ori);
+    Vector line_x=lOri.getCol(0);
+    line_x.pop_back();
 
+    Vector fr_lp=lp_root-foot_right;
+    Vector fl_lp=lp_root-foot_left;
+    Vector pline=lp_root+line_x;
+    Vector v1=lp_root-pline;
+    double dist_fr_line=norm(cross(v1,fr_lp))/norm(v1);
+    double dist_fl_line=norm(cross(v1,fl_lp))/norm(v1);
+    yInfo()<<"dist foot right line"<<dist_fr_line;
+    yInfo()<<"dist foot left line"<<dist_fl_line;
+
+    return (dist_fr_line<finishline_thresh && dist_fl_line<finishline_thresh);
+}
+
+/********************************************************/
+bool Manager::setLinePose(const vector<double> &line_pose)
+{
+    lock_guard<mutex> lg(mtx);
+    this->line_pose=line_pose;
     return true;
 }
 
@@ -886,7 +955,28 @@ void Manager::getSkeleton()
                                             Skeleton* skeleton = skeleton_factory(prop);
                                             skeletonIn.update(skeleton->toProperty());
                                             if(skeleton->update_planes())
-                                                all_keypoints.push_back(skeletonIn.get_unordered());
+                                            {
+                                                vector<pair<string,Vector>> keyps=skeletonIn.get_unordered();
+                                                for(int j=0;j<keyps.size();j++)
+                                                {
+                                                    Vector temp;
+                                                    temp=keyps[j].second;
+                                                    temp.push_back(1.0);
+                                                    temp=gaze_frame*temp;
+                                                    temp.pop_back();
+                                                    keyps[j].second=temp;
+                                                }
+                                                all_keypoints.push_back(keyps);
+                                            }
+                                            if(skeletonIn[KeyPointTag::shoulder_center]->isUpdated())
+                                            {
+                                                Vector shoulder_center=skeletonIn[KeyPointTag::shoulder_center]->getPoint();
+                                                shoulder_center.push_back(1.0);
+                                                shoulder_center=gaze_frame*shoulder_center;
+                                                shoulder_center.pop_back();
+                                                AWPolyElement el(shoulder_center,Time::now());
+                                                shoulder_center_height_vel=lin_est_shoulder->estimate(el)[2];
+                                            }
                                             updated=true;
                                             delete skeleton;
                                         }
@@ -922,6 +1012,7 @@ bool Manager::configure(ResourceFinder &rf)
     dtwPort.open(("/" + getName() + "/dtw:cmd").c_str());
     actionPort.open(("/" + getName() + "/action:cmd").c_str());
     rpcPort.open(("/" + getName() + "/cmd").c_str());
+    gazePort.open(("/" + getName() + "/gaze:i").c_str());
     attach(rpcPort);
 
     cameraposinit.resize(3);
@@ -939,7 +1030,7 @@ bool Manager::configure(ResourceFinder &rf)
     prop_tag="";
     curr_exercise=NULL;
     curr_metric=NULL;
-
+    lin_est_shoulder=new AWLinEstimator(16,0.01);
     return true;
 }
 
@@ -952,6 +1043,7 @@ bool Manager::interruptModule()
     dtwPort.interrupt();
     actionPort.interrupt();
     rpcPort.interrupt();
+    gazePort.interrupt();
     yInfo() << "Interrupted module";
 
     return true;
@@ -960,17 +1052,15 @@ bool Manager::interruptModule()
 /********************************************************/
 bool Manager::close()
 {
-    delete curr_exercise;
     for(int i=0; i<exercises.size(); i++)
     {
         delete exercises[i];
     }
-
     for(int i=0; i<processors.size(); i++)
     {
         delete processors[i];
     }
-
+    delete lin_est_shoulder;
     yInfo() << "Freed memory";
 
     opcPort.close();
@@ -979,7 +1069,7 @@ bool Manager::close()
     dtwPort.close();
     actionPort.close();
     rpcPort.close();
-
+    gazePort.close();
     yInfo() << "Closed ports";
 
     return true;
@@ -996,39 +1086,51 @@ bool Manager::updateModule()
 {
     lock_guard<mutex> lg(mtx);
 
-    //if we query the database
-    if(opcPort.getOutputCount()>0 && starting)
+    if (Property *p=gazePort.read(false))
     {
-        //if no metric has been defined we do not analyze motion
-        if(curr_exercise!=NULL && curr_metric!=NULL)
-        {
-            //get skeleton and normalize
-            getSkeleton();
-            if(updated)
-            {
-                //update time array
-                time_samples.push_back(Time::now()-tstart);
+        Vector pose;
+        p->find("depth_rgb").asList()->write(pose);
+        gaze_frame=axis2dcm(pose.subVector(3,6));
+        gaze_frame.setSubcol(pose.subVector(0,2),0,3);
+    }
 
-                //write on output port
-                Bottle &scopebottleout=scopePort.prepare();
-                scopebottleout.clear();
-                for(int i=0; i<processors.size(); i++)
+    //if we query the database
+    if(opcPort.getOutputCount()>0)
+    {
+        //get skeleton and normalize
+        getSkeleton();
+
+        //if no metric has been defined we do not analyze motion
+        if(starting)
+        {
+            if(curr_exercise!=NULL && curr_metric!=NULL)
+            {
+                if(updated)
                 {
-                    processors[i]->update(skeletonIn);
-                    processors[i]->estimate();
-                    Property result=processors[i]->getResult();
-                    if(result.check(prop_tag) &&
-                            processors[i]->getProcessedMetric()==curr_metric->getParams().find("name").asString())
+                    //update time array
+                    time_samples.push_back(Time::now()-tstart);
+
+                    //write on output port
+                    Bottle &scopebottleout=scopePort.prepare();
+                    scopebottleout.clear();
+                    for(int i=0; i<processors.size(); i++)
                     {
-                        double res=result.find(prop_tag).asDouble();
-                        scopebottleout.addDouble(res);
+                        processors[i]->update(skeletonIn,gaze_frame);
+                        processors[i]->estimate();
+                        Property result=processors[i]->getResult();
+                        if(result.check(prop_tag) &&
+                                processors[i]->getProcessedMetric()==curr_metric->getParams().find("name").asString())
+                        {
+                            double res=result.find(prop_tag).asDouble();
+                            scopebottleout.addDouble(res);
+                        }
                     }
+                    scopePort.write();
                 }
-                scopePort.write();
             }
+            else
+                yInfo() << "Please specify metric";
         }
-        else
-            yInfo() << "Please specify metric";
     }
 
     return true;

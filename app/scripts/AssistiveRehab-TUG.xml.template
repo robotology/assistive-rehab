@@ -1,5 +1,5 @@
 <application>
-<name>Assistive Rehabilitation App</name>
+<name>Assistive Rehabilitation TUG App</name>
 
     <module>
         <name>yarpdev</name>
@@ -44,7 +44,7 @@
 
     <module>
        <name>skeletonRetriever</name>
-       <parameters></parameters>
+       <parameters>--depth::enable false --filtering::optimize-limblength false</parameters>
        <dependencies>
           <port timeout="5">/opc/rpc</port>
        </dependencies>
@@ -68,39 +68,20 @@
 
     <module>
        <name>motionAnalyzer</name>
-       <parameters>--from motion-repertoire-rom-left.ini</parameters>
-       <node>r1-console-linux</node>
-    </module>
-
-    <module>
-       <name>skeletonPlayer</name>
        <parameters></parameters>
-       <node>r1-display-linux</node>
-    </module>
-
-    <module>
-       <name>skeletonScaler</name>
-       <node>r1-display-linux</node>
-    </module>
-
-    <module>
-       <name>feedbackProducer</name>
        <node>r1-console-linux</node>
     </module>
 
     <module>
-       <name>actionRecognizer</name>
-       <node>r1-console-linux</node>
+        <name>finishLineDetector</name>
+        <parameters></parameters>
+        <node>r1-console-linux</node>
     </module>
 
     <module>
-       <name>feedbackSynthetizer</name>
-       <node>r1-console-linux</node>
-    </module>
-
-    <module>
-       <name>robotSkeletonPublisher</name>
-       <node>r1-console-linux</node>
+        <name>managerTUG</name>
+        <parameters>--standing-thresh 0.3 --finish-line-thresh 0.2</parameters>
+        <node>r1-console-linux</node>
     </module>
 
     <module>
@@ -116,6 +97,12 @@
     </module>
 
     <module>
+        <name>yarpview</name>
+        <parameters>--name /viewer/line --x 770 --y 40 --p 50 --compact</parameters>
+        <node>r1-display-linux</node>
+    </module>
+
+    <module>
         <name>skeletonViewer</name>
         <parameters>--x 1120 --y 10</parameters>
         <node>r1-display-linux</node>
@@ -125,48 +112,6 @@
        <name>yarpscope</name>
        <parameters>--x 100 --y 400 --dx 1000 --dy 600 --context AssistiveRehab --xml motionAnalyzer-scope.xml</parameters>
        <node>r1-display-linux</node>
-    </module>
-
-    <module>
-        <name>interactionManager</name>
-        <parameters></parameters>
-        <node>r1-console-linux</node>
-    </module>
-
-    <module>
-        <name>ctpService</name>
-        <parameters>--robot cer --part right_arm</parameters>
-        <node>r1-console-linux</node>
-    </module>
-
-    <module>
-        <name>ctpService</name>
-        <parameters>--robot cer --part left_arm</parameters>
-        <node>r1-console-linux</node>
-    </module>
-
-    <module>
-        <name>cer_reaching-solver</name>
-        <parameters>--robot cer --arm-type left --verbosity 1</parameters>
-        <node>r1-base</node>
-    </module>
-
-    <module>
-        <name>cer_reaching-controller</name>
-        <parameters>--robot cer --arm-type left --verbosity 1 --T 2.0</parameters>
-        <node>r1-base</node>
-    </module>
-
-    <module>
-        <name>cer_reaching-solver</name>
-        <parameters>--robot cer --arm-type right --verbosity 1</parameters>
-        <node>r1-base</node>
-    </module>
-
-    <module>
-        <name>cer_reaching-controller</name>
-        <parameters>--robot cer --arm-type right --verbosity 1 --T 2.0</parameters>
-        <node>r1-base</node>
     </module>
 
     <connection>
@@ -248,37 +193,31 @@
     </connection>
 
     <connection>
+        <from>/depthCamera/rgbImage:o</from>
+        <to>/finishLineDetector/img:i</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/finishLineDetector/cam:rpc</from>
+        <to>/depthCamera/rpc:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer_gaze-controller/state:o</from>
+        <to>/finishLineDetector/gaze/state:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/finishLineDetector/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
         <from>/motionAnalyzer/opc</from>
-        <to>/opc/rpc</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/motionAnalyzer/scaler:cmd</from>
-        <to>/skeletonScaler/rpc</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/motionAnalyzer/dtw:cmd</from>
-        <to>/feedbackProducer/rpc</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/motionAnalyzer/action:cmd</from>
-        <to>/actionRecognizer/rpc</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/skeletonPlayer/opc:rpc</from>
-        <to>/opc/rpc</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/skeletonScaler/opc</from>
         <to>/opc/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
@@ -287,6 +226,12 @@
         <from>/depthCamera/depthImage:o</from>
         <to>/viewer/depth</to>
         <protocol>fast_tcp+recv.portmonitor+type.dll+file.depthimage</protocol>
+    </connection>
+
+    <connection>
+        <from>/finishLineDetector/img:o</from>
+        <to>/viewer/line</to>
+        <protocol>mjpeg</protocol>
     </connection>
 
     <connection>
@@ -302,116 +247,26 @@
     </connection>
 
     <connection>
-        <from>/skeletonPlayer/viewer:o</from>
-        <to>/skeletonViewer:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/skeletonScaler/player:rpc</from>
-        <to>/skeletonPlayer/cmd:rpc</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/skeletonScaler/viewer:rpc</from>
-        <to>/skeletonViewer:rpc</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/feedbackProducer/opc</from>
-        <to>/opc/rpc</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/feedbackProducer/analyzer:rpc</from>
-        <to>/motionAnalyzer/cmd</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/feedbackProducer:o</from>
-        <to>/feedbackSynthetizer/dtw:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/actionRecognizer/opc</from>
-        <to>/opc/rpc</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/actionRecognizer/target:o</from>
-        <to>/feedbackProducer/action:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/feedbackSynthetizer/speech:o</from>
-        <to>/iSpeak</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/feedbackSynthetizer/score:o</from>
-        <to>/interactionManager/synthetizer:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/interactionManager/attention:rpc</from>
+        <from>/managerTUG/attention:rpc</from>
         <to>/attentionManager/cmd:rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
-        <from>/interactionManager/analyzer:rpc</from>
+        <from>/managerTUG/analyzer:rpc</from>
         <to>/motionAnalyzer/cmd</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
-        <from>/interactionManager/speech:o</from>
+        <from>/managerTUG/speech:o</from>
         <to>/iSpeak</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
-        <from>/interactionManager/speech:rpc</from>
+        <from>/managerTUG/speech:rpc</from>
         <to>/iSpeak/rpc</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/robotSkeletonPublisher/opc:rpc</from>
-        <to>/opc/rpc</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/robotSkeletonPublisher/viewer:o</from>
-        <to>/skeletonViewer:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/interactionManager/robotskeleton:rpc</from>
-        <to>/robotSkeletonPublisher/cmd:rpc</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/cer_reaching-controller/left/solver:rpc</from>
-        <to>/cer_reaching-solver/left/rpc</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/cer_reaching-controller/right/solver:rpc</from>
-        <to>/cer_reaching-solver/right/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
 </application>

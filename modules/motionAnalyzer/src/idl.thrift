@@ -115,4 +115,32 @@ service motionAnalyzer_IDL
    */
    bool mirrorTemplate(1:bool robot_skeleton_mirror);
 
+   /**
+   * Detect if the person is standing.
+   * @param standing_thresh threshold on the speed of the shoulder center height [m/s].
+   * @return true/false if the person is/is not standing.
+   */
+   bool isStanding(1:double standing_thresh);
+
+   /**
+   * Detect if the person is sitting.
+   * @param standing_thresh threshold on the speed of the shoulder center height [m/s].
+   * @return true/false if the person is/is not standing.
+   */
+   bool isSitting(1:double standing_thresh);
+
+   /**
+   * Detect if the finish line has been crossed.
+   * @param finishline_thresh distance between foot and finish line [m].
+   * @return true/false if the finish line has been/not been crossed.
+   */
+   bool hasCrossedFinishLine(1:double finishline_thresh);
+
+   /**
+   * Set the pose of the finish line.
+   * @param pose of the finish line.
+   * @return true/false on success/failure.
+   */
+   bool setLinePose(1:list<double> line_pose);
+
 }
