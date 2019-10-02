@@ -204,6 +204,54 @@ class Detector : public RFModule
                 else
                 {
                     yInfo()<<"No marker detected";
+                    if(opc_id!=-1)
+                    {
+                        if (opcPort.getOutputCount())
+                        {
+                            Bottle cmd,rep;
+                            cmd.addVocab(Vocab::encode("get"));
+                            Bottle &content=cmd.addList().addList();
+                            content.addString("id");
+                            content.addInt(opc_id);
+                            if(opcPort.write(cmd,rep))
+                            {
+                                if(rep.get(0).asVocab()==Vocab::encode("ack"))
+                                {
+                                    if(Bottle *prop1=rep.get(1).asList())
+                                    {
+                                        if(Bottle *prop2=prop1->get(0).asList())
+                                        {
+                                            if(Bottle *prop3=prop2->get(1).asList())
+                                            {
+                                                Property prop(prop3->toString().c_str());
+                                                if(prop.check("pose_camera") && prop.check("pose_root"))
+                                                {
+                                                    if(Bottle *bPoseCam=prop.find("pose_camera").asList())
+                                                    {
+                                                        if(Bottle *bPoseRoot=prop.find("pose_root").asList())
+                                                        {
+                                                            Property poseProp;
+                                                            Bottle pc; pc.addList().read(*bPoseCam);
+                                                            Bottle pr; pr.addList().read(*bPoseRoot);
+                                                            poseProp.put("pose_camera",pc.get(0));
+                                                            poseProp.put("pose_root",pr.get(0));
+                                                            poseProp.put("visibility",false);
+
+                                                            Property prop_line;
+                                                            Bottle line;
+                                                            line.addList().read(poseProp);
+                                                            prop_line.put("finish-line",line.get(0));
+                                                            opcSet(prop_line);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 outImg=yarp::cv::fromCvMat<yarp::sig::PixelRgb>(inImgMat);
@@ -230,6 +278,8 @@ class Detector : public RFModule
             Bottle bPoseRoot;
             bPoseRoot.addList().read(pose_root);
             poseProp.put("pose_root",bPoseRoot.get(0));
+
+            poseProp.put("visibility",true);
 
             Property prop;
             Bottle line;
