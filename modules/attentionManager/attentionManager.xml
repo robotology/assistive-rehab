@@ -19,6 +19,9 @@
     <param default="1.5" desc="Time constant of the gaze controller used while tracking skeletons (s).">gaze-follow-T</param>
     <param default="2.0" desc="Time constant of the gaze controller used while looking around (s).">gaze-seek-T</param>
     <param default="0.05" desc="Threshold for detecting inactivity of the skeleton.">inactivity-thres</param>
+    <param default="false" desc="Enable virtual modality.">virtual-mode</param>
+    <param default="robot" desc="Tag of the robot's skeleton.">robot-skeleton-name</param>
+    <param default="30" desc="Order of the median filter applied to the estimates of the end-line.">line-quality-threshold</param>
   </arguments>
 
   <authors>

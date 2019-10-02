@@ -408,7 +408,7 @@ class Manager : public RFModule, public managerTUG_IDL
         {
             //search for finish line
             Bottle cmd,rep;
-            cmd.addString("getLinePose");
+            cmd.addString("get_line_pose");
             if(attentionPort.write(cmd,rep))
             {
                 if(Bottle* line_pose_bottle=rep.get(0).asList())
