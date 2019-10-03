@@ -167,7 +167,9 @@ class Navigator : public RFModule, public navController_IDL {
       cmd.addString("run");
       if (navCmdPort.write(cmd, rep)) {
         if (rep.size() > 0) {
-          return reset_odometry();
+          if (reset_odometry()) {
+            return true;
+          }
         }
       }
     }
