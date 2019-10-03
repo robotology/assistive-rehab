@@ -456,12 +456,13 @@ class Navigator : public RFModule, public navController_IDL {
       go_to_helper(x, y, theta, heading_rear);
       mtx_update.unlock();
       unique_lock<mutex> lck(mtx_nav_done);
+      bool ret = true;
       if (timeout > 0) {
-        cv_nav_done.wait_for(lck, chrono::seconds(timeout));
+        ret = (cv_nav_done.wait_for(lck, chrono::seconds(timeout)) == cv_status::no_timeout);
       } else {
         cv_nav_done.wait(lck);
       }
-      return true;
+      return ret;
     } else {
       yWarning() << "The controller is busy";
       mtx_update.unlock();
