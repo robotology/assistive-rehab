@@ -213,9 +213,9 @@ class Navigator : public RFModule, public navController_IDL {
   }
 
   /****************************************************************/
-  void getSkeleton(const bool wait = false) {
+  void getSkeleton() {
     if (opcPort.getInputCount() > 0) {
-      if (Bottle* b = opcPort.read(wait)) {
+      if (Bottle* b = opcPort.read(false)) {
         if (!b->get(1).isString()) {
           skeleton.reset();
           for (int i = 1; i < b->size(); i++)	{
