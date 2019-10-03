@@ -33,6 +33,8 @@
     <param default="false" desc="Enables the virtual modality.">virtual-mode</param>
     <param default="true" desc="Starts the interaction when the user rises the hand.">engage-with-hand</param>
     <param default="false" desc="If true, the imitation phase starts only by providing start_imitation command.">wait-for-imitation</param>
+    <param default="true" desc="If true, the template used for motion analysis is extracted from the robot. Otherwise, a pre-recorded template is used.">use-robot-template</param>
+    <param default="robot" desc="Tag of the skeleton created from the robot.">robot-skeleton-name</param>
   </arguments>
 
   <authors>

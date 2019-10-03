@@ -21,7 +21,7 @@
     <param default="0.05" desc="Threshold for detecting inactivity of the skeleton.">inactivity-thres</param>
     <param default="false" desc="Enable virtual modality.">virtual-mode</param>
     <param default="robot" desc="Tag of the robot's skeleton.">robot-skeleton-name</param>
-    <param default="30" desc="Order of the median filter applied to the estimates of the end-line.">line-quality-threshold</param>
+    <param default="30" desc="Order of the median filter applied to the estimates of the end-line.">line-filter-order</param>
   </arguments>
 
   <authors>

@@ -16,8 +16,8 @@
     <param default="managerTUG" desc="Name of the module. All the open ports will be tagged with the prefix /module_name.">module_name</param>
     <param default="0.1" desc="Periodicity of the module.">period</param>
     <param default="speak-it" desc="Configuration file name for the speak.">speak-file</param>
-    <param default="0.1" desc="Threshold on the distance between foot and finish line [m].">finish-line-thresh</param>
-    <param default="0.1" desc="Threshold on the speed of the shoulder center height [m/s].">standing-thresh</param>
+    <param default="0.2" desc="Threshold on the distance between foot and finish line [m].">finish-line-thresh</param>
+    <param default="0.3" desc="Threshold on the speed of the shoulder center height [m/s].">standing-thresh</param>
   </arguments>
 
   <authors>
