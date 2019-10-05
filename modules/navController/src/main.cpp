@@ -86,13 +86,16 @@ class Navigator : public RFModule, public navController_IDL {
     double x{0.0};
     double y{0.0};
     double theta{0.0};
+    double x_0{0.0};
+    double y_0{0.0};
+    double theta_0{0.0};
     Location() = default;
     Location(const double x_, const double y_, const double theta_) : x(x_), y(y_), theta(theta_) { }
     bool getFrom(BufferedPort<Bottle>& navLocPort) {
       if (Bottle* b = navLocPort.read(false)) {
-        x = b->get(0).asDouble();
-        y = b->get(1).asDouble();
-        theta = b->get(2).asDouble();
+        x = b->get(0).asDouble() + x_0;
+        y = b->get(1).asDouble() + y_0;
+        theta = b->get(2).asDouble() + theta_0;
         return true;
       }
       return false;
@@ -167,7 +170,7 @@ class Navigator : public RFModule, public navController_IDL {
       cmd.addString("run");
       if (navCmdPort.write(cmd, rep)) {
         if (rep.size() > 0) {
-          if (reset_odometry()) {
+          if (reset_odometry(0.0, 0.0, 0.0)) {
             return true;
           }
         }
@@ -505,7 +508,8 @@ class Navigator : public RFModule, public navController_IDL {
   }
 
   /****************************************************************/
-  bool reset_odometry()override {
+  bool reset_odometry(const double x_0, const double y_0,
+                      const double theta_0)override {
     lock_guard<mutex> lck(mtx_update);
     bool ret = false;
     if (state == State::idle) {
@@ -514,6 +518,11 @@ class Navigator : public RFModule, public navController_IDL {
       yInfo() << "Odometry reset";
       if (navCmdPort.write(cmd, rep)) {
         ret = (rep.size() > 0);
+        if (ret) {
+          robot_location.x_0 = x_0;
+          robot_location.y_0 = y_0;
+          robot_location.theta_0 = theta_0;
+        }
       }
     } else {
       yWarning() << "The controller is busy";
