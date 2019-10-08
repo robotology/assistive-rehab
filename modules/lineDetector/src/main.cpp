@@ -41,7 +41,7 @@ class Detector : public RFModule
     bool configure(ResourceFinder &rf) override
     {
         //parameters
-        std::string moduleName = rf.check("name", Value("finishLineDetector")).asString();
+        std::string moduleName = rf.check("name", Value("lineDetector")).asString();
         setName(moduleName.c_str());
 
         period = rf.check("period",Value(0.1)).asDouble();

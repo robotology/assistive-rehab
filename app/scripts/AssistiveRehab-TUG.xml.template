@@ -73,7 +73,7 @@
     </module>
 
     <module>
-        <name>finishLineDetector</name>
+        <name>lineDetector</name>
         <parameters></parameters>
         <node>r1-console-linux</node>
     </module>
@@ -194,24 +194,24 @@
 
     <connection>
         <from>/depthCamera/rgbImage:o</from>
-        <to>/finishLineDetector/img:i</to>
+        <to>/lineDetector/img:i</to>
         <protocol>mjpeg</protocol>
     </connection>
 
     <connection>
-        <from>/finishLineDetector/cam:rpc</from>
+        <from>/lineDetector/cam:rpc</from>
         <to>/depthCamera/rpc:i</to>
         <protocol>tcp</protocol>
     </connection>
 
     <connection>
         <from>/cer_gaze-controller/state:o</from>
-        <to>/finishLineDetector/gaze/state:i</to>
+        <to>/lineDetector/gaze/state:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
-        <from>/finishLineDetector/opc:rpc</from>
+        <from>/lineDetector/opc:rpc</from>
         <to>/opc/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
@@ -229,7 +229,7 @@
     </connection>
 
     <connection>
-        <from>/finishLineDetector/img:o</from>
+        <from>/lineDetector/img:o</from>
         <to>/viewer/line</to>
         <protocol>mjpeg</protocol>
     </connection>
