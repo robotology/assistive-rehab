@@ -38,11 +38,11 @@ using namespace assistive_rehab;
 /****************************************************************/
 class Attention : public RFModule, public attentionManager_IDL
 {
-    enum class State { unconnected, connection_trigger, idle, seek_skeleton, seek_finishline, follow } state;
+    enum class State { unconnected, connection_trigger, idle, seek_skeleton, seek_lines, follow } state;
     bool auto_mode,virtual_mode;
 
-    Vector filtered_line_pose;
-    MedianFilter *line_filter;
+    Vector filtered_startline_pose,filtered_finishline_pose;
+    MedianFilter *finishline_filter,*startline_filter;
 
     const int ack=Vocab::encode("ack");
     const double T=3.0;
@@ -57,7 +57,7 @@ class Attention : public RFModule, public attentionManager_IDL
 
     Matrix gaze_frame,gaze_frame_init;
     bool first_gaze_frame;
-    Vector is_following_x;
+    Vector is_following_x,is_following_coronal,is_following_sagittal;
     vector<shared_ptr<Skeleton>> skeletons;
     vector<double> activity;
     string tag;
@@ -142,11 +142,14 @@ class Attention : public RFModule, public attentionManager_IDL
             info.x=is_following_x[0];
             info.y=is_following_x[1];
             info.z=is_following_x[2];
+            info.coronal=is_following_coronal;
+            info.sagittal=is_following_sagittal;
         }
         else
         {
             info.tag=string("");
             info.x=info.y=info.z=0.0;
+            info.coronal=info.sagittal=Vector(3,0.0);
         }
         return info;
     }
@@ -188,7 +191,7 @@ class Attention : public RFModule, public attentionManager_IDL
     }
 
     /****************************************************************/
-    bool set_auto(const bool seek_for_finish_line) override
+    bool set_auto(const bool seek_for_line) override
     {
         lock_guard<mutex> lg(mtx);
         if (state<State::idle)
@@ -196,10 +199,11 @@ class Attention : public RFModule, public attentionManager_IDL
             return false;
         }
         auto_mode=true;
-        if (seek_for_finish_line)
+        if (seek_for_line)
         {
-            filtered_line_pose.clear();
-            return switch_to(State::seek_finishline);
+            filtered_startline_pose.clear();
+            filtered_finishline_pose.clear();
+            return switch_to(State::seek_lines);
         }
         else
         {
@@ -216,16 +220,30 @@ class Attention : public RFModule, public attentionManager_IDL
     }
 
     /****************************************************************/
-    Vector get_line_pose() override
+    Vector get_startline_pose() override
     {
         lock_guard<mutex> lg(mtx);
-        if (filtered_line_pose.size()>0)
+        if (filtered_startline_pose.size()>0)
         {
             return {};
         }
         else
         {
-            return filtered_line_pose;
+            return filtered_startline_pose;
+        }
+    }
+
+    /****************************************************************/
+    Vector get_finishline_pose() override
+    {
+        lock_guard<mutex> lg(mtx);
+        if (filtered_finishline_pose.size()>0)
+        {
+            return {};
+        }
+        else
+        {
+            return filtered_finishline_pose;
         }
     }
 
@@ -436,7 +454,7 @@ class Attention : public RFModule, public attentionManager_IDL
     }
 
     /****************************************************************/
-    bool wait_line_reliable()
+    bool wait_line_reliable(const string &line)
     {
         bool line_found=false;
         if (Bottle *b=opcPort.read())
@@ -447,7 +465,7 @@ class Attention : public RFModule, public attentionManager_IDL
                 {
                     Property prop;
                     prop.fromString(b->get(i).asList()->toString());
-                    if(prop.check("finish-line"))
+                    if(prop.check(line))
                     {
                         Bottle *bi=b->get(i).asList();
                         if(Bottle *propField=bi->get(0).asList())
@@ -491,7 +509,7 @@ class Attention : public RFModule, public attentionManager_IDL
                     {
                         Property prop;
                         prop.fromString(b->get(i).asList()->toString());
-                        if(prop.check("finish-line"))
+                        if(prop.check(line))
                         {
                             Bottle *bi=b->get(i).asList();
                             if(Bottle *propField=bi->get(0).asList())
@@ -514,7 +532,10 @@ class Attention : public RFModule, public attentionManager_IDL
                                                     line_pose[4]=bPose->get(4).asDouble();
                                                     line_pose[5]=bPose->get(5).asDouble();
                                                     line_pose[6]=bPose->get(6).asDouble();
-                                                    filtered_line_pose=line_filter->filt(line_pose);
+                                                    if(line=="start-line")
+                                                        filtered_startline_pose=startline_filter->filt(line_pose);
+                                                    else if(line=="finish-line")
+                                                        filtered_finishline_pose=finishline_filter->filt(line_pose);
                                                     line_cnt++;
                                                 }
                                             }
@@ -528,11 +549,22 @@ class Attention : public RFModule, public attentionManager_IDL
             }
         }
 
-        Vector v=filtered_line_pose.subVector(3,5);
-        if(norm(v)>0.0)
-            v/=norm(v);
-        filtered_line_pose.setSubvector(3,v);
-        yInfo()<<"Finish line estimated at"<<filtered_line_pose.toString();
+        if(line=="start-line")
+        {
+            Vector v=filtered_startline_pose.subVector(3,5);
+            if(norm(v)>0.0)
+                v/=norm(v);
+            filtered_startline_pose.setSubvector(3,v);
+            yInfo()<<line<<"estimated at"<<filtered_startline_pose.toString();
+        }
+        else if(line=="finish-line")
+        {
+            Vector v=filtered_finishline_pose.subVector(3,5);
+            if(norm(v)>0.0)
+                v/=norm(v);
+            filtered_finishline_pose.setSubvector(3,v);
+            yInfo()<<line<<"estimated at"<<filtered_finishline_pose.toString();
+        }
         return true;
     }
 
@@ -564,12 +596,15 @@ class Attention : public RFModule, public attentionManager_IDL
 
         state=State::unconnected;
         is_following_x.resize(3,0.0);
+        is_following_coronal.resize(3,0.0);
+        is_following_sagittal.resize(3,0.0);
         still_t0=lost_t0=Time::now();
         first_follow_look=false;
         first_seek_look=false;
         first_gaze_frame=true;
 
-        line_filter=new MedianFilter(line_filter_order,Vector(7,0.0));
+        startline_filter=new MedianFilter(line_filter_order,Vector(7,0.0));
+        finishline_filter=new MedianFilter(line_filter_order,Vector(7,0.0));
 
         Rand::init();
         return true;
@@ -626,16 +661,16 @@ class Attention : public RFModule, public attentionManager_IDL
         {
             switch_to(auto_mode?State::seek_skeleton:State::idle);
         }
-        else if (state==State::seek_finishline)
+        else if (state==State::seek_lines)
         {
-            yInfo()<<"Looking for finish line";
+            yInfo()<<"Looking for start and finish line";
             Vector target(2);
             target[0]=Rand::scalar(-30.0,30.0);
             target[1]=Rand::scalar(-35.0,-15.0);
             look("angular",target);
             wait_motion_done();
-            bool line_ok=wait_line_reliable();
-            if(line_ok)
+            bool lines_ok=wait_line_reliable("start-line") && wait_line_reliable("finish-line");
+            if(lines_ok)
             {
                 switch_to(State::seek_skeleton);
             }
@@ -749,7 +784,8 @@ class Attention : public RFModule, public attentionManager_IDL
         // homing gaze
         look("angular",zeros(2));
 
-        delete line_filter;
+        delete startline_filter;
+        delete finishline_filter;
 
         opcPort.close();
         gazeCmdPort.close();

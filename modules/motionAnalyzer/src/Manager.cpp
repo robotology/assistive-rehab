@@ -856,16 +856,24 @@ bool Manager::isSitting(const double standing_thresh)
 }
 
 /********************************************************/
+bool Manager::set_world_frame(const Matrix &world_frame)
+{
+    lock_guard<mutex> lg(mtx);
+    this->world_frame=world_frame;
+    return true;
+}
+
+/********************************************************/
 bool Manager::hasCrossedFinishLine(const double finishline_thresh)
 {
     lock_guard<mutex> lg(mtx);
     Vector foot_right=skeletonIn[KeyPointTag::ankle_right]->getPoint();
     Vector foot_left=skeletonIn[KeyPointTag::ankle_left]->getPoint();
     foot_right.push_back(1.0);
-    foot_right=gaze_frame*foot_right;
+    foot_right=(world_frame*gaze_frame)*foot_right;
     foot_right.pop_back();
     foot_left.push_back(1.0);
-    foot_left=gaze_frame*foot_left;
+    foot_left=(world_frame*gaze_frame)*foot_left;
     foot_left.pop_back();
 
     Vector lp_root(3);

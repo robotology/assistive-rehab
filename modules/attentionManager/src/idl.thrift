@@ -15,6 +15,13 @@
 *
 * IDL structure to send info on followed skeleton.
 */
+
+struct Vector { }
+(
+   yarp.name="yarp::sig::Vector"
+   yarp.includefile="yarp/sig/Vector.h"
+)
+
 struct FollowedSkeletonInfo
 {
    /**
@@ -36,13 +43,17 @@ struct FollowedSkeletonInfo
    * the z-coordinate.
    */
    4:double z;
-}
 
-struct Vector { }
-(
-   yarp.name="yarp::sig::Vector"
-   yarp.includefile="yarp/sig/Vector.h"
-)
+   /**
+   * the coronal plane.
+   */
+   5:Vector coronal;
+
+   /**
+   * the sagittal plane.
+   */
+   6:Vector sagittal;
+}
 
 /**
  * attentionManager_IDL
@@ -111,9 +122,15 @@ service attentionManager_IDL
    bool set_robot_skeleton_name(1:string robot_skeleton_name);
 
    /**
-    * Get the pose of the finish line.
-    * @return pose of the finish line with respect to the camera.
+    * Get the pose of the start line.
+    * @return pose of the start line with respect to the robot root.
     */
-    Vector get_line_pose();
+    Vector get_startline_pose();
+
+   /**
+    * Get the pose of the finish line.
+    * @return pose of the finish line with respect to the robot root.
+    */
+    Vector get_finishline_pose();
 
 }
