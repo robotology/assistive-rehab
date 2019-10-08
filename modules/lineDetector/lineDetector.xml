@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="yarpmanifest.xsl"?>
+
+<module>
+  <name>lineDetector</name>
+  <doxygen-group>lineDetector</doxygen-group>
+  <description>This module takes as input the RGB image containing two lines composed of a set of ArUco markers and publishes the estimated pose of the markers with respect to the robot camera and root.</description>
+  <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
+  <version>0.3.0</version>
+
+  <description-long>
+   This module takes as input the RGB image containing two lines composed of a set of markers and publishes the estimated poses of the markers with respect to the camera and to robot root.
+   It makes use of an OpenCV ArUco Board of 6x1 markers. The used board can be found in `app/conf` (the two images were sticked togheter for printing a marker big enough to be visible from a certain distance).
+   The detected start and finish lines are published into the \ref objectsPropertiesCollector, with the pose estimated with respect to the robot camera (`pose_camera`) and to the robot root (`pose_root`), as following:
+
+   \code
+   ((finish-line (pose_camera (x y z ax ay az theta)) (pose_root (x y z ax ay az theta))) (id opc_id))
+   \endcode
+
+  </description-long>
+
+  <arguments>
+    <param default="lineDetector" desc="The module's name; all the open ports will be tagged with the prefix /name.">name</param>
+    <param default="(6 6)" desc="Vector containing the number of markers along X direction, for the start and the finish line respectively.">nx</param>
+    <param default="(1 1)" desc="Vector containing the number of markers along Y direction, for the start and the finish line respectively.">ny</param>
+    <param default="(0.13 0.13)" desc="Vector containing the marker's length, for the start and the finish line respectively [m].">marker-size</param>
+    <param default="(0.005 0.005)" desc="Vector containing the distance between markers, for the start and the finish line respectively [m].">marker-dist</param>
+  </arguments>
+
+  <authors>
+    <author email="valentina.vasco@iit.it"> Valentina Vasco </author>
+  </authors>
+
+  <data>
+      <input>
+          <type>ImageOfPixelRgb</type>
+          <port>/lineDetector/img:i</port>
+          <description>
+            Receives the RGB image.
+          </description>
+      </input>
+      <input>
+          <type>Property</type>
+          <port>/lineDetector/gaze/state:i</port>
+          <description>
+            Retrieves the current pose of the camera.
+          </description>
+      </input>
+      <output>
+          <type>ImageOfPixelRgb</type>
+          <port>/lineDetector/img:o</port>
+          <description>
+            Streams out the input image with detected axes.
+          </description>
+      </output>
+      <output>
+          <type>rpc</type>
+          <port>/lineDetector/cam:rpc</port>
+          <description>
+            Retrieves intrinsics from the camera.
+          </description>
+      </output>
+      <output>
+          <type>rpc</type>
+          <port>/lineDetector/opc:rpc</port>
+          <description>
+            Adds the start and the finish line to \ref objectsPropertiesCollector.
+          </description>
+      </output>
+  </data>
+
+</module>

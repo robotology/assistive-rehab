@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # Authors: Valentina Vasco <valentina.vasco@iit.it>
 
-project(finishLineDetector)
+project(lineDetector)
 
 set(doc_files ${PROJECT_NAME}.xml)
 source_group("DOC Files" FILES ${doc_files})
