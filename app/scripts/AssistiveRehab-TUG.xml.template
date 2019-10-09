@@ -58,6 +58,17 @@
     </module>
 
     <module>
+       <name>navController</name>
+       <parameters></parameters>
+       <dependencies>
+         <port>/baseControl/rpc</port>
+         <port>/baseControl/odometry:o</port>
+         <port>/baseControl/control:i</port>
+       </dependencies>
+       <node>r1-console-linux</node>
+    </module>
+
+    <module>
        <name>cer_gaze-controller</name>
        <parameters>--cameras::context cameraCalibration --cameras::file cerEyes_320x240.ini --joints-limits::pitch "(-20.0 20.0)" --joints-limits::yaw "(-40.0 40.0)"</parameters>
        <ensure>
@@ -201,7 +212,7 @@
     <connection>
         <from>/lineDetector/cam:rpc</from>
         <to>/depthCamera/rpc:i</to>
-        <protocol>tcp</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
@@ -247,6 +258,18 @@
     </connection>
 
     <connection>
+        <from>/opc/broadcast:o</from>
+        <to>/navController/opc:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer_gaze-controller/state:o</from>
+        <to>/navController/gaze:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
         <from>/managerTUG/attention:rpc</from>
         <to>/attentionManager/cmd:rpc</to>
         <protocol>fast_tcp</protocol>
@@ -269,4 +292,11 @@
         <to>/iSpeak/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
+
+    <connection>
+        <from>/managerTUG/navigation:rpc</from>
+        <to>/navController/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
 </application>
