@@ -468,67 +468,84 @@ class Manager : public RFModule, public managerTUG_IDL
                         startline_pose[5]=line_pose_bottle->get(5).asDouble();
                         startline_pose[6]=line_pose_bottle->get(6).asDouble();
 
+                        Matrix line2robot(4,4);
+                        line2robot=axis2dcm(startline_pose.subVector(3,6));
+                        line2robot.setSubcol(startline_pose.subVector(0,2),0,3);
+                        worldframe=SE3inv(line2robot);
+
                         cmd.clear();
                         rep.clear();
-                        cmd.addString("reset_odometry");
-                        cmd.addDouble(startline_pose[0]);
-                        cmd.addDouble(startline_pose[1]);
-                        cmd.addDouble(0.0);
+                        cmd.addString("get_state");
                         if (navigationPort.write(cmd,rep))
                         {
-                            if (rep.get(0).asVocab()==ok)
+                            Property robotState(rep.get(0).toString().c_str());
+                            if (Bottle *loc=robotState.find("robot-location").asList())
                             {
-                                Matrix line2robot(4,4);
-                                line2robot=axis2dcm(startline_pose.subVector(3,6));
-                                line2robot.setSubcol(startline_pose.subVector(0,2),0,3);
-                                worldframe=SE3inv(line2robot);
-                                yInfo()<<"World frame set at"<<startline_pose[0]<<startline_pose[1];
+                                Vector robot_location(4);
+                                robot_location[0]=loc->get(0).asDouble();
+                                robot_location[1]=loc->get(1).asDouble();
+                                robot_location[2]=0.0;
+                                robot_location[3]=1.0;
+                                robot_location=worldframe*robot_location;
+                                robot_location.pop_back();
 
+                                yInfo()<<"World frame set at"<<robot_location.toString();
                                 cmd.clear();
                                 rep.clear();
-                                cmd.addString("set_world_frame");
-                                cmd.addList().read(worldframe);
-                                if (analyzerPort.write(cmd,rep))
+                                cmd.addString("reset_odometry");
+                                cmd.addDouble(robot_location[0]);
+                                cmd.addDouble(robot_location[1]);
+                                cmd.addDouble(0.0);
+                                if (navigationPort.write(cmd,rep))
                                 {
                                     if (rep.get(0).asVocab()==ok)
                                     {
                                         cmd.clear();
                                         rep.clear();
-                                        line_pose_bottle->clear();
-                                        cmd.addString("get_finishline_pose");
-                                        if(attentionPort.write(cmd,rep))
+                                        cmd.addString("set_world_frame");
+                                        cmd.addList().read(worldframe);
+                                        if (analyzerPort.write(cmd,rep))
                                         {
-                                            if(line_pose_bottle=rep.get(0).asList())
+                                            if (rep.get(0).asVocab()==ok)
                                             {
-                                                yInfo()<<"Found finish line at"<<line_pose_bottle->toString();
-                                                Vector lp(7);
-                                                lp[0]=line_pose_bottle->get(0).asDouble();
-                                                lp[1]=line_pose_bottle->get(1).asDouble();
-                                                lp[2]=line_pose_bottle->get(2).asDouble();
-                                                lp[3]=line_pose_bottle->get(3).asDouble();
-                                                lp[4]=line_pose_bottle->get(4).asDouble();
-                                                lp[5]=line_pose_bottle->get(5).asDouble();
-                                                lp[6]=line_pose_bottle->get(6).asDouble();
-                                                Vector finishline_pose=lp.subVector(0,2);
-                                                finishline_pose.push_back(1.0);
-                                                finishline_pose=worldframe*finishline_pose;
-                                                finishline_pose.pop_back();
-
-                                                Matrix lineori=axis2dcm(lp.subVector(3,6));
-                                                Vector lo=dcm2axis(worldframe*lineori);
-                                                finishline_pose.push_back(lo[0]);
-                                                finishline_pose.push_back(lo[1]);
-                                                finishline_pose.push_back(lo[2]);
-                                                finishline_pose.push_back(lo[3]);
-
                                                 cmd.clear();
                                                 rep.clear();
-                                                cmd.addString("setLinePose");
-                                                cmd.addList().read(finishline_pose);
-                                                if(analyzerPort.write(cmd,rep))
+                                                cmd.addString("get_finishline_pose");
+                                                if(attentionPort.write(cmd,rep))
                                                 {
-                                                    yInfo()<<"Set finish line to motionAnalyzer";
-                                                    state=State::seek_skeleton;
+                                                    if(Bottle *lp_bottle=rep.get(0).asList())
+                                                    {
+                                                        Vector lp(7);
+                                                        lp[0]=lp_bottle->get(0).asDouble();
+                                                        lp[1]=lp_bottle->get(1).asDouble();
+                                                        lp[2]=lp_bottle->get(2).asDouble();
+                                                        lp[3]=lp_bottle->get(3).asDouble();
+                                                        lp[4]=lp_bottle->get(4).asDouble();
+                                                        lp[5]=lp_bottle->get(5).asDouble();
+                                                        lp[6]=lp_bottle->get(6).asDouble();
+                                                        Vector finishline_pose=lp.subVector(0,2);
+                                                        finishline_pose.push_back(1.0);
+                                                        finishline_pose=worldframe*finishline_pose;
+                                                        finishline_pose.pop_back();
+
+                                                        Matrix lineori=axis2dcm(lp.subVector(3,6));
+                                                        Vector lo=dcm2axis(worldframe*lineori);
+                                                        finishline_pose.push_back(lo[0]);
+                                                        finishline_pose.push_back(lo[1]);
+                                                        finishline_pose.push_back(lo[2]);
+                                                        finishline_pose.push_back(lo[3]);
+                                                        yInfo()<<"Finish line wrt world frame"<<finishline_pose.toString();
+
+                                                        cmd.clear();
+                                                        rep.clear();
+                                                        cmd.addString("setLinePose");
+                                                        cmd.addList().read(finishline_pose);
+                                                        if(analyzerPort.write(cmd,rep))
+                                                        {
+                                                            yInfo()<<"Set finish line to motionAnalyzer";
+                                                            state=State::seek_skeleton;
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
@@ -649,10 +666,9 @@ class Manager : public RFModule, public managerTUG_IDL
                                                                 cmd.clear();
                                                                 rep.clear();
                                                                 cmd.addString("go_to_wait");
-                                                                cmd.addDouble(finishline_pose[0]);
+                                                                cmd.addDouble(finishline_pose[0]-0.5);
                                                                 cmd.addDouble(finishline_pose[1]);
                                                                 cmd.addDouble(0.0);
-                                                                cmd.addInt(1);
                                                                 if (navigationPort.write(cmd,rep))
                                                                 {
                                                                     if (rep.get(0).asVocab()==ok)
