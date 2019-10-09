@@ -281,27 +281,30 @@ class Manager : public RFModule, public managerTUG_IDL
         cmd.addString("is_following");
         if (attentionPort.write(cmd,rep))
         {
-            if (Bottle *corB=rep.get(4).asList())
+            if (!rep.get(0).asString().empty())
             {
-                Vector coronal(3);
-                coronal[0]=corB->get(0).asDouble();
-                coronal[1]=corB->get(1).asDouble();
-                coronal[2]=corB->get(2).asDouble();
-
-                double x=(finishline_pose[0]-startline_pose[0])/2.0;
-                double y=finishline_pose[1]+0.5;
-                double theta=(180/M_PI)*atan2(-coronal[1],-coronal[0]);
-                cmd.clear();
-                rep.clear();
-                cmd.addString("go_to_wait");
-                cmd.addDouble(x);
-                cmd.addDouble(y);
-                cmd.addDouble(theta);
-                if (navigationPort.write(cmd,rep))
+                if (Bottle *corB=rep.get(4).asList())
                 {
-                    if (rep.get(0).asVocab()==ok)
+                    Vector coronal(3);
+                    coronal[0]=corB->get(0).asDouble();
+                    coronal[1]=corB->get(1).asDouble();
+                    coronal[2]=corB->get(2).asDouble();
+
+                    double x=(finishline_pose[0]-startline_pose[0])/2.0;
+                    double y=finishline_pose[1]+0.5;
+                    double theta=(180/M_PI)*atan2(-coronal[1],-coronal[0]);
+                    cmd.clear();
+                    rep.clear();
+                    cmd.addString("go_to_wait");
+                    cmd.addDouble(x);
+                    cmd.addDouble(y);
+                    cmd.addDouble(theta);
+                    if (navigationPort.write(cmd,rep))
                     {
-                        yInfo()<<"Back to initial position";
+                        if (rep.get(0).asVocab()==ok)
+                        {
+                            yInfo()<<"Back to initial position";
+                        }
                     }
                 }
             }

@@ -225,11 +225,11 @@ class Attention : public RFModule, public attentionManager_IDL
         lock_guard<mutex> lg(mtx);
         if (filtered_startline_pose.size()>0)
         {
-            return {};
+            return filtered_startline_pose;
         }
         else
         {
-            return filtered_startline_pose;
+            return {};
         }
     }
 
@@ -239,11 +239,11 @@ class Attention : public RFModule, public attentionManager_IDL
         lock_guard<mutex> lg(mtx);
         if (filtered_finishline_pose.size()>0)
         {
-            return {};
+            return filtered_finishline_pose;
         }
         else
         {
-            return filtered_finishline_pose;
+            return {};
         }
     }
 
@@ -456,6 +456,7 @@ class Attention : public RFModule, public attentionManager_IDL
     /****************************************************************/
     bool wait_line_reliable(const string &line)
     {
+        yInfo()<<"Looking for"<<line;
         bool line_found=false;
         if (Bottle *b=opcPort.read())
         {
@@ -649,7 +650,8 @@ class Attention : public RFModule, public attentionManager_IDL
                 {
                     Property prop;
                     prop.fromString(b->get(i).asList()->toString());
-                    if(prop.find("tag").asString()!=robot_skeleton_name && !prop.check("finish-line"))
+                    if(prop.find("tag").asString()!=robot_skeleton_name
+                            && !prop.check("finish-line") && !prop.check("start-line"))
                     {
                         skeletons.push_back(shared_ptr<Skeleton>(skeleton_factory(prop)));
                     }
@@ -663,7 +665,6 @@ class Attention : public RFModule, public attentionManager_IDL
         }
         else if (state==State::seek_lines)
         {
-            yInfo()<<"Looking for start and finish line";
             Vector target(2);
             target[0]=Rand::scalar(-30.0,30.0);
             target[1]=Rand::scalar(-35.0,-15.0);
