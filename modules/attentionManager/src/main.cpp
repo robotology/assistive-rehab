@@ -54,6 +54,7 @@ class Attention : public RFModule, public attentionManager_IDL
     double lost_t0;
     bool first_follow_look;
     bool first_seek_look;
+    bool startline_ok,finishline_ok;
 
     Matrix gaze_frame,gaze_frame_init;
     bool first_gaze_frame;
@@ -454,10 +455,11 @@ class Attention : public RFModule, public attentionManager_IDL
     }
 
     /****************************************************************/
-    bool wait_line_reliable(const string &line)
+    string detect_line()
     {
-        yInfo()<<"Looking for"<<line;
-        bool line_found=false;
+        string line="";
+        string startline="start-line";
+        string finishline="finish-line";
         if (Bottle *b=opcPort.read())
         {
             if (!b->get(1).isString())
@@ -466,7 +468,7 @@ class Attention : public RFModule, public attentionManager_IDL
                 {
                     Property prop;
                     prop.fromString(b->get(i).asList()->toString());
-                    if(prop.check(line))
+                    if(prop.check(startline) || prop.check(finishline))
                     {
                         Bottle *bi=b->get(i).asList();
                         if(Bottle *propField=bi->get(0).asList())
@@ -481,7 +483,14 @@ class Attention : public RFModule, public attentionManager_IDL
                                         {
                                             if(subPropField2->find("visibility").asBool())
                                             {
-                                                line_found=true;
+                                                if(prop.check(startline) && !startline_ok)
+                                                {
+                                                    line=startline;
+                                                }
+                                                if(prop.check(finishline) && !finishline_ok)
+                                                {
+                                                    line=finishline;
+                                                }
                                             }
                                         }
                                     }
@@ -493,12 +502,19 @@ class Attention : public RFModule, public attentionManager_IDL
             }
         }
 
-        if(!line_found)
+        if(!line.empty())
         {
-            yInfo()<<"Line not in the field of view";
-            return false;
+            yInfo()<<"Found"<<line;
         }
 
+        return line;
+    }
+
+    /****************************************************************/
+    bool wait_line_reliable(const string &line)
+    {
+        yInfo()<<"Waiting for a good estimate of"<<line;
+        bool line_reliable=false;
         int line_cnt=0;
         while ( line_cnt<=line_filter_order )
         {
@@ -556,7 +572,9 @@ class Attention : public RFModule, public attentionManager_IDL
             if(norm(v)>0.0)
                 v/=norm(v);
             filtered_startline_pose.setSubvector(3,v);
+            startline_ok=true;
             yInfo()<<line<<"estimated at"<<filtered_startline_pose.toString();
+            line_reliable=startline_ok;
         }
         else if(line=="finish-line")
         {
@@ -564,9 +582,11 @@ class Attention : public RFModule, public attentionManager_IDL
             if(norm(v)>0.0)
                 v/=norm(v);
             filtered_finishline_pose.setSubvector(3,v);
+            finishline_ok=true;
             yInfo()<<line<<"estimated at"<<filtered_finishline_pose.toString();
+            line_reliable=finishline_ok;
         }
-        return true;
+        return line_reliable;
     }
 
     /****************************************************************/
@@ -606,6 +626,8 @@ class Attention : public RFModule, public attentionManager_IDL
 
         startline_filter=new MedianFilter(line_filter_order,Vector(7,0.0));
         finishline_filter=new MedianFilter(line_filter_order,Vector(7,0.0));
+        startline_ok=false;
+        finishline_ok=false;
 
         Rand::init();
         return true;
@@ -665,15 +687,21 @@ class Attention : public RFModule, public attentionManager_IDL
         }
         else if (state==State::seek_lines)
         {
+            yInfo()<<"Looking for lines";
             Vector target(2);
             target[0]=Rand::scalar(-30.0,30.0);
             target[1]=Rand::scalar(-35.0,-15.0);
             look("angular",target);
             wait_motion_done();
-            bool lines_ok=wait_line_reliable("start-line") && wait_line_reliable("finish-line");
-            if(lines_ok)
+            string line=detect_line();
+            if(!line.empty())
             {
-                switch_to(State::seek_skeleton);
+                wait_line_reliable(line);
+                bool lines_ok=startline_ok && finishline_ok;
+                if(lines_ok)
+                {
+                    switch_to(State::seek_skeleton);
+                }
             }
         }
         else if (state==State::seek_skeleton)
