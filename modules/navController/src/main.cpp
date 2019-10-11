@@ -86,17 +86,17 @@ class Navigator : public RFModule, public navController_IDL {
     double x{0.0};
     double y{0.0};
     double theta{0.0};
-    double x_0{0.0};
-    double y_0{0.0};
-    double theta_0{0.0};
+    Matrix H0{eye(4, 4)};
     Location() = default;
     Location(const double x_, const double y_, const double theta_) : x(x_), y(y_), theta(theta_) { }
     bool getFrom(BufferedPort<Bottle>& navLocPort) {
       if (Bottle* b = navLocPort.read(false)) {
-        x = b->get(0).asDouble() + x_0;
-        y = b->get(1).asDouble() + y_0;
-        theta = b->get(2).asDouble() + theta_0;
-        return true;
+        if (b->size() >= 3) {
+          x = b->get(0).asDouble();
+          y = b->get(1).asDouble();
+          theta = b->get(2).asDouble();
+          return true;
+        }
       }
       return false;
     }
@@ -218,7 +218,7 @@ class Navigator : public RFModule, public navController_IDL {
   }
 
   /****************************************************************/
-  void getSkeleton() {
+  void get_skeleton() {
     if (opcPort.getInputCount() > 0) {
       if (Bottle* b = opcPort.read(false)) {
         if (!b->get(1).isString()) {
@@ -236,7 +236,7 @@ class Navigator : public RFModule, public navController_IDL {
   }
 
   /****************************************************************/
-  void getGaze() {
+  void get_gaze() {
     if (Property* p = gazePort.read(false)) {
       if (Bottle* b = p->find("depth").asList()) {
         Vector pos(3);
@@ -254,7 +254,7 @@ class Navigator : public RFModule, public navController_IDL {
   }
 
   /****************************************************************/
-  Property publishState() {
+  Property publish_state() {
     Bottle b_rloc, b_rvel, b_tloc, b_sloc;
     Bottle& lb_rloc = b_rloc.addList();
     Bottle& lb_rvel = b_rvel.addList();
@@ -270,9 +270,10 @@ class Navigator : public RFModule, public navController_IDL {
       p.put("robot-state", "nav");
     }
 
-    lb_rloc.addDouble(robot_location.x);
-    lb_rloc.addDouble(robot_location.y);
-    lb_rloc.addDouble(robot_location.theta);
+    Location loc = get_location(robot_location.H0 * get_matrix(robot_location));
+    lb_rloc.addDouble(loc.x);
+    lb_rloc.addDouble(loc.y);
+    lb_rloc.addDouble(loc.theta);
     p.put("robot-location", b_rloc.get(0));
 
     lb_rvel.addDouble(robot_velocity.x);
@@ -307,6 +308,27 @@ class Navigator : public RFModule, public navController_IDL {
     e[0] = loc.x - robot_location.x;
     e[1] = loc.y - robot_location.y;
     return e;
+  }
+
+  /****************************************************************/
+  Matrix get_matrix(const Location& loc) {
+    Vector rot(4, 0.0);
+    rot[2] = 1.0;
+    rot[3] = CTRL_DEG2RAD * loc.theta;
+    Matrix H = axis2dcm(rot);
+    H(0, 3) = loc.x;
+    H(1, 3) = loc.y;
+    return H;
+  }
+
+  /****************************************************************/
+  Location get_location(const Matrix& H) {
+    Location loc;
+    Vector rot = dcm2axis(H);
+    loc.x = H(0, 3);
+    loc.y = H(1, 3);
+    loc.theta = CTRL_RAD2DEG * rot[3] * sign(rot[2]);
+    return loc;
   }
 
   /****************************************************************/
@@ -346,8 +368,8 @@ class Navigator : public RFModule, public navController_IDL {
     lock_guard<mutex> lck(mtx_update);
 
     robot_location.getFrom(navLocPort);
-    getSkeleton();
-    getGaze();
+    get_skeleton();
+    get_gaze();
 
     robot_velocity.zero();
     skeleton_location = numeric_limits<double>::quiet_NaN();
@@ -416,7 +438,7 @@ class Navigator : public RFModule, public navController_IDL {
     robot_velocity.sendTo(navCtrlPort);
 
     if (statePort.getOutputCount() > 0) {
-      statePort.prepare() = publishState();
+      statePort.prepare() = publish_state();
       statePort.writeStrict();
     }
 
@@ -428,7 +450,8 @@ class Navigator : public RFModule, public navController_IDL {
                     const bool heading_rear) {
     heading = (heading_rear ? -1 : 1);
     yInfo() << "Navigating to (" << x << y << theta << ") heading =" << heading;
-    generate_waypoints(Location(x, y, theta));
+    Matrix H = get_matrix(Location(x, y, theta));
+    generate_waypoints(get_location(SE3inv(robot_location.H0) * H));
     target_location = target_locations.begin();
     Vector e = compute_error(*target_location);
     target_theta = ((target_location + 1 == target_locations.end()) && (norm(e) < distance_hysteresis_low) ?
@@ -519,9 +542,7 @@ class Navigator : public RFModule, public navController_IDL {
       if (navCmdPort.write(cmd, rep)) {
         ret = (rep.size() > 0);
         if (ret) {
-          robot_location.x_0 = x_0;
-          robot_location.y_0 = y_0;
-          robot_location.theta_0 = theta_0;
+          robot_location.H0 = get_matrix(Location(x_0, y_0, theta_0));
         }
       }
     } else {
@@ -538,7 +559,7 @@ class Navigator : public RFModule, public navController_IDL {
 
   /****************************************************************/
   Property get_state()override {
-    return publishState();
+    return publish_state();
   }
 };
 
