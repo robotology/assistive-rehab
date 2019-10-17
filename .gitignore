@@ -1,4 +1,5 @@
 build*
 *~
 *.user
+.DS_Store
 report/.ipynb_checkpoints/
