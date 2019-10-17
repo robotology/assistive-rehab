@@ -1,0 +1,30 @@
+<application>
+    <name>Google_Speech</name>
+
+    <dependencies>
+    </dependencies>
+    
+    <module>
+        <name>yarpdev</name>
+        <parameters>--device AudioRecorderWrapper --context startAudio --from startaudio.ini --channels 1  --rate 16000 --samples 16000</parameters>
+        <node>localhost</node>
+    </module>
+    
+    <module>
+        <name>googleSpeech</name>
+        <node>localhost</node>
+    </module>
+
+    <connection>
+        <from>/microphone/audio:o</from>
+        <to>/googleSpeech/sound:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/googleSpeech/commands:rpc</from>
+        <to>/microphone/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+</application>
