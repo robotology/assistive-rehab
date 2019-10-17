@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="yarpmanifest.xsl"?>
+
+<module>
+  <name>googleSpeech</name>
+  <doxygen-group>googleSpeech</doxygen-group>
+  <description>This module is responsible for recognizing speech in various languages.</description>
+  <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
+  <version>0.3.0</version>
+
+  <description-long>
+   This module retrieves raw input from the microphone port and queries google cloud speech services and provides the transcript on a port.
+  </description-long>
+
+  <arguments>
+        <param default="googleSpeech" desc="Module's name; all the open ports will be tagged with the prefix /name.">name</param>
+        <param default="en-US" desc="Use English US">language_code</param>
+        <param default="16000" desc="Use 16000 hertz for the sample rate">sample_rate_hertz</param>
+  </arguments>
+
+  <authors>
+    <author email="vadim.tikhanoff@iit.it"> Vadim Tikhanoff </author>
+  </authors>
+
+  <data>
+      <input>
+          <type>Sound</type>
+          <port>/googleSpeech/sound:i</port>
+          <description>
+            Port to receive sound from the microphone
+          </description>
+      </input>
+      <output>
+          <type>Bottle</type>
+          <port>/googleSpeech/result:o</port>
+          <description>
+            Sends the transcript result of the output of google
+          </description>
+      </output>
+      <output>
+          <type>rpc</type>
+          <port>/googleSpeech/commands:rpc</port>
+          <description>
+            Sends commands to the microphone device driver to start and stop the acquisition.
+          </description>
+      </output>
+  </data>
+
+  <services>
+    <server>
+      <type>googleSpeech_IDL</type>
+      <idl>idl.thrift</idl>
+      <port>/googleSpeech/rpc</port>
+      <description>service port</description>
+    </server>
+  </services>
+
+</module>
+
