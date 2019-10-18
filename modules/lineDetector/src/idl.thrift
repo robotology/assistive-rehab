@@ -31,18 +31,18 @@ service lineDetector_IDL
 {
   /**
    * Start detection of start/finish line.
-   * @param line_idx index of the line to detect, 0:start-line, 1:finish-line.
+   * @param line string indicating the line to detect, start-line or finish-line.
    * @param timeout optional timeout in seconds, if > 0.
    * @return true on success/failure.
    */
-   bool detect(1:i32 line_idx, 2:i32 timeout=0)
+   bool detect(1:string line, 2:i32 timeout=0)
 
    /**
     * Get the pose of the line.
-    * @param line_idx index of the line, 0:start-line, 1:finish-line.
+    * @param line string indicating the line to detect, start-line or finish-line.
     * @return pose of the line with respect to the world frame (start-line).
     */
-    Vector get_line_pose(1:i32 line_idx);
+    Vector get_line_pose(1:string line);
 
    /**
     * Get the transformation matrix from robot root to world frame (start-line).

@@ -38,6 +38,7 @@ class Detector : public RFModule, public lineDetector_IDL
     bool camera_configured;
     double fx,fy,px,py;
     cv::Vec3d rvec,tvec; // Rodrigues coefficients wrt cam
+    std::map<std::string,int> line2idx;
 
     std::vector<yarp::sig::Vector>lines_pose;
     std::vector<iCub::ctrl::MedianFilter*> lines_filter;
@@ -123,6 +124,9 @@ class Detector : public RFModule, public lineDetector_IDL
         camera_configured=false;
         line_idx=-1;
         line_estimated=false;
+
+        line2idx["start-line"]=0;
+        line2idx["finish-line"]=1;
 
         cam_intrinsic=cv::Mat::eye(3,3,CV_64F);
         cam_distortion=cv::Mat::zeros(1,5,CV_64F);
@@ -332,12 +336,20 @@ class Detector : public RFModule, public lineDetector_IDL
     }
 
     /****************************************************************/
-    bool detect(const int line_idx, const int timeout) override
+    bool detect(const std::string &line, const int timeout) override
     {
         std::unique_lock<std::mutex> lck(mtx_line_detected);
-        this->line_idx=line_idx;
+        if(line2idx.count(line)>0)
+        {
+            line_idx=line2idx.at(line);
+        }
+        else
+        {
+            yWarning()<<"This line does not exist";
+            return false;
+        }
         line_cnt=0;
-        yInfo()<<"Detecting line"<<line_idx;
+        yInfo()<<"Detecting"<<line;
         const int ok=Vocab::encode("ok");
         if (line_idx==0)
         {
@@ -502,13 +514,19 @@ class Detector : public RFModule, public lineDetector_IDL
     }
 
     /****************************************************************/
-    yarp::sig::Vector get_line_pose(const int line_idx) override
+    yarp::sig::Vector get_line_pose(const std::string &line) override
     {
         std::lock_guard<std::mutex> lg(mtx_update);
-        if (line_estimated)
-            return lines_pose[line_idx];
+        if(line2idx.count(line)>0 && line_estimated)
+        {
+            int i=line2idx.at(line);
+            return lines_pose[i];
+        }
         else
+        {
+            yWarning()<<"This line does not exist or has not been estimated yet";
             return {};
+        }
     }
 
     /****************************************************************/
