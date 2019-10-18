@@ -14,7 +14,8 @@
 
   <arguments>
     <param default="0.05" desc="Periodicity of the module (s).">period</param>
-    <param default="0.3" desc="The magnitude of the linear velocity used in the bang-bang controller (m/s).">velocity-magnitude-linear</param>
+    <param default="0.3" desc="The magnitude of the linear velocity used in the bang-bang controller (m/s).">velocity-linear-magnitude</param>
+    <param default="20.0" desc="The maximum angular velocity used in the PID controller (deg/s).">velocity-angular-saturation</param>
     <param default="5.0" desc="Angular tolerance for rotating (deg/s).">angular-tolerance</param>
     <param default="2.0" desc="The target distance from the skeleton that the controller will attempt to keep (m).">distance-target</param>
     <param default="0.2" desc="The low threshold of the hsyteresis on the distance error (m).">distance-hysteresis-low</param>

@@ -50,7 +50,8 @@ using namespace assistive_rehab;
 /****************************************************************/
 class Navigator : public RFModule, public navController_IDL {
   double period{0.0};
-  double velocity_magnitude_linear{0.0};
+  double velocity_linear_magnitude{0.0};
+  double velocity_angular_saturation{0.0};
   double angular_tolerance{0.0};
   double distance_target{0.0};
   double distance_hysteresis_low{0.0};
@@ -131,7 +132,8 @@ class Navigator : public RFModule, public navController_IDL {
   /****************************************************************/
   bool configure(ResourceFinder& rf)override {
     period = rf.check("period", Value(0.05)).asDouble();
-    velocity_magnitude_linear = abs(rf.check("velocity-magnitude-linear", Value(0.3)).asDouble());
+    velocity_linear_magnitude = abs(rf.check("velocity-linear-magnitude", Value(0.3)).asDouble());
+    velocity_angular_saturation = abs(rf.check("velocity-angular-saturation", Value(20.0)).asDouble());
     angular_tolerance = abs(rf.check("angular-tolerance", Value(5.0)).asDouble());
     distance_target = abs(rf.check("distance-target", Value(2.0)).asDouble());
     distance_hysteresis_low = abs(rf.check("distance-hysteresis-low", Value(0.2)).asDouble());
@@ -156,7 +158,7 @@ class Navigator : public RFModule, public navController_IDL {
     double N = 1.0;
     double Tt = 1.0;
     Matrix sat(1, 2);
-    sat(0, 0) = -20.0;
+    sat(0, 0) = -velocity_angular_saturation;
     sat(0, 1) = -sat(0, 0);
     pid_controller = shared_ptr<parallelPID>(new parallelPID(period, Kp * ones(1), Ki * ones(1), Kd * ones(1),
                                                              w * ones(1), w * ones(1), w * ones(1),
@@ -380,7 +382,7 @@ class Navigator : public RFModule, public navController_IDL {
           skeleton_location = (*skeleton)[KeyPointTag::hip_center]->getPoint();
           double e = norm(skeleton_location) - distance_target;
           double abs_e = abs(e);
-          double command = velocity_magnitude_linear * sign(e);
+          double command = velocity_linear_magnitude * sign(e);
           if (distance_hysteresis_active) {
             if (abs_e > distance_hysteresis_high) {
               robot_velocity.x = command;
@@ -421,7 +423,7 @@ class Navigator : public RFModule, public navController_IDL {
         Vector dir(2);
         dir[0] = cos(theta_rad);
         dir[1] = sin(theta_rad);
-        robot_velocity.x = sign(dot(dir, e)) * velocity_magnitude_linear;
+        robot_velocity.x = sign(dot(dir, e)) * velocity_linear_magnitude;
       } else {
         if (target_location + 1 != target_locations.end()) {
           target_location++;
