@@ -876,10 +876,10 @@ bool Manager::hasCrossedFinishLine(const double finishline_thresh)
     foot_left=(world_frame*gaze_frame)*foot_left;
     foot_left.pop_back();
 
-    Vector lp_root(3);
-    lp_root[0]=line_pose[0];
-    lp_root[1]=line_pose[1];
-    lp_root[2]=line_pose[2];
+    Vector lp_world(3);
+    lp_world[0]=line_pose[0];
+    lp_world[1]=line_pose[1];
+    lp_world[2]=line_pose[2];
 
     Vector line_ori(4);
     line_ori[0]=line_pose[3];
@@ -890,10 +890,10 @@ bool Manager::hasCrossedFinishLine(const double finishline_thresh)
     Vector line_x=lOri.getCol(0);
     line_x.pop_back();
 
-    Vector fr_lp=lp_root-foot_right;
-    Vector fl_lp=lp_root-foot_left;
-    Vector pline=lp_root+line_x;
-    Vector v1=lp_root-pline;
+    Vector fr_lp=lp_world-foot_right;
+    Vector fl_lp=lp_world-foot_left;
+    Vector pline=lp_world+line_x;
+    Vector v1=lp_world-pline;
     double dist_fr_line=norm(cross(v1,fr_lp))/norm(v1);
     double dist_fl_line=norm(cross(v1,fl_lp))/norm(v1);
     yInfo()<<"dist foot right line"<<dist_fr_line;

@@ -23,8 +23,6 @@
 #include <yarp/math/Math.h>
 #include <yarp/math/Rand.h>
 
-#include <iCub/ctrl/filters.h>
-
 #include "AssistiveRehab/skeleton.h"
 #include "src/attentionManager_IDL.h"
 
@@ -32,17 +30,13 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
 using namespace yarp::math;
-using namespace iCub::ctrl;
 using namespace assistive_rehab;
 
 /****************************************************************/
 class Attention : public RFModule, public attentionManager_IDL
 {
-    enum class State { unconnected, connection_trigger, idle, seek_skeleton, seek_lines, follow } state;
+    enum class State { unconnected, connection_trigger, idle, seek_skeleton, follow } state;
     bool auto_mode,virtual_mode;
-
-    Vector filtered_startline_pose,filtered_finishline_pose;
-    MedianFilter *finishline_filter,*startline_filter;
 
     const int ack=Vocab::encode("ack");
     const double T=3.0;
@@ -64,7 +58,6 @@ class Attention : public RFModule, public attentionManager_IDL
     string tag;
     string keypoint;
     string robot_skeleton_name;
-    int line_filter_order;
 
     mutex mtx;
     BufferedPort<Bottle> opcPort;
@@ -192,7 +185,7 @@ class Attention : public RFModule, public attentionManager_IDL
     }
 
     /****************************************************************/
-    bool set_auto(const bool seek_for_line) override
+    bool set_auto() override
     {
         lock_guard<mutex> lg(mtx);
         if (state<State::idle)
@@ -200,16 +193,7 @@ class Attention : public RFModule, public attentionManager_IDL
             return false;
         }
         auto_mode=true;
-        if (seek_for_line)
-        {
-            filtered_startline_pose.clear();
-            filtered_finishline_pose.clear();
-            return switch_to(State::seek_lines);
-        }
-        else
-        {
-            return switch_to(State::seek_skeleton);
-        }
+        return switch_to(State::seek_skeleton);
     }
 
     /****************************************************************/
@@ -218,34 +202,6 @@ class Attention : public RFModule, public attentionManager_IDL
         lock_guard<mutex> lg(mtx);
         virtual_mode=true;
         return true;
-    }
-
-    /****************************************************************/
-    Vector get_startline_pose() override
-    {
-        lock_guard<mutex> lg(mtx);
-        if (filtered_startline_pose.size()>0)
-        {
-            return filtered_startline_pose;
-        }
-        else
-        {
-            return {};
-        }
-    }
-
-    /****************************************************************/
-    Vector get_finishline_pose() override
-    {
-        lock_guard<mutex> lg(mtx);
-        if (filtered_finishline_pose.size()>0)
-        {
-            return filtered_finishline_pose;
-        }
-        else
-        {
-            return {};
-        }
     }
 
     /****************************************************************/
@@ -455,141 +411,6 @@ class Attention : public RFModule, public attentionManager_IDL
     }
 
     /****************************************************************/
-    string detect_line()
-    {
-        string line="";
-        string startline="start-line";
-        string finishline="finish-line";
-        if (Bottle *b=opcPort.read())
-        {
-            if (!b->get(1).isString())
-            {
-                for (int i=1; i<b->size(); i++)
-                {
-                    Property prop;
-                    prop.fromString(b->get(i).asList()->toString());
-                    if(prop.check(startline) || prop.check(finishline))
-                    {
-                        Bottle *bi=b->get(i).asList();
-                        if(Bottle *propField=bi->get(0).asList())
-                        {
-                            if(Bottle *subProp=propField->get(1).asList())
-                            {
-                                if(Bottle *subPropField1=subProp->get(1).asList())
-                                {
-                                    if(Bottle *subPropField2=subProp->get(2).asList())
-                                    {
-                                        if(Bottle *bPose=subPropField1->find("pose_root").asList())
-                                        {
-                                            if(subPropField2->find("visibility").asBool())
-                                            {
-                                                if(prop.check(startline) && !startline_ok)
-                                                {
-                                                    line=startline;
-                                                }
-                                                if(prop.check(finishline) && !finishline_ok)
-                                                {
-                                                    line=finishline;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        if(!line.empty())
-        {
-            yInfo()<<"Found"<<line;
-        }
-
-        return line;
-    }
-
-    /****************************************************************/
-    bool wait_line_reliable(const string &line)
-    {
-        yInfo()<<"Waiting for a good estimate of"<<line;
-        bool line_reliable=false;
-        int line_cnt=0;
-        while ( line_cnt<=line_filter_order )
-        {
-            if (Bottle *b=opcPort.read())
-            {
-                if (!b->get(1).isString())
-                {
-                    for (int i=1; i<b->size(); i++)
-                    {
-                        Property prop;
-                        prop.fromString(b->get(i).asList()->toString());
-                        if(prop.check(line))
-                        {
-                            Bottle *bi=b->get(i).asList();
-                            if(Bottle *propField=bi->get(0).asList())
-                            {
-                                if(Bottle *subProp=propField->get(1).asList())
-                                {
-                                    if(Bottle *subPropField1=subProp->get(1).asList())
-                                    {
-                                        if(Bottle *subPropField2=subProp->get(2).asList())
-                                        {
-                                            if(Bottle *bPose=subPropField1->find("pose_root").asList())
-                                            {
-                                                if(subPropField2->find("visibility").asBool())
-                                                {
-                                                    Vector line_pose(7);
-                                                    line_pose[0]=bPose->get(0).asDouble();
-                                                    line_pose[1]=bPose->get(1).asDouble();
-                                                    line_pose[2]=bPose->get(2).asDouble();
-                                                    line_pose[3]=bPose->get(3).asDouble();
-                                                    line_pose[4]=bPose->get(4).asDouble();
-                                                    line_pose[5]=bPose->get(5).asDouble();
-                                                    line_pose[6]=bPose->get(6).asDouble();
-                                                    if(line=="start-line")
-                                                        filtered_startline_pose=startline_filter->filt(line_pose);
-                                                    else if(line=="finish-line")
-                                                        filtered_finishline_pose=finishline_filter->filt(line_pose);
-                                                    line_cnt++;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        if(line=="start-line")
-        {
-            Vector v=filtered_startline_pose.subVector(3,5);
-            if(norm(v)>0.0)
-                v/=norm(v);
-            filtered_startline_pose.setSubvector(3,v);
-            startline_ok=true;
-            yInfo()<<line<<"estimated at"<<filtered_startline_pose.toString();
-            line_reliable=startline_ok;
-        }
-        else if(line=="finish-line")
-        {
-            Vector v=filtered_finishline_pose.subVector(3,5);
-            if(norm(v)>0.0)
-                v/=norm(v);
-            filtered_finishline_pose.setSubvector(3,v);
-            finishline_ok=true;
-            yInfo()<<line<<"estimated at"<<filtered_finishline_pose.toString();
-            line_reliable=finishline_ok;
-        }
-        return line_reliable;
-    }
-
-    /****************************************************************/
     bool attach(RpcServer &source) override
     {
         return yarp().attachAsServer(source);
@@ -605,7 +426,6 @@ class Attention : public RFModule, public attentionManager_IDL
         inactivity_thres=rf.check("inactivity-thres",Value(0.05)).asDouble();
         virtual_mode=rf.check("virtual-mode",Value(false)).asBool();
         robot_skeleton_name=rf.check("robot-skeleton-name",Value("robot")).asString();
-        line_filter_order=rf.check("line-filter-order",Value(30)).asInt();
 
         opcPort.open("/attentionManager/opc:i");
         gazeCmdPort.open("/attentionManager/gaze/cmd:rpc");
@@ -623,11 +443,6 @@ class Attention : public RFModule, public attentionManager_IDL
         first_follow_look=false;
         first_seek_look=false;
         first_gaze_frame=true;
-
-        startline_filter=new MedianFilter(line_filter_order,Vector(7,0.0));
-        finishline_filter=new MedianFilter(line_filter_order,Vector(7,0.0));
-        startline_ok=false;
-        finishline_ok=false;
 
         Rand::init();
         return true;
@@ -684,25 +499,6 @@ class Attention : public RFModule, public attentionManager_IDL
         if (state==State::connection_trigger)
         {
             switch_to(auto_mode?State::seek_skeleton:State::idle);
-        }
-        else if (state==State::seek_lines)
-        {
-            yInfo()<<"Looking for lines";
-            Vector target(2);
-            target[0]=Rand::scalar(-30.0,30.0);
-            target[1]=Rand::scalar(-35.0,-15.0);
-            look("angular",target);
-            wait_motion_done();
-            string line=detect_line();
-            if(!line.empty())
-            {
-                wait_line_reliable(line);
-                bool lines_ok=startline_ok && finishline_ok;
-                if(lines_ok)
-                {
-                    switch_to(State::seek_skeleton);
-                }
-            }
         }
         else if (state==State::seek_skeleton)
         {
@@ -774,6 +570,8 @@ class Attention : public RFModule, public attentionManager_IDL
                 }
                 x.pop_back();
                 is_following_x=x;
+                is_following_coronal=(*s).getCoronal();
+                is_following_sagittal=(*s).getSagittal();
 
                 // gaze speed is faster when chasing,
                 // hence wait till the first movement is done
@@ -812,9 +610,6 @@ class Attention : public RFModule, public attentionManager_IDL
     {
         // homing gaze
         look("angular",zeros(2));
-
-        delete startline_filter;
-        delete finishline_filter;
 
         opcPort.close();
         gazeCmdPort.close();

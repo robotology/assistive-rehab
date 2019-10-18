@@ -228,6 +228,12 @@
     </connection>
 
     <connection>
+        <from>/lineDetector/nav:rpc</from>
+        <to>/navController/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
         <from>/motionAnalyzer/opc</from>
         <to>/opc/rpc</to>
         <protocol>fast_tcp</protocol>
@@ -278,6 +284,12 @@
     <connection>
         <from>/managerTUG/analyzer:rpc</from>
         <to>/motionAnalyzer/cmd</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/line:rpc</from>
+        <to>/lineDetector/cmd:rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
