@@ -11,6 +11,8 @@
   <description-long>
    This module connects to robot's state ports to retrieve the joints and then uses such information to compute the 
    3D configuration of the limbs. The resulting skeleton is sent to the viewer and to the OPC.
+   The 3D info are expressed in the world frame if the navigation state is provided; the root becomes the depth_center
+   frame otherwise.
   </description-long>
 
   <arguments>
@@ -26,6 +28,13 @@
   </authors>
 
   <data>
+      <input>
+          <type>Property</type>
+          <port>/robotSkeletonPublisher/nav:i</port>
+          <description>
+            Receives the navigation status broadcast.
+          </description>
+      </input>
       <output>
           <type>Bottle</type>
           <port>/robotSkeletonPublisher/viewer:o</port>

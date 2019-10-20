@@ -31,6 +31,7 @@
 #include <vtkCommand.h>
 #include <vtkProperty.h>
 #include <vtkPolyDataMapper.h>
+#include <vtkLineSource.h>
 #include <vtkQuadric.h>
 #include <vtkSphereSource.h>
 #include <vtkTransform.h>
@@ -48,6 +49,7 @@
 #include <vtkInteractorStyleSwitch.h>
 
 #include "AssistiveRehab/skeleton.h"
+#include "src/skeletonViewer_IDL.h"
 
 using namespace std;
 using namespace yarp::os;
@@ -77,7 +79,7 @@ protected:
     vector<vtkSmartPointer<vtkTransform>>      vtk_quadric_transform;
     vector<vtkSmartPointer<vtkPolyDataMapper>> vtk_quadric_mapper;
     vector<vtkSmartPointer<vtkActor>>          vtk_quadric_actor;
-    vtkSmartPointer<vtkCaptionActor2D>         vtk_textActor;
+    vtkSmartPointer<vtkCaptionActor2D>         vtk_text_actor;
 
     unordered_map<const KeyPoint*,unsigned int> k2id_sphere;
     unordered_map<const KeyPoint*,unordered_map<const KeyPoint*,unsigned int>> kk2id_quadric;
@@ -273,23 +275,23 @@ public:
                 auto k=(*skeleton)[0];
                 generate_limbs(k);
 
-                vtk_textActor=vtkSmartPointer<vtkCaptionActor2D>::New();
-                vtk_textActor->GetTextActor()->SetTextScaleModeToNone();
-                vtk_textActor->SetCaption(skeleton->getTag().c_str());
-                vtk_textActor->BorderOff();
-                vtk_textActor->LeaderOn();
-                vtk_textActor->GetCaptionTextProperty()->SetColor(color.data());
-                vtk_textActor->GetCaptionTextProperty()->SetFontSize(20);
-                vtk_textActor->GetCaptionTextProperty()->FrameOff();
-                vtk_textActor->GetCaptionTextProperty()->ShadowOff();
-                vtk_textActor->GetCaptionTextProperty()->BoldOff();
-                vtk_textActor->GetCaptionTextProperty()->ItalicOff();
-                vtk_textActor->SetVisibility(opacity!=0.0);
-                vtk_renderer->AddActor(vtk_textActor);
+                vtk_text_actor=vtkSmartPointer<vtkCaptionActor2D>::New();
+                vtk_text_actor->GetTextActor()->SetTextScaleModeToNone();
+                vtk_text_actor->SetCaption(skeleton->getTag().c_str());
+                vtk_text_actor->BorderOff();
+                vtk_text_actor->LeaderOn();
+                vtk_text_actor->GetCaptionTextProperty()->SetColor(color.data());
+                vtk_text_actor->GetCaptionTextProperty()->SetFontSize(20);
+                vtk_text_actor->GetCaptionTextProperty()->FrameOff();
+                vtk_text_actor->GetCaptionTextProperty()->ShadowOff();
+                vtk_text_actor->GetCaptionTextProperty()->BoldOff();
+                vtk_text_actor->GetCaptionTextProperty()->ItalicOff();
+                vtk_text_actor->SetVisibility(opacity!=0.0);
+                vtk_renderer->AddActor(vtk_text_actor);
 
                 Vector p;
                 if (findCaptionPoint(p))
-                    vtk_textActor->SetAttachmentPoint(p.data());
+                    vtk_text_actor->SetAttachmentPoint(p.data());
             }
         }
 
@@ -303,7 +305,7 @@ public:
             vtk_renderer->RemoveActor(actor);
         for (auto &actor:vtk_quadric_actor)
             vtk_renderer->RemoveActor(actor);
-        vtk_renderer->RemoveActor(vtk_textActor);
+        vtk_renderer->RemoveActor(vtk_text_actor);
     }
 
     /****************************************************************/
@@ -322,9 +324,9 @@ public:
 
                 Vector p;
                 if (findCaptionPoint(p))
-                    vtk_textActor->SetAttachmentPoint(p.data());
-                vtk_textActor->GetCaptionTextProperty()->SetColor(color.data());
-                vtk_textActor->SetVisibility(opacity!=0.0);
+                    vtk_text_actor->SetAttachmentPoint(p.data());
+                vtk_text_actor->GetCaptionTextProperty()->SetColor(color.data());
+                vtk_text_actor->SetVisibility(opacity!=0.0);
             }
         }
 
@@ -339,13 +341,83 @@ public:
 };
 
 
+/****************************************************************/
+class VTKLine
+{
+protected:
+    string name;
+    vector<double> line_origin;
+    vector<double> line_end;
+    vector<double> color;
+
+    vtkSmartPointer<vtkRenderer>       &vtk_renderer;
+    vtkSmartPointer<vtkLineSource>      vtk_line;
+    vtkSmartPointer<vtkPolyDataMapper>  vtk_line_mapper;
+    vtkSmartPointer<vtkActor>           vtk_line_actor;
+    vtkSmartPointer<vtkCaptionActor2D>  vtk_text_actor;
+
+public:
+    /****************************************************************/
+    VTKLine(const string &name_, const vector<double> &line_origin_,
+            const vector<double> &line_end_, const vector<double> &color_,
+            vtkSmartPointer<vtkRenderer> &vtk_renderer_) :
+            name(name_), line_origin(line_origin_), line_end(line_end_),
+            color(color_), vtk_renderer(vtk_renderer_) { }
+
+    /****************************************************************/
+    void draw()
+    {
+        vtk_line=vtkSmartPointer<vtkLineSource>::New();
+        vtk_line->SetPoint1(line_origin.data());
+        vtk_line->SetPoint2(line_end.data());
+
+        vtk_line_mapper=vtkSmartPointer<vtkPolyDataMapper>::New();
+        vtk_line_mapper->SetInputConnection(vtk_line->GetOutputPort());
+
+        vtk_line_actor=vtkSmartPointer<vtkActor>::New();
+        vtk_line_actor->SetMapper(vtk_line_mapper);
+        vtk_line_actor->GetProperty()->SetLineWidth(4);
+        vtk_line_actor->GetProperty()->SetColor(color.data());
+
+        vtk_text_actor=vtkSmartPointer<vtkCaptionActor2D>::New();
+        vtk_text_actor->GetTextActor()->SetTextScaleModeToNone();
+        vtk_text_actor->SetCaption(name.c_str());
+        vtk_text_actor->BorderOff();
+        vtk_text_actor->LeaderOn();
+        vtk_text_actor->GetCaptionTextProperty()->SetColor(color.data());
+        vtk_text_actor->GetCaptionTextProperty()->SetFontSize(20);
+        vtk_text_actor->GetCaptionTextProperty()->FrameOff();
+        vtk_text_actor->GetCaptionTextProperty()->ShadowOff();
+        vtk_text_actor->GetCaptionTextProperty()->BoldOff();
+        vtk_text_actor->GetCaptionTextProperty()->ItalicOff();
+        vtk_text_actor->SetAttachmentPoint(line_origin.data());
+
+        vtk_renderer->AddActor(vtk_line_actor);
+        vtk_renderer->AddActor(vtk_text_actor);
+    }
+
+    /****************************************************************/
+    virtual ~VTKLine()
+    {
+        vtk_renderer->RemoveActor(vtk_line_actor);
+        vtk_renderer->RemoveActor(vtk_text_actor);
+    }
+};
+
+
 mutex mtx;
-vector<Bottle> inputs;
-bool rpc_command_rx;
-Vector camera_position,camera_focalpoint,camera_viewup;
 vtkSmartPointer<vtkRenderer> vtk_renderer;
+
+Vector camera_position,camera_focalpoint,camera_viewup;
+bool rpc_camera_rx;
+
+vector<Bottle> skeletons_rx;
 unordered_map<string,unique_ptr<VTKSkeleton>> skeletons;
 unordered_set<string> skeletons_gc_tags;
+
+unordered_set<string> lines_rx;
+unordered_map<string,unique_ptr<VTKLine>> lines;
+unordered_set<string> lines_gc_tags;
 
 /****************************************************************/
 class UpdateCommand : public vtkCommand
@@ -389,13 +461,13 @@ public:
         }
 
         unordered_set<string> skeletons_prevent_gc_tags;
-        if (!inputs.empty())
+        if (!skeletons_rx.empty())
         {
-            for (auto &input:inputs)
+            for (auto &sk:skeletons_rx)
             {
-                for (int i=0; i<input.size(); i++)
+                for (int i=0; i<sk.size(); i++)
                 {
-                    if (Bottle *b1=input.get(i).asList())
+                    if (Bottle *b1=sk.get(i).asList())
                     {
                         if (b1->check("tag"))
                         {
@@ -425,10 +497,17 @@ public:
                 }
             }
 
-            inputs.clear();
+            skeletons_rx.clear();
         }
 
-        if (rpc_command_rx)
+        if (!lines_rx.empty())
+        {
+            for (auto &name:lines_rx)
+                lines[name]->draw();
+            lines_rx.clear();
+        }
+
+        if (rpc_camera_rx)
         {
             vtkSmartPointer<vtkCamera> vtk_camera=vtk_renderer->GetActiveCamera();
             vtk_camera->SetPosition(camera_position.data());
@@ -438,7 +517,7 @@ public:
                    <<"position=("<<camera_position.toString(3,3)<<");"
                    <<"focalpoint=("<<camera_focalpoint.toString(3,3)<<");"
                    <<"viewup=("<<camera_viewup.toString(3,3)<<");";
-            rpc_command_rx=false;
+            rpc_camera_rx=false;
         }
 
         if (!skeletons_gc_tags.empty())
@@ -456,6 +535,16 @@ public:
             skeletons_gc_tags.clear();
         }
 
+        if (!lines_gc_tags.empty())
+        {
+            for (auto &name:lines_gc_tags)
+            {
+                auto line=lines.find(name);
+                lines.erase(line);
+            }
+            lines_gc_tags.clear();
+        }
+
         iren->GetRenderWindow()->SetWindowName("Skeleton Viewer");
         iren->Render();
     }
@@ -463,7 +552,7 @@ public:
 
 
 /****************************************************************/
-class Viewer : public RFModule
+class Viewer : public RFModule, public skeletonViewer_IDL
 {
     bool closing;
 
@@ -497,9 +586,15 @@ class Viewer : public RFModule
     vtkSmartPointer<UpdateCommand> vtk_updateCallback;
 
     /****************************************************************/
+    bool attach(RpcServer &source) override
+    {
+        return yarp().attachAsServer(source);
+    }
+
+    /****************************************************************/
     bool configure(ResourceFinder &rf) override
     {
-        rpc_command_rx=false;
+        rpc_camera_rx=false;
 
         int x=rf.check("x",Value(0)).asInt();
         int y=rf.check("y",Value(0)).asInt();
@@ -580,7 +675,7 @@ class Viewer : public RFModule
     void process(const Bottle &input)
     {
         lock_guard<mutex> lg(mtx);
-        inputs.push_back(input);
+        skeletons_rx.push_back(input);
     }
 
     /****************************************************************/
@@ -596,39 +691,79 @@ class Viewer : public RFModule
     }
 
     /****************************************************************/
-    bool respond(const Bottle &command, Bottle &reply) override
+    bool set_camera_position(const double x, const double y,
+                             const double z) override
     {
         lock_guard<mutex> lg(mtx);
-        if (command.size()>0)
-        {
-            string cmd=command.get(0).asString();
-            if (command.size()>1)
-            {
-                Property options;
-                command.tail().write(options);
-                if (cmd=="set_camera")
-                {
-                    if (options.check("position"))
-                    {
-                        options.find("position").asList()->write(camera_position);
-                        rpc_command_rx=true;
-                    }
-                    if (options.check("focalpoint"))
-                    {
-                        options.find("focalpoint").asList()->write(camera_focalpoint);
-                        rpc_command_rx=true;
-                    }
-                    if (options.check("viewup"))
-                    {
-                        options.find("viewup").asList()->write(camera_viewup);
-                        rpc_command_rx=true;
-                    }
-                }
-            }
-        }
-
-        reply.addVocab(Vocab::encode(rpc_command_rx?"ack":"nack"));
+        camera_position[0]=x;
+        camera_position[1]=y;
+        camera_position[2]=z;
+        rpc_camera_rx=true;
         return true;
+    }
+
+    /****************************************************************/
+    bool set_camera_focalpoint(const double x, const double y,
+                               const double z) override
+    {
+        lock_guard<mutex> lg(mtx);
+        camera_focalpoint[0]=x;
+        camera_focalpoint[1]=y;
+        camera_focalpoint[2]=z;
+        rpc_camera_rx=true;
+        return true;
+    }
+
+    /****************************************************************/
+    bool set_camera_viewup(const double x, const double y,
+                           const double z) override
+    {
+        lock_guard<mutex> lg(mtx);
+        camera_viewup[0]=x;
+        camera_viewup[1]=y;
+        camera_viewup[2]=z;
+        rpc_camera_rx=true;
+        return true;
+    }
+
+    /****************************************************************/
+    bool create_line(const string &name,
+                     const double x0, const double y0, const double z0,
+                     const double x1, const double y1, const double z1,
+                     const double r, const double g, const double b) override
+    {
+        lock_guard<mutex> lg(mtx);
+        if (lines.find(name)==lines.end())
+        {
+            vector<double> line_origin({x0,y0,z0});
+            vector<double> line_end({x1,y1,z1});
+            vector<double> color({r,g,b});
+            lines[name]=unique_ptr<VTKLine>(new VTKLine(name,line_origin,line_end,
+                                                        color,vtk_renderer));
+            lines_rx.insert(name);
+            return true;
+        }
+        else
+        {
+            yError()<<"Line already existing";
+            return false;
+        }
+    }
+
+    /****************************************************************/
+    bool delete_line(const string &name) override
+    {
+        lock_guard<mutex> lg(mtx);
+        if (lines.find(name)!=lines.end())
+        {
+            lines_gc_tags.insert(name);
+            return true;
+        }
+        else
+        {
+            yError()<<"Line not existing";
+            return false;
+        }
     }
 
     /****************************************************************/
