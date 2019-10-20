@@ -241,16 +241,18 @@ class Navigator : public RFModule, public navController_IDL {
   void get_gaze() {
     if (Property* p = gazePort.read(false)) {
       if (Bottle* b = p->find("depth_rgb").asList()) {
-        Vector pos(3);
-        for (size_t i = 0; i < pos.length(); i++) {
-          pos[i] = b->get(i).asDouble();
+        if (b->size() >= 7) {
+          Vector pos(3);
+          for (size_t i = 0; i < pos.length(); i++) {
+            pos[i] = b->get(i).asDouble();
+          }
+          Vector ax(4);
+          for (size_t i = 0; i < ax.length(); i++) {
+            ax[i] = b->get(pos.length() + i).asDouble();
+          }
+          gaze = axis2dcm(ax);
+          gaze.setSubcol(pos, 0, 3);
         }
-        Vector ax(4);
-        for (size_t i = 0; i < ax.length(); i++) {
-          ax[i] = b->get(pos.length() + i).asDouble();
-        }
-        gaze = axis2dcm(ax);
-        gaze.setSubcol(pos, 0, 3);
       }
     }
   }

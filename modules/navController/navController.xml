@@ -35,7 +35,7 @@
           </description>
       </input>
       <input>
-          <type>Bottle</type>
+          <type>Property</type>
           <port>/navController/gaze:i</port>
           <description>
             Receives the gaze status broadcast.
