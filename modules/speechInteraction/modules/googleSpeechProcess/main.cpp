@@ -175,7 +175,7 @@ public:
             read_language( &response.language() );
             read_sentences( &response.sentences() );
             //read_tokens( &response.tokens() );
-            read_answer( &response.tokens() );
+            b = read_answer( &response.tokens() );
 
         } else if ( !status.ok() )
             yError() << "Status Returned Canceled";
@@ -224,7 +224,7 @@ public:
     }
     
     /********************************************************/
-    void read_answer( const google::protobuf::RepeatedPtrField< Token >* tokens ) {
+    yarp::os::Bottle read_answer( const google::protobuf::RepeatedPtrField< Token >* tokens ) {
         
         yarp::os::Bottle &outTargets = targetPort.prepare();
         
@@ -272,7 +272,7 @@ public:
         int verbinc = 0;
         int nouninc = 0;
         
-         outTargets.clear();
+        outTargets.clear();
         
         for ( int i = 0; i <wordList.size(); i++)
         {
@@ -406,7 +406,7 @@ public:
                 yInfo()<< "We need to send bottle with SPEED";
             }*/
             
-            targetPort.write();
+            return outTargets;
         }
     }
     
