@@ -56,6 +56,20 @@
             Receives stream of camera depth images.
           </description>
       </input>
+      <input>
+          <type>Property</type>
+          <port>/skeletonRetriever/nav:i</port>
+          <description>
+            Receives the navigation status broadcast.
+          </description>
+      </input>
+      <input>
+          <type>Property</type>
+          <port>/skeletonRetriever/gaze:i</port>
+          <description>
+            Receives the gaze status broadcast.
+          </description>
+      </input>
       <output>
           <type>rpc</type>
           <port>/skeletonRetriever/opc:rpc</port>

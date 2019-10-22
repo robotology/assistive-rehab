@@ -35,13 +35,15 @@
             Receives 3D skeletons to visualize.
           </description>
       </input>
-      <input>
-           <type>rpc</type>
-           <port>/skeletonViewer:rpc</port>
-           <description>Receives the following commands and provides replies: (notation: "." identifies a string)
-           -# <b>set camera options</b> <i>"set_camera" ("position" pos_list) ("focalpoint" focal_list) ("viewup" view_list)</i>:set camera options for visualization. pos_list the position of the camera in world coordinates (set to (0.0,0.0,1.0) if not provided). focal_list the focal point of the camera in world coordinates (set to (0.0,0.0,0.0) if not provided). view_list view up direction for the camera (set to (0.0,1.0,0.0) if not provided).
-           </description>
-       </input>
   </data>
+
+  <services>
+    <server>
+      <type>skeletonViewer_IDL</type>
+      <idl>idl.thrift</idl>
+      <port>/skeletonViewer:rpc</port>
+      <description>service port</description>
+    </server>
+  </services>
 
 </module>

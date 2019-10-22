@@ -11,6 +11,7 @@
  */
 
 #include <cstdlib>
+#include <cmath>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -72,6 +73,10 @@ class Publisher : public RFModule, public robotSkeletonPublisher_IDL
     string skeleton_name;
     vector<double> skeleton_color;
     Bottle b_sk_color;
+
+    BufferedPort<Property> navPort;
+    Matrix navFrame;
+    bool navFrameUpdated;
 
     RpcClient opcPort;
     int opc_id;
@@ -150,6 +155,28 @@ class Publisher : public RFModule, public robotSkeletonPublisher_IDL
         lock_guard<mutex> lg(mtx);
         this->skeleton_name=skeleton_name;
         return true;
+    }
+
+    /**************************************************************************/
+    bool update_nav_frame()
+    {
+        if (Property *p=navPort.read(false))
+        {
+            if (Bottle *b=p->find("robot-location").asList())
+            {
+                if (b->size()>=3)
+                {
+                    Vector rot(4,0.0);
+                    rot[2]=1.0; rot[3]=(M_PI/180.0)*b->get(2).asDouble();
+                    navFrame=axis2dcm(rot);
+                    navFrame(0,3)=b->get(0).asDouble();
+                    navFrame(1,3)=b->get(1).asDouble();
+                    navFrameUpdated=true;
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**************************************************************************/
@@ -288,6 +315,11 @@ class Publisher : public RFModule, public robotSkeletonPublisher_IDL
         phdl_right_arm.push_back(phdl_encs[6]);
 
         viewerPort.open("/robotSkeletonPublisher/viewer:o");
+
+        navPort.open("/robotSkeletonPublisher/nav:i");
+        navFrame=eye(4,4);
+        navFrameUpdated=false;
+
         opcPort.open("/robotSkeletonPublisher/opc:rpc");
         opc_id=-1;
 
@@ -336,13 +368,16 @@ class Publisher : public RFModule, public robotSkeletonPublisher_IDL
         Vector encs_head=getHeadEncs(phdl_head);
         Vector encs_left_arm=getArmEncs(phdl_left_arm);
         Vector encs_right_arm=getArmEncs(phdl_right_arm);
-        
-        // compute fkin + update the skeleton info:
-        // root frame is "depth_center"
-        Matrix root,hee;
-        head.fkin(encs_head,root);
-        root=SE3inv(root);
 
+        // refresh navigation status
+        update_nav_frame();
+        
+        // compute robot's root fkin (depth_center)
+        Matrix depth_center,hee;
+        head.fkin(encs_head,depth_center);
+        Matrix root=SE3inv(depth_center);
+
+        // update the skeleton
         vector<pair<string,Vector>> unordered;
         unordered.push_back(make_pair(KeyPointTag::head,Vector(3,0.0)));
 
@@ -378,6 +413,10 @@ class Publisher : public RFModule, public robotSkeletonPublisher_IDL
 
         shared_ptr<SkeletonStd> skeleton(new SkeletonStd());
         skeleton->setTag(skeleton_name);
+        if (navFrameUpdated)
+        {
+            skeleton->setTransformation(navFrame*depth_center);
+        }
         skeleton->update(unordered);
 
         viewerUpdate(skeleton);
@@ -407,6 +446,10 @@ class Publisher : public RFModule, public robotSkeletonPublisher_IDL
         {
             opcDel();
             opcPort.close();
+        }
+        if (!navPort.isClosed())
+        {
+            navPort.close();
         }
         if (!viewerPort.isClosed())
         {

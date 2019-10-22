@@ -229,8 +229,13 @@ class Retriever : public RFModule
     BufferedPort<Bottle> skeletonsPort;
     BufferedPort<ImageOf<PixelFloat>> depthPort;
     BufferedPort<Bottle> viewerPort;
+    BufferedPort<Property> navPort;
+    BufferedPort<Property> gazePort;
     RpcClient opcPort;
     RpcClient camPort;
+
+    Matrix navFrame, gazeFrame, rootFrame;
+    bool navFrameUpdated, gazeFrameUpdated;
 
     ImageOf<PixelFloat> depth;
 
@@ -521,7 +526,7 @@ class Retriever : public RFModule
         {
             Bottle cmd,rep;
             cmd.addVocab(Vocab::encode("add"));
-            Property prop=s->skeleton->toProperty();
+            Property prop=applyTransform(s->skeleton)->toProperty();
             if (stamp.isValid())
             {
                 prop.put("stamp",stamp.getTime());
@@ -553,7 +558,7 @@ class Retriever : public RFModule
             Bottle cmd,rep;
             cmd.addVocab(Vocab::encode("set"));
             Bottle &pl=cmd.addList();
-            Property prop=s->skeleton->toProperty();
+            Property prop=applyTransform(s->skeleton)->toProperty();
             if (stamp.isValid())
             {
                 prop.put("stamp",stamp.getTime());
@@ -669,6 +674,76 @@ class Retriever : public RFModule
     }
 
     /****************************************************************/
+    bool update_nav_frame()
+    {
+        if (Property *p=navPort.read(false))
+        {
+            if (Bottle *b=p->find("robot-location").asList())
+            {
+                if (b->size()>=3)
+                {
+                    Vector rot(4,0.0);
+                    rot[2]=1.0; rot[3]=(M_PI/180.0)*b->get(2).asDouble();
+                    navFrame=axis2dcm(rot);
+                    navFrame(0,3)=b->get(0).asDouble();
+                    navFrame(1,3)=b->get(1).asDouble();
+                    navFrameUpdated=true;
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /****************************************************************/
+    bool update_gaze_frame()
+    {
+        if (Property* p=gazePort.read(false))
+        {
+            if (Bottle* b=p->find("depth_rgb").asList())
+            {
+                if (b->size()>=7)
+                {
+                    Vector pos(3);
+                    for (size_t i=0; i<pos.length(); i++)
+                    {
+                        pos[i]=b->get(i).asDouble();
+                    }
+
+                    Vector ax(4);
+                    for (size_t i=0; i<ax.length(); i++)
+                    {
+                        ax[i]=b->get(pos.length()+i).asDouble();
+                    }
+
+                    gazeFrame=axis2dcm(ax);
+                    gazeFrame.setSubcol(pos,0,3);
+                    gazeFrameUpdated=true;
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /****************************************************************/
+    shared_ptr<SkeletonStd> applyTransform(shared_ptr<SkeletonStd> &s)
+    {
+        if (navFrameUpdated && gazeFrameUpdated)
+        {
+            shared_ptr<SkeletonStd> sk=shared_ptr<SkeletonStd>(new SkeletonStd());
+            sk->fromProperty(s->toProperty());
+            sk->setTransformation(rootFrame);
+            sk->update();
+            return sk;
+        }
+        else
+            return s;
+    }
+
+    /****************************************************************/
     void viewerUpdate(const vector<string> &remove_tags)
     {
         if (viewerPort.getOutputCount()>0)
@@ -677,7 +752,7 @@ class Retriever : public RFModule
             msg.clear();
             for (auto &s:skeletons)
             {
-                Property prop=s->skeleton->toProperty();
+                Property prop=applyTransform(s->skeleton)->toProperty();
                 msg.addList().read(prop);
             }
 
@@ -796,8 +871,13 @@ class Retriever : public RFModule
         skeletonsPort.open("/skeletonRetriever/skeletons:i");
         depthPort.open("/skeletonRetriever/depth:i");
         viewerPort.open("/skeletonRetriever/viewer:o");
+        navPort.open("/skeletonRetriever/nav:i");
+        gazePort.open("/skeletonRetriever/gaze:i");
         opcPort.open("/skeletonRetriever/opc:rpc");
         camPort.open("/skeletonRetriever/cam:rpc");
+
+        navFrame=gazeFrame=eye(4,4);
+        navFrameUpdated=gazeFrameUpdated=false;
 
         t0=Time::now();
         return true;
@@ -836,6 +916,11 @@ class Retriever : public RFModule
 
         // garbage collector
         gc(dt);
+
+        // update external frames
+        update_nav_frame();
+        update_gaze_frame();
+        rootFrame=navFrame*gazeFrame;
 
         // handle skeletons acquired from detector
         if (Bottle *b1=skeletonsPort.read(false))
@@ -908,6 +993,8 @@ class Retriever : public RFModule
         skeletonsPort.close();
         depthPort.close();
         viewerPort.close();
+        navPort.close();
+        gazePort.close();
         opcPort.close();
         camPort.close();
 

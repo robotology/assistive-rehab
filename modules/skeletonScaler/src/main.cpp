@@ -259,29 +259,33 @@ class Scaler : public RFModule
     /****************************************************************/
     bool rotateCam(const Vector& camerapos,const Vector& focalpoint)
     {
-        Bottle cmd,rep;
-        cmd.addString("set_camera");
-        Bottle &content1 = cmd.addList();
-        content1.addString("position");
-        Bottle &position = content1.addList();
-        position.addDouble(camerapos[0]);
-        position.addDouble(camerapos[1]);
-        position.addDouble(camerapos[2]);
-        Bottle &content2 = cmd.addList();
-        content2.addString("focalpoint");
-        Bottle &fp = content2.addList();
-        fp.addDouble(focalpoint[0]);
-        fp.addDouble(focalpoint[1]);
-        fp.addDouble(focalpoint[2]);
-
-        yInfo() << cmd.toString();
-        if(rpcViewerPort.write(cmd,rep))
+        bool ret_pos=false;
         {
-            if(rep.get(0).asVocab()==Vocab::encode("ack"))
-                return true;
+            Bottle cmd,rep;
+            cmd.addString("set_camera_position");
+            cmd.addDouble(camerapos[0]);
+            cmd.addDouble(camerapos[1]);
+            cmd.addDouble(camerapos[2]);
+            if(rpcViewerPort.write(cmd,rep))
+            {
+                ret_pos=rep.get(0).asVocab()==Vocab::encode("ack");
+            }
         }
 
-        return false;
+        bool ret_foc=false;
+        {
+            Bottle cmd,rep;
+            cmd.addString("set_camera_focalpoint");
+            cmd.addDouble(focalpoint[0]);
+            cmd.addDouble(focalpoint[1]);
+            cmd.addDouble(focalpoint[2]);
+            if(rpcViewerPort.write(cmd,rep))
+            {
+                ret_foc=rep.get(0).asVocab()==Vocab::encode("ack");
+            }
+        }
+
+        return (ret_pos && ret_foc);
     }
 
     /****************************************************************/
