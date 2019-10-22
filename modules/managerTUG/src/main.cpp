@@ -155,6 +155,7 @@ class Manager : public RFModule, public managerTUG_IDL
     unordered_map<string,string> speak_map;
     bool interrupting;
     mutex mtx;
+    bool start_ex;
 
     Vector startline_pose,finishline_pose;
     Matrix worldframe;
@@ -280,27 +281,8 @@ class Manager : public RFModule, public managerTUG_IDL
         bool ret=false;
         state=State::idle;
 
+        bool ok_nav=false;
         Bottle cmd,rep;
-        if(finishline_pose.size()>0 && coronal.size()>0)
-        {
-            double x=finishline_pose[0]-0.6;
-            double y=finishline_pose[1]-0.6;
-            double theta=(180/M_PI)*atan2(-coronal[1],-coronal[0]);
-            cmd.addString("go_to_wait");
-            cmd.addDouble(x);
-            cmd.addDouble(y);
-            cmd.addDouble(theta);
-            if (navigationPort.write(cmd,rep))
-            {
-                if (rep.get(0).asVocab()==ok)
-                {
-                    yInfo()<<"Back to initial position";
-                }
-            }
-        }
-
-        cmd.clear();
-        rep.clear();
         cmd.addString("stop");
         if (attentionPort.write(cmd,rep))
         {
@@ -312,13 +294,59 @@ class Manager : public RFModule, public managerTUG_IDL
                 {
                     if (rep.get(0).asVocab()==ok)
                     {
+                        cmd.clear();
+                        rep.clear();
+                        cmd.addString("is_navigating");
+                        if (navigationPort.write(cmd,rep))
+                        {
+                            if (rep.get(0).asBool()==true)
+                            {
+                                cmd.clear();
+                                rep.clear();
+                                cmd.addString("stop");
+                                if (navigationPort.write(cmd,rep))
+                                {
+                                    if (rep.get(0).asVocab()==ok)
+                                    {
+                                        ok_nav=true;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                ok_nav=true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (ok_nav)
+        {
+            if(finishline_pose.size()>0 && coronal.size()>0)
+            {
+                cmd.clear();
+                rep.clear();
+                double x=finishline_pose[0]-0.6;
+                double y=finishline_pose[1]-0.6;
+                double theta=(180/M_PI)*atan2(-coronal[1],-coronal[0]);
+                cmd.addString("go_to_wait");
+                cmd.addDouble(x);
+                cmd.addDouble(y);
+                cmd.addDouble(theta);
+                if (navigationPort.write(cmd,rep))
+                {
+                    if (rep.get(0).asVocab()==ok)
+                    {
+                        yInfo()<<"Back to initial position";
                         ret=true;
                     }
                 }
             }
         }
-        t0=Time::now();
 
+        t0=Time::now();
         return ret;
     }
 
@@ -326,6 +354,7 @@ class Manager : public RFModule, public managerTUG_IDL
     bool start() override
     {
         lock_guard<mutex> lg(mtx);
+        start_ex=true;
         return disengage();
     }
 
@@ -335,15 +364,64 @@ class Manager : public RFModule, public managerTUG_IDL
         lock_guard<mutex> lg(mtx);
         bool ret=false;
 
+        bool ok_nav=false;
         Bottle cmd,rep;
         cmd.addString("stop");
         if (attentionPort.write(cmd,rep))
         {
             if (rep.get(0).asVocab()==ok)
             {
-                ret=true;
+                cmd.clear();
+                rep.clear();
+                cmd.addString("is_navigating");
+                if (navigationPort.write(cmd,rep))
+                {
+                    if (rep.get(0).asBool()==true)
+                    {
+                        cmd.clear();
+                        rep.clear();
+                        cmd.addString("stop");
+                        if (navigationPort.write(cmd,rep))
+                        {
+                            if (rep.get(0).asVocab()==ok)
+                            {
+                                ok_nav=true;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        ok_nav=true;
+                    }
+                }
             }
         }
+
+        if (ok_nav)
+        {
+            if(finishline_pose.size()>0 && coronal.size()>0)
+            {
+                cmd.clear();
+                rep.clear();
+                double x=finishline_pose[0]-0.6;
+                double y=finishline_pose[1]-0.6;
+                double theta=(180/M_PI)*atan2(-coronal[1],-coronal[0]);
+                cmd.addString("go_to_wait");
+                cmd.addDouble(x);
+                cmd.addDouble(y);
+                cmd.addDouble(theta);
+                if (navigationPort.write(cmd,rep))
+                {
+                    if (rep.get(0).asVocab()==ok)
+                    {
+                        yInfo()<<"Back to initial position";
+                        ret=true;
+                    }
+                }
+            }
+        }
+
+        start_ex=false;
         state=State::stopped;
         return ret;
     }
@@ -366,6 +444,7 @@ class Manager : public RFModule, public managerTUG_IDL
             yError()<<msg;
             return false;
         }
+        start_ex=false;
 
         analyzerPort.open("/"+module_name+"/analyzer:rpc");
         speechRpcPort.open("/"+module_name+"/speech:rpc");
@@ -402,6 +481,11 @@ class Manager : public RFModule, public managerTUG_IDL
                 (navigationPort.getOutputCount()==0) || (linePort.getOutputCount())==0)
         {
             yInfo()<<"not connected";
+            return true;
+        }
+
+        if(!start_ex)
+        {
             return true;
         }
 
@@ -845,29 +929,32 @@ class Manager : public RFModule, public managerTUG_IDL
                                                     cmd.clear();
                                                     rep.clear();
                                                     cmd.addString("get_line_pose");
-                                                    cmd.addInt(1);
+                                                    cmd.addString("finish-line");
                                                     if(linePort.write(cmd,rep))
                                                     {
                                                         if(Bottle *lp_bottle=rep.get(0).asList())
                                                         {
-                                                            finishline_pose.resize(7);
-                                                            finishline_pose[0]=lp_bottle->get(0).asDouble();
-                                                            finishline_pose[1]=lp_bottle->get(1).asDouble();
-                                                            finishline_pose[2]=lp_bottle->get(2).asDouble();
-                                                            finishline_pose[3]=lp_bottle->get(3).asDouble();
-                                                            finishline_pose[4]=lp_bottle->get(4).asDouble();
-                                                            finishline_pose[5]=lp_bottle->get(5).asDouble();
-                                                            finishline_pose[6]=lp_bottle->get(6).asDouble();
-                                                            yInfo()<<"Finish line wrt world frame"<<finishline_pose.toString();
-
-                                                            cmd.clear();
-                                                            rep.clear();
-                                                            cmd.addString("setLinePose");
-                                                            cmd.addList().read(finishline_pose);
-                                                            if(analyzerPort.write(cmd,rep))
+                                                            if(lp_bottle->size()>=7)
                                                             {
-                                                                yInfo()<<"Set finish line to motionAnalyzer";
-                                                                return true;
+                                                                finishline_pose.resize(7);
+                                                                finishline_pose[0]=lp_bottle->get(0).asDouble();
+                                                                finishline_pose[1]=lp_bottle->get(1).asDouble();
+                                                                finishline_pose[2]=lp_bottle->get(2).asDouble();
+                                                                finishline_pose[3]=lp_bottle->get(3).asDouble();
+                                                                finishline_pose[4]=lp_bottle->get(4).asDouble();
+                                                                finishline_pose[5]=lp_bottle->get(5).asDouble();
+                                                                finishline_pose[6]=lp_bottle->get(6).asDouble();
+                                                                yInfo()<<"Finish line wrt world frame"<<finishline_pose.toString();
+
+                                                                cmd.clear();
+                                                                rep.clear();
+                                                                cmd.addString("setLinePose");
+                                                                cmd.addList().read(finishline_pose);
+                                                                if(analyzerPort.write(cmd,rep))
+                                                                {
+                                                                    yInfo()<<"Set finish line to motionAnalyzer";
+                                                                    return true;
+                                                                }
                                                             }
                                                         }
                                                     }

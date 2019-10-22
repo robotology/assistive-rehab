@@ -28,7 +28,7 @@ using namespace yarp::math;
 class Detector : public RFModule, public lineDetector_IDL
 {
     double period;
-    int line_filter_order;
+    int nlines,line_filter_order;
     std::vector< cv::Ptr<cv::aruco::Dictionary> > dictionary;
     std::vector< cv::Ptr<cv::aruco::GridBoard> > board;
     cv::Ptr<cv::aruco::DetectorParameters> detector_params;
@@ -44,9 +44,11 @@ class Detector : public RFModule, public lineDetector_IDL
     std::vector<iCub::ctrl::MedianFilter*> lines_filter;
     std::mutex mtx_update,mtx_line_detected;
     std::condition_variable line_detected;
-    yarp::sig::Matrix cam2root,cam2world,root2world,robotT;
-    int line_idx,line_cnt;
-    bool line_estimated;
+    yarp::sig::Matrix cam2root,root2world,robotT;
+    int line_cnt;
+    std::string line;
+    std::vector<bool> line_estimated;
+    bool start_detection;
 
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > imgInPort;
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > imgOutPort;
@@ -70,11 +72,18 @@ class Detector : public RFModule, public lineDetector_IDL
         setName(moduleName.c_str());
 
         period=rf.check("period",Value(0.1)).asDouble();
+        nlines=rf.check("nlines",Value(2)).asInt();
         line_filter_order=rf.check("line-filter-order",Value(30)).asInt();
 
         std::vector<int> nx={6,6};
         if(Bottle *nxB=rf.find("nx").asList())
         {
+            if(nxB->size()!=nlines)
+            {
+                yError()<<"The number of parameters has to match the number of lines";
+                yError()<<"nx="<<nxB->toString();
+                return false;
+            }
             nx[0]=nxB->get(0).asInt();
             nx[1]=nxB->get(1).asInt();
         }
@@ -82,6 +91,12 @@ class Detector : public RFModule, public lineDetector_IDL
         std::vector<int> ny={1,1};
         if(Bottle *nyB=rf.find("ny").asList())
         {
+            if(nyB->size()!=nlines)
+            {
+                yError()<<"The number of parameters has to match the number of lines";
+                yError()<<"ny="<<nyB->toString();
+                return false;
+            }
             ny[0]=nyB->get(0).asInt();
             ny[1]=nyB->get(1).asInt();
         }
@@ -89,6 +104,12 @@ class Detector : public RFModule, public lineDetector_IDL
         std::vector<double> marker_size={0.13,0.13};
         if(Bottle *mSzB=rf.find("marker-size").asList())
         {
+            if(mSzB->size()!=nlines)
+            {
+                yError()<<"The number of parameters has to match the number of lines";
+                yError()<<"marker-size="<<mSzB->toString();
+                return false;
+            }
             marker_size[0]=mSzB->get(0).asDouble();
             marker_size[1]=mSzB->get(1).asDouble();
         }
@@ -96,38 +117,48 @@ class Detector : public RFModule, public lineDetector_IDL
         std::vector<double> marker_dist={0.005,0.005};
         if(Bottle *mDistB=rf.find("marker-dist").asList())
         {
+            if(mDistB->size()!=nlines)
+            {
+                yError()<<"The number of parameters has to match the number of lines";
+                yError()<<"marker-dist="<<mDistB->toString();
+                return false;
+            }
             marker_dist[0]=mDistB->get(0).asDouble();
             marker_dist[1]=mDistB->get(1).asDouble();
         }
 
+        line2idx["start-line"]=0;
+        line2idx["finish-line"]=1;
+
         //create dictionary
         //0 corresponds to the starting line
         //1 corresponds to the ending line
-        dictionary.resize(2);
+        dictionary.resize(nlines);
         dictionary[0]=cv::aruco::getPredefinedDictionary(cv::aruco::PREDEFINED_DICTIONARY_NAME::DICT_4X4_50);
         dictionary[1]=cv::aruco::getPredefinedDictionary(cv::aruco::PREDEFINED_DICTIONARY_NAME::DICT_6X6_50);
 
-        board.resize(2);
-        board[0]=cv::aruco::GridBoard::create(nx[0],ny[0],marker_size[0],marker_dist[0],dictionary[0]);
-        board[1]=cv::aruco::GridBoard::create(nx[1],ny[1],marker_size[1],marker_dist[1],dictionary[1]);
+        board.resize(nlines);
+        add.resize(nlines);
+        opc_id.resize(nlines);
+        line_estimated.resize(nlines);
+        lines_pose.resize(nlines);
+        lines_filter.resize(nlines);
+        for(int i=0; i<nlines;i++)
+        {
+            add[i]=true;
+            opc_id[i]=-1;
+            line_estimated[i]=false;
+            board[i]=cv::aruco::GridBoard::create(nx[i],ny[i],marker_size[i],marker_dist[i],dictionary[i]);
+            lines_pose[i]=yarp::sig::Vector(7,0.0);
+            lines_filter[i]=new iCub::ctrl::MedianFilter(line_filter_order,yarp::sig::Vector(7,0.0));
+        }
 
         //configure the detector with corner refinement
         detector_params = cv::aruco::DetectorParameters::create();
         detector_params->cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
 
-        add.resize(2);
-        add[0]=true;
-        add[1]=true;
-        opc_id.resize(2);
-        opc_id[0]=-1;
-        opc_id[1]=-1;
+        start_detection=false;
         camera_configured=false;
-        line_idx=-1;
-        line_estimated=false;
-
-        line2idx["start-line"]=0;
-        line2idx["finish-line"]=1;
-
         cam_intrinsic=cv::Mat::eye(3,3,CV_64F);
         cam_distortion=cv::Mat::zeros(1,5,CV_64F);
         Bottle &gCamera=rf.findGroup("camera");
@@ -159,12 +190,6 @@ class Detector : public RFModule, public lineDetector_IDL
                     cam_distortion.at<double>(0,4)=0.0; //k3;
                 }
             }
-        }
-
-        for(int i=0; i<2;i++)
-        {
-            lines_pose.push_back(yarp::sig::Vector(7,0.0));
-            lines_filter.push_back(new iCub::ctrl::MedianFilter(line_filter_order,yarp::sig::Vector(7,0.0)));
         }
 
         imgInPort.open("/" + getName() + "/img:i");
@@ -203,17 +228,14 @@ class Detector : public RFModule, public lineDetector_IDL
                 Property robotState(rep.get(0).toString().c_str());
                 if (Bottle *loc=robotState.find("robot-location").asList())
                 {
-                    yarp::sig::Vector robot_location(4);
+                    yarp::sig::Vector robot_location(7,0.0);
                     robot_location[0]=loc->get(0).asDouble();
                     robot_location[1]=loc->get(1).asDouble();
-                    robot_location[2]=0.0;
-                    robot_location[3]=loc->get(2).asDouble();
 
                     yarp::sig::Matrix T(4,4);
-                    yarp::sig::Vector rot(4,0.0);
-                    rot[2]=1.0;
-                    rot[3]=robot_location[3];
-                    T=yarp::math::axis2dcm(rot);
+                    robot_location[5]=-1.0;
+                    robot_location[6]=(M_PI/180)*loc->get(2).asDouble();
+                    T=yarp::math::axis2dcm(robot_location.subVector(3,6));
                     T.setSubcol(robot_location.subVector(0,2),0,3);
                     robotT=SE3inv(T);
                 }
@@ -231,9 +253,9 @@ class Detector : public RFModule, public lineDetector_IDL
                 yarp::sig::ImageOf<yarp::sig::PixelRgb> &outImg=imgOutPort.prepare();
                 cv::Mat inImgMat=yarp::cv::toCvMat(*inImg);
 
-                if (line_idx>=0)
+                if (line2idx.count(line)>0 && start_detection)
                 {
-                    line_estimated=detect_helper(inImgMat);
+                    detect_helper(inImgMat);
                 }
 
                 outImg=yarp::cv::fromCvMat<yarp::sig::PixelRgb>(inImgMat);
@@ -339,11 +361,9 @@ class Detector : public RFModule, public lineDetector_IDL
     bool detect(const std::string &line, const int timeout) override
     {
         std::unique_lock<std::mutex> lck(mtx_line_detected);
-        if(line2idx.count(line)>0)
-        {
-            line_idx=line2idx.at(line);
-        }
-        else
+        start_detection=true;
+        this->line=line;
+        if(line2idx.count(line)<=0)
         {
             yWarning()<<"This line does not exist";
             return false;
@@ -351,17 +371,22 @@ class Detector : public RFModule, public lineDetector_IDL
         line_cnt=0;
         yInfo()<<"Detecting"<<line;
         const int ok=Vocab::encode("ok");
-        if (line_idx==0)
+        if (line=="start-line")
         {
             Bottle cmd,rep;
             cmd.addString("reset_odometry");
             if (navPort.write(cmd,rep))
             {
-                if (rep.get(0).asVocab()==ok)
+                if (rep.get(0).asVocab()!=ok)
                 {
-                    yInfo()<<"Robot at 0.0 0.0 0.0";
+                    return false;
                 }
             }
+            else
+            {
+                return false;
+            }
+            yInfo()<<"Reset robot's odometry";
         }
         if (timeout>0)
         {
@@ -371,7 +396,8 @@ class Detector : public RFModule, public lineDetector_IDL
         {
             line_detected.wait(lck);
         }
-        return line_estimated;
+        int i=line2idx.at(line);
+        return line_estimated[i];
     }
 
     /****************************************************************/
@@ -385,17 +411,15 @@ class Detector : public RFModule, public lineDetector_IDL
     bool reset() override
     {
       std::lock_guard<std::mutex> lg(mtx_update);
-      line_idx=-1;
-      line_estimated=false;
-      cam2world.zero();
       root2world.zero();
-      for(int i=0;i<2;i++)
+      for(int i=0;i<nlines;i++)
       {
           lines_pose[i]=yarp::sig::Vector(7,0.0);
           lines_filter[i]->init(yarp::sig::Vector(7,0.0));
           opcDel(opc_id[i]);
           add[i]=true;
           opc_id[i]=true;
+          line_estimated[i]=false;
       }
       line_detected.notify_all();
       return true;
@@ -405,7 +429,7 @@ class Detector : public RFModule, public lineDetector_IDL
     bool stop() override
     {
       std::lock_guard<std::mutex> lg(mtx_update);
-      line_idx=-1;
+      start_detection=false;
       line_detected.notify_all();
       yInfo()<<"Stopping detection";
       return true;
@@ -415,6 +439,7 @@ class Detector : public RFModule, public lineDetector_IDL
     bool detect_helper(const cv::Mat &inImgMat)
     {
         //detect markers
+        int line_idx=line2idx.at(line);
         std::vector<int> ids;
         std::vector<std::vector<cv::Point2f> > corners;
         cv::aruco::detectMarkers(inImgMat,dictionary[line_idx],corners,ids);
@@ -464,15 +489,24 @@ class Detector : public RFModule, public lineDetector_IDL
                     world2cam.setSubmatrix(R,0,0);
                     world2cam.setCol(3,pose);
                     world2cam.setRow(3,yarp::sig::Vector(3,0.0));
-                    cam2world=SE3inv(world2cam);
                     root2world=SE3inv(cam2root*world2cam);
                 }
 
-                if (cam2world.data())
+                if (root2world.data())
                 {
-                    yarp::sig::Vector rot=yarp::math::dcm2axis(root2world*robotT*cam2root.submatrix(0,2,0,2));
+                    yarp::sig::Matrix T;
+                    if (line=="start-line")
+                    {
+                        T=root2world*cam2root;
+                    }
+                    if (line=="finish-line")
+                    {
+                        T=root2world*robotT*cam2root;
+                    }
+
+                    yarp::sig::Vector rot=yarp::math::dcm2axis(T.submatrix(0,2,0,2));
                     yarp::sig::Vector est_pose_world(7,0.0);
-                    est_pose_world.setSubvector(0,root2world*robotT*cam2root*pose);
+                    est_pose_world.setSubvector(0,T*pose);
                     est_pose_world.setSubvector(3,rot);
 
                     lines_pose[line_idx]=lines_filter[line_idx]->filt(est_pose_world);
@@ -491,6 +525,7 @@ class Detector : public RFModule, public lineDetector_IDL
                         {
                             add[line_idx]=false;
                         }
+                        line_estimated[line_idx]=true;
                         line_detected.notify_all();
                         return true;
                     }
@@ -517,14 +552,22 @@ class Detector : public RFModule, public lineDetector_IDL
     yarp::sig::Vector get_line_pose(const std::string &line) override
     {
         std::lock_guard<std::mutex> lg(mtx_update);
-        if(line2idx.count(line)>0 && line_estimated)
+        if(line2idx.count(line)>0)
         {
             int i=line2idx.at(line);
-            return lines_pose[i];
+            if (line_estimated[i])
+            {
+                return lines_pose[i];
+            }
+            else
+            {
+                yInfo()<<"This line has not been estimated yet";
+                return {};
+            }
         }
         else
         {
-            yWarning()<<"This line does not exist or has not been estimated yet";
+            yWarning()<<"This line does not exist";
             return {};
         }
     }
@@ -532,8 +575,10 @@ class Detector : public RFModule, public lineDetector_IDL
     /****************************************************************/
     bool interruptModule() override
     {
-        for(int i=0;i<opc_id.size();i++)
+        for(int i=0;i<nlines;i++)
+        {
             opcDel(opc_id[i]);
+        }
 
         imgInPort.interrupt();
         imgOutPort.interrupt();
@@ -548,7 +593,7 @@ class Detector : public RFModule, public lineDetector_IDL
     /****************************************************************/
     bool close() override
     {
-        for(int i=0;i<2;i++)
+        for(int i=0;i<nlines;i++)
         {
             delete lines_filter[i];
         }
