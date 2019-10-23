@@ -39,6 +39,8 @@ class Detector : public RFModule, public lineDetector_IDL
     double fx,fy,px,py;
     cv::Vec3d rvec,tvec; // Rodrigues coefficients wrt cam
     std::map<std::string,int> line2idx;
+    std::vector<int> nx,ny;
+    std::vector<double> marker_size,marker_dist;
 
     std::vector<yarp::sig::Vector>lines_pose;
     std::vector<iCub::ctrl::MedianFilter*> lines_filter;
@@ -57,6 +59,7 @@ class Detector : public RFModule, public lineDetector_IDL
     yarp::os::RpcServer cmdPort;
     yarp::os::BufferedPort<yarp::os::Property> gazeStatePort;
     yarp::os::RpcClient navPort;
+    yarp::os::RpcClient viewerPort;
 
     /****************************************************************/
     bool attach(RpcServer &source) override
@@ -75,7 +78,7 @@ class Detector : public RFModule, public lineDetector_IDL
         nlines=rf.check("nlines",Value(2)).asInt();
         line_filter_order=rf.check("line-filter-order",Value(30)).asInt();
 
-        std::vector<int> nx={6,6};
+        nx={6,6};
         if(Bottle *nxB=rf.find("nx").asList())
         {
             if(nxB->size()!=nlines)
@@ -88,7 +91,7 @@ class Detector : public RFModule, public lineDetector_IDL
             nx[1]=nxB->get(1).asInt();
         }
 
-        std::vector<int> ny={1,1};
+        ny={1,1};
         if(Bottle *nyB=rf.find("ny").asList())
         {
             if(nyB->size()!=nlines)
@@ -101,7 +104,7 @@ class Detector : public RFModule, public lineDetector_IDL
             ny[1]=nyB->get(1).asInt();
         }
 
-        std::vector<double> marker_size={0.13,0.13};
+        marker_size={0.13,0.13};
         if(Bottle *mSzB=rf.find("marker-size").asList())
         {
             if(mSzB->size()!=nlines)
@@ -114,7 +117,7 @@ class Detector : public RFModule, public lineDetector_IDL
             marker_size[1]=mSzB->get(1).asDouble();
         }
 
-        std::vector<double> marker_dist={0.005,0.005};
+        marker_dist={0.005,0.005};
         if(Bottle *mDistB=rf.find("marker-dist").asList())
         {
             if(mDistB->size()!=nlines)
@@ -198,6 +201,7 @@ class Detector : public RFModule, public lineDetector_IDL
         opcPort.open("/" + getName() + "/opc:rpc");
         gazeStatePort.open("/" + getName() + "/gaze/state:i");
         navPort.open("/" + getName() + "/nav:rpc");
+        viewerPort.open("/" + getName() + "/viewer:rpc");
         cmdPort.open("/" + getName() + "/cmd:rpc");
         attach(cmdPort);
 
@@ -396,6 +400,8 @@ class Detector : public RFModule, public lineDetector_IDL
         {
             line_detected.wait(lck);
         }
+        //visualize line on the viewer
+        create_line(line);
         int i=line2idx.at(line);
         return line_estimated[i];
     }
@@ -420,6 +426,15 @@ class Detector : public RFModule, public lineDetector_IDL
           add[i]=true;
           opc_id[i]=true;
           line_estimated[i]=false;
+          std::string l="";
+          for (auto &j:line2idx)
+          {
+              if(j.second==i)
+              {
+                  l=j.first;
+              }
+          }
+          delete_line(l);
       }
       line_detected.notify_all();
       return true;
@@ -433,6 +448,62 @@ class Detector : public RFModule, public lineDetector_IDL
       line_detected.notify_all();
       yInfo()<<"Stopping detection";
       return true;
+    }
+
+    /****************************************************************/
+    void create_line(const std::string &l)
+    {
+        int i=line2idx[l];
+        double llen=(marker_dist[i]+marker_size[i])*nx[i];
+        yarp::sig::Vector ax(4);
+        ax[0]=lines_pose[i][3];
+        ax[1]=lines_pose[i][4];
+        ax[2]=lines_pose[i][5];
+        ax[3]=lines_pose[i][6];
+        yarp::sig::Matrix R=axis2dcm(ax);
+        yarp::sig::Vector u=R.subcol(0,0,2);
+        yarp::sig::Vector p0(3);
+        p0[0]=lines_pose[i][0];
+        p0[1]=lines_pose[i][1];
+        p0[2]=lines_pose[i][2];
+        yarp::sig::Vector p1=p0+llen*u;
+        int r=1;
+        int g=0;
+        int b=0;
+        Bottle cmd,rep;
+        cmd.addString("create_line");
+        cmd.addString(l);
+        cmd.addDouble(p0[0]);
+        cmd.addDouble(p0[1]);
+        cmd.addDouble(p0[2]);
+        cmd.addDouble(p1[0]);
+        cmd.addDouble(p1[1]);
+        cmd.addDouble(p1[2]);
+        cmd.addInt(r);
+        cmd.addInt(g);
+        cmd.addInt(b);
+        if(viewerPort.write(cmd,rep))
+        {
+            if(rep.get(0).asBool()==true)
+            {
+                yInfo()<<l<<"created on the viewer";
+            }
+        }
+    }
+
+    /****************************************************************/
+    void delete_line(const std::string &l)
+    {
+        Bottle cmd,rep;
+        cmd.addString("delete_line");
+        cmd.addString(l);
+        if(viewerPort.write(cmd,rep))
+        {
+            if(rep.get(0).asBool()==true)
+            {
+                yInfo()<<l<<"deleted";
+            }
+        }
     }
 
     /****************************************************************/
@@ -483,7 +554,7 @@ class Detector : public RFModule, public lineDetector_IDL
                 pose[2]=tvec[2];
                 pose[3]=1.0;
 
-                if (line_idx==0)
+                if (line=="start-line")
                 {
                     yarp::sig::Matrix world2cam(4,4);
                     world2cam.setSubmatrix(R,0,0);
@@ -586,6 +657,7 @@ class Detector : public RFModule, public lineDetector_IDL
         opcPort.interrupt();
         gazeStatePort.interrupt();
         navPort.interrupt();
+        viewerPort.interrupt();
         cmdPort.interrupt();
         return true;
     }
@@ -604,6 +676,7 @@ class Detector : public RFModule, public lineDetector_IDL
         opcPort.close();
         gazeStatePort.close();
         navPort.close();
+        viewerPort.close();
         cmdPort.close();
         return true;
     }
