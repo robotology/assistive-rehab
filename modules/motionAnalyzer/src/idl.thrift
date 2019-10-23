@@ -149,12 +149,4 @@ service motionAnalyzer_IDL
    */
    bool setLinePose(1:list<double> line_pose);
 
-   /**
-   * Set world frame from the start line.
-   * @param world_frame 4x4 transformation matrix from robot root to start line.
-   * @return true/false on success/failure.
-   */
-   bool set_world_frame(1:Matrix world_frame);
-
-
 }

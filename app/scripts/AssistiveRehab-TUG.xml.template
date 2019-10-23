@@ -52,13 +52,13 @@
     </module>
 
     <module>
-       <name>robotSkeletonPublisher</name>
+       <name>attentionManager</name>
        <parameters></parameters>
        <node>r1-console-linux</node>
     </module>
 
     <module>
-       <name>attentionManager</name>
+       <name>robotSkeletonPublisher</name>
        <parameters></parameters>
        <node>r1-console-linux</node>
     </module>
@@ -198,12 +198,6 @@
     </connection>
 
     <connection>
-        <from>/navController/state:o</from>
-        <to>/robotSkeletonPublisher/nav:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
         <from>/opc/broadcast:o</from>
         <to>/attentionManager/opc:i</to>
         <protocol>fast_tcp</protocol>
@@ -218,12 +212,6 @@
     <connection>
         <from>/cer_gaze-controller/state:o</from>
         <to>/attentionManager/gaze/state:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/cer_gaze-controller/state:o</from>
-        <to>/motionAnalyzer/gaze:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
@@ -289,6 +277,24 @@
 
     <connection>
         <from>/skeletonRetriever/viewer:o</from>
+        <to>/skeletonViewer:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/robotSkeletonPublisher/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/navController/state:o</from>
+        <to>/robotSkeletonPublisher/nav:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/robotSkeletonPublisher/viewer:o</from>
         <to>/skeletonViewer:i</to>
         <protocol>fast_tcp</protocol>
     </connection>

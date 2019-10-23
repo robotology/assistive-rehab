@@ -36,7 +36,7 @@ class Processor
 
 protected:
     assistive_rehab::SkeletonStd curr_skeleton,first_skeleton;
-    yarp::sig::Matrix inv_reference_system,gaze_frame;
+    yarp::sig::Matrix curr_frame;
     yarp::sig::Vector plane_normal;
     double t0;
 
@@ -44,9 +44,9 @@ public:
     Processor();
     virtual ~Processor() {;}
     void setInitialConf(assistive_rehab::SkeletonStd &skeleton_, yarp::sig::Matrix &T);
-    void update(assistive_rehab::SkeletonStd& curr_skeleton_, const yarp::sig::Matrix &gaze_frame);
+    void update(assistive_rehab::SkeletonStd& curr_skeleton_);
     yarp::sig::Vector projectOnPlane(const yarp::sig::Vector &v,const yarp::sig::Vector &plane);
-    yarp::sig::Vector getKeypointRoot(const std::string &tag);
+    yarp::sig::Vector toCurrFrame(const std::string &tag);
     void stop();
 
     yarp::sig::Vector getPlaneNormal() const { return plane_normal; }

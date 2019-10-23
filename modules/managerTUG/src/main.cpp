@@ -920,42 +920,32 @@ class Manager : public RFModule, public managerTUG_IDL
                                             yInfo()<<cmd.toString();
                                             cmd.clear();
                                             rep.clear();
-                                            cmd.addString("set_world_frame");
-                                            cmd.addList().read(worldframe);
-                                            if (analyzerPort.write(cmd,rep))
+                                            cmd.addString("get_line_pose");
+                                            cmd.addString("finish-line");
+                                            if(linePort.write(cmd,rep))
                                             {
-                                                if (rep.get(0).asVocab()==ok)
+                                                if(Bottle *lp_bottle=rep.get(0).asList())
                                                 {
-                                                    cmd.clear();
-                                                    rep.clear();
-                                                    cmd.addString("get_line_pose");
-                                                    cmd.addString("finish-line");
-                                                    if(linePort.write(cmd,rep))
+                                                    if(lp_bottle->size()>=7)
                                                     {
-                                                        if(Bottle *lp_bottle=rep.get(0).asList())
-                                                        {
-                                                            if(lp_bottle->size()>=7)
-                                                            {
-                                                                finishline_pose.resize(7);
-                                                                finishline_pose[0]=lp_bottle->get(0).asDouble();
-                                                                finishline_pose[1]=lp_bottle->get(1).asDouble();
-                                                                finishline_pose[2]=lp_bottle->get(2).asDouble();
-                                                                finishline_pose[3]=lp_bottle->get(3).asDouble();
-                                                                finishline_pose[4]=lp_bottle->get(4).asDouble();
-                                                                finishline_pose[5]=lp_bottle->get(5).asDouble();
-                                                                finishline_pose[6]=lp_bottle->get(6).asDouble();
-                                                                yInfo()<<"Finish line wrt world frame"<<finishline_pose.toString();
+                                                        finishline_pose.resize(7);
+                                                        finishline_pose[0]=lp_bottle->get(0).asDouble();
+                                                        finishline_pose[1]=lp_bottle->get(1).asDouble();
+                                                        finishline_pose[2]=lp_bottle->get(2).asDouble();
+                                                        finishline_pose[3]=lp_bottle->get(3).asDouble();
+                                                        finishline_pose[4]=lp_bottle->get(4).asDouble();
+                                                        finishline_pose[5]=lp_bottle->get(5).asDouble();
+                                                        finishline_pose[6]=lp_bottle->get(6).asDouble();
+                                                        yInfo()<<"Finish line wrt world frame"<<finishline_pose.toString();
 
-                                                                cmd.clear();
-                                                                rep.clear();
-                                                                cmd.addString("setLinePose");
-                                                                cmd.addList().read(finishline_pose);
-                                                                if(analyzerPort.write(cmd,rep))
-                                                                {
-                                                                    yInfo()<<"Set finish line to motionAnalyzer";
-                                                                    return true;
-                                                                }
-                                                            }
+                                                        cmd.clear();
+                                                        rep.clear();
+                                                        cmd.addString("setLinePose");
+                                                        cmd.addList().read(finishline_pose);
+                                                        if(analyzerPort.write(cmd,rep))
+                                                        {
+                                                            yInfo()<<"Set finish line to motionAnalyzer";
+                                                            return true;
                                                         }
                                                     }
                                                 }
