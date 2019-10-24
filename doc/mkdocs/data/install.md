@@ -11,9 +11,9 @@
 - [icub-contrib-common](https://github.com/robotology/icub-contrib-common)
 - [yarp](https://github.com/robotology/yarp) (3.1.100 or higher)
 - [iCub](https://github.com/robotology/icub-main)
-- [cer](https://github.com/robotology/cer)
 - [OpenCV](https://github.com/opencv/opencv) (3.4.0 or higher)
 - [yarpOpenPose](https://github.com/robotology/human-sensing)
+- [Ipopt](https://github.com/coin-or/Ipopt)
 
 !!! note "yarp"
     - `ENABLE_yarpcar_mjpeg ON`: to allow mjpeg compression.
@@ -36,8 +36,8 @@
 | fftw3 | GPL |
 | GSL | GPL |
 | [matio](https://github.com/tbeu/matio) | BSD 2-Clause |
-| IPOPT | EPL |
 | [VTK](https://github.com/Kitware/VTK) (8.1.0 or higher) | BSD-style |
+| [cer](https://github.com/robotology/cer) | GPL |
 
 !!! note "TensorFlowCC"
     TensorFlowCC builds and installs the TensorFlow C++ API, which is released under Apache 2.0 license.
