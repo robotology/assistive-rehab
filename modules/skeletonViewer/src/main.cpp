@@ -34,6 +34,7 @@
 #include <vtkLineSource.h>
 #include <vtkQuadric.h>
 #include <vtkSphereSource.h>
+#include <vtkPlaneSource.h>
 #include <vtkTransform.h>
 #include <vtkSampleFunction.h>
 #include <vtkContourFilter.h>
@@ -408,7 +409,7 @@ public:
 mutex mtx;
 vtkSmartPointer<vtkRenderer> vtk_renderer;
 
-Vector camera_position,camera_focalpoint,camera_viewup;
+vector<double> camera_position,camera_focalpoint,camera_viewup;
 bool rpc_camera_rx;
 
 vector<Bottle> skeletons_rx;
@@ -514,9 +515,9 @@ public:
             vtk_camera->SetFocalPoint(camera_focalpoint.data());
             vtk_camera->SetViewUp(camera_viewup.data());
             yInfo()<<"new camera options received:"
-                   <<"position=("<<camera_position.toString(3,3)<<");"
-                   <<"focalpoint=("<<camera_focalpoint.toString(3,3)<<");"
-                   <<"viewup=("<<camera_viewup.toString(3,3)<<");";
+                   <<"position="<<camera_position<<";"
+                   <<"focalpoint="<<camera_focalpoint<<";"
+                   <<"viewup="<<camera_viewup<<";";
             rpc_camera_rx=false;
         }
 
@@ -578,12 +579,15 @@ class Viewer : public RFModule, public skeletonViewer_IDL
 
     RpcServer rpcPort;
 
-    vtkSmartPointer<vtkRenderWindow> vtk_renderWindow;
+    vtkSmartPointer<vtkRenderWindow>           vtk_renderWindow;
     vtkSmartPointer<vtkRenderWindowInteractor> vtk_renderWindowInteractor;
-    vtkSmartPointer<vtkAxesActor> vtk_axes;
-    vtkSmartPointer<vtkCamera> vtk_camera;
-    vtkSmartPointer<vtkInteractorStyleSwitch> vtk_style;
-    vtkSmartPointer<UpdateCommand> vtk_updateCallback;
+    vtkSmartPointer<vtkAxesActor>              vtk_axes;
+    vtkSmartPointer<vtkCamera>                 vtk_camera;
+    vtkSmartPointer<vtkPlaneSource>            vtk_floor;
+    vtkSmartPointer<vtkPolyDataMapper>         vtk_floor_mapper;
+    vtkSmartPointer<vtkActor>                  vtk_floor_actor;
+    vtkSmartPointer<vtkInteractorStyleSwitch>  vtk_style;
+    vtkSmartPointer<UpdateCommand>             vtk_updateCallback;
 
     /****************************************************************/
     bool attach(RpcServer &source) override
@@ -640,15 +644,84 @@ class Viewer : public RFModule, public skeletonViewer_IDL
         vtk_axes->SetTotalLength((0.1*ones(3)).data());
         vtk_renderer->AddActor(vtk_axes);
 
-        camera_position=camera_focalpoint=camera_viewup=zeros(3);
-        camera_position[2]=-2.0;
-        camera_viewup[1]=-1.0;
+        camera_position={0.0,0.0,-2.0};
+        if (rf.check("camera-position"))
+        {
+            if (const Bottle *ptr=rf.find("camera-position").asList())
+            {
+                size_t len=std::min(camera_position.size(),ptr->size());
+                for (size_t i=0; i<len; i++)
+                    camera_position[i]=ptr->get(i).asDouble();
+            }
+        }
+
+        camera_focalpoint={0.0,0.0,0.0};
+        if (rf.check("camera-focalpoint"))
+        {
+            if (const Bottle *ptr=rf.find("camera-focalpoint").asList())
+            {
+                size_t len=std::min(camera_focalpoint.size(),ptr->size());
+                for (size_t i=0; i<len; i++)
+                    camera_focalpoint[i]=ptr->get(i).asDouble();
+            }
+        }
+
+        camera_viewup={0.0,-1.0,0.0};
+        if (rf.check("camera-viewup"))
+        {
+            if (const Bottle *ptr=rf.find("camera-viewup").asList())
+            {
+                size_t len=std::min(camera_viewup.size(),ptr->size());
+                for (size_t i=0; i<len; i++)
+                    camera_viewup[i]=ptr->get(i).asDouble();
+            }
+        }
 
         vtk_camera=vtkSmartPointer<vtkCamera>::New();
         vtk_camera->SetPosition(camera_position.data());
         vtk_camera->SetFocalPoint(camera_focalpoint.data());
         vtk_camera->SetViewUp(camera_viewup.data());
         vtk_renderer->SetActiveCamera(vtk_camera);
+
+        if (rf.check("show-floor",Value("off")).asString()=="on")
+        {
+            vector<double> floor_center={0.0,0.0,0.0};
+            if (rf.check("floor-center"))
+            {
+                if (const Bottle *ptr=rf.find("floor-center").asList())
+                {
+                    size_t len=std::min(floor_center.size(),ptr->size());
+                    for (size_t i=0; i<len; i++)
+                        floor_center[i]=ptr->get(i).asDouble();
+                }
+            }
+
+            vector<double> floor_normal={0.0,0.0,1.0};
+            if (rf.check("floor-normal"))
+            {
+                if (const Bottle *ptr=rf.find("floor-normal").asList())
+                {
+                    size_t len=std::min(floor_normal.size(),ptr->size());
+                    for (size_t i=0; i<len; i++)
+                        floor_normal[i]=ptr->get(i).asDouble();
+                }
+            }
+
+            vtk_floor=vtkSmartPointer<vtkPlaneSource>::New();
+            vtk_floor->SetOrigin(-5.0,-5.0,0.0);
+            vtk_floor->SetPoint1(5.0,-5.0,0.0);
+            vtk_floor->SetPoint2(-5.0,5.0,0.0);
+            vtk_floor->SetResolution(10,10);
+            vtk_floor->SetCenter(floor_center.data());
+            vtk_floor->SetNormal(floor_normal.data());
+            vtk_floor->Update();
+            vtk_floor_mapper=vtkSmartPointer<vtkPolyDataMapper>::New();
+            vtk_floor_mapper->SetInputData(vtk_floor->GetOutput());
+            vtk_floor_actor=vtkSmartPointer<vtkActor>::New();
+            vtk_floor_actor->SetMapper(vtk_floor_mapper);
+            vtk_floor_actor->GetProperty()->SetRepresentationToWireframe();
+            vtk_renderer->AddActor(vtk_floor_actor);
+        }
 
         vtk_style=vtkSmartPointer<vtkInteractorStyleSwitch>::New();
         vtk_style->SetCurrentStyleToTrackballCamera();
@@ -695,9 +768,7 @@ class Viewer : public RFModule, public skeletonViewer_IDL
                              const double z) override
     {
         lock_guard<mutex> lg(mtx);
-        camera_position[0]=x;
-        camera_position[1]=y;
-        camera_position[2]=z;
+        camera_position={x,y,z};
         rpc_camera_rx=true;
         return true;
     }
@@ -707,9 +778,7 @@ class Viewer : public RFModule, public skeletonViewer_IDL
                                const double z) override
     {
         lock_guard<mutex> lg(mtx);
-        camera_focalpoint[0]=x;
-        camera_focalpoint[1]=y;
-        camera_focalpoint[2]=z;
+        camera_focalpoint={x,y,z};
         rpc_camera_rx=true;
         return true;
     }
@@ -719,9 +788,7 @@ class Viewer : public RFModule, public skeletonViewer_IDL
                            const double z) override
     {
         lock_guard<mutex> lg(mtx);
-        camera_viewup[0]=x;
-        camera_viewup[1]=y;
-        camera_viewup[2]=z;
+        camera_viewup={x,y,z};
         rpc_camera_rx=true;
         return true;
     }
