@@ -341,4 +341,9 @@
         <protocol>fast_tcp</protocol>
     </connection>
 
+    <connection>
+        <from>/googleSpeechProcess/result:o</from>
+        <to>/managerTUG/speech-interp:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
 </application>

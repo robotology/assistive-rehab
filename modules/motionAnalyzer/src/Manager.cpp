@@ -627,20 +627,23 @@ bool Manager::start(const bool use_robot_template)
     this->use_robot_template = use_robot_template;
     yInfo() << "Start!";
 	
-    bool out=false;
-    while(out==false)
+    if (!starting)
     {
-        getSkeleton();
-
-        //we do not start if we haven't selected a skeleton tag
-        if(skel_tag.empty() || !updated)
+        bool out=false;
+        while(out==false)
         {
-            yWarning() << "Please select a proper skeleton tag";
-            return false;
-        }
+            getSkeleton();
 
-        out=skeletonIn.update_planes();
-        Time::yield();
+            //we do not start if we haven't selected a skeleton tag
+            if(skel_tag.empty() || !updated)
+            {
+                yWarning() << "Please select a proper skeleton tag";
+                return false;
+            }
+
+            out=skeletonIn.update_planes();
+            Time::yield();
+        }
     }
 
     if(curr_exercise->getType()==ExerciseType::rehabilitation)
@@ -756,8 +759,17 @@ bool Manager::start(const bool use_robot_template)
         }
     }
 
-    tstart_session=Time::now()-tstart;
-    starting=true;
+    if(frozen)
+    {
+        frozen=false;
+        if(!starting)
+        {
+            starting=true;
+            tstart_session=Time::now()-tstart;
+            return true;
+        }
+    }
+
     return true;
     
 }
@@ -836,6 +848,15 @@ bool Manager::stop()
 
         return true;
     }
+    return true;
+}
+
+/********************************************************/
+bool Manager::freeze()
+{
+    lock_guard<mutex> lg(mtx);
+    yInfo()<<"Freezing";
+    frozen=true;
     return true;
 }
 
@@ -1012,6 +1033,7 @@ bool Manager::configure(ResourceFinder &rf)
     curr_exercise=NULL;
     curr_metric=NULL;
     lin_est_shoulder=new AWLinEstimator(16,0.01);
+    frozen=false;
     return true;
 }
 
@@ -1074,7 +1096,7 @@ bool Manager::updateModule()
         //if no metric has been defined we do not analyze motion
         if(starting)
         {
-            if(curr_exercise!=NULL && curr_metric!=NULL)
+            if(curr_exercise!=NULL && curr_metric!=NULL &&!frozen)
             {
                 if(updated)
                 {
