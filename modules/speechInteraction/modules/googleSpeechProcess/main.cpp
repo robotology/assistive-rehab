@@ -269,6 +269,8 @@ public:
         bool foundACOMP = false;
         bool foundNSUBJ = false;
         bool foundTMOD = false;
+        bool foundTMARK = false;
+        bool foundADVMOD = false;
         int verbinc = 0;
         int nouninc = 0;
         
@@ -322,12 +324,25 @@ public:
                     foundACOMP = true;
                     nouninc = i;
                 }
+                if (strcmp(wordList.get(i).asList()->find("label").asString().c_str(),"ADVMOD") == 0)
+                {
+                    foundADVMOD = true;
+                    nouninc = i;
+                }
             }
             if (strcmp(root.toString().c_str(), "ADJ") == 0)
             {
                 if (strcmp(wordList.get(i).asList()->find("label").asString().c_str(),"ACOMP") == 0)
                 {
                     foundACOMP = true;
+                    nouninc = i;
+                }
+            }
+            if (strcmp(root.toString().c_str(), "ADP") == 0)
+            {
+                if (strcmp(wordList.get(i).asList()->find("label").asString().c_str(),"MARK") == 0)
+                {
+                    foundTMARK = true;
                     nouninc = i;
                 }
             }
@@ -342,7 +357,7 @@ public:
             yInfo() << "have verb " << verb.toString().c_str() << wordList.get(verbinc).asList()->toString().c_str();
         }
         
-        if (foundPOBJ || foundDOBJ || foundADV || foundACOMP || foundNSUBJ || foundTMOD)
+        if (foundPOBJ || foundDOBJ || foundADV || foundACOMP || foundNSUBJ || foundTMOD || foundTMARK || foundADVMOD)
         {
             noun.addString(wordList.get(nouninc).asList()->find("lemma").asString());
         
@@ -373,7 +388,7 @@ public:
                 outTargets.addString("repetition");
             }
             
-            if (strcmp(noun.toString().c_str(), "cosa" ) == 0 || strcmp(noun.toString().c_str(), "come" ) == 0 )
+            if (strcmp(noun.toString().c_str(), "cosa" ) == 0 || strcmp(noun.toString().c_str(), "come" ) == 0  || strcmp(noun.toString().c_str(), "bene" ) == 0)
             {
                 yInfo()<< "We need to send bottle with FEEDBACK";
                 outTargets.addString("feedback");
@@ -406,8 +421,9 @@ public:
                 yInfo()<< "We need to send bottle with SPEED";
             }*/
             
-            return outTargets;
+            //targetPort.write();
         }
+        return outTargets;
     }
     
     /********************************************************/
