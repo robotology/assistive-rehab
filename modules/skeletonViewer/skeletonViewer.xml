@@ -20,7 +20,12 @@
     <param default="600" desc="Viewer's height in screen coordinates pixels.">h</param>
     <param default="1.0" desc="Periodicity of the module (s)">gc-period</param>
     <param default="(0.7,0.7,0.7)" desc="Viewer's background color using rgb color specification.">bg-color</param>
-
+    <param default="(0.0 0.0 -2.0)" desc="The camera position in world coordinates.">camera-position</param>
+    <param default="(0.0 0.0 0.0)" desc="The camera focal point in world coordinates.">camera-focalpoint</param>
+    <param default="(0.0 -1.0 0.0)" desc="The camera viewup direction in world coordinates.">camera-viewup</param>
+    <param default="off" desc="Switch it on to display the floor.">show-floor</param>
+    <param default="(0.0 0.0 0.0)" desc="The floor center in world coordinates.">floor-center</param>
+    <param default="(0.0 0.0 1.0)" desc="The floor normal in world coordinates.">floor-normal</param>
   </arguments>
 
   <authors>
