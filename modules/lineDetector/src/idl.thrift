@@ -45,12 +45,6 @@ service lineDetector_IDL
     Vector get_line_pose(1:string line);
 
    /**
-    * Get the transformation matrix from robot root to world frame (start-line).
-    * @return transformation matrix.
-    */
-    Matrix get_world_frame();
-
-   /**
     * Reset lines.
     * @return true/false on success/failure.
     */

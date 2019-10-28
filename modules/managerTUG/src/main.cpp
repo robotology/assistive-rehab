@@ -157,7 +157,7 @@ class Manager : public RFModule, public managerTUG_IDL
     mutex mtx;
     bool start_ex;
 
-    Vector startline_pose,finishline_pose;
+    Vector startline_pose,finishline_pose,starting_pose;
     Matrix worldframe;
     Vector coronal;
     bool world_configured;
@@ -299,7 +299,7 @@ class Manager : public RFModule, public managerTUG_IDL
                         cmd.addString("is_navigating");
                         if (navigationPort.write(cmd,rep))
                         {
-                            if (rep.get(0).asBool()==true)
+                            if (rep.get(0).asVocab()==ok)
                             {
                                 cmd.clear();
                                 rep.clear();
@@ -324,17 +324,14 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (ok_nav)
         {
-            if(finishline_pose.size()>0 && coronal.size()>0)
+            if(starting_pose.size()>0)
             {
                 cmd.clear();
                 rep.clear();
-                double x=finishline_pose[0]-0.6;
-                double y=finishline_pose[1]-0.6;
-                double theta=(180/M_PI)*atan2(-coronal[1],-coronal[0]);
                 cmd.addString("go_to_wait");
-                cmd.addDouble(x);
-                cmd.addDouble(y);
-                cmd.addDouble(theta);
+                cmd.addDouble(starting_pose[0]);
+                cmd.addDouble(starting_pose[1]);
+                cmd.addDouble(starting_pose[2]);
                 if (navigationPort.write(cmd,rep))
                 {
                     if (rep.get(0).asVocab()==ok)
@@ -354,8 +351,21 @@ class Manager : public RFModule, public managerTUG_IDL
     bool start() override
     {
         lock_guard<mutex> lg(mtx);
-        start_ex=true;
-        return disengage();
+        Bottle cmd,rep;
+        cmd.addString("get_state");
+        if (navigationPort.write(cmd,rep))
+        {
+            Property robotState(rep.get(0).toString().c_str());
+            if (Bottle *loc=robotState.find("robot-location").asList())
+            {
+                starting_pose.resize(3);
+                starting_pose[0]=loc->get(0).asDouble();
+                starting_pose[1]=loc->get(1).asDouble();
+                starting_pose[2]=loc->get(2).asDouble();
+            }
+        }
+        start_ex=disengage();
+        return start_ex;
     }
 
     /****************************************************************/
@@ -484,16 +494,16 @@ class Manager : public RFModule, public managerTUG_IDL
             return true;
         }
 
-        if(!start_ex)
-        {
-            return true;
-        }
-
         //get start and finish lines
         if (!world_configured)
         {
             yInfo()<<"Getting world...";
             world_configured=getWorld();
+            return true;
+        }
+
+        if(!start_ex)
+        {
             return true;
         }
 
@@ -641,8 +651,8 @@ class Manager : public RFModule, public managerTUG_IDL
                                                                         coronal[1]=corB->get(1).asDouble();
                                                                         coronal[2]=corB->get(2).asDouble();
 
-                                                                        double x=finishline_pose[0]-0.3;
-                                                                        double y=finishline_pose[1]-0.2;
+                                                                        double x=finishline_pose[0]+0.3;
+                                                                        double y=finishline_pose[1]+0.2;
                                                                         double theta=(180/M_PI)*atan2(-coronal[1],-coronal[0]);
                                                                         cmd.clear();
                                                                         rep.clear();
@@ -858,109 +868,37 @@ class Manager : public RFModule, public managerTUG_IDL
     bool getWorld()
     {
         Bottle cmd,rep;
-        cmd.addString("get_world_frame");
+        cmd.addString("get_line_pose");
+        cmd.addString("finish-line");
         if(linePort.write(cmd,rep))
         {
-            if(Bottle* worldBottle=rep.get(0).asList())
+            if(Bottle *lp_bottle=rep.get(0).asList())
             {
-                if(worldBottle->size()>=3 && worldBottle->get(0).asInt()>=4 && worldBottle->get(1).asInt()>=4)
+                if(lp_bottle->size()>=7)
                 {
-                    if(Bottle *wfB=worldBottle->get(2).asList())
+                    finishline_pose.resize(7);
+                    finishline_pose[0]=lp_bottle->get(0).asDouble();
+                    finishline_pose[1]=lp_bottle->get(1).asDouble();
+                    finishline_pose[2]=lp_bottle->get(2).asDouble();
+                    finishline_pose[3]=lp_bottle->get(3).asDouble();
+                    finishline_pose[4]=lp_bottle->get(4).asDouble();
+                    finishline_pose[5]=lp_bottle->get(5).asDouble();
+                    finishline_pose[6]=lp_bottle->get(6).asDouble();
+                    yInfo()<<"Finish line wrt world frame"<<finishline_pose.toString();
+
+                    cmd.clear();
+                    rep.clear();
+                    cmd.addString("setLinePose");
+                    cmd.addList().read(finishline_pose);
+                    if(analyzerPort.write(cmd,rep))
                     {
-                        if(wfB->size()>=16)
-                        {
-                            Matrix worldframe(4,4);
-                            worldframe(0,0)=wfB->get(0).asDouble();
-                            worldframe(0,1)=wfB->get(1).asDouble();
-                            worldframe(0,2)=wfB->get(2).asDouble();
-                            worldframe(0,3)=wfB->get(3).asDouble();
-
-                            worldframe(1,0)=wfB->get(4).asDouble();
-                            worldframe(1,1)=wfB->get(5).asDouble();
-                            worldframe(1,2)=wfB->get(6).asDouble();
-                            worldframe(1,3)=wfB->get(7).asDouble();
-
-                            worldframe(2,0)=wfB->get(8).asDouble();
-                            worldframe(2,1)=wfB->get(9).asDouble();
-                            worldframe(2,2)=wfB->get(10).asDouble();
-                            worldframe(2,3)=wfB->get(11).asDouble();
-
-                            worldframe(3,0)=wfB->get(12).asDouble();
-                            worldframe(3,1)=wfB->get(13).asDouble();
-                            worldframe(3,2)=wfB->get(14).asDouble();
-                            worldframe(3,3)=wfB->get(15).asDouble();
-
-                            cmd.clear();
-                            rep.clear();
-                            cmd.addString("get_state");
-                            if (navigationPort.write(cmd,rep))
-                            {
-                                Property robotState(rep.get(0).toString().c_str());
-                                if (Bottle *loc=robotState.find("robot-location").asList())
-                                {
-                                    Vector robot_location(4);
-                                    robot_location[0]=loc->get(0).asDouble();
-                                    robot_location[1]=loc->get(1).asDouble();
-                                    robot_location[2]=0.0;
-                                    robot_location[3]=1.0;
-                                    robot_location=worldframe*robot_location;
-                                    robot_location.pop_back();
-
-                                    Vector rot=dcm2axis(worldframe.submatrix(0,2,0,2));
-                                    cmd.clear();
-                                    rep.clear();
-                                    cmd.addString("reset_odometry");
-                                    cmd.addDouble(robot_location[0]);
-                                    cmd.addDouble(robot_location[1]);
-                                    cmd.addDouble(-(180/M_PI)*rot[3]);
-                                    if (navigationPort.write(cmd,rep))
-                                    {
-                                        if (rep.get(0).asVocab()==ok)
-                                        {
-                                            yInfo()<<cmd.toString();
-                                            cmd.clear();
-                                            rep.clear();
-                                            cmd.addString("get_line_pose");
-                                            cmd.addString("finish-line");
-                                            if(linePort.write(cmd,rep))
-                                            {
-                                                if(Bottle *lp_bottle=rep.get(0).asList())
-                                                {
-                                                    if(lp_bottle->size()>=7)
-                                                    {
-                                                        finishline_pose.resize(7);
-                                                        finishline_pose[0]=lp_bottle->get(0).asDouble();
-                                                        finishline_pose[1]=lp_bottle->get(1).asDouble();
-                                                        finishline_pose[2]=lp_bottle->get(2).asDouble();
-                                                        finishline_pose[3]=lp_bottle->get(3).asDouble();
-                                                        finishline_pose[4]=lp_bottle->get(4).asDouble();
-                                                        finishline_pose[5]=lp_bottle->get(5).asDouble();
-                                                        finishline_pose[6]=lp_bottle->get(6).asDouble();
-                                                        yInfo()<<"Finish line wrt world frame"<<finishline_pose.toString();
-
-                                                        cmd.clear();
-                                                        rep.clear();
-                                                        cmd.addString("setLinePose");
-                                                        cmd.addList().read(finishline_pose);
-                                                        if(analyzerPort.write(cmd,rep))
-                                                        {
-                                                            yInfo()<<"Set finish line to motionAnalyzer";
-                                                            return true;
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        yInfo()<<"Set finish line to motionAnalyzer";
+                        return true;
                     }
                 }
             }
         }
         yError()<<"Could not configure world";
-
         return false;
     }
 
