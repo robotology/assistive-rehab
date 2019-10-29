@@ -65,13 +65,11 @@ class Navigator : public RFModule, public navController_IDL {
   shared_ptr<Skeleton> skeleton;
   string skeleton_tag{""};
   Vector skeleton_location{zeros(3)};
-  Matrix gaze{zeros(4, 4)};
 
   RpcClient navCmdPort;
   BufferedPort<Bottle> navLocPort;
   BufferedPort<Bottle> navCtrlPort;
   BufferedPort<Bottle> opcPort;
-  BufferedPort<Property> gazePort;
   BufferedPort<Property> statePort;
   RpcServer cmdPort;
 
@@ -143,13 +141,11 @@ class Navigator : public RFModule, public navController_IDL {
     navLocPort.open("/navController/base/loc:i");
     navCtrlPort.open("/navController/base/ctrl:o");
     opcPort.open("/navController/opc:i");
-    gazePort.open("/navController/gaze:i");
     statePort.open("/navController/state:o");
     cmdPort.open("/navController/rpc");
     attach(cmdPort);
 
     state = State::idle;
-    gaze = numeric_limits<double>::quiet_NaN();
 
     double Kp = 1.0;
     double Ki = 1.0;
@@ -205,8 +201,6 @@ class Navigator : public RFModule, public navController_IDL {
       navCtrlPort.close();
     if (!opcPort.isClosed())
       opcPort.close();
-    if (!gazePort.isClosed())
-      gazePort.close();
     if (!statePort.isClosed())
       statePort.close();
     if (cmdPort.asPort().isOpen())
@@ -232,26 +226,6 @@ class Navigator : public RFModule, public navController_IDL {
               skeleton = shared_ptr<Skeleton>(skeleton_factory(prop));
             }
           }
-        }
-      }
-    }
-  }
-
-  /****************************************************************/
-  void get_gaze() {
-    if (Property* p = gazePort.read(false)) {
-      if (Bottle* b = p->find("depth_rgb").asList()) {
-        if (b->size() >= 7) {
-          Vector pos(3);
-          for (size_t i = 0; i < pos.length(); i++) {
-            pos[i] = b->get(i).asDouble();
-          }
-          Vector ax(4);
-          for (size_t i = 0; i < ax.length(); i++) {
-            ax[i] = b->get(pos.length() + i).asDouble();
-          }
-          gaze = axis2dcm(ax);
-          gaze.setSubcol(pos, 0, 3);
         }
       }
     }
@@ -295,11 +269,8 @@ class Navigator : public RFModule, public navController_IDL {
 
     if (state == State::track) {
       p.put("skeleton-tag", skeleton_tag);
-      Vector v_sloc = skeleton_location;
-      v_sloc.push_back(1.0);
-      v_sloc = gaze * v_sloc;
-      lb_sloc.addDouble(v_sloc[0]);
-      lb_sloc.addDouble(v_sloc[1]);
+      lb_sloc.addDouble(skeleton_location[0]);
+      lb_sloc.addDouble(skeleton_location[1]);
       p.put("skeleton-location", b_sloc.get(0));
     }
 
@@ -373,7 +344,6 @@ class Navigator : public RFModule, public navController_IDL {
 
     robot_location.getFrom(navLocPort);
     get_skeleton();
-    get_gaze();
 
     robot_velocity.zero();
     skeleton_location = numeric_limits<double>::quiet_NaN();
@@ -382,7 +352,8 @@ class Navigator : public RFModule, public navController_IDL {
       if (skeleton) {
         if ((*skeleton)[KeyPointTag::hip_center]->isUpdated()) {
           skeleton_location = (*skeleton)[KeyPointTag::hip_center]->getPoint();
-          double e = norm(skeleton_location) - distance_target;
+          Vector pos = (robot_location.H0 * get_matrix(robot_location)).getCol(3);
+          double e = norm(skeleton_location.subVector(0, 1) - pos.subVector(0, 1)) - distance_target;
           double abs_e = abs(e);
           double command = velocity_linear_magnitude * sign(e);
           if (distance_hysteresis_active) {

@@ -34,13 +34,6 @@
             Receives the OPC broadcast.
           </description>
       </input>
-      <input>
-          <type>Property</type>
-          <port>/navController/gaze:i</port>
-          <description>
-            Receives the gaze status broadcast.
-          </description>
-      </input>
       <output>
           <type>Bottle</type>
           <port>/navController/state:o</port>
