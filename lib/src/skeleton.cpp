@@ -459,10 +459,11 @@ void Skeleton::update()
         if (k->isUpdated())
         {
             auto v=k->getPoint();
+            auto px=k->getPixel();
             p[0]=v[0];
             p[1]=v[1];
             p[2]=v[2];
-            k->setPoint((T*p).subVector(0,2));
+            k->setPoint((T*p).subVector(0,2),px);
         }
     }
 
