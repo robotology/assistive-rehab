@@ -323,21 +323,18 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (ok_nav)
         {
-            if(starting_pose.size()>0)
+            cmd.clear();
+            rep.clear();
+            cmd.addString("go_to_wait");
+            cmd.addDouble(starting_pose[0]);
+            cmd.addDouble(starting_pose[1]);
+            cmd.addDouble(starting_pose[2]);
+            if (navigationPort.write(cmd,rep))
             {
-                cmd.clear();
-                rep.clear();
-                cmd.addString("go_to_wait");
-                cmd.addDouble(starting_pose[0]);
-                cmd.addDouble(starting_pose[1]);
-                cmd.addDouble(starting_pose[2]);
-                if (navigationPort.write(cmd,rep))
+                if (rep.get(0).asVocab()==ok)
                 {
-                    if (rep.get(0).asVocab()==ok)
-                    {
-                        yInfo()<<"Back to initial position";
-                        ret=true;
-                    }
+                    yInfo()<<"Back to initial position";
+                    ret=true;
                 }
             }
         }
@@ -366,16 +363,15 @@ class Manager : public RFModule, public managerTUG_IDL
                     {
                         cmd.clear();
                         rep.clear();
-                        cmd.addString("get_state");
+                        cmd.addString("go_to_wait");
+                        cmd.addDouble(starting_pose[0]);
+                        cmd.addDouble(starting_pose[1]);
+                        cmd.addDouble(starting_pose[2]);
                         if (navigationPort.write(cmd,rep))
                         {
-                            Property robotState(rep.get(0).toString().c_str());
-                            if (Bottle *loc=robotState.find("robot-location").asList())
+                            if (rep.get(0).asVocab()==ok)
                             {
-                                starting_pose.resize(3);
-                                starting_pose[0]=loc->get(0).asDouble();
-                                starting_pose[1]=loc->get(1).asDouble();
-                                starting_pose[2]=loc->get(2).asDouble();
+                                yInfo()<<"Going to starting position";
                                 ret=true;
                             }
                         }
@@ -429,21 +425,18 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (ok_nav)
         {
-            if(starting_pose.size()>0)
+            cmd.clear();
+            rep.clear();
+            cmd.addString("go_to_wait");
+            cmd.addDouble(starting_pose[0]);
+            cmd.addDouble(starting_pose[1]);
+            cmd.addDouble(starting_pose[2]);
+            if (navigationPort.write(cmd,rep))
             {
-                cmd.clear();
-                rep.clear();
-                cmd.addString("go_to_wait");
-                cmd.addDouble(starting_pose[0]);
-                cmd.addDouble(starting_pose[1]);
-                cmd.addDouble(starting_pose[2]);
-                if (navigationPort.write(cmd,rep))
+                if (rep.get(0).asVocab()==ok)
                 {
-                    if (rep.get(0).asVocab()==ok)
-                    {
-                        yInfo()<<"Back to initial position";
-                        ret=true;
-                    }
+                    yInfo()<<"Back to initial position";
+                    ret=true;
                 }
             }
         }
@@ -459,8 +452,20 @@ class Manager : public RFModule, public managerTUG_IDL
         module_name=rf.check("name",Value("managerTUG")).asString();
         period=rf.check("period",Value(0.1)).asDouble();
         speak_file=rf.check("speak-file",Value("speak-it")).asString();
-        finish_line_thresh=rf.check("finish-line-thresh",Value(0.2)).asDouble();
-        standing_thresh=rf.check("standing-thresh",Value(0.3)).asDouble();
+        finish_line_thresh=rf.check("finish-line-thresh",Value(0.3)).asDouble();
+        standing_thresh=rf.check("standing-thresh",Value(0.2)).asDouble();
+        starting_pose={1.5,-3.0,110.0};
+        if(rf.check("starting-pose"))
+        {
+            if (const Bottle *sp=rf.find("starting-pose").asList())
+            {
+                size_t len=sp->size();
+                for (size_t i=0; i<len; i++)
+                {
+                    starting_pose[i]=sp->get(i).asDouble();
+                }
+            }
+        }
 
         this->setName(module_name.c_str());
 
