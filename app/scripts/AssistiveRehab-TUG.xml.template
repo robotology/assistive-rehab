@@ -97,7 +97,7 @@
 
     <module>
         <name>managerTUG</name>
-        <parameters>--standing-thresh 0.3 --finish-line-thresh 0.2</parameters>
+        <parameters>--standing-thresh 0.2 --finish-line-thresh 0.3</parameters>
         <node>r1-console-linux</node>
     </module>
 
@@ -121,7 +121,7 @@
 
     <module>
         <name>skeletonViewer</name>
-        <parameters>--x 1120 --y 10</parameters>
+        <parameters>--x 1120 --y 10 --show-floor on --camera-viewup "(1.0 0.0 0.0)" --camera-position "(-4.0 -2.0 8.0)" --camera-focalpoint "(0.0 -2.0 0.0)"</parameters>
         <node>r1-display-linux</node>
     </module>
 
@@ -302,12 +302,6 @@
     <connection>
         <from>/opc/broadcast:o</from>
         <to>/navController/opc:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/cer_gaze-controller/state:o</from>
-        <to>/navController/gaze:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
