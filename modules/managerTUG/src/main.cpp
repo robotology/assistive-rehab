@@ -159,7 +159,6 @@ class Manager : public RFModule, public managerTUG_IDL
 
     Vector startline_pose,finishline_pose,starting_pose;
     Matrix worldframe;
-    Vector coronal;
     bool world_configured;
 
     //ports
@@ -351,20 +350,41 @@ class Manager : public RFModule, public managerTUG_IDL
     bool start() override
     {
         lock_guard<mutex> lg(mtx);
+        bool ret=false;
         Bottle cmd,rep;
-        cmd.addString("get_state");
-        if (navigationPort.write(cmd,rep))
+        cmd.addString("stop");
+        if (attentionPort.write(cmd,rep))
         {
-            Property robotState(rep.get(0).toString().c_str());
-            if (Bottle *loc=robotState.find("robot-location").asList())
+            if (rep.get(0).asVocab()==ok)
             {
-                starting_pose.resize(3);
-                starting_pose[0]=loc->get(0).asDouble();
-                starting_pose[1]=loc->get(1).asDouble();
-                starting_pose[2]=loc->get(2).asDouble();
+                cmd.clear();
+                rep.clear();
+                cmd.addString("set_auto");
+                if (attentionPort.write(cmd,rep))
+                {
+                    if (rep.get(0).asVocab()==ok)
+                    {
+                        cmd.clear();
+                        rep.clear();
+                        cmd.addString("get_state");
+                        if (navigationPort.write(cmd,rep))
+                        {
+                            Property robotState(rep.get(0).toString().c_str());
+                            if (Bottle *loc=robotState.find("robot-location").asList())
+                            {
+                                starting_pose.resize(3);
+                                starting_pose[0]=loc->get(0).asDouble();
+                                starting_pose[1]=loc->get(1).asDouble();
+                                starting_pose[2]=loc->get(2).asDouble();
+                                ret=true;
+                            }
+                        }
+                    }
+                }
             }
         }
-        start_ex=disengage();
+
+        start_ex=ret;
         return start_ex;
     }
 
@@ -409,17 +429,14 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (ok_nav)
         {
-            if(finishline_pose.size()>0 && coronal.size()>0)
+            if(starting_pose.size()>0)
             {
                 cmd.clear();
                 rep.clear();
-                double x=finishline_pose[0]-0.6;
-                double y=finishline_pose[1]-0.6;
-                double theta=(180/M_PI)*atan2(-coronal[1],-coronal[0]);
                 cmd.addString("go_to_wait");
-                cmd.addDouble(x);
-                cmd.addDouble(y);
-                cmd.addDouble(theta);
+                cmd.addDouble(starting_pose[0]);
+                cmd.addDouble(starting_pose[1]);
+                cmd.addDouble(starting_pose[2]);
                 if (navigationPort.write(cmd,rep))
                 {
                     if (rep.get(0).asVocab()==ok)
@@ -643,64 +660,55 @@ class Manager : public RFModule, public managerTUG_IDL
                                                             {
                                                                 if (!rep.get(0).asString().empty())
                                                                 {
-                                                                    if (Bottle *corB=rep.get(4).asList())
+                                                                    double x=finishline_pose[0]+0.2;
+                                                                    double y=finishline_pose[1]-0.5;
+                                                                    double theta=starting_pose[2];
+                                                                    cmd.clear();
+                                                                    rep.clear();
+                                                                    cmd.addString("go_to_wait");
+                                                                    cmd.addDouble(x);
+                                                                    cmd.addDouble(y);
+                                                                    cmd.addDouble(theta);
+                                                                    yDebug()<<cmd.toString();
+                                                                    if (navigationPort.write(cmd,rep))
                                                                     {
-                                                                        coronal.clear();
-                                                                        coronal.resize(3);
-                                                                        coronal[0]=corB->get(0).asDouble();
-                                                                        coronal[1]=corB->get(1).asDouble();
-                                                                        coronal[2]=corB->get(2).asDouble();
-
-                                                                        double x=finishline_pose[0]+0.3;
-                                                                        double y=finishline_pose[1]+0.2;
-                                                                        double theta=(180/M_PI)*atan2(-coronal[1],-coronal[0]);
-                                                                        cmd.clear();
-                                                                        rep.clear();
-                                                                        cmd.addString("go_to_wait");
-                                                                        cmd.addDouble(x);
-                                                                        cmd.addDouble(y);
-                                                                        cmd.addDouble(theta);
-                                                                        if (navigationPort.write(cmd,rep))
+                                                                        if (rep.get(0).asVocab()==ok)
                                                                         {
-                                                                            if (rep.get(0).asVocab()==ok)
+                                                                            speak("line",true);
+                                                                            speak("questions",true);
+                                                                            double t1=Time::now();
+                                                                            while(speech_interp->getAnswer().empty())
                                                                             {
-                                                                                speak("line",true);
-                                                                                speak("questions",true);
-                                                                                double t1=Time::now();
-                                                                                while(speech_interp->getAnswer().empty())
+                                                                                double timeout=Time::now()-t1;
+                                                                                if(timeout>10.0)
+                                                                                    break;
+                                                                            }
+                                                                            cmd.clear();
+                                                                            rep.clear();
+                                                                            cmd.addString("track_skeleton");
+                                                                            cmd.addString(tag);
+                                                                            if (navigationPort.write(cmd,rep))
+                                                                            {
+                                                                                if (rep.get(0).asVocab()==ok)
                                                                                 {
-                                                                                    double timeout=Time::now()-t1;
-                                                                                    if(timeout>10.0)
-                                                                                        break;
-                                                                                }
-
-                                                                                cmd.clear();
-                                                                                rep.clear();
-                                                                                cmd.addString("track_skeleton");
-                                                                                cmd.addString(tag);
-                                                                                if (navigationPort.write(cmd,rep))
-                                                                                {
-                                                                                    if (rep.get(0).asVocab()==ok)
+                                                                                    cmd.clear();
+                                                                                    rep.clear();
+                                                                                    cmd.addString("look");
+                                                                                    cmd.addString(tag);
+                                                                                    cmd.addString(KeyPointTag::hip_center);
+                                                                                    if (attentionPort.write(cmd,rep))
                                                                                     {
+                                                                                        speak("start",true);
                                                                                         cmd.clear();
                                                                                         rep.clear();
-                                                                                        cmd.addString("look");
-                                                                                        cmd.addString(tag);
-                                                                                        cmd.addString(KeyPointTag::hip_center);
-                                                                                        if (attentionPort.write(cmd,rep))
+                                                                                        cmd.addString("start");
+                                                                                        cmd.addInt(1);
+                                                                                        if (analyzerPort.write(cmd,rep))
                                                                                         {
-                                                                                            speak("start",true);
-                                                                                            cmd.clear();
-                                                                                            rep.clear();
-                                                                                            cmd.addString("start");
-                                                                                            cmd.addInt(1);
-                                                                                            if (analyzerPort.write(cmd,rep))
+                                                                                            if (rep.get(0).asVocab()==ok)
                                                                                             {
-                                                                                                if (rep.get(0).asVocab()==ok)
-                                                                                                {
-                                                                                                    state=State::assess_standing;
-                                                                                                    t0=tstart=Time::now();
-                                                                                                }
+                                                                                                state=State::assess_standing;
+                                                                                                t0=tstart=Time::now();
                                                                                             }
                                                                                         }
                                                                                     }
