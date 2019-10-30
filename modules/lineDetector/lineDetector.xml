@@ -69,4 +69,13 @@
       </output>
   </data>
 
+  <services>
+    <server>
+      <type>lineDetector_IDL</type>
+      <idl>idl.thrift</idl>
+      <port>/lineDetector/cmd:rpc</port>
+      <description>service port</description>
+    </server>
+  </services>
+
 </module>
