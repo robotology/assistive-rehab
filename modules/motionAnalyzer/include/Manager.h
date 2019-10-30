@@ -41,7 +41,6 @@ class Manager : public yarp::os::RFModule,
     yarp::os::RpcClient dtwPort;
     yarp::os::RpcClient actionPort;
     yarp::os::BufferedPort<yarp::os::Bottle> scopePort;
-    yarp::os::BufferedPort<yarp::os::Property> gazePort;
 
     yarp::os::ResourceFinder *rf;
 
@@ -59,7 +58,6 @@ class Manager : public yarp::os::RFModule,
     Exercise* curr_exercise;
     std::vector<Processor*> processors;
     const Metric* curr_metric;
-    yarp::sig::Matrix gaze_frame;
 
     double tstart;
     double tstart_session;
@@ -80,6 +78,7 @@ class Manager : public yarp::os::RFModule,
     iCub::ctrl::AWLinEstimator *lin_est_shoulder;
     double shoulder_center_height_vel;
     std::vector<double> line_pose;
+    yarp::sig::Matrix world_frame;
 
     bool loadMotionList(yarp::os::ResourceFinder &rf);
     bool loadExercise(const std::string &exercise_tag) override;

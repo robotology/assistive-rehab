@@ -10,6 +10,12 @@
 * IDL Interface to Motion Analyzer services.
 */
 
+struct Matrix { }
+(
+   yarp.name="yarp::sig::Matrix"
+   yarp.includefile="yarp/sig/Matrix.h"
+)
+
 service motionAnalyzer_IDL
 {
 

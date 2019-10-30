@@ -48,8 +48,8 @@ Processor *createProcessor(const string& metric_type, const Metric* metric_)
 Processor::Processor()
 {
     plane_normal.resize(3);
-    inv_reference_system.resize(4,4);
-    inv_reference_system=eye(4,4);
+    curr_frame.resize(4,4);
+    curr_frame=eye(4,4);
 }
 
 void print(const Matrix& m)
@@ -83,16 +83,15 @@ void Processor::setInitialConf(SkeletonStd &skeleton_, Matrix &T)
     T1.setSubcol(transverse,0,2);
     T1.setSubcol(p,0,3);
     T1(3,3)=1.0;
-    inv_reference_system = SE3inv(T1);
-    T = inv_reference_system;
+    curr_frame = SE3inv(T1);
+    T = curr_frame;
 
     t0=Time::now();
 }
 
 /****************************************************************/
-void Processor::update(SkeletonStd &curr_skeleton_,const Matrix &gaze_frame)
+void Processor::update(SkeletonStd &curr_skeleton_)
 {
-    this->gaze_frame=gaze_frame;
     curr_skeleton.update(curr_skeleton_.toProperty());
 }
 
@@ -104,11 +103,11 @@ Vector Processor::projectOnPlane(const Vector &v,const Vector &plane)
 }
 
 /****************************************************************/
-Vector Processor::getKeypointRoot(const string &tag)
+Vector Processor::toCurrFrame(const string &tag)
 {
     Vector k=curr_skeleton[tag]->getPoint();
     k.push_back(1.0);
-    return (gaze_frame*inv_reference_system*k).subVector(0,2);
+    return (curr_frame*k).subVector(0,2);
 }
 
 /****************************************/
@@ -152,8 +151,8 @@ void Rom_Processor::estimate()
             {
                 plane_normal=curr_skeleton.getTransverse();
             }
-            Vector k1=getKeypointRoot(tag_joint);
-            Vector k2=getKeypointRoot(curr_skeleton[tag_joint]->getChild(0)->getTag());
+            Vector k1=toCurrFrame(tag_joint);
+            Vector k2=toCurrFrame(curr_skeleton[tag_joint]->getChild(0)->getTag());
             v1=k2-k1;
             v1=projectOnPlane(v1,plane_normal);
             double n1=norm(v1);
@@ -161,7 +160,7 @@ void Rom_Processor::estimate()
                 v1/=n1;
             if(!rom->getRefJoint().empty())
             {
-                Vector k_dir=getKeypointRoot(rom->getRefJoint());
+                Vector k_dir=toCurrFrame(rom->getRefJoint());
                 ref_dir=k1-k_dir;
             }
             else
@@ -222,8 +221,8 @@ void Step_Processor::estimate()
     if(curr_skeleton[KeyPointTag::ankle_left]->isUpdated() &&
             curr_skeleton[KeyPointTag::ankle_right]->isUpdated())
     {
-        Vector k1=getKeypointRoot(KeyPointTag::ankle_left);
-        Vector k2=getKeypointRoot(KeyPointTag::ankle_right);
+        Vector k1=toCurrFrame(KeyPointTag::ankle_left);
+        Vector k2=toCurrFrame(KeyPointTag::ankle_right);
         Vector v=k1-k2;
         double dist=norm(v);
         feetdist.push_back(dist);
@@ -384,8 +383,8 @@ void EndPoint_Processor::estimate()
         ref.push_back(1.0);
         Vector v = curr_skeleton[tag_joint]->getPoint();
         v.push_back(1.0);
-        Vector transformed_v = inv_reference_system*v;
-        Vector transformed_ref = inv_reference_system*ref;
+        Vector transformed_v = curr_frame*v;
+        Vector transformed_ref = curr_frame*ref;
         Vector dv = transformed_v.subVector(0,2)-transformed_ref.subVector(0,2);
         est_traj = getTrajectory(dv);
 
@@ -395,7 +394,7 @@ void EndPoint_Processor::estimate()
 
         Vector t=ep->getTarget();
         t.push_back(1.0);
-        Vector transformed_t = inv_reference_system*t;
+        Vector transformed_t = curr_frame*t;
         Vector dt = transformed_t.subVector(0,2)-transformed_ref.subVector(0,2);
         ideal_traj = getTrajectory(dt);
 

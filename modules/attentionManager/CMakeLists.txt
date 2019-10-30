@@ -13,7 +13,7 @@ source_group("DOC Files" FILES ${doc_files})
 
 add_executable(${PROJECT_NAME} src/main.cpp src/idl.thrift ${IDL_GEN_FILES} ${doc_files})
 target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
-target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} ctrlLib AssistiveRehab)
+target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} AssistiveRehab)
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
 file(GLOB scripts app/scripts/*.template)

@@ -17,6 +17,7 @@
 #include <yarp/os/LogStream.h>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/RpcClient.h>
+#include <yarp/math/Math.h>
 
 #include <mutex>
 #include <cmath>
@@ -28,6 +29,7 @@
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
+using namespace yarp::math;
 using namespace assistive_rehab;
 
 class SpeechInterpApi : public BufferedPort<Bottle>
@@ -146,20 +148,27 @@ class Manager : public RFModule, public managerTUG_IDL
 
     const int ok=Vocab::encode("ok");
     const int fail=Vocab::encode("fail");
-    enum class State { stopped, idle, seek_line, seek_skeleton, follow, engaged, assess_standing, assess_crossing, line_crossed, not_passed, finished } state;
+    enum class State { stopped, idle, seek_skeleton, follow, engaged, assess_standing, assess_crossing, line_crossed, not_passed, finished } state;
     string tag;
     double t0,tstart,t;
     int encourage_cnt;
     unordered_map<string,string> speak_map;
     bool interrupting;
     mutex mtx;
+    bool start_ex;
+
+    Vector startline_pose,finishline_pose,starting_pose;
+    Matrix worldframe;
+    bool world_configured;
 
     //ports
     RpcClient analyzerPort;
     RpcClient speechRpcPort;
     RpcClient attentionPort;
+    RpcClient navigationPort;
     BufferedPort<Bottle> speechStreamPort;
     RpcServer cmdPort;
+    RpcClient linePort;
 
     SpeechInterpApi *speech_interp;
 
@@ -271,6 +280,7 @@ class Manager : public RFModule, public managerTUG_IDL
         bool ret=false;
         state=State::idle;
 
+        bool ok_nav=false;
         Bottle cmd,rep;
         cmd.addString("stop");
         if (attentionPort.write(cmd,rep))
@@ -279,18 +289,57 @@ class Manager : public RFModule, public managerTUG_IDL
             {
                 cmd.clear();
                 cmd.addString("set_auto");
-                cmd.addInt(1);
                 if (attentionPort.write(cmd,rep))
                 {
                     if (rep.get(0).asVocab()==ok)
                     {
-                        ret=true;
+                        cmd.clear();
+                        rep.clear();
+                        cmd.addString("is_navigating");
+                        if (navigationPort.write(cmd,rep))
+                        {
+                            if (rep.get(0).asVocab()==ok)
+                            {
+                                cmd.clear();
+                                rep.clear();
+                                cmd.addString("stop");
+                                if (navigationPort.write(cmd,rep))
+                                {
+                                    if (rep.get(0).asVocab()==ok)
+                                    {
+                                        ok_nav=true;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                ok_nav=true;
+                            }
+                        }
                     }
                 }
             }
         }
-        t0=Time::now();
 
+        if (ok_nav)
+        {
+            cmd.clear();
+            rep.clear();
+            cmd.addString("go_to_wait");
+            cmd.addDouble(starting_pose[0]);
+            cmd.addDouble(starting_pose[1]);
+            cmd.addDouble(starting_pose[2]);
+            if (navigationPort.write(cmd,rep))
+            {
+                if (rep.get(0).asVocab()==ok)
+                {
+                    yInfo()<<"Back to initial position";
+                    ret=true;
+                }
+            }
+        }
+
+        t0=Time::now();
         return ret;
     }
 
@@ -298,7 +347,41 @@ class Manager : public RFModule, public managerTUG_IDL
     bool start() override
     {
         lock_guard<mutex> lg(mtx);
-        return disengage();
+        bool ret=false;
+        Bottle cmd,rep;
+        cmd.addString("stop");
+        if (attentionPort.write(cmd,rep))
+        {
+            if (rep.get(0).asVocab()==ok)
+            {
+                cmd.clear();
+                rep.clear();
+                cmd.addString("set_auto");
+                if (attentionPort.write(cmd,rep))
+                {
+                    if (rep.get(0).asVocab()==ok)
+                    {
+                        cmd.clear();
+                        rep.clear();
+                        cmd.addString("go_to_wait");
+                        cmd.addDouble(starting_pose[0]);
+                        cmd.addDouble(starting_pose[1]);
+                        cmd.addDouble(starting_pose[2]);
+                        if (navigationPort.write(cmd,rep))
+                        {
+                            if (rep.get(0).asVocab()==ok)
+                            {
+                                yInfo()<<"Going to starting position";
+                                ret=true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        start_ex=ret;
+        return start_ex;
     }
 
     /****************************************************************/
@@ -307,15 +390,58 @@ class Manager : public RFModule, public managerTUG_IDL
         lock_guard<mutex> lg(mtx);
         bool ret=false;
 
+        bool ok_nav=false;
         Bottle cmd,rep;
         cmd.addString("stop");
         if (attentionPort.write(cmd,rep))
         {
             if (rep.get(0).asVocab()==ok)
             {
-                ret=true;
+                cmd.clear();
+                rep.clear();
+                cmd.addString("is_navigating");
+                if (navigationPort.write(cmd,rep))
+                {
+                    if (rep.get(0).asBool()==true)
+                    {
+                        cmd.clear();
+                        rep.clear();
+                        cmd.addString("stop");
+                        if (navigationPort.write(cmd,rep))
+                        {
+                            if (rep.get(0).asVocab()==ok)
+                            {
+                                ok_nav=true;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        ok_nav=true;
+                    }
+                }
             }
         }
+
+        if (ok_nav)
+        {
+            cmd.clear();
+            rep.clear();
+            cmd.addString("go_to_wait");
+            cmd.addDouble(starting_pose[0]);
+            cmd.addDouble(starting_pose[1]);
+            cmd.addDouble(starting_pose[2]);
+            if (navigationPort.write(cmd,rep))
+            {
+                if (rep.get(0).asVocab()==ok)
+                {
+                    yInfo()<<"Back to initial position";
+                    ret=true;
+                }
+            }
+        }
+
+        start_ex=false;
         state=State::stopped;
         return ret;
     }
@@ -326,8 +452,20 @@ class Manager : public RFModule, public managerTUG_IDL
         module_name=rf.check("name",Value("managerTUG")).asString();
         period=rf.check("period",Value(0.1)).asDouble();
         speak_file=rf.check("speak-file",Value("speak-it")).asString();
-        finish_line_thresh=rf.check("finish-line-thresh",Value(0.2)).asDouble();
-        standing_thresh=rf.check("standing-thresh",Value(0.3)).asDouble();
+        finish_line_thresh=rf.check("finish-line-thresh",Value(0.3)).asDouble();
+        standing_thresh=rf.check("standing-thresh",Value(0.2)).asDouble();
+        starting_pose={1.5,-3.0,110.0};
+        if(rf.check("starting-pose"))
+        {
+            if (const Bottle *sp=rf.find("starting-pose").asList())
+            {
+                size_t len=sp->size();
+                for (size_t i=0; i<len; i++)
+                {
+                    starting_pose[i]=sp->get(i).asDouble();
+                }
+            }
+        }
 
         this->setName(module_name.c_str());
 
@@ -338,10 +476,13 @@ class Manager : public RFModule, public managerTUG_IDL
             yError()<<msg;
             return false;
         }
+        start_ex=false;
 
         analyzerPort.open("/"+module_name+"/analyzer:rpc");
         speechRpcPort.open("/"+module_name+"/speech:rpc");
         attentionPort.open("/"+module_name+"/attention:rpc");
+        navigationPort.open("/"+module_name+"/navigation:rpc");
+        linePort.open("/"+module_name+"/line:rpc");
         speechStreamPort.open("/"+module_name+"/speech:o");
         cmdPort.open("/"+module_name+"/cmd:rpc");
         attach(cmdPort);
@@ -351,6 +492,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         state=State::idle;
         interrupting=false;
+        world_configured=false;
         t0=tstart=Time::now();
 
         return true;
@@ -367,9 +509,23 @@ class Manager : public RFModule, public managerTUG_IDL
     {
         lock_guard<mutex> lg(mtx);
         if((analyzerPort.getOutputCount()==0) || (speechStreamPort.getOutputCount()==0) ||
-                (speechRpcPort.getOutputCount()==0) || (attentionPort.getOutputCount()==0))
+                (speechRpcPort.getOutputCount()==0) || (attentionPort.getOutputCount()==0) ||
+                (navigationPort.getOutputCount()==0) || (linePort.getOutputCount())==0)
         {
             yInfo()<<"not connected";
+            return true;
+        }
+
+        //get start and finish lines
+        if (!world_configured)
+        {
+            yInfo()<<"Getting world...";
+            world_configured=getWorld();
+            return true;
+        }
+
+        if(!start_ex)
+        {
             return true;
         }
 
@@ -387,7 +543,7 @@ class Manager : public RFModule, public managerTUG_IDL
         {
             if (Time::now()-t0>10.0)
             {
-                state=State::seek_line;
+                state=State::seek_skeleton;
             }
         }
 
@@ -401,39 +557,6 @@ class Manager : public RFModule, public managerTUG_IDL
                 speak("disengaged",true);
                 disengage();
                 return true;
-            }
-        }
-
-        if (state==State::seek_line)
-        {
-            //search for finish line
-            Bottle cmd,rep;
-            cmd.addString("get_line_pose");
-            if(attentionPort.write(cmd,rep))
-            {
-                if(Bottle* line_pose_bottle=rep.get(0).asList())
-                {
-                    if(line_pose_bottle->size()>=7)
-                    {
-                        yInfo()<<"Found finish line at"<<line_pose_bottle->toString();
-                        Vector line_pose(7);
-                        line_pose[0]=line_pose_bottle->get(0).asDouble();
-                        line_pose[1]=line_pose_bottle->get(1).asDouble();
-                        line_pose[2]=line_pose_bottle->get(2).asDouble();
-                        line_pose[3]=line_pose_bottle->get(3).asDouble();
-                        line_pose[4]=line_pose_bottle->get(4).asDouble();
-                        line_pose[5]=line_pose_bottle->get(5).asDouble();
-                        line_pose[6]=line_pose_bottle->get(6).asDouble();
-                        cmd.clear();
-                        cmd.addString("setLinePose");
-                        cmd.addList().read(line_pose);
-                        rep.clear();
-                        if(analyzerPort.write(cmd,rep))
-                        {
-                            state=State::seek_skeleton;
-                        }
-                    }
-                }
             }
         }
 
@@ -534,32 +657,69 @@ class Manager : public RFModule, public managerTUG_IDL
                                                         if (rep.get(0).asVocab()==ok)
                                                         {
                                                             speak("sit",true);
+                                                            speak("explain",true);
                                                             cmd.clear();
                                                             rep.clear();
-                                                            cmd.addString("look");
-                                                            cmd.addString(tag);
-                                                            cmd.addString(KeyPointTag::hip_center);
+                                                            cmd.addString("is_following");
                                                             if (attentionPort.write(cmd,rep))
                                                             {
-                                                                speak("explain",true);
-                                                                speak("questions",true);
-                                                                double t1=Time::now();
-                                                                while(speech_interp->getAnswer().empty())
+                                                                if (!rep.get(0).asString().empty())
                                                                 {
-                                                                    double timeout=Time::now()-t1;
-                                                                    if(timeout>10.0)
-                                                                        break;
-                                                                }
-                                                                speak("start",true);
-                                                                cmd.clear();
-                                                                cmd.addString("start");
-                                                                cmd.addInt(1);
-                                                                if (analyzerPort.write(cmd,rep))
-                                                                {
-                                                                    if (rep.get(0).asVocab()==ok)
+                                                                    double x=finishline_pose[0]+0.2;
+                                                                    double y=finishline_pose[1]-0.5;
+                                                                    double theta=starting_pose[2];
+                                                                    cmd.clear();
+                                                                    rep.clear();
+                                                                    cmd.addString("go_to_wait");
+                                                                    cmd.addDouble(x);
+                                                                    cmd.addDouble(y);
+                                                                    cmd.addDouble(theta);
+                                                                    yDebug()<<cmd.toString();
+                                                                    if (navigationPort.write(cmd,rep))
                                                                     {
-                                                                        state=State::assess_standing;
-                                                                        t0=tstart=Time::now();
+                                                                        if (rep.get(0).asVocab()==ok)
+                                                                        {
+                                                                            speak("line",true);
+                                                                            speak("questions",true);
+                                                                            double t1=Time::now();
+                                                                            while(speech_interp->getAnswer().empty())
+                                                                            {
+                                                                                double timeout=Time::now()-t1;
+                                                                                if(timeout>10.0)
+                                                                                    break;
+                                                                            }
+                                                                            cmd.clear();
+                                                                            rep.clear();
+                                                                            cmd.addString("track_skeleton");
+                                                                            cmd.addString(tag);
+                                                                            if (navigationPort.write(cmd,rep))
+                                                                            {
+                                                                                if (rep.get(0).asVocab()==ok)
+                                                                                {
+                                                                                    cmd.clear();
+                                                                                    rep.clear();
+                                                                                    cmd.addString("look");
+                                                                                    cmd.addString(tag);
+                                                                                    cmd.addString(KeyPointTag::hip_center);
+                                                                                    if (attentionPort.write(cmd,rep))
+                                                                                    {
+                                                                                        speak("start",true);
+                                                                                        cmd.clear();
+                                                                                        rep.clear();
+                                                                                        cmd.addString("start");
+                                                                                        cmd.addInt(1);
+                                                                                        if (analyzerPort.write(cmd,rep))
+                                                                                        {
+                                                                                            if (rep.get(0).asVocab()==ok)
+                                                                                            {
+                                                                                                state=State::assess_standing;
+                                                                                                t0=tstart=Time::now();
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
                                                                     }
                                                                 }
                                                             }
@@ -718,6 +878,44 @@ class Manager : public RFModule, public managerTUG_IDL
     }
 
     /****************************************************************/
+    bool getWorld()
+    {
+        Bottle cmd,rep;
+        cmd.addString("get_line_pose");
+        cmd.addString("finish-line");
+        if(linePort.write(cmd,rep))
+        {
+            if(Bottle *lp_bottle=rep.get(0).asList())
+            {
+                if(lp_bottle->size()>=7)
+                {
+                    finishline_pose.resize(7);
+                    finishline_pose[0]=lp_bottle->get(0).asDouble();
+                    finishline_pose[1]=lp_bottle->get(1).asDouble();
+                    finishline_pose[2]=lp_bottle->get(2).asDouble();
+                    finishline_pose[3]=lp_bottle->get(3).asDouble();
+                    finishline_pose[4]=lp_bottle->get(4).asDouble();
+                    finishline_pose[5]=lp_bottle->get(5).asDouble();
+                    finishline_pose[6]=lp_bottle->get(6).asDouble();
+                    yInfo()<<"Finish line wrt world frame"<<finishline_pose.toString();
+
+                    cmd.clear();
+                    rep.clear();
+                    cmd.addString("setLinePose");
+                    cmd.addList().read(finishline_pose);
+                    if(analyzerPort.write(cmd,rep))
+                    {
+                        yInfo()<<"Set finish line to motionAnalyzer";
+                        return true;
+                    }
+                }
+            }
+        }
+        yError()<<"Could not configure world";
+        return false;
+    }
+
+    /****************************************************************/
     bool interruptModule() override
     {
         interrupting=true;
@@ -733,6 +931,8 @@ class Manager : public RFModule, public managerTUG_IDL
         analyzerPort.close();
         speechRpcPort.close();
         attentionPort.close();
+        navigationPort.close();
+        linePort.close();
         speechStreamPort.close();
         cmdPort.close();
         return true;

@@ -861,17 +861,11 @@ bool Manager::hasCrossedFinishLine(const double finishline_thresh)
     lock_guard<mutex> lg(mtx);
     Vector foot_right=skeletonIn[KeyPointTag::ankle_right]->getPoint();
     Vector foot_left=skeletonIn[KeyPointTag::ankle_left]->getPoint();
-    foot_right.push_back(1.0);
-    foot_right=gaze_frame*foot_right;
-    foot_right.pop_back();
-    foot_left.push_back(1.0);
-    foot_left=gaze_frame*foot_left;
-    foot_left.pop_back();
 
-    Vector lp_root(3);
-    lp_root[0]=line_pose[0];
-    lp_root[1]=line_pose[1];
-    lp_root[2]=line_pose[2];
+    Vector lp_world(3);
+    lp_world[0]=line_pose[0];
+    lp_world[1]=line_pose[1];
+    lp_world[2]=line_pose[2];
 
     Vector line_ori(4);
     line_ori[0]=line_pose[3];
@@ -882,10 +876,10 @@ bool Manager::hasCrossedFinishLine(const double finishline_thresh)
     Vector line_x=lOri.getCol(0);
     line_x.pop_back();
 
-    Vector fr_lp=lp_root-foot_right;
-    Vector fl_lp=lp_root-foot_left;
-    Vector pline=lp_root+line_x;
-    Vector v1=lp_root-pline;
+    Vector fr_lp=lp_world-foot_right;
+    Vector fl_lp=lp_world-foot_left;
+    Vector pline=lp_world+line_x;
+    Vector v1=lp_world-pline;
     double dist_fr_line=norm(cross(v1,fr_lp))/norm(v1);
     double dist_fl_line=norm(cross(v1,fl_lp))/norm(v1);
     yInfo()<<"dist foot right line"<<dist_fr_line;
@@ -957,23 +951,11 @@ void Manager::getSkeleton()
                                             if(skeleton->update_planes())
                                             {
                                                 vector<pair<string,Vector>> keyps=skeletonIn.get_unordered();
-                                                for(int j=0;j<keyps.size();j++)
-                                                {
-                                                    Vector temp;
-                                                    temp=keyps[j].second;
-                                                    temp.push_back(1.0);
-                                                    temp=gaze_frame*temp;
-                                                    temp.pop_back();
-                                                    keyps[j].second=temp;
-                                                }
                                                 all_keypoints.push_back(keyps);
                                             }
                                             if(skeletonIn[KeyPointTag::shoulder_center]->isUpdated())
                                             {
                                                 Vector shoulder_center=skeletonIn[KeyPointTag::shoulder_center]->getPoint();
-                                                shoulder_center.push_back(1.0);
-                                                shoulder_center=gaze_frame*shoulder_center;
-                                                shoulder_center.pop_back();
                                                 AWPolyElement el(shoulder_center,Time::now());
                                                 shoulder_center_height_vel=lin_est_shoulder->estimate(el)[2];
                                             }
@@ -1012,7 +994,6 @@ bool Manager::configure(ResourceFinder &rf)
     dtwPort.open(("/" + getName() + "/dtw:cmd").c_str());
     actionPort.open(("/" + getName() + "/action:cmd").c_str());
     rpcPort.open(("/" + getName() + "/cmd").c_str());
-    gazePort.open(("/" + getName() + "/gaze:i").c_str());
     attach(rpcPort);
 
     cameraposinit.resize(3);
@@ -1043,7 +1024,6 @@ bool Manager::interruptModule()
     dtwPort.interrupt();
     actionPort.interrupt();
     rpcPort.interrupt();
-    gazePort.interrupt();
     yInfo() << "Interrupted module";
 
     return true;
@@ -1069,7 +1049,6 @@ bool Manager::close()
     dtwPort.close();
     actionPort.close();
     rpcPort.close();
-    gazePort.close();
     yInfo() << "Closed ports";
 
     return true;
@@ -1085,14 +1064,6 @@ double Manager::getPeriod()
 bool Manager::updateModule()
 {
     lock_guard<mutex> lg(mtx);
-
-    if (Property *p=gazePort.read(false))
-    {
-        Vector pose;
-        p->find("depth_rgb").asList()->write(pose);
-        gaze_frame=axis2dcm(pose.subVector(3,6));
-        gaze_frame.setSubcol(pose.subVector(0,2),0,3);
-    }
 
     //if we query the database
     if(opcPort.getOutputCount()>0)
@@ -1115,7 +1086,7 @@ bool Manager::updateModule()
                     scopebottleout.clear();
                     for(int i=0; i<processors.size(); i++)
                     {
-                        processors[i]->update(skeletonIn,gaze_frame);
+                        processors[i]->update(skeletonIn);
                         processors[i]->estimate();
                         Property result=processors[i]->getResult();
                         if(result.check(prop_tag) &&

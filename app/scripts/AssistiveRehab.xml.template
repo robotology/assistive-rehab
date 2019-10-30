@@ -242,12 +242,6 @@
     </connection>
 
     <connection>
-        <from>/cer_gaze-controller/state:o</from>
-        <to>/motionAnalyzer/gaze:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
         <from>/motionAnalyzer/opc</from>
         <to>/opc/rpc</to>
         <protocol>fast_tcp</protocol>
