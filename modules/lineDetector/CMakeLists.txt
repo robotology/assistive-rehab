@@ -15,6 +15,7 @@ file(GLOB scripts app/scripts/*.template)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 add_executable(${PROJECT_NAME} ${source} src/idl.thrift ${IDL_GEN_FILES} ${doc_files})
+target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES} ${YARP_LIBRARIES} ctrlLib)
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
