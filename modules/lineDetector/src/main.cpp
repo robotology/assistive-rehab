@@ -425,9 +425,15 @@ class Detector : public RFModule, public lineDetector_IDL
         p0[1]=lines_pose[i][1];
         p0[2]=lines_pose[i][2];
         yarp::sig::Vector p1=p0+llen*u;
-        int r=1;
-        int g=0;
-        int b=0;
+        std::vector<int> color(3,0.0);
+        if(line=="start-line")
+        {
+            color[0]=1;
+        }
+        if(line=="finish-line")
+        {
+            color[2]=1;
+        }
         Bottle cmd,rep;
         cmd.addString("create_line");
         cmd.addString(l);
@@ -437,9 +443,9 @@ class Detector : public RFModule, public lineDetector_IDL
         cmd.addDouble(p1[0]);
         cmd.addDouble(p1[1]);
         cmd.addDouble(p1[2]);
-        cmd.addInt(r);
-        cmd.addInt(g);
-        cmd.addInt(b);
+        cmd.addInt(color[0]);
+        cmd.addInt(color[1]);
+        cmd.addInt(color[2]);
         if(viewerPort.write(cmd,rep))
         {
             if(rep.get(0).asBool()==true)
@@ -608,37 +614,20 @@ class Detector : public RFModule, public lineDetector_IDL
     {
         yarp::sig::Matrix wf=SE3inv(camFrame*lineFrame);
         const int ok=Vocab::encode("ok");
+        yarp::sig::Vector tr=wf.getCol(3);
+        yarp::sig::Vector rot=dcm2axis(wf.submatrix(0,2,0,2));
         Bottle cmd,rep;
-        cmd.addString("get_state");
+        cmd.addString("reset_odometry");
+        cmd.addDouble(tr[0]);
+        cmd.addDouble(tr[1]);
+        cmd.addDouble((180/M_PI)*rot[3]);
         if (navPort.write(cmd,rep))
         {
-            Property robotState(rep.get(0).toString().c_str());
-            if (Bottle *loc=robotState.find("robot-location").asList())
+            if (rep.get(0).asVocab()==ok)
             {
-                yarp::sig::Vector robot_location(4);
-                robot_location[0]=loc->get(0).asDouble();
-                robot_location[1]=loc->get(1).asDouble();
-                robot_location[2]=0.0;
-                robot_location[3]=1.0;
-                robot_location=wf*robot_location;
-                robot_location.pop_back();
-
-                yarp::sig::Vector rot=dcm2axis(wf.submatrix(0,2,0,2));
-                cmd.clear();
-                rep.clear();
-                cmd.addString("reset_odometry");
-                cmd.addDouble(robot_location[0]);
-                cmd.addDouble(robot_location[1]);
-                cmd.addDouble((180/M_PI)*rot[3]);
-                if (navPort.write(cmd,rep))
-                {
-                    if (rep.get(0).asVocab()==ok)
-                    {
-                        yInfo()<<"Reset robot's odometry";
-                        updated_odom=true;
-                        return true;
-                    }
-                }
+                yInfo()<<"Reset robot's odometry";
+                updated_odom=true;
+                return true;
             }
         }
         return false;
