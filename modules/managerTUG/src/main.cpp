@@ -19,6 +19,8 @@
 #include <yarp/os/RpcClient.h>
 #include <yarp/math/Math.h>
 
+#include <condition_variable>
+
 #include <mutex>
 #include <cmath>
 
@@ -32,24 +34,34 @@ using namespace yarp::sig;
 using namespace yarp::math;
 using namespace assistive_rehab;
 
-class SpeechInterpApi : public BufferedPort<Bottle>
+class QuestionManager: public BufferedPort<Bottle>
 {
     string module_name;
     unordered_map<string,string> speak_map;
-    double t;
-    string keyword;
+    BufferedPort<Bottle> answerPort;
+    BufferedPort<Bottle> *speechPort;
+    RpcClient *speechRpc;
+    bool freezing,asked,replied;
+    double time;
+    mutex mtx;
 
 public:
 
     /********************************************************/
-    SpeechInterpApi(const string &module_name, const unordered_map<string,string> &speak_map)
+    QuestionManager(const string &module_name, const unordered_map<string,string> &speak_map,
+                    BufferedPort<Bottle> *speechPort, RpcClient *speechRpc)
     {
         this->module_name=module_name;
         this->speak_map=speak_map;
+        this->speechPort=speechPort;
+        this->speechRpc=speechRpc;
+        freezing=false;
+        asked=false;
+        replied=false;
     }
 
     /********************************************************/
-    ~SpeechInterpApi()
+    ~QuestionManager()
     {
     };
 
@@ -57,7 +69,8 @@ public:
     bool open()
     {
         this->useCallback();
-        BufferedPort<yarp::os::Bottle >::open("/"+module_name+"/speech-interp:i");
+        BufferedPort<yarp::os::Bottle >::open("/"+module_name+"/question:i");
+        answerPort.open("/"+module_name+"/answer:i");
         return true;
     }
 
@@ -65,53 +78,79 @@ public:
     void close()
     {
         BufferedPort<yarp::os::Bottle >::close();
+        answerPort.close();
     }
 
     /********************************************************/
     void interrupt()
     {
         BufferedPort<yarp::os::Bottle >::interrupt();
+        answerPort.interrupt();
+    }
+
+    /********************************************************/
+    bool freeze() const
+    {
+        return freezing;
+    }
+
+    /********************************************************/
+    bool restore() const
+    {
+        return !freezing;
+    }
+
+    /********************************************************/
+    void onRead( yarp::os::Bottle &question )
+    {
+        lock_guard<mutex> lg(mtx);
+        yInfo()<<"Received a question...";
+        freezing=true;
+        asked=true;
+        replied=false;
+        string keyword;
+        bool got_kw=false;
+        while (true)
+        {
+            got_kw=getAnswer(keyword);
+            if (got_kw)
+            {
+                break;
+            }
+        }
+        string answer=speak_map[keyword];
+        replied=reply(answer);
+        freezing=false;
+        asked=false;
     }
 
     /********************************************************/
     void setTime(const double &t)
     {
-        this->t=t;
+        this->time=t;
     }
 
     /********************************************************/
-    string getKeyword() const
+    bool getAnswer(string &keyword)
     {
-        return keyword;
-    }
-
-    /********************************************************/
-    void resetKeyword()
-    {
-        keyword.clear();
-    }
-
-    /********************************************************/
-    void onRead( yarp::os::Bottle &speech_interpretation )
-    {
-        yInfo()<<"Received a question...";
-        if(!speech_interpretation.isNull())
+        yarp::os::Bottle *speech_interpretation=answerPort.read(true);
+        if(!speech_interpretation->isNull())
         {
             yInfo()<<"Trying to answer...";
-            keyword=speech_interpretation.get(0).asString();
+            keyword=speech_interpretation->get(0).asString();
             if (!keyword.empty())
             {
                 if(keyword=="feedback")
                 {
-                    if(t<=10.0)
+                    if(time<=10.0)
                     {
                         keyword+="-high";
                     }
-                    else if(t<=20.0)
+                    else if(time<=30.0)
                     {
                         keyword+="-medium";
                     }
-                    else if(t<=30.0)
+                    else if(time>=30.0)
                     {
                         keyword+="-low";
                     }
@@ -128,9 +167,52 @@ public:
         else
         {
             yWarning()<<"Corrupted bottle";
+            return false;
         }
+
+        return true;
     }
 
+    /********************************************************/
+    bool reply(const string &ans)
+    {
+        bool ret=false;
+        Bottle &answer=speechPort->prepare();
+        answer.clear();
+        answer.addString(ans);
+        speechPort->writeStrict();
+        while (true && (speechPort->getOutputCount()>0))
+        {
+            Time::delay(0.01);
+            Bottle cmd,rep;
+            cmd.addVocab(Vocab::encode("stat"));
+            if (speechRpc->write(cmd,rep))
+            {
+                if (rep.get(0).asString()=="quiet")
+                {
+                    ret=true;
+                    break;
+                }
+            }
+        }
+        Time::delay(0.1);
+
+        return ret;
+    }
+
+    /********************************************************/
+    bool gotQuestion()
+    {
+        lock_guard<mutex> lg(mtx);
+        return asked;
+    }
+
+    /********************************************************/
+    bool hasReplied()
+    {
+        lock_guard<mutex> lg(mtx);
+        return replied;
+    }
 };
 
 /****************************************************************/
@@ -155,16 +237,18 @@ class Manager : public RFModule, public managerTUG_IDL
 
     const int ok=Vocab::encode("ok");
     const int fail=Vocab::encode("fail");
-    enum class State { stopped, idle, seek_skeleton, follow, engaged, assess_standing, assess_crossing, line_crossed, not_passed, finished } state;
+    enum class State { frozen, stopped, idle, seek_skeleton, follow, engaged, explain, reach_line, starting, assess_standing, assess_crossing, line_crossed, not_passed, finished } state;
+    State prev_state;
     string tag;
     double t0,tstart,t;
     int encourage_cnt;
     unordered_map<string,string> speak_map;
+    unordered_map<string,int> speak_count_map;
     bool interrupting;
     mutex mtx;
-    bool start_ex;
+    bool start_ex,ok_go;
 
-    Vector startline_pose,finishline_pose,starting_pose;
+    Vector finishline_pose,starting_pose;
     Matrix worldframe;
     bool world_configured;
 
@@ -177,7 +261,7 @@ class Manager : public RFModule, public managerTUG_IDL
     RpcServer cmdPort;
     RpcClient linePort;
 
-    SpeechInterpApi *speech_interp;
+    QuestionManager *question_manager;
 
     /****************************************************************/
     bool attach(RpcServer &source) override
@@ -225,6 +309,7 @@ class Manager : public RFModule, public managerTUG_IDL
             string key=bSection.find("key").asString();
             string value=bSection.find("value").asString();
             speak_map[key]=value;
+            speak_count_map[key]=0;
         }
 
         return true;
@@ -234,6 +319,28 @@ class Manager : public RFModule, public managerTUG_IDL
     bool speak(const string &key, const bool wait,
                const vector<SpeechParam> &p=vector<SpeechParam>())
     {
+        //if a question was received, we wait until an answer is given, before speaking
+        bool received_question=question_manager->gotQuestion();
+        if (received_question)
+        {
+            bool can_speak=false;
+            yInfo()<<"Replying to question first";
+            while (true)
+            {
+                can_speak=question_manager->hasReplied();
+                if (can_speak)
+                {
+                    break;
+                }
+            }
+        }
+        if (speak_count_map[key]>0)
+        {
+            yInfo()<<"Skipping"<<key;
+            return true;
+        }
+        yInfo()<<"Speaking"<<key;
+
         auto it=speak_map.find(key);
         string value=(it!=end(speak_map)?it->second:speak_map["ouch"]);
 
@@ -278,6 +385,8 @@ class Manager : public RFModule, public managerTUG_IDL
                 }
             }
         }
+
+        speak_count_map[key]+=1;
         return (it!=end(speak_map));
     }
 
@@ -286,6 +395,13 @@ class Manager : public RFModule, public managerTUG_IDL
     {
         bool ret=false;
         state=State::idle;
+        ok_go=false;
+
+        for (auto it=speak_map.begin(); it!=speak_map.end(); it++)
+        {
+            string key=it->first;
+            speak_count_map[key]=0;
+        }
 
         bool ok_nav=false;
         Bottle cmd,rep;
@@ -345,6 +461,7 @@ class Manager : public RFModule, public managerTUG_IDL
                 }
             }
         }
+        ret=true;
 
         t0=Time::now();
         return ret;
@@ -356,29 +473,29 @@ class Manager : public RFModule, public managerTUG_IDL
         lock_guard<mutex> lg(mtx);
         bool ret=false;
         Bottle cmd,rep;
-        cmd.addString("stop");
-        if (attentionPort.write(cmd,rep))
+        cmd.addString("go_to_wait");
+        cmd.addDouble(starting_pose[0]);
+        cmd.addDouble(starting_pose[1]);
+        cmd.addDouble(starting_pose[2]);
+        if (navigationPort.write(cmd,rep))
         {
             if (rep.get(0).asVocab()==ok)
             {
+                yInfo()<<"Going to initial position";
                 cmd.clear();
                 rep.clear();
-                cmd.addString("set_auto");
+                cmd.addString("stop");
                 if (attentionPort.write(cmd,rep))
                 {
                     if (rep.get(0).asVocab()==ok)
                     {
                         cmd.clear();
                         rep.clear();
-                        cmd.addString("go_to_wait");
-                        cmd.addDouble(starting_pose[0]);
-                        cmd.addDouble(starting_pose[1]);
-                        cmd.addDouble(starting_pose[2]);
-                        if (navigationPort.write(cmd,rep))
+                        cmd.addString("set_auto");
+                        if (attentionPort.write(cmd,rep))
                         {
                             if (rep.get(0).asVocab()==ok)
                             {
-                                yInfo()<<"Going to starting position";
                                 ret=true;
                             }
                         }
@@ -396,6 +513,13 @@ class Manager : public RFModule, public managerTUG_IDL
     {
         lock_guard<mutex> lg(mtx);
         bool ret=false;
+        ok_go=false;
+
+        for (auto it=speak_map.begin(); it!=speak_map.end(); it++)
+        {
+            string key=it->first;
+            speak_count_map[key]=0;
+        }
 
         bool ok_nav=false;
         Bottle cmd,rep;
@@ -447,6 +571,7 @@ class Manager : public RFModule, public managerTUG_IDL
                 }
             }
         }
+        ret=true;
 
         start_ex=false;
         state=State::stopped;
@@ -459,7 +584,7 @@ class Manager : public RFModule, public managerTUG_IDL
         module_name=rf.check("name",Value("managerTUG")).asString();
         period=rf.check("period",Value(0.1)).asDouble();
         speak_file=rf.check("speak-file",Value("speak-it")).asString();
-        finish_line_thresh=rf.check("finish-line-thresh",Value(0.3)).asDouble();
+        finish_line_thresh=rf.check("finish-line-thresh",Value(0.2)).asDouble();
         standing_thresh=rf.check("standing-thresh",Value(0.2)).asDouble();
         starting_pose={1.5,-3.0,110.0};
         if(rf.check("starting-pose"))
@@ -494,12 +619,13 @@ class Manager : public RFModule, public managerTUG_IDL
         cmdPort.open("/"+module_name+"/cmd:rpc");
         attach(cmdPort);
 
-        speech_interp=new SpeechInterpApi(module_name,speak_map);
-        speech_interp->open();
+        question_manager=new QuestionManager(module_name,speak_map,&speechStreamPort,&speechRpcPort);
+        question_manager->open();
 
         state=State::idle;
         interrupting=false;
         world_configured=false;
+        ok_go=false;
         t0=tstart=Time::now();
 
         return true;
@@ -536,9 +662,42 @@ class Manager : public RFModule, public managerTUG_IDL
             return true;
         }
 
+        if (state==State::frozen)
         {
-            string kw=speech_interp->getKeyword();
-            reply(kw);
+            if (question_manager->restore())
+            {
+                state=prev_state;
+            }
+        }
+
+        if (state>State::frozen)
+        {
+            if (question_manager->freeze())
+            {
+                prev_state=state;
+                if (prev_state==State::reach_line)
+                {
+                    Bottle cmd,rep;
+                    cmd.addString("is_navigating");
+                    if (navigationPort.write(cmd,rep))
+                    {
+                        if (rep.get(0).asVocab()==ok)
+                        {
+                            cmd.clear();
+                            rep.clear();
+                            cmd.addString("stop");
+                            if (navigationPort.write(cmd,rep))
+                            {
+                                if (rep.get(0).asVocab()==ok)
+                                {
+                                    yInfo()<<"Frozen navigation";
+                                }
+                            }
+                        }
+                    }
+                }
+                state=State::frozen;
+            }
         }
 
         string follow_tag("");
@@ -629,7 +788,6 @@ class Manager : public RFModule, public managerTUG_IDL
                         {
                             string metric="step_0";//select_randomly(metrics);
                             yInfo()<<"Selected metric:"<<metric;
-
                             cmd.clear();
                             rep.clear();
                             cmd.addString("selectMetric");
@@ -649,7 +807,6 @@ class Manager : public RFModule, public managerTUG_IDL
                                         {
                                             string prop="step_length";//select_randomly(props);
                                             yInfo()<<"Selected prop:"<<prop;
-
                                             cmd.clear();
                                             rep.clear();
                                             cmd.addString("selectMetricProp");
@@ -668,77 +825,7 @@ class Manager : public RFModule, public managerTUG_IDL
                                                     {
                                                         if (rep.get(0).asVocab()==ok)
                                                         {
-                                                            speak("sit",true);
-                                                            speak("explain",true);
-                                                            cmd.clear();
-                                                            rep.clear();
-                                                            cmd.addString("is_following");
-                                                            if (attentionPort.write(cmd,rep))
-                                                            {
-                                                                if (!rep.get(0).asString().empty())
-                                                                {
-                                                                    double x=finishline_pose[0]+0.2;
-                                                                    double y=finishline_pose[1]-0.5;
-                                                                    double theta=starting_pose[2];
-                                                                    cmd.clear();
-                                                                    rep.clear();
-                                                                    cmd.addString("go_to_wait");
-                                                                    cmd.addDouble(x);
-                                                                    cmd.addDouble(y);
-                                                                    cmd.addDouble(theta);
-                                                                    yDebug()<<cmd.toString();
-                                                                    if (navigationPort.write(cmd,rep))
-                                                                    {
-                                                                        if (rep.get(0).asVocab()==ok)
-                                                                        {
-                                                                            speak("line",true);
-                                                                            speak("questions",true);
-                                                                            double t1=Time::now();
-                                                                            bool gotQuestion=false;
-                                                                            while(!gotQuestion)
-                                                                            {
-                                                                                string kw=speech_interp->getKeyword();
-                                                                                gotQuestion=reply(kw);
-                                                                                double timeout=Time::now()-t1;
-                                                                                if(timeout>10.0)
-                                                                                    break;
-                                                                            }
-
-                                                                            cmd.clear();
-                                                                            rep.clear();
-                                                                            cmd.addString("track_skeleton");
-                                                                            cmd.addString(tag);
-                                                                            if (navigationPort.write(cmd,rep))
-                                                                            {
-                                                                                if (rep.get(0).asVocab()==ok)
-                                                                                {
-                                                                                    cmd.clear();
-                                                                                    rep.clear();
-                                                                                    cmd.addString("look");
-                                                                                    cmd.addString(tag);
-                                                                                    cmd.addString(KeyPointTag::hip_center);
-                                                                                    if (attentionPort.write(cmd,rep))
-                                                                                    {
-                                                                                        speak("start",true);
-                                                                                        cmd.clear();
-                                                                                        rep.clear();
-                                                                                        cmd.addString("start");
-                                                                                        cmd.addInt(1);
-                                                                                        if (analyzerPort.write(cmd,rep))
-                                                                                        {
-                                                                                            if (rep.get(0).asVocab()==ok)
-                                                                                            {
-                                                                                                state=State::assess_standing;
-                                                                                                t0=tstart=Time::now();
-                                                                                            }
-                                                                                        }
-                                                                                    }
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }
+                                                            state=State::explain;
                                                         }
                                                     }
                                                 }
@@ -753,7 +840,115 @@ class Manager : public RFModule, public managerTUG_IDL
             }
         }
 
-        speech_interp->setTime(Time::now()-tstart);
+        if (state==State::explain)
+        {
+            speak("sit",true);
+            speak("explain-start",true);
+            speak("explain-walk",true);
+            Bottle cmd,rep;
+            cmd.addString("is_following");
+            if (attentionPort.write(cmd,rep))
+            {
+                if (!rep.get(0).asString().empty())
+                {
+                    state=State::reach_line;
+                }
+            }
+        }
+
+        if (state==State::reach_line)
+        {
+            bool navigating;
+            Bottle cmd,rep;
+            cmd.addString("is_navigating");
+            if (navigationPort.write(cmd,rep))
+            {
+                if (rep.get(0).asVocab()!=ok)
+                {
+                    navigating=false;
+                }
+                else
+                {
+                    navigating=true;
+                }
+            }
+
+            if (!navigating)
+            {
+                double x=finishline_pose[0]+0.2+0.8;
+                double y=finishline_pose[1]-0.5;
+                double theta=starting_pose[2];
+                cmd.clear();
+                rep.clear();
+                cmd.addString("go_to");
+                cmd.addDouble(x);
+                cmd.addDouble(y);
+                cmd.addDouble(theta);
+                yDebug()<<cmd.toString();
+                if (navigationPort.write(cmd,rep))
+                {
+                    if (rep.get(0).asVocab()==ok)
+                    {
+                        ok_go=true;
+                    }
+                }
+            }
+
+            if (ok_go)
+            {
+                Time::delay(getPeriod());
+                cmd.clear();
+                rep.clear();
+                cmd.addString("is_navigating");
+                if (navigationPort.write(cmd,rep))
+                {
+                    if (rep.get(0).asVocab()!=ok)
+                    {
+                        yInfo()<<"Reached finish line";
+                        ok_go=false;
+                        state=State::starting;
+                    }
+                }
+            }
+        }
+
+        if (state==State::starting)
+        {
+            Bottle cmd,rep;
+            speak("explain-line",true);
+            speak("explain-end",true);
+            cmd.addString("track_skeleton");
+            cmd.addString(tag);
+            if (navigationPort.write(cmd,rep))
+            {
+                if (rep.get(0).asVocab()==ok)
+                {
+                    cmd.clear();
+                    rep.clear();
+                    cmd.addString("look");
+                    cmd.addString(tag);
+                    cmd.addString(KeyPointTag::hip_center);
+                    if (attentionPort.write(cmd,rep))
+                    {
+                        speak("start",true);
+                        cmd.clear();
+                        rep.clear();
+                        cmd.addString("start");
+                        cmd.addInt(1);
+                        if (analyzerPort.write(cmd,rep))
+                        {
+                            if (rep.get(0).asVocab()==ok)
+                            {
+                                state=State::assess_standing;
+                                t0=tstart=Time::now();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        question_manager->setTime(Time::now()-tstart);
         if (state==State::assess_standing)
         {
             //check if the person stands up
@@ -771,7 +966,7 @@ class Manager : public RFModule, public managerTUG_IDL
                 }
                 else
                 {
-                    if((Time::now()-t0)>10.0)
+                    if((Time::now()-t0)>30.0)
                     {
                         if(++encourage_cnt<=1)
                         {
@@ -812,7 +1007,7 @@ class Manager : public RFModule, public managerTUG_IDL
                         if(rep.get(0).asVocab()==ok)
                         {
                             yInfo()<<"Test finished but line not crossed";
-                            speak("not-crossed",true);
+                            speak("not-crossed",false);
                             state=State::not_passed;
                         }
                         else
@@ -874,8 +1069,8 @@ class Manager : public RFModule, public managerTUG_IDL
             Bottle cmd,rep;
             cmd.addString("stop");
             analyzerPort.write(cmd,rep);
-            speak("assess-high",true,p);
-            speak("greetings",true);
+            speak("assess-high",false,p);
+            speak("greetings",false);
             disengage();
         }
 
@@ -884,72 +1079,13 @@ class Manager : public RFModule, public managerTUG_IDL
             Bottle cmd,rep;
             cmd.addString("stop");
             analyzerPort.write(cmd,rep);
-            speak("end",true);
-            speak("assess-low",true);
-            speak("greetings",true);
+            speak("end",false);
+            speak("assess-low",false);
+            speak("greetings",false);
             disengage();
         }
 
         return true;
-    }
-
-    /****************************************************************/
-    bool reply(const string &kw)
-    {
-        bool ret=false;
-        if (!kw.empty())
-        {
-            yInfo()<<"Interrupting modules";
-            freeze();
-            ret=speak(kw,true);
-            speech_interp->resetKeyword();
-            yInfo()<<"Restoring modules";
-            restore();
-        }
-        return ret;
-    }
-
-    /****************************************************************/
-    bool freeze()
-    {
-        Bottle cmd,rep;
-        cmd.addString("stop");
-        if(navigationPort.write(cmd,rep))
-        {
-            if(rep.get(0).asVocab()==ok)
-            {
-                yInfo()<<"navController stopped";
-                cmd.clear();
-                rep.clear();
-                cmd.addString("freeze");
-                if(analyzerPort.write(cmd,rep))
-                {
-                    if(rep.get(0).asVocab()==ok)
-                    {
-                        yInfo()<<"motionAnalyzer frozen";
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /****************************************************************/
-    bool restore()
-    {
-        Bottle cmd,rep;
-        cmd.addString("start");
-        if(analyzerPort.write(cmd,rep))
-        {
-            if(rep.get(0).asBool()==true)
-            {
-                yInfo()<<"motionAnalyzer restored";
-                return true;
-            }
-        }
-        return false;
     }
 
     /****************************************************************/
@@ -1000,9 +1136,9 @@ class Manager : public RFModule, public managerTUG_IDL
     /****************************************************************/
     bool close() override
     {
-        speech_interp->interrupt();
-        speech_interp->close();
-        delete speech_interp;
+        question_manager->interrupt();
+        question_manager->close();
+        delete question_manager;
         analyzerPort.close();
         speechRpcPort.close();
         attentionPort.close();
