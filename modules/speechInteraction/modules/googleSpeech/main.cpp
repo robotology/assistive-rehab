@@ -57,6 +57,7 @@ class Processing : public yarp::os::TypedReaderCallback<yarp::sig::Sound>
     yarp::os::RpcServer handlerPort;
     yarp::os::BufferedPort<yarp::sig::Sound> port;
     yarp::os::BufferedPort<yarp::os::Bottle> targetPort;
+    yarp::os::BufferedPort<yarp::os::Bottle> questionPort;
     yarp::os::RpcClient audioCommand;
     yarp::os::Mutex mutex;
 
@@ -107,6 +108,7 @@ public:
         port.open("/" + moduleName + "/sound:i");
         targetPort.open("/"+ moduleName + "/result:o");
         audioCommand.open("/"+ moduleName + "/commands:rpc");
+        questionPort.open("/"+ moduleName + "/question:o");
 
         //yarp::os::Network::connect("/microphone/audio:o", port.getName());
         //yarp::os::Network::connect(audioCommand.getName(), "/microphone/rpc");
@@ -120,6 +122,7 @@ public:
         port.close();
         targetPort.close();
         audioCommand.close();
+        questionPort.close();
     }
 
     /********************************************************/
@@ -280,6 +283,10 @@ public:
         if (audioCommand.write(cmd, rep))
         {
             yDebug() << "cmd.addString(start)" << rep.toString().c_str();
+            yarp::os::Bottle &trigger=questionPort.prepare();
+            trigger.clear();
+            trigger.addString("asking");
+            questionPort.write();
         }
         
         start = std::chrono::system_clock::now();
