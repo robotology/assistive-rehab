@@ -12,6 +12,7 @@
     
     <module>
         <name>googleSpeech</name>
+        <parameters>--language_code it-IT</parameters>
         <node>localhost</node>
     </module>
 
