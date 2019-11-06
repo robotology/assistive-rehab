@@ -334,11 +334,21 @@
         <to>/iSpeak/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
-
     <connection>
         <from>/managerTUG/navigation:rpc</from>
         <to>/navController/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
+    <connection>
+        <from>/googleSpeech/question:o</from>
+        <to>/managerTUG/question:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/googleSpeechProcess/result:o</from>
+        <to>/managerTUG/answer:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
 </application>

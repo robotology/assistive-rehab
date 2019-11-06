@@ -149,4 +149,10 @@ service motionAnalyzer_IDL
    */
    bool setLinePose(1:list<double> line_pose);
 
+   /**
+   * Freeze module.
+   * @return true/false on success/failure.
+   */
+   bool freeze();
+
 }
