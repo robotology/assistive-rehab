@@ -102,6 +102,18 @@
     </module>
 
     <module>
+        <name>ctpService</name>
+        <parameters>--robot cer --part right_arm</parameters>
+        <node>r1-console-linux</node>
+    </module>
+
+    <module>
+        <name>ctpService</name>
+        <parameters>--robot cer --part left_arm</parameters>
+        <node>r1-console-linux</node>
+    </module>
+
+    <module>
         <name>yarpview</name>
         <parameters>--name /viewer/depth --x 10 --y 40 --p 50 --compact</parameters>
         <node>r1-display-linux</node>
@@ -334,6 +346,7 @@
         <to>/iSpeak/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
+
     <connection>
         <from>/managerTUG/navigation:rpc</from>
         <to>/navController/rpc</to>
@@ -349,6 +362,18 @@
     <connection>
         <from>/googleSpeechProcess/result:o</from>
         <to>/managerTUG/answer:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/left_arm:rpc</from>
+        <to>/ctpservice/left_arm/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/right_arm:rpc</from>
+        <to>/ctpservice/right_arm/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
 </application>
