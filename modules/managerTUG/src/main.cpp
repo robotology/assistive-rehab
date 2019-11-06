@@ -233,7 +233,8 @@ class Manager : public RFModule, public managerTUG_IDL
     string module_name;
     string speak_file;
     double period;
-    double finish_line_thresh,standing_thresh;
+    double finish_line_thresh,standing_thresh,pointing_time;
+    Vector starting_pose,pointing_home,pointing_start,pointing_finish;
 
     const int ok=Vocab::encode("ok");
     const int fail=Vocab::encode("fail");
@@ -248,7 +249,7 @@ class Manager : public RFModule, public managerTUG_IDL
     mutex mtx;
     bool start_ex,ok_go;
 
-    Vector finishline_pose,starting_pose;
+    Vector finishline_pose;
     Matrix worldframe;
     bool world_configured;
 
@@ -260,6 +261,8 @@ class Manager : public RFModule, public managerTUG_IDL
     BufferedPort<Bottle> speechStreamPort;
     RpcServer cmdPort;
     RpcClient linePort;
+    RpcClient leftarmPort;
+    RpcClient rightarmPort;
 
     QuestionManager *question_manager;
 
@@ -589,12 +592,52 @@ class Manager : public RFModule, public managerTUG_IDL
         starting_pose={1.5,-3.0,110.0};
         if(rf.check("starting-pose"))
         {
-            if (const Bottle *sp=rf.find("starting-pose").asList())
+            if (Bottle *sp=rf.find("starting-pose").asList())
             {
                 size_t len=sp->size();
                 for (size_t i=0; i<len; i++)
                 {
                     starting_pose[i]=sp->get(i).asDouble();
+                }
+            }
+        }
+
+        pointing_time=rf.check("pointing-time",Value(3.0)).asDouble();
+        pointing_home={-10.0,20.0,-10.0,35.0,0.0,0.030,0.0,0.0};
+        if(rf.check("pointing-home"))
+        {
+            if (Bottle *ph=rf.find("pointing-home").asList())
+            {
+                size_t len=ph->size();
+                for (size_t i=0; i<len; i++)
+                {
+                    pointing_home[i]=ph->get(i).asDouble();
+                }
+            }
+        }
+
+        pointing_start={70.0,12.0,-10.0,10.0,0.0,0.050,0.0,0.0};
+        if(rf.check("pointing-start"))
+        {
+            if (Bottle *ps=rf.find("pointing-start").asList())
+            {
+                size_t len=ps->size();
+                for (size_t i=0; i<len; i++)
+                {
+                    pointing_start[i]=ps->get(i).asDouble();
+                }
+            }
+        }
+
+        pointing_finish={35.0,12.0,-10.0,10.0,0.0,0.050,0.0,0.0};
+        if(rf.check("pointing-finish"))
+        {
+            if (Bottle *pf=rf.find("pointing-finish").asList())
+            {
+                size_t len=pf->size();
+                for (size_t i=0; i<len; i++)
+                {
+                    pointing_finish[i]=pf->get(i).asDouble();
                 }
             }
         }
@@ -616,6 +659,8 @@ class Manager : public RFModule, public managerTUG_IDL
         navigationPort.open("/"+module_name+"/navigation:rpc");
         linePort.open("/"+module_name+"/line:rpc");
         speechStreamPort.open("/"+module_name+"/speech:o");
+        leftarmPort.open("/"+module_name+"/left_arm:rpc");
+        rightarmPort.open("/"+module_name+"/right_arm:rpc");
         cmdPort.open("/"+module_name+"/cmd:rpc");
         attach(cmdPort);
 
@@ -643,7 +688,8 @@ class Manager : public RFModule, public managerTUG_IDL
         lock_guard<mutex> lg(mtx);
         if((analyzerPort.getOutputCount()==0) || (speechStreamPort.getOutputCount()==0) ||
                 (speechRpcPort.getOutputCount()==0) || (attentionPort.getOutputCount()==0) ||
-                (navigationPort.getOutputCount()==0) || (linePort.getOutputCount())==0)
+                (navigationPort.getOutputCount()==0) || (linePort.getOutputCount())==0 ||
+                (leftarmPort.getOutputCount()==0) || (rightarmPort.getOutputCount())==0)
         {
             yInfo()<<"not connected";
             return true;
@@ -842,7 +888,10 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::explain)
         {
+            string part=which_part();
+            point(pointing_start,part);
             speak("sit",true);
+            point(pointing_home,part);
             speak("explain-start",true);
             speak("explain-walk",true);
             Bottle cmd,rep;
@@ -915,7 +964,10 @@ class Manager : public RFModule, public managerTUG_IDL
         if (state==State::starting)
         {
             Bottle cmd,rep;
+            string part=which_part();
+            point(pointing_finish,part);
             speak("explain-line",true);
+            point(pointing_home,part);
             speak("explain-end",true);
             cmd.addString("track_skeleton");
             cmd.addString(tag);
@@ -1089,6 +1141,75 @@ class Manager : public RFModule, public managerTUG_IDL
     }
 
     /****************************************************************/
+    string which_part()
+    {
+        yarp::sig::Matrix R=axis2dcm(finishline_pose.subVector(3,6));
+        yarp::sig::Vector u=R.subcol(0,0,2);
+        yarp::sig::Vector p0=finishline_pose.subVector(0,2);
+        yarp::sig::Vector p1=p0+0.8*u;
+        string part="";
+        Bottle cmd,rep;
+        cmd.addString("get_state");
+        if (navigationPort.write(cmd,rep))
+        {
+            Property robotState(rep.get(0).toString().c_str());
+            if (Bottle *loc=robotState.find("robot-location").asList())
+            {
+                double x=loc->get(0).asDouble();
+                double line_center=(p0[0]+p1[0])/2;
+                if ( (x-line_center)>0.0 )
+                {
+                    part="left";
+                }
+                else
+                {
+                    part="right";
+                }
+            }
+        }
+
+        return part;
+    }
+
+    /****************************************************************/
+    bool point(const Vector &target, const string &part)
+    {
+        if(part.empty())
+        {
+            return false;
+        }
+
+        RpcClient *tmpPort;
+        if (part=="left")
+        {
+            tmpPort=&leftarmPort;
+        }
+        if (part=="right")
+        {
+            tmpPort=&rightarmPort;
+        }
+
+        Bottle cmd,rep;
+        cmd.addString("ctpq");
+        cmd.addString("time");
+        cmd.addDouble(pointing_time);
+        cmd.addString("off");
+        cmd.addInt(0);
+        cmd.addString("pos");
+        cmd.addList().read(target);
+        yDebug()<<cmd.toString();
+        if (tmpPort->write(cmd,rep))
+        {
+            if (rep.get(0).asBool()==true)
+            {
+                yInfo()<<"Moving"<<part<<"arm";
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /****************************************************************/
     bool getWorld()
     {
         Bottle cmd,rep;
@@ -1144,6 +1265,8 @@ class Manager : public RFModule, public managerTUG_IDL
         attentionPort.close();
         navigationPort.close();
         linePort.close();
+        leftarmPort.close();
+        rightarmPort.close();
         speechStreamPort.close();
         cmdPort.close();
         return true;
