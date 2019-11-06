@@ -237,7 +237,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
     const int ok=Vocab::encode("ok");
     const int fail=Vocab::encode("fail");
-    enum class State { frozen, stopped, idle, seek_skeleton, follow, engaged, explain, reach_line, starting, assess_standing, assess_crossing, line_crossed, not_passed, finished } state;
+    enum class State { assess_standing, assess_crossing, line_crossed, frozen, stopped, idle, seek_skeleton, follow, engaged, explain, reach_line, starting, not_passed, finished } state;
     State prev_state;
     string tag;
     double t0,tstart,t;
@@ -1069,8 +1069,8 @@ class Manager : public RFModule, public managerTUG_IDL
             Bottle cmd,rep;
             cmd.addString("stop");
             analyzerPort.write(cmd,rep);
-            speak("assess-high",false,p);
-            speak("greetings",false);
+            speak("assess-high",true,p);
+            speak("greetings",true);
             disengage();
         }
 
@@ -1079,9 +1079,9 @@ class Manager : public RFModule, public managerTUG_IDL
             Bottle cmd,rep;
             cmd.addString("stop");
             analyzerPort.write(cmd,rep);
-            speak("end",false);
-            speak("assess-low",false);
-            speak("greetings",false);
+            speak("end",true);
+            speak("assess-low",true);
+            speak("greetings",true);
             disengage();
         }
 
