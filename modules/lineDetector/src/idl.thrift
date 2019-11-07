@@ -45,15 +45,25 @@ service lineDetector_IDL
     Vector get_line_pose(1:string line);
 
    /**
-    * Reset lines.
+    * Delete lines from opc and skeletonViewer.
     * @return true/false on success/failure.
     */
     bool reset();
 
    /**
-    * Stop detection.
+    * Update robot's odometry with respect to specified line.
+    * @param line_tag string indicating line with respect to calibrate, start-line or finish-line.
+    * @param theta angle-coordinate to reach the specified line (degrees).
     * @return true/false on success/failure.
     */
-    bool stop();
+    bool update_odometry(1:string line_tag, 2:double theta);
+
+   /**
+    * Navigate to the specified line.
+    * @param line_tag string indicating line with respect to calibrate, start-line or finish-line.
+    * @param theta angle-coordinate to reach the specified line (degrees).
+    * @return true/false on success/failure.
+    */
+    bool go_to_line(1:string line_tag, 2:double theta);
 
 }

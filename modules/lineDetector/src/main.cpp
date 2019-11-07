@@ -33,8 +33,6 @@ class Detector : public RFModule, public lineDetector_IDL
     std::vector< cv::Ptr<cv::aruco::GridBoard> > board;
     cv::Ptr<cv::aruco::DetectorParameters> detector_params;
     cv::Mat cam_intrinsic,cam_distortion;
-    std::vector<int> opc_id;
-    std::vector<bool> add;
     bool camera_configured;
     double fx,fy,px,py;
     cv::Vec3d rvec,tvec; // Rodrigues coefficients wrt cam
@@ -42,14 +40,13 @@ class Detector : public RFModule, public lineDetector_IDL
     std::vector<int> nx,ny;
     std::vector<double> marker_size,marker_dist;
 
-    std::vector<yarp::sig::Vector>lines_pose;
+    std::vector<yarp::sig::Vector>lines_pose_world;
     std::vector<iCub::ctrl::MedianFilter*> lines_filter;
     std::mutex mtx_update,mtx_line_detected;
     std::condition_variable line_detected;
     yarp::sig::Matrix lineFrame,camFrame,navFrame,worldFrame;
     int line_cnt;
     std::string line;
-    std::vector<bool> line_estimated;
     bool start_detection;
     bool updated_cam,updated_nav,updated_odom;
 
@@ -142,18 +139,12 @@ class Detector : public RFModule, public lineDetector_IDL
         dictionary[1]=cv::aruco::getPredefinedDictionary(cv::aruco::PREDEFINED_DICTIONARY_NAME::DICT_6X6_50);
 
         board.resize(nlines);
-        add.resize(nlines);
-        opc_id.resize(nlines);
-        line_estimated.resize(nlines);
-        lines_pose.resize(nlines);
+        lines_pose_world.resize(nlines);
         lines_filter.resize(nlines);
         for(int i=0; i<nlines;i++)
         {
-            add[i]=true;
-            opc_id[i]=-1;
-            line_estimated[i]=false;
             board[i]=cv::aruco::GridBoard::create(nx[i],ny[i],marker_size[i],marker_dist[i],dictionary[i]);
-            lines_pose[i]=yarp::sig::Vector(7,0.0);
+            lines_pose_world[i]=yarp::sig::Vector(7,0.0);
             lines_filter[i]=new iCub::ctrl::MedianFilter(line_filter_order,yarp::sig::Vector(7,0.0));
         }
 
@@ -221,9 +212,6 @@ class Detector : public RFModule, public lineDetector_IDL
     {
         std::lock_guard<std::mutex> lg(mtx_update);
 
-        update_cam_frame();
-        update_nav_frame();
-
         //configure camera
         if (!camera_configured)
         {
@@ -231,14 +219,20 @@ class Detector : public RFModule, public lineDetector_IDL
             return true;
         }
 
+        update_cam_frame();
+        update_nav_frame();
+
         if (yarp::sig::ImageOf<yarp::sig::PixelRgb> *inImg=imgInPort.read())
         {
             yarp::sig::ImageOf<yarp::sig::PixelRgb> &outImg=imgOutPort.prepare();
             cv::Mat inImgMat=yarp::cv::toCvMat(*inImg);
 
-            if (line2idx.count(line)>0 && start_detection)
+            if (opcCheck("start-line")<0 || opcCheck("finish-line")<0)
             {
-                detect_helper(inImgMat);
+                if (start_detection)
+                {
+                    detect_helper(inImgMat);
+                }
             }
 
             outImg=yarp::cv::fromCvMat<yarp::sig::PixelRgb>(inImgMat);
@@ -248,7 +242,76 @@ class Detector : public RFModule, public lineDetector_IDL
     }
 
     /****************************************************************/
-    bool opcAdd(const yarp::sig::Vector &pose_world, const bool &add, const int idx)
+    int opcCheck(const std::string &line_tag)
+    {
+        int id=-1;
+        if (opcPort.getOutputCount())
+        {
+            Bottle cmd,rep;
+            cmd.addVocab(Vocab::encode("ask"));
+
+            Bottle &bLine=cmd.addList();
+            Bottle &b1=bLine.addList();
+            b1.addString(line_tag);
+            if (opcPort.write(cmd,rep))
+            {
+                if (rep.get(0).asVocab()==Vocab::encode("ack"))
+                {
+                    if (Bottle *idB=rep.get(1).asList())
+                    {
+                        if (Bottle *idList=idB->get(1).asList())
+                        {
+                            if (idList->size()>0)
+                            {
+                                id=idList->get(0).asInt();
+                                int i=line2idx[line_tag];
+                                lines_pose_world[i]=get_line_opc(id,line_tag);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return id;
+    }
+
+    /****************************************************************/
+    yarp::sig::Vector get_line_opc(const int id, const std::string &line_tag)
+    {
+        yarp::sig::Vector lp(7,0.0);
+        if (opcPort.getOutputCount())
+        {
+            Bottle cmd,rep;
+            cmd.addVocab(Vocab::encode("get"));
+
+            Bottle &l=cmd.addList();
+            l.addString("id");
+            l.addInt(id);
+            if (opcPort.write(cmd,rep))
+            {
+                if (rep.get(0).asVocab()==Vocab::encode("ack"))
+                {
+                    Property lineProp(rep.get(1).toString().c_str());
+                    if (Bottle *poseBottle=lineProp.find(line_tag).asList())
+                    {
+                        Property poseProp(poseBottle->toString().c_str());
+                        if (Bottle *pose=poseProp.find("pose_world").asList())
+                        {
+                            size_t sz=pose->size();
+                            for (size_t j=0; j<sz; j++)
+                            {
+                                lp[j]=pose->get(j).asDouble();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return lp;
+    }
+
+    /****************************************************************/
+    bool opcAdd(const yarp::sig::Vector &pose_world, const int opc_id, const std::string &line_tag)
     {
         if (opcPort.getOutputCount())
         {
@@ -263,30 +326,23 @@ class Detector : public RFModule, public lineDetector_IDL
             Property prop;
             Bottle line;
             line.addList().read(poseProp);
-            if(idx==0)
-            {
-                prop.put("start-line",line.get(0));
-            }
-            else if(idx==1)
-            {
-                prop.put("finish-line",line.get(0));
-            }
+            prop.put(line_tag,line.get(0));
 
-            if(add)
+            if(opc_id<0)
             {
                 cmd.addList().read(prop);
                 if (opcPort.write(cmd,rep))
                 {
                     if (rep.get(0).asVocab()==Vocab::encode("ack"))
                     {
-                        opc_id[idx]=rep.get(1).asList()->get(1).asInt();
-                        return opcSet(prop,opc_id[idx]);
+                        int id=rep.get(1).asList()->get(1).asInt();
+                        return opcSet(prop,id);
                     }
                 }
             }
             else
             {
-                return opcSet(prop,opc_id[idx]);
+                return opcSet(prop,opc_id);
             }
         }
 
@@ -343,13 +399,18 @@ class Detector : public RFModule, public lineDetector_IDL
     bool detect(const std::string &line, const int timeout) override
     {
         std::unique_lock<std::mutex> lck(mtx_line_detected);
-        start_detection=true;
+        if (opcCheck(line)>=0)
+        {
+            yWarning()<<"Line already inside opc";
+            return false;
+        }
         this->line=line;
         if(line2idx.count(line)<=0)
         {
             yWarning()<<"This line does not exist";
             return false;
         }
+        start_detection=true;
         line_cnt=0;
         yInfo()<<"Detecting"<<line;
         if (timeout>0)
@@ -360,29 +421,29 @@ class Detector : public RFModule, public lineDetector_IDL
         {
             line_detected.wait(lck);
         }
-        if(line=="start-line" &&!updated_odom)
+
+        if (line=="start-line" && !updated_odom)
         {
-            update_odometry();
+            yarp::sig::Matrix wf=SE3inv(camFrame*lineFrame);
+            yarp::sig::Vector tr=wf.getCol(3);
+            yarp::sig::Vector rot=(180/M_PI)*dcm2axis(wf.submatrix(0,2,0,2));
+            update_odometry(tr[0],tr[1],rot[3]);
         }
-        //visualize line on the viewer
         create_line(line);
-        int i=line2idx.at(line);
-        return line_estimated[i];
+        start_detection=false;
+
+        return true;
     }
 
     /****************************************************************/
     bool reset() override
     {
       std::lock_guard<std::mutex> lg(mtx_update);
-      worldFrame.zero();
       for(int i=0;i<nlines;i++)
       {
-          lines_pose[i]=yarp::sig::Vector(7,0.0);
+          lines_pose_world[i]=yarp::sig::Vector(7,0.0);
           lines_filter[i]->init(yarp::sig::Vector(7,0.0));
-          opcDel(opc_id[i]);
-          add[i]=true;
-          opc_id[i]=true;
-          line_estimated[i]=false;
+          updated_odom=false;
           std::string l="";
           for (auto &j:line2idx)
           {
@@ -391,52 +452,47 @@ class Detector : public RFModule, public lineDetector_IDL
                   l=j.first;
               }
           }
-          delete_line(l);
+          remove_from_viewer(l);
+          int opc_id=opcCheck(l);
+          if (opc_id>=0)
+          {
+              opcDel(opc_id);
+          }
+
       }
-      updated_odom=false;
       line_detected.notify_all();
       return true;
     }
 
     /****************************************************************/
-    bool stop() override
+    void create_line(const std::string &line_tag)
     {
-      std::lock_guard<std::mutex> lg(mtx_update);
-      start_detection=false;
-      line_detected.notify_all();
-      yInfo()<<"Stopping detection";
-      return true;
-    }
-
-    /****************************************************************/
-    void create_line(const std::string &l)
-    {
-        int i=line2idx[l];
+        int i=line2idx[line_tag];
         double llen=(marker_dist[i]+marker_size[i])*nx[i];
         yarp::sig::Vector ax(4);
-        ax[0]=lines_pose[i][3];
-        ax[1]=lines_pose[i][4];
-        ax[2]=lines_pose[i][5];
-        ax[3]=lines_pose[i][6];
+        ax[0]=lines_pose_world[i][3];
+        ax[1]=lines_pose_world[i][4];
+        ax[2]=lines_pose_world[i][5];
+        ax[3]=lines_pose_world[i][6];
         yarp::sig::Matrix R=axis2dcm(ax);
         yarp::sig::Vector u=R.subcol(0,0,2);
         yarp::sig::Vector p0(3);
-        p0[0]=lines_pose[i][0];
-        p0[1]=lines_pose[i][1];
-        p0[2]=lines_pose[i][2];
+        p0[0]=lines_pose_world[i][0];
+        p0[1]=lines_pose_world[i][1];
+        p0[2]=lines_pose_world[i][2];
         yarp::sig::Vector p1=p0+llen*u;
         std::vector<int> color(3,0.0);
-        if(line=="start-line")
+        if(line_tag=="start-line")
         {
             color[0]=1;
         }
-        if(line=="finish-line")
+        if(line_tag=="finish-line")
         {
             color[2]=1;
         }
         Bottle cmd,rep;
         cmd.addString("create_line");
-        cmd.addString(l);
+        cmd.addString(line_tag);
         cmd.addDouble(p0[0]);
         cmd.addDouble(p0[1]);
         cmd.addDouble(p0[2]);
@@ -450,13 +506,13 @@ class Detector : public RFModule, public lineDetector_IDL
         {
             if(rep.get(0).asBool()==true)
             {
-                yInfo()<<l<<"created on the viewer";
+                yInfo()<<line_tag<<"created on the viewer";
             }
         }
     }
 
     /****************************************************************/
-    void delete_line(const std::string &l)
+    void remove_from_viewer(const std::string &l)
     {
         Bottle cmd,rep;
         cmd.addString("delete_line");
@@ -532,28 +588,23 @@ class Detector : public RFModule, public lineDetector_IDL
                 {
                     worldFrame=navFrame*camFrame;
                 }
+
                 yarp::sig::Vector rot=yarp::math::dcm2axis(worldFrame.submatrix(0,2,0,2));
                 yarp::sig::Vector est_pose_world(7,0.0);
                 est_pose_world.setSubvector(0,worldFrame*pose);
                 est_pose_world.setSubvector(3,rot);
 
-                lines_pose[line_idx]=lines_filter[line_idx]->filt(est_pose_world);
-                yarp::sig::Vector v=lines_pose[line_idx].subVector(3,5);
+                lines_pose_world[line_idx]=lines_filter[line_idx]->filt(est_pose_world);
+                yarp::sig::Vector v=lines_pose_world[line_idx].subVector(3,5);
                 if (norm(v)>0.0)
                     v/=norm(v);
-                lines_pose[line_idx].setSubvector(3,v);
+                lines_pose_world[line_idx].setSubvector(3,v);
                 line_cnt++;
 
                 if (line_cnt>line_filter_order)
                 {
-                    yInfo()<<"Line"<<line_idx<<"detected at"<<lines_pose[line_idx].toString();
-                    bool add_to_opc=add[line_idx];
-                    opcAdd(lines_pose[line_idx],add_to_opc,line_idx);
-                    if(add_to_opc && opc_id[line_idx]!=-1)
-                    {
-                        add[line_idx]=false;
-                    }
-                    line_estimated[line_idx]=true;
+                    int opc_id=opcCheck(line);
+                    opcAdd(lines_pose_world[line_idx],opc_id,line);
                     line_detected.notify_all();
                     return true;
                 }
@@ -610,26 +661,81 @@ class Detector : public RFModule, public lineDetector_IDL
     }
 
     /****************************************************************/
-    bool update_odometry()
+    bool update_odometry(const double x, const double y, const double theta)
     {
-        yarp::sig::Matrix wf=SE3inv(camFrame*lineFrame);
-        const int ok=Vocab::encode("ok");
-        yarp::sig::Vector tr=wf.getCol(3);
-        yarp::sig::Vector rot=dcm2axis(wf.submatrix(0,2,0,2));
         Bottle cmd,rep;
         cmd.addString("reset_odometry");
-        cmd.addDouble(tr[0]);
-        cmd.addDouble(tr[1]);
-        cmd.addDouble((180/M_PI)*rot[3]);
+        cmd.addDouble(x);
+        cmd.addDouble(y);
+        cmd.addDouble(theta);
+        yDebug()<<cmd.toString();
         if (navPort.write(cmd,rep))
         {
-            if (rep.get(0).asVocab()==ok)
+            if (rep.get(0).asVocab()==Vocab::encode("ok"))
             {
-                yInfo()<<"Reset robot's odometry";
                 updated_odom=true;
+                yInfo()<<"Reset robot's odometry";
                 return true;
             }
         }
+        return false;
+    }
+
+    /****************************************************************/
+    bool update_odometry(const std::string &line_tag, const double theta) override
+    {
+        std::lock_guard<std::mutex> lg(mtx_update);
+        if (line2idx.count(line_tag)<=0)
+        {
+            return false;
+        }
+        int i=line2idx[line_tag];
+        yarp::sig::Vector pose=lines_pose_world[i].subVector(0,2);
+        return update_odometry(pose[0],pose[1],theta);
+    }
+
+    /****************************************************************/
+    bool go_to_line(const std::string &line_tag, const double theta) override
+    {
+        std::lock_guard<std::mutex> lg(mtx_update);
+        if (updated_odom && line2idx.count(line_tag)>0)
+        {
+            yInfo()<<"Going to"<<line_tag;
+            int i=line2idx[line_tag];
+            yarp::sig::Vector pose=lines_pose_world[i].subVector(0,2);
+            Bottle cmd,rep;
+            cmd.addString("go_to_wait");
+            cmd.addDouble(pose[0]);
+            cmd.addDouble(pose[1]);
+            cmd.addDouble(theta);
+            if (navPort.write(cmd,rep))
+            {
+                if (rep.get(0).asVocab()==Vocab::encode("ok"))
+                {
+                    yInfo()<<"Reached"<<line_tag;
+                    cmd.clear();
+                    rep.clear();
+                    cmd.addString("reset_odometry");
+                    cmd.addDouble(pose[0]);
+                    cmd.addDouble(pose[1]);
+                    cmd.addDouble(theta);
+                    yDebug()<<cmd.toString();
+                    if (navPort.write(cmd,rep))
+                    {
+                        if (rep.get(0).asVocab()==Vocab::encode("ok"))
+                        {
+                            yInfo()<<"Reset robot's odometry";
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            yWarning()<<"The line does not exist or odometry is not referred to world frame!";
+        }
+
         return false;
     }
 
@@ -639,16 +745,8 @@ class Detector : public RFModule, public lineDetector_IDL
         std::lock_guard<std::mutex> lg(mtx_update);
         if(line2idx.count(line)>0)
         {
-            int i=line2idx.at(line);
-            if (line_estimated[i])
-            {
-                return lines_pose[i];
-            }
-            else
-            {
-                yInfo()<<"This line has not been estimated yet";
-                return {};
-            }
+            int id=opcCheck(line);
+            return get_line_opc(id,line);
         }
         else
         {
@@ -660,20 +758,6 @@ class Detector : public RFModule, public lineDetector_IDL
     /****************************************************************/
     bool interruptModule() override
     {
-        for(int i=0;i<nlines;i++)
-        {
-            opcDel(opc_id[i]);
-            std::string l="";
-            for (auto &j:line2idx)
-            {
-                if(j.second==i)
-                {
-                    l=j.first;
-                }
-            }
-            delete_line(l);
-        }
-
         imgInPort.interrupt();
         imgOutPort.interrupt();
         camPort.interrupt();
