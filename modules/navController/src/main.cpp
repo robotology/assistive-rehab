@@ -219,7 +219,7 @@ class Navigator : public RFModule, public navController_IDL {
       if (Bottle* b = opcPort.read(false)) {
         if (!b->get(1).isString()) {
           skeleton.reset();
-          for (int i = 1; i < b->size(); i++)	{
+          for (int i = 1; i < b->size(); i++) {
             Property prop;
             prop.fromString(b->get(i).asList()->toString());
             if (prop.find("tag").asString() == skeleton_tag) {
