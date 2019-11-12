@@ -746,7 +746,14 @@ class Detector : public RFModule, public lineDetector_IDL
         if(line2idx.count(line)>0)
         {
             int id=opcCheck(line);
-            return get_line_opc(id,line);
+            if (id>=0)
+            {
+                return get_line_opc(id,line);
+            }
+            else
+            {
+                return {};
+            }
         }
         else
         {

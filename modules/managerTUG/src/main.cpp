@@ -238,7 +238,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
     const int ok=Vocab::encode("ok");
     const int fail=Vocab::encode("fail");
-    enum class State { assess_standing, assess_crossing, line_crossed, frozen, stopped, idle, seek_skeleton, follow, engaged, explain, reach_line, starting, not_passed, finished } state;
+    enum class State { stopped, idle, seek_skeleton, follow, assess_standing, assess_crossing, line_crossed, frozen, engaged, explain, reach_line, starting, not_passed, finished } state;
     State prev_state;
     string tag;
     double t0,tstart,t;
@@ -474,6 +474,7 @@ class Manager : public RFModule, public managerTUG_IDL
     bool start() override
     {
         lock_guard<mutex> lg(mtx);
+        state=State::idle;
         bool ret=false;
         Bottle cmd,rep;
         cmd.addString("go_to_wait");
@@ -688,7 +689,7 @@ class Manager : public RFModule, public managerTUG_IDL
         lock_guard<mutex> lg(mtx);
         if((analyzerPort.getOutputCount()==0) || (speechStreamPort.getOutputCount()==0) ||
                 (speechRpcPort.getOutputCount()==0) || (attentionPort.getOutputCount()==0) ||
-                (navigationPort.getOutputCount()==0) || (linePort.getOutputCount())==0 ||
+                (navigationPort.getOutputCount()==0) || (linePort.getOutputCount()==0) ||
                 (leftarmPort.getOutputCount()==0) || (rightarmPort.getOutputCount())==0)
         {
             yInfo()<<"not connected";
@@ -979,7 +980,7 @@ class Manager : public RFModule, public managerTUG_IDL
                     rep.clear();
                     cmd.addString("look");
                     cmd.addString(tag);
-                    cmd.addString(KeyPointTag::hip_center);
+                    cmd.addString(KeyPointTag::knee_left);
                     if (attentionPort.write(cmd,rep))
                     {
                         speak("start",true);
