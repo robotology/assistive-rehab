@@ -65,7 +65,7 @@
 
     <module>
        <name>navController</name>
-       <parameters></parameters>
+       <parameters>--velocity-angular-saturation 10.0</parameters>
        <dependencies>
          <port>/baseControl/rpc</port>
          <port>/baseControl/odometry:o</port>
