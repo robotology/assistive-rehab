@@ -414,34 +414,26 @@ class Manager : public RFModule, public managerTUG_IDL
             if (rep.get(0).asVocab()==ok)
             {
                 cmd.clear();
-                cmd.addString("set_auto");
-                if (attentionPort.write(cmd,rep))
+                rep.clear();
+                cmd.addString("is_navigating");
+                if (navigationPort.write(cmd,rep))
                 {
                     if (rep.get(0).asVocab()==ok)
                     {
                         cmd.clear();
                         rep.clear();
-                        cmd.addString("is_navigating");
+                        cmd.addString("stop");
                         if (navigationPort.write(cmd,rep))
                         {
                             if (rep.get(0).asVocab()==ok)
                             {
-                                cmd.clear();
-                                rep.clear();
-                                cmd.addString("stop");
-                                if (navigationPort.write(cmd,rep))
-                                {
-                                    if (rep.get(0).asVocab()==ok)
-                                    {
-                                        ok_nav=true;
-                                    }
-                                }
-                            }
-                            else
-                            {
                                 ok_nav=true;
                             }
                         }
+                    }
+                    else
+                    {
+                        ok_nav=true;
                     }
                 }
             }
@@ -460,11 +452,19 @@ class Manager : public RFModule, public managerTUG_IDL
                 if (rep.get(0).asVocab()==ok)
                 {
                     yInfo()<<"Back to initial position";
-                    ret=true;
+                    cmd.clear();
+                    rep.clear();
+                    cmd.addString("set_auto");
+                    if (attentionPort.write(cmd,rep))
+                    {
+                        if (rep.get(0).asVocab()==ok)
+                        {
+                            ret=true;
+                        }
+                    }
                 }
             }
         }
-        ret=true;
 
         t0=Time::now();
         return ret;
@@ -575,7 +575,6 @@ class Manager : public RFModule, public managerTUG_IDL
                 }
             }
         }
-        ret=true;
 
         start_ex=false;
         state=State::stopped;
