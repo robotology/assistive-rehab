@@ -264,8 +264,7 @@ class Detector : public RFModule, public lineDetector_IDL
                             if (idList->size()>0)
                             {
                                 id=idList->get(0).asInt();
-                                int i=line2idx[line_tag];
-                                lines_pose_world[i]=get_line_opc(id,line_tag);
+                                get_line_opc(id,line_tag);
                             }
                         }
                     }
@@ -276,9 +275,9 @@ class Detector : public RFModule, public lineDetector_IDL
     }
 
     /****************************************************************/
-    yarp::sig::Vector get_line_opc(const int id, const std::string &line_tag)
+    yarp::os::Property get_line_opc(const int id, const std::string &line_tag)
     {
-        yarp::sig::Vector lp(7,0.0);
+        Property prop;
         if (opcPort.getOutputCount())
         {
             Bottle cmd,rep;
@@ -292,26 +291,19 @@ class Detector : public RFModule, public lineDetector_IDL
                 if (rep.get(0).asVocab()==Vocab::encode("ack"))
                 {
                     Property lineProp(rep.get(1).toString().c_str());
-                    if (Bottle *poseBottle=lineProp.find(line_tag).asList())
+                    if (Bottle *b=lineProp.find(line_tag).asList())
                     {
-                        Property poseProp(poseBottle->toString().c_str());
-                        if (Bottle *pose=poseProp.find("pose_world").asList())
-                        {
-                            size_t sz=pose->size();
-                            for (size_t j=0; j<sz; j++)
-                            {
-                                lp[j]=pose->get(j).asDouble();
-                            }
-                        }
+                        prop.fromString(b->toString().c_str());
                     }
                 }
             }
         }
-        return lp;
+        return prop;
     }
 
     /****************************************************************/
-    bool opcAdd(const yarp::sig::Vector &pose_world, const int opc_id, const std::string &line_tag)
+    bool opcAdd(const yarp::sig::Vector &pose_world, const yarp::sig::Vector &line_size,
+                const int opc_id, const std::string &line_tag)
     {
         if (opcPort.getOutputCount())
         {
@@ -322,6 +314,10 @@ class Detector : public RFModule, public lineDetector_IDL
             Property poseProp;
             bPoseWorld.addList().read(pose_world);
             poseProp.put("pose_world",bPoseWorld.get(0));
+
+            Bottle bSize;
+            bSize.addList().read(line_size);
+            poseProp.put("size",bSize.get(0));
 
             Property prop;
             Bottle line;
@@ -604,7 +600,10 @@ class Detector : public RFModule, public lineDetector_IDL
                 if (line_cnt>line_filter_order)
                 {
                     int opc_id=opcCheck(line);
-                    opcAdd(lines_pose_world[line_idx],opc_id,line);
+                    yarp::sig::Vector line_size(2);
+                    line_size[0]=(marker_dist[line_idx]+marker_size[line_idx])*nx[line_idx];
+                    line_size[1]=marker_size[line_idx]*ny[line_idx];
+                    opcAdd(lines_pose_world[line_idx],line_size,opc_id,line);
                     line_detected.notify_all();
                     return true;
                 }
@@ -740,7 +739,7 @@ class Detector : public RFModule, public lineDetector_IDL
     }
 
     /****************************************************************/
-    yarp::sig::Vector get_line_pose(const std::string &line) override
+    yarp::os::Property get_line(const std::string &line) override
     {
         std::lock_guard<std::mutex> lg(mtx_update);
         if(line2idx.count(line)>0)

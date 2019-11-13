@@ -250,7 +250,7 @@ class Manager : public RFModule, public managerTUG_IDL
     bool start_ex,ok_go;
 
     Vector finishline_pose;
-    Matrix worldframe;
+    double line_length;
     bool world_configured;
 
     //ports
@@ -925,7 +925,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
             if (!navigating)
             {
-                double x=finishline_pose[0]+0.2+0.8;
+                double x=finishline_pose[0]+0.2+line_length;
                 double y=finishline_pose[1]-0.5;
                 double theta=starting_pose[2];
                 cmd.clear();
@@ -1147,7 +1147,7 @@ class Manager : public RFModule, public managerTUG_IDL
         yarp::sig::Matrix R=axis2dcm(finishline_pose.subVector(3,6));
         yarp::sig::Vector u=R.subcol(0,0,2);
         yarp::sig::Vector p0=finishline_pose.subVector(0,2);
-        yarp::sig::Vector p1=p0+0.8*u;
+        yarp::sig::Vector p1=p0+line_length*u;
         string part="";
         Bottle cmd,rep;
         cmd.addString("get_state");
@@ -1214,11 +1214,12 @@ class Manager : public RFModule, public managerTUG_IDL
     bool getWorld()
     {
         Bottle cmd,rep;
-        cmd.addString("get_line_pose");
+        cmd.addString("get_line");
         cmd.addString("finish-line");
         if(linePort.write(cmd,rep))
         {
-            if(Bottle *lp_bottle=rep.get(0).asList())
+            Property line(rep.get(0).toString().c_str());
+            if (Bottle *lp_bottle=line.find("pose_world").asList())
             {
                 if(lp_bottle->size()>=7)
                 {
@@ -1232,14 +1233,23 @@ class Manager : public RFModule, public managerTUG_IDL
                     finishline_pose[6]=lp_bottle->get(6).asDouble();
                     yInfo()<<"Finish line wrt world frame"<<finishline_pose.toString();
 
-                    cmd.clear();
-                    rep.clear();
-                    cmd.addString("setLinePose");
-                    cmd.addList().read(finishline_pose);
-                    if(analyzerPort.write(cmd,rep))
+                    if (Bottle *lp_length=line.find("size").asList())
                     {
-                        yInfo()<<"Set finish line to motionAnalyzer";
-                        return true;
+                        if (lp_length->size()>=2)
+                        {
+                            line_length=lp_length->get(0).asDouble();
+                            yInfo()<<"with length"<<line_length;
+
+                            cmd.clear();
+                            rep.clear();
+                            cmd.addString("setLinePose");
+                            cmd.addList().read(finishline_pose);
+                            if(analyzerPort.write(cmd,rep))
+                            {
+                                yInfo()<<"Set finish line to motionAnalyzer";
+                                return true;
+                            }
+                        }
                     }
                 }
             }

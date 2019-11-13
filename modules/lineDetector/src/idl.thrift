@@ -10,16 +10,10 @@
  * @authors: Valentina Vasco <valentina.vasco@iit.it>
  */
 
-struct Vector { }
+struct Property { }
 (
-   yarp.name="yarp::sig::Vector"
-   yarp.includefile="yarp/sig/Vector.h"
-)
-
-struct Matrix { }
-(
-   yarp.name="yarp::sig::Matrix"
-   yarp.includefile="yarp/sig/Matrix.h"
+   yarp.name="yarp::os::Property"
+   yarp.includefile="yarp/os/Property.h"
 )
 
 /**
@@ -38,11 +32,13 @@ service lineDetector_IDL
    bool detect(1:string line, 2:i32 timeout=0)
 
    /**
-    * Get the pose of the line.
+    * Retrieve line.
     * @param line string indicating the line to detect, start-line or finish-line.
-    * @return pose of the line with respect to the world frame (start-line).
+    * @return a property-like object in the form
+    *         (pose_world (x y z ax ay az theta))
+    *         (line_size (lenght width)).
     */
-    Vector get_line_pose(1:string line);
+    Property get_line(1:string line);
 
    /**
     * Delete lines from opc and skeletonViewer.
