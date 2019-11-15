@@ -11,6 +11,7 @@
  */
 
 #include <cstdlib>
+#include <memory>
 #include <mutex>
 #include <algorithm>
 #include <fstream>
@@ -559,15 +560,14 @@ public:
                 /********************************/
                 /*    Difference in position    */
                 /********************************/
-                double errpos[warped_template.size()];
-
+                unique_ptr<double> errpos=unique_ptr<double>(new double[warped_template.size()]);
                 for(int k=0; k<warped_template.size(); k++)
                 {
-                    errpos[k] = warped_candidate[k]-warped_template[k];
+                    errpos.get()[k] = warped_candidate[k]-warped_template[k];
                 }
 
-                double sdev = gsl_stats_sd(errpos,1,warped_template.size());
-                double skwns = gsl_stats_skew(errpos,1,warped_template.size());
+                double sdev = gsl_stats_sd(errpos.get(),1,warped_template.size());
+                double skwns = gsl_stats_skew(errpos.get(),1,warped_template.size());
                 stats.push_back(sdev);
                 stats.push_back(skwns);
 
