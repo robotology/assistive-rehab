@@ -18,7 +18,6 @@
 #include <yarp/os/all.h>
 #include <yarp/sig/Matrix.h>
 #include <yarp/math/Math.h>
-#include <boost/algorithm/string.hpp>
 #include <tensorflow/core/public/session.h>
 #include <tensorflow/core/protobuf/meta_graph.pb.h>
 #include <tensorflow/cc/client/client_session.h>
