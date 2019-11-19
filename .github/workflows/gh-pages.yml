@@ -1,0 +1,64 @@
+name: GitHub Pages
+
+on:
+  push:
+    branches:
+    - 'master'
+
+jobs:
+  docs:
+    name: "Deploy"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y doxygen doxygen-doc graphviz python3-wheel python3-setuptools
+          pip3 install --user mkdocs mkdocs-material pymdown-extensions
+          echo "::set-env name=PATH::$HOME/.local/bin:$PATH"
+          env
+
+      - name: Export local deployment folder
+        run: |
+          GH_PAGES_ROOTDIR=$HOME/gh-pages
+          echo "::set-env name=GH_PAGES_ROOTDIR::$GH_PAGES_ROOTDIR"
+
+      - name: Export remote link
+        run: |
+          GH_REPO_REF="github.com/robotology/assistive_rehab.git"
+          echo "::set-env name=GH_REPO_REF::$GH_REPO_REF"
+
+      - name: Check remote
+        run: git ls-remote --heads --exit-code https://$GH_REPO_REF gh-pages
+
+      - name: Clone and configure remote
+        run: |
+          git clone --branch gh-pages https://$GH_REPO_REF $GH_PAGES_ROOTDIR
+          cd $GH_PAGES_ROOTDIR
+          git rebase master
+
+      - name: Doxygen
+        run: |
+          cd $GH_PAGES_ROOTDIR/doc/doxygen
+          ./doc-compile.sh
+
+      - name: Mkdocs
+        run: |
+          cd $GH_PAGES_ROOTDIR/doc/mkdocs
+          ./site-compile.sh
+
+      - name: Deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd $GH_PAGES_ROOTDIR
+          git config push.default upstream
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+          git remote set-url origin https://x-access-token:$GITHUB_TOKEN@$GH_REPO_REF
+          git add .
+          git commit --amend
+          git push origin gh-pages --force-with-lease
