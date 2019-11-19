@@ -35,7 +35,7 @@ jobs:
       - name: Clone and rebase
         run: |
           cd ${GITHUB_WORKSPACE}
-          git clone git@github.com:{{ github.repository }}.git gh-pages
+          git clone git@github.com:${{ github.repository }}.git gh-pages
           cd gh-pages
           git checkout gh-pages
           git rebase master
