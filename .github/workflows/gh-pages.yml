@@ -12,6 +12,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@master
+      - uses: webfactory/ssh-agent@v0.1.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Dependencies
         run: |
@@ -24,18 +27,15 @@ jobs:
         run: git ls-remote --heads --exit-code https://github.com/${{ github.repository }}.git gh-pages
         
       - name: Configure Git
-        env:
-          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         run: |
-          git config --global push.default upstream
-          git config --global user.name "Ugo Pattacini"
-          git config --global user.email "ugo.pattacini@iit.it"
-          git config --global url."https://$GITHUB_TOKEN:@github.com/".insteadOf "https://github.com/"
+          #git config --global push.default upstream
+          #git config --global user.name "Ugo Pattacini"
+          #git config --global user.email "ugo.pattacini@iit.it"
 
       - name: Clone and rebase
         run: |
           cd ${GITHUB_WORKSPACE}
-          git clone https://github.com/${{ github.repository }}.git gh-pages
+          git clone git@github.com:{{ github.repository }}.git gh-pages
           cd gh-pages
           git checkout gh-pages
           git rebase master
