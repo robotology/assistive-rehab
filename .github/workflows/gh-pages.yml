@@ -56,10 +56,10 @@ jobs:
 
       - name: Deploy
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         run: |
           cd $GH_PAGES_ROOTDIR
           git add .
           git commit --amend
-          git remote set-url origin https://x-access-token:$GITHUB_TOKEN@$GH_REPO_REF
+          git remote set-url origin https://x-access-token:$ACCESS_TOKEN@$GH_REPO_REF
           git push origin gh-pages --force-with-lease
