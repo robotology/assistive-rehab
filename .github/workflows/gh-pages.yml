@@ -25,7 +25,7 @@ jobs:
         
       - name: Configure Git
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN_PATTACINI }}
         run: |
           git config --global push.default upstream
           git config --global user.name "Ugo Pattacini"
