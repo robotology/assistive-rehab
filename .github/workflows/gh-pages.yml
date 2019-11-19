@@ -36,8 +36,9 @@ jobs:
 
       - name: Clone and configure remote
         run: |
-          git clone --branch gh-pages https://$GH_REPO_REF $GH_PAGES_ROOTDIR
+          git clone https://$GH_REPO_REF $GH_PAGES_ROOTDIR
           cd $GH_PAGES_ROOTDIR
+          git checkout gh-pages
           git rebase master
 
       - name: Doxygen
