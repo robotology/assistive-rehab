@@ -28,7 +28,7 @@ jobs:
 
       - name: Export remote link
         run: |
-          GH_REPO_REF="github.com/robotology/assistive_rehab.git"
+          GH_REPO_REF="github.com/robotology/assistive-rehab.git"
           echo "::set-env name=GH_REPO_REF::$GH_REPO_REF"
 
       - name: Check remote
