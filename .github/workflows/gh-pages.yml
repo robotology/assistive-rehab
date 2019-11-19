@@ -35,12 +35,19 @@ jobs:
         run: git ls-remote --heads --exit-code https://$GH_REPO_REF gh-pages
 
       - name: Clone and configure remote
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         run: |
           git clone https://$GH_REPO_REF $GH_PAGES_ROOTDIR
           cd $GH_PAGES_ROOTDIR
-          git config push.default upstream
-          git config user.name "GitHub Action"
-          git config user.email "action@github.com"
+          git config --local push.default upstream
+          git config --local user.name "GitHub Action"
+          git config --local user.email "action@github.com"
+          git config --local url."https://$ACCESS_TOKEN:@github.com/".insteadOf "https://github.com/"
+
+      - name: Update gh-pages branch
+        run: |
+          cd $GH_PAGES_ROOTDIR
           git checkout gh-pages
           git rebase master
 
@@ -55,11 +62,8 @@ jobs:
           ./site-compile.sh
 
       - name: Deploy
-        env:
-          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         run: |
           cd $GH_PAGES_ROOTDIR
           git add .
           git commit --amend
-          git remote set-url origin https://x-access-token:$ACCESS_TOKEN@$GH_REPO_REF
           git push origin gh-pages --force-with-lease
