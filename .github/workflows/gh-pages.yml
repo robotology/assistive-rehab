@@ -38,6 +38,9 @@ jobs:
         run: |
           git clone https://$GH_REPO_REF $GH_PAGES_ROOTDIR
           cd $GH_PAGES_ROOTDIR
+          git config push.default upstream
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
           git checkout gh-pages
           git rebase master
 
@@ -56,10 +59,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd $GH_PAGES_ROOTDIR
-          git config push.default upstream
-          git config user.name "GitHub Action"
-          git config user.email "action@github.com"
-          git remote set-url origin https://x-access-token:$GITHUB_TOKEN@$GH_REPO_REF
           git add .
           git commit --amend
+          git remote set-url origin https://x-access-token:$GITHUB_TOKEN@$GH_REPO_REF
           git push origin gh-pages --force-with-lease
