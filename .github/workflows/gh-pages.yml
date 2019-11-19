@@ -58,7 +58,7 @@ jobs:
         run: |
           cd $GH_PAGES_ROOTDIR
           git add .
-          git commit --amend
+          git commit --amend --no-edit
 
       - name: Push
         uses: JamesIves/github-pages-deploy-action@master
