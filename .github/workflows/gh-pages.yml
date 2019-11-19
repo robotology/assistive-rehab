@@ -29,7 +29,7 @@ jobs:
         run: |
           git config --global push.default upstream
           git config --global user.name "Ugo Pattacini"
-          git config --global user.email "3738070+pattacini@users.noreply.github.com"
+          git config --global user.email "ugo.pattacini@iit.it"
           git config --global url."https://$GITHUB_TOKEN:@github.com/".insteadOf "https://github.com/"
 
       - name: Clone and rebase
