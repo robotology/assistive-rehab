@@ -29,8 +29,8 @@ jobs:
       - name: Configure Git
         run: |
           git config --global push.default upstream
-          git config --global user.name "Ugo Pattacini"
-          git config --global user.email "ugo.pattacini@iit.it"
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
 
       - name: Clone and rebase
         run: |
