@@ -34,16 +34,7 @@ jobs:
       - name: Check remote
         run: git ls-remote --heads --exit-code https://$GH_REPO_REF gh-pages
 
-      - name: Configure remote
-        env:
-          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-        run: |
-          git config --global push.default upstream
-          git config --global user.name "GitHub Action"
-          git config --global user.email "action@github.com"
-          git config --global url."https://$ACCESS_TOKEN:@github.com/".insteadOf "https://github.com/"
-
-      - name: Clone and update
+      - name: Clone and rebase
         run: |
           git clone https://$GH_REPO_REF $GH_PAGES_ROOTDIR
           cd $GH_PAGES_ROOTDIR
@@ -60,9 +51,15 @@ jobs:
           cd $GH_PAGES_ROOTDIR/doc/mkdocs
           ./site-compile.sh
 
-      - name: Deploy
+      - name: Commit
         run: |
           cd $GH_PAGES_ROOTDIR
           git add .
           git commit --amend
-          git push origin gh-pages --force-with-lease
+
+      - name: Push
+        uses: JamesIves/github-pages-deploy-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: $GH_PAGES_ROOTDIR
