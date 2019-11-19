@@ -36,9 +36,9 @@ jobs:
 
       - name: Clone and rebase
         run: |
-          git config push.default upstream
-          git config user.name "GitHub Action"
-          git config user.email "action@github.com"
+          git config --global push.default upstream
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
           git clone https://$GH_REPO_REF $GH_PAGES_ROOTDIR
           cd $GH_PAGES_ROOTDIR
           git checkout gh-pages
