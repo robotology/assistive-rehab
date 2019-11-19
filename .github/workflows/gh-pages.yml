@@ -20,20 +20,10 @@ jobs:
           pip3 install --user mkdocs mkdocs-material pymdown-extensions
           echo "::set-env name=PATH::$HOME/.local/bin:$PATH"
 
-      - name: Export local deployment folder
-        run: |
-          GH_PAGES_ROOTDIR=$HOME/gh-pages
-          echo "::set-env name=GH_PAGES_ROOTDIR::$GH_PAGES_ROOTDIR"
-
-      - name: Export remote link
-        run: |
-          GH_REPO_REF="github.com/robotology/assistive-rehab.git"
-          echo "::set-env name=GH_REPO_REF::$GH_REPO_REF"
-
       - name: Check remote
-        run: git ls-remote --heads --exit-code https://$GH_REPO_REF gh-pages
+        run: git ls-remote --heads --exit-code https://github.com/robotology/assistive-rehab.git gh-pages
         
-      - name: Configure remote
+      - name: Configure Git
         run: |
           git config --global push.default upstream
           git config --global user.name "GitHub Action"
@@ -41,27 +31,32 @@ jobs:
 
       - name: Clone and rebase
         run: |
-          git clone https://$GH_REPO_REF $GH_PAGES_ROOTDIR
-          cd $GH_PAGES_ROOTDIR
+          cd ${GITHUB_WORKSPACE}
+          git clone https://github.com/robotology/assistive-rehab.git
+          cd assistive-rehab
           git checkout gh-pages
           git rebase master
 
       - name: Build Doxygen
         run: |
-          cd $GH_PAGES_ROOTDIR/doc/doxygen
+          cd ${GITHUB_WORKSPACE}/assistive-rehab/doc/doxygen
           ./doc-compile.sh
 
       - name: Build Mkdocs
         run: |
-          cd $GH_PAGES_ROOTDIR/doc/mkdocs
+          cd ${GITHUB_WORKSPACE}/assistive-rehab/doc/mkdocs
           ./site-compile.sh
 
-      - name: Commit and push
-        env:
-          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+      - name: Commit
         run: |
-          cd $GH_PAGES_ROOTDIR
+          cd ${GITHUB_WORKSPACE}/assistive-rehab
           git add .
-          git commit --amend --no-edit
-          git remote set-url origin https://x-access-token:$GITHUB_TOKEN@$GH_REPO_REF
-          git push origin gh-pages --force-with-lease
+          git commit --amend --no-edit          
+
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: assistive-rehab
+          
