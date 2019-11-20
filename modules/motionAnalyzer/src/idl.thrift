@@ -1,14 +1,14 @@
-# Copyright: (C) 2016 iCub Facility - Istituto Italiano di Tecnologia
-# Authors: Valentina Vasco
-# CopyPolicy: Released under the terms of the GNU GPL v2.0.
-#
-# idl.thrift
+/******************************************************************************
+ *                                                                            *
+ * Copyright (C) 2019 Fondazione Istituto Italiano di Tecnologia (IIT)        *
+ * All Rights Reserved.                                                       *
+ *                                                                            *
+ ******************************************************************************/
 
 /**
-* motionAnalyzer_IDL
-*
-* IDL Interface to Motion Analyzer services.
-*/
+ * @file idl.thrift
+ * @authors: Valentina Vasco <valentina.vasco@iit.it>
+ */
 
 struct Matrix { }
 (
