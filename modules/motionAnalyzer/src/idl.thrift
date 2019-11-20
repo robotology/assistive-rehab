@@ -16,9 +16,13 @@ struct Matrix { }
    yarp.includefile="yarp/sig/Matrix.h"
 )
 
+/**
+ * motionAnalyzer_IDL
+ *
+ * IDL Interface to Motion Analyzer services.
+ */
 service motionAnalyzer_IDL
 {
-
    /**
    * Load exercise to analyze.
    * @param exercise_tag name of the exercise to analyze
@@ -148,5 +152,4 @@ service motionAnalyzer_IDL
    * @return true/false on success/failure.
    */
    bool setLinePose(1:list<double> line_pose);
-
 }
