@@ -64,7 +64,7 @@ class Manager : public yarp::os::RFModule,
     double tend_session;
     bool finishedSession;
 
-    bool starting,frozen;
+    bool starting;
 
     std::string skel_tag,template_tag;
     bool use_robot_template,robot_skeleton_mirror;
@@ -79,6 +79,7 @@ class Manager : public yarp::os::RFModule,
     double shoulder_center_height_vel;
     std::vector<double> line_pose;
     yarp::sig::Matrix world_frame;
+    yarp::sig::Vector num,den;
 
     bool loadMotionList(yarp::os::ResourceFinder &rf);
     bool loadExercise(const std::string &exercise_tag) override;
@@ -101,7 +102,6 @@ class Manager : public yarp::os::RFModule,
     bool isSitting(const double standing_thresh) override;
     bool hasCrossedFinishLine(const double finishline_thresh) override;
     bool setLinePose(const std::vector<double> &line_pose) override;
-    bool freeze() override;
 
     bool writeStructToMat(const std::string& name, const std::vector< std::vector< std::pair<std::string,yarp::sig::Vector> > >& keypoints_skel, mat_t *matfp);
     bool writeStructToMat(const std::string& name, const Exercise *ex, mat_t *matfp);

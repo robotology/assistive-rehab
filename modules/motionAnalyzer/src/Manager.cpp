@@ -116,24 +116,17 @@ bool Manager::loadMotionList(ResourceFinder &rf)
                                         }                                      
                                         if(metric_type==MetricType::step)
                                         {
-                                            Bottle *bNum = bMetricEx.find("num").asList();
-                                            Bottle *bDen = bMetricEx.find("den").asList();
-                                            Vector num(6,0.0),den(6,0.0);
+                                            Bottle *bNum=bMetricEx.find("num").asList();
+                                            Bottle *bDen=bMetricEx.find("den").asList();
                                             if(!bNum->isNull() && !bDen->isNull())
                                             {
-                                                num[0] = bNum->get(0).asDouble();
-                                                num[1] = bNum->get(1).asDouble();
-                                                num[2] = bNum->get(2).asDouble();
-                                                num[3] = bNum->get(3).asDouble();
-                                                num[4] = bNum->get(4).asDouble();
-                                                num[5] = bNum->get(5).asDouble();
-
-                                                den[0] = bDen->get(0).asDouble();
-                                                den[1] = bDen->get(1).asDouble();
-                                                den[2] = bDen->get(2).asDouble();
-                                                den[3] = bDen->get(3).asDouble();
-                                                den[4] = bDen->get(4).asDouble();
-                                                den[5] = bDen->get(5).asDouble();
+                                                num.resize(bNum->size());
+                                                den.resize(bDen->size());
+                                                for(size_t l=0; l<bNum->size(); l++)
+                                                {
+                                                    num[l]=bNum->get(l).asDouble();
+                                                    den[l]=bDen->get(l).asDouble();
+                                                }
                                             }
                                             double minv=bMetricEx.find("min").asDouble();
                                             double maxv=bMetricEx.find("max").asDouble();
@@ -626,8 +619,9 @@ bool Manager::start(const bool use_robot_template)
                 
     this->use_robot_template = use_robot_template;
     yInfo() << "Start!";
-	
-    if (!starting)
+    starting=true;
+
+    if(curr_exercise->getType()==ExerciseType::rehabilitation)
     {
         bool out=false;
         while(out==false)
@@ -644,10 +638,7 @@ bool Manager::start(const bool use_robot_template)
             out=skeletonIn.update_planes();
             Time::yield();
         }
-    }
 
-    if(curr_exercise->getType()==ExerciseType::rehabilitation)
-    {
         Matrix T;
         for(int i=0; i<processors.size(); i++)
         {
@@ -759,19 +750,9 @@ bool Manager::start(const bool use_robot_template)
         }
     }
 
-    if(frozen)
-    {
-        frozen=false;
-        if(!starting)
-        {
-            starting=true;
-            tstart_session=Time::now()-tstart;
-            return true;
-        }
-    }
-
+    tstart_session=Time::now()-tstart;
     return true;
-    
+
 }
 
 /********************************************************/
@@ -848,15 +829,6 @@ bool Manager::stop()
 
         return true;
     }
-    return true;
-}
-
-/********************************************************/
-bool Manager::freeze()
-{
-    lock_guard<mutex> lg(mtx);
-    yInfo()<<"Freezing";
-    frozen=true;
     return true;
 }
 
@@ -969,7 +941,7 @@ void Manager::getSkeleton()
                                         {
                                             Skeleton* skeleton = skeleton_factory(prop);
                                             skeletonIn.update(skeleton->toProperty());
-                                            if(skeleton->update_planes())
+                                            if(skeleton->update_planes() && starting)
                                             {
                                                 vector<pair<string,Vector>> keyps=skeletonIn.get_unordered();
                                                 all_keypoints.push_back(keyps);
@@ -1033,7 +1005,7 @@ bool Manager::configure(ResourceFinder &rf)
     curr_exercise=NULL;
     curr_metric=NULL;
     lin_est_shoulder=new AWLinEstimator(16,0.01);
-    frozen=false;
+
     return true;
 }
 
@@ -1096,7 +1068,7 @@ bool Manager::updateModule()
         //if no metric has been defined we do not analyze motion
         if(starting)
         {
-            if(curr_exercise!=NULL && curr_metric!=NULL &&!frozen)
+            if(curr_exercise!=NULL && curr_metric!=NULL)
             {
                 if(updated)
                 {
@@ -1306,21 +1278,11 @@ matvar_t * Manager::writeStructToMat(const Metric* m)
         size_t dim_struct[2]={1,1};
         submatvar=Mat_VarCreateStruct(metric_name.c_str(),2,dim_struct,subfields,numFields);
         matvar_t *subfield;
-        size_t dims_field_num[2]={1,3};
-        Bottle *bNum=params.find("num").asList();
-        Vector num(3,0.0);
-        num[0]=bNum->get(0).asDouble();
-        num[1]=bNum->get(1).asDouble();
-        num[2]=bNum->get(2).asDouble();
+        size_t dims_field_num[2]={1,num.size()};
         subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_num,num.data(),0);
         Mat_VarSetStructFieldByName(submatvar,subfields[0],0,subfield);
 
-        size_t dims_field_den[2]={1,3};
-        Bottle *bDen=params.find("den").asList();
-        Vector den(3,0.0);
-        den[0]=bDen->get(0).asDouble();
-        den[1]=bDen->get(1).asDouble();
-        den[2]=bDen->get(2).asDouble();
+        size_t dims_field_den[2]={1,den.size()};
         subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_den,den.data(),0);
         Mat_VarSetStructFieldByName(submatvar,subfields[1],0,subfield);
 
