@@ -366,6 +366,12 @@
     </connection>
 
     <connection>
+        <from>/opc/broadcast:o</from>
+        <to>/managerTUG/opc:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
         <from>/managerTUG/left_arm:rpc</from>
         <to>/ctpservice/left_arm/rpc</to>
         <protocol>fast_tcp</protocol>

@@ -263,6 +263,7 @@ class Manager : public RFModule, public managerTUG_IDL
     RpcClient linePort;
     RpcClient leftarmPort;
     RpcClient rightarmPort;
+    BufferedPort<Bottle> opcPort;
 
     QuestionManager *question_manager;
 
@@ -662,6 +663,7 @@ class Manager : public RFModule, public managerTUG_IDL
         leftarmPort.open("/"+module_name+"/left_arm:rpc");
         rightarmPort.open("/"+module_name+"/right_arm:rpc");
         cmdPort.open("/"+module_name+"/cmd:rpc");
+        opcPort.open("/"+module_name+"/opc:i");
         attach(cmdPort);
 
         question_manager=new QuestionManager(module_name,speak_map,&speechStreamPort,&speechRpcPort);
@@ -695,11 +697,19 @@ class Manager : public RFModule, public managerTUG_IDL
             return true;
         }
 
-        //get start and finish lines
-        if (!world_configured)
+        //get finish line
+        Property l;
+        if (hasLine(l))
         {
-            yInfo()<<"Getting world...";
-            world_configured=getWorld();
+            if (!world_configured)
+            {
+                getWorld(l);
+            }
+        }
+        else
+        {
+            world_configured=false;
+            yInfo()<<"World not configured";
             return true;
         }
 
@@ -817,61 +827,69 @@ class Manager : public RFModule, public managerTUG_IDL
         if (state==State::engaged)
         {
             Bottle cmd,rep;
-            cmd.addString("loadExercise");
-            cmd.addString("tug");
-            if (analyzerPort.write(cmd,rep))
+            cmd.addString("setLinePose");
+            cmd.addList().read(finishline_pose);
+            if(analyzerPort.write(cmd,rep))
             {
-                bool ack=rep.get(0).asBool();
-                if (ack)
+                yInfo()<<"Set finish line to motionAnalyzer";
+                cmd.clear();
+                rep.clear();
+                cmd.addString("loadExercise");
+                cmd.addString("tug");
+                if (analyzerPort.write(cmd,rep))
                 {
-                    cmd.clear();
-                    rep.clear();
-                    cmd.addString("listMetrics");
-                    if (analyzerPort.write(cmd,rep))
+                    bool ack=rep.get(0).asBool();
+                    if (ack)
                     {
-                        Bottle &metrics=*rep.get(0).asList();
-                        if (metrics.size()>0)
+                        cmd.clear();
+                        rep.clear();
+                        cmd.addString("listMetrics");
+                        if (analyzerPort.write(cmd,rep))
                         {
-                            string metric="step_0";//select_randomly(metrics);
-                            yInfo()<<"Selected metric:"<<metric;
-                            cmd.clear();
-                            rep.clear();
-                            cmd.addString("selectMetric");
-                            cmd.addString(metric);
-                            if (analyzerPort.write(cmd,rep))
+                            Bottle &metrics=*rep.get(0).asList();
+                            if (metrics.size()>0)
                             {
-                                ack=rep.get(0).asBool();
-                                if(ack)
+                                string metric="step_0";//select_randomly(metrics);
+                                yInfo()<<"Selected metric:"<<metric;
+                                cmd.clear();
+                                rep.clear();
+                                cmd.addString("selectMetric");
+                                cmd.addString(metric);
+                                if (analyzerPort.write(cmd,rep))
                                 {
-                                    cmd.clear();
-                                    rep.clear();
-                                    cmd.addString("listMetricProps");
-                                    if (analyzerPort.write(cmd,rep))
+                                    ack=rep.get(0).asBool();
+                                    if(ack)
                                     {
-                                        Bottle &props=*rep.get(0).asList();
-                                        if (props.size()>0)
+                                        cmd.clear();
+                                        rep.clear();
+                                        cmd.addString("listMetricProps");
+                                        if (analyzerPort.write(cmd,rep))
                                         {
-                                            string prop="step_length";//select_randomly(props);
-                                            yInfo()<<"Selected prop:"<<prop;
-                                            cmd.clear();
-                                            rep.clear();
-                                            cmd.addString("selectMetricProp");
-                                            cmd.addString(prop);
-                                            if (analyzerPort.write(cmd,rep))
+                                            Bottle &props=*rep.get(0).asList();
+                                            if (props.size()>0)
                                             {
-                                                ack=rep.get(0).asBool();
-                                                if(ack)
+                                                string prop="step_length";//select_randomly(props);
+                                                yInfo()<<"Selected prop:"<<prop;
+                                                cmd.clear();
+                                                rep.clear();
+                                                cmd.addString("selectMetricProp");
+                                                cmd.addString(prop);
+                                                if (analyzerPort.write(cmd,rep))
                                                 {
-                                                    cmd.clear();
-                                                    rep.clear();
-                                                    cmd.addString("selectSkel");
-                                                    cmd.addString(tag);
-                                                    yInfo()<<"Selecting skeleton"<<tag;
-                                                    if (analyzerPort.write(cmd,rep))
+                                                    ack=rep.get(0).asBool();
+                                                    if(ack)
                                                     {
-                                                        if (rep.get(0).asVocab()==ok)
+                                                        cmd.clear();
+                                                        rep.clear();
+                                                        cmd.addString("selectSkel");
+                                                        cmd.addString(tag);
+                                                        yInfo()<<"Selecting skeleton"<<tag;
+                                                        if (analyzerPort.write(cmd,rep))
                                                         {
-                                                            state=State::explain;
+                                                            if (rep.get(0).asVocab()==ok)
+                                                            {
+                                                                state=State::explain;
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -924,7 +942,12 @@ class Manager : public RFModule, public managerTUG_IDL
 
             if (!navigating)
             {
-                double x=finishline_pose[0]+0.2+line_length;
+                string part=which_part();
+                double x=finishline_pose[0]+0.2;
+                if (part=="left")
+                {
+                    x+=line_length;
+                }
                 double y=finishline_pose[1]-0.5;
                 double theta=starting_pose[2];
                 cmd.clear();
@@ -1045,6 +1068,7 @@ class Manager : public RFModule, public managerTUG_IDL
                 {
                     yInfo()<<"Line crossed!";
                     state=State::line_crossed;
+                    speak("line-crossed",true);
                     encourage_cnt=0;
                     t0=Time::now();
                 }
@@ -1210,15 +1234,35 @@ class Manager : public RFModule, public managerTUG_IDL
     }
 
     /****************************************************************/
-    bool getWorld()
+    bool hasLine(Property &prop)
     {
-        Bottle cmd,rep;
-        cmd.addString("get_line");
-        cmd.addString("finish-line");
-        if(linePort.write(cmd,rep))
+        if (opcPort.getInputCount()>0)
         {
-            Property line(rep.get(0).toString().c_str());
-            if (Bottle *lp_bottle=line.find("pose_world").asList())
+            if (Bottle* b=opcPort.read(true))
+            {
+                if (!b->get(1).isString())
+                {
+                    for (int i=1; i<b->size(); i++)
+                    {
+                        prop.fromString(b->get(i).asList()->toString());
+                        if (prop.find("finish-line").asList())
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /****************************************************************/
+    bool getWorld(const Property &prop)
+    {
+        if (opcPort.getInputCount()>0)
+        {
+            Bottle *line=prop.find("finish-line").asList();
+            if (Bottle *lp_bottle=line->find("pose_world").asList())
             {
                 if(lp_bottle->size()>=7)
                 {
@@ -1231,28 +1275,21 @@ class Manager : public RFModule, public managerTUG_IDL
                     finishline_pose[5]=lp_bottle->get(5).asDouble();
                     finishline_pose[6]=lp_bottle->get(6).asDouble();
                     yInfo()<<"Finish line wrt world frame"<<finishline_pose.toString();
-
-                    if (Bottle *lp_length=line.find("size").asList())
+                    if (Bottle *lp_length=line->find("size").asList())
                     {
                         if (lp_length->size()>=2)
                         {
                             line_length=lp_length->get(0).asDouble();
                             yInfo()<<"with length"<<line_length;
-
-                            cmd.clear();
-                            rep.clear();
-                            cmd.addString("setLinePose");
-                            cmd.addList().read(finishline_pose);
-                            if(analyzerPort.write(cmd,rep))
-                            {
-                                yInfo()<<"Set finish line to motionAnalyzer";
-                                return true;
-                            }
+                            yInfo()<<"World configured";
+                            world_configured=true;
+                            return true;
                         }
                     }
                 }
             }
         }
+
         yError()<<"Could not configure world";
         return false;
     }
@@ -1278,6 +1315,7 @@ class Manager : public RFModule, public managerTUG_IDL
         leftarmPort.close();
         rightarmPort.close();
         speechStreamPort.close();
+        opcPort.close();
         cmdPort.close();
         return true;
     }

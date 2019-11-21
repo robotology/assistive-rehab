@@ -515,7 +515,7 @@ class Detector : public RFModule, public lineDetector_IDL
         cmd.addString(l);
         if(viewerPort.write(cmd,rep))
         {
-            if(rep.get(0).asBool()==true)
+            if(rep.get(0).asVocab()==Vocab::encode("ok"))
             {
                 yInfo()<<l<<"deleted";
             }
