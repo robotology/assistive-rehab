@@ -123,11 +123,11 @@ jobs:
         cmake -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release ..
         cmake --build . --config ${{ matrix.build_type }} --target install 
         # tensorflow_cc
-        cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/FloopCZ/tensorflow_cc.git --depth 1 --branch master
-        cd tensorflow_cc/tensorflow_cc && mkdir -p build && cd build
-        cmake -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DTENSORFLOW_STATIC=ON -DTENSORFLOW_SHARED=OFF -DCMAKE_BUILD_TYPE=Release ..
-        cmake --build . --config ${{ matrix.build_type }} --target install 
+        #cd ${GITHUB_WORKSPACE}
+        #git clone https://github.com/FloopCZ/tensorflow_cc.git --depth 1 --branch master
+        #cd tensorflow_cc/tensorflow_cc && mkdir -p build && cd build
+        #cmake -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DTENSORFLOW_STATIC=OFF -DTENSORFLOW_SHARED=ON -DCMAKE_BUILD_TYPE=Release ..
+        #cmake --build . --config ${{ matrix.build_type }} --target install 
         # ycm
         cd ${GITHUB_WORKSPACE}
         git clone https://github.com/robotology/ycm.git --depth 1 --branch devel
@@ -180,7 +180,7 @@ jobs:
         mkdir -p build
         cd build    
         cmake -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install \
-              -DTENSORFLOW_LINK_SHARED=OFF -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON ..
+              -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON ..
       
     - name: Build
       shell: bash
