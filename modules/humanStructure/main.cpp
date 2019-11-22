@@ -109,7 +109,7 @@ public:
 
         targetPort.open("/" + moduleName + "/target:o");
         blobPort.open("/" + moduleName + "/blobs:o");
-        armPort.open("/" + moduleName + "/speechTrigger:o");
+        armPort.open("/" + moduleName + "/trigger:o");
 
         imageInFloat.open("/" + moduleName + "/float:i");
 
