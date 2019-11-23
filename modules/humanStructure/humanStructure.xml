@@ -87,5 +87,14 @@
           </description>
       </output>
   </data>
+  
+  <services>
+    <server>
+      <type>humanStructure_IDLServer</type>
+      <idl>humanStructure.thrift</idl>
+      <port>/humanStructure/rpc</port>
+      <description>service port</description>
+    </server>
+  </services>
 
 </module>
