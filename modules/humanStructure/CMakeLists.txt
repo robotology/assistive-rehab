@@ -15,8 +15,6 @@ endforeach()
 set(doc_files ${PROJECT_NAME}.xml)
 source_group("DOC Files" FILES ${doc_files})
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
-
 add_executable(${PROJECT_NAME} main.cpp ${doc_files} ${IDL_GEN_FILES})
 target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} ${OpenCV_LIBRARIES})
