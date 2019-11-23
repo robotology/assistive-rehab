@@ -4,14 +4,13 @@
 <module>
   <name>humanStructure</name>
   <doxygen-group>humanStructure</doxygen-group>
-  <description>This module takes as input an image and 2D skeleton data and outputs sorted blobs around their faces.</description>
+  <description>This module takes as input an image and 2D skeleton data and outputs a series of data such as skeleton tracked, bounbing box around object of interest.</description>
   <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
   <version>0.3.0</version>
 
   <description-long>
-   This module takes as input an image and 2D skeleton data from yarpOpenPose and outputs sorted blobs around their faces.
-   Skeleton data are used to define blobs, whose corners are extracted from right ear and left ear keypoints (if one of the two is not detected, the nose is used).
-   Only skeletons with valid nose keypoints are considered, to avoid sending backward oriented faces.
+   This module takes as input an image and 2D skeleton data from yarpOpenPose.
+   Skeleton data are used to get skeleton of interest (from arm lifted), send a trigger to the speech pipeline when lifting and lowering the arm. Get the bounding box of interest from the selected skeleton. 
    Detected blobs are finally sorted from left to right to avoid confusion in case of occlusion (yarpOpenPose outputs an unsorted list of 2D skeletons).
   </description-long>
 
@@ -38,11 +37,32 @@
             Receives the input image. To be connected to \yarpOpenPose\propag:o.
           </description>
       </input>
+      <input>
+          <type>ImageOfPixelFloat</type>
+          <port>/humanStructure/float:i</port>
+          <description>
+            Receives the float image. To be connected to \yarpOpenPose\float:o
+          </description>
+      </input>
       <output>
           <type>ImageOfPixelRgb</type>
           <port>/humanStructure/image:o</port>
           <description>
-            Streams out the input image with blobs around the detected faces.
+            Streams out the input image with blobs around the detected ROI.
+          </description>
+      </output>
+      <output>
+          <type>ImageOfPixelMono</type>
+          <port>/humanStructure/depth:o</port>
+          <description>
+            Streams out the depth image blobs around the detected ROI.
+          </description>
+      </output>
+      <output>
+          <type>ImageOfPixelMono</type>
+          <port>/humanStructure/segmented:o</port>
+          <description>
+            Streams out the segmented ROI.
           </description>
       </output>
       <output>
@@ -59,6 +79,22 @@
             Streams out blobs' coordinates around detected faces as top left and bottom right corners.
           </description>
       </output>
+      <output>
+          <type>Bottle</type>
+          <port>/humanStructure/trigger:o</port>
+          <description>
+            Streams out the trigger for the speech pipeline.
+          </description>
+      </output>
   </data>
+  
+  <services>
+    <server>
+      <type>humanStructure_IDLServer</type>
+      <idl>humanStructure.thrift</idl>
+      <port>/humanStructure/rpc</port>
+      <description>service port</description>
+    </server>
+  </services>
 
 </module>
