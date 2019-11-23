@@ -7,7 +7,7 @@ project(humanStructure)
 message(STATUS "YARP_LIBRARIES = ${YARP_LIBRARIES}")
 foreach(target ${YARP_LIBRARIES})
     get_property(x TARGET ${target} PROPERTY INTERFACE_LINK_LIBRARIES)
-    message("    ${target} -> ${x}")
+    message(STATUS "    ${target} -> ${x}")
 endforeach()
 
 set(doc_files ${PROJECT_NAME}.xml)
