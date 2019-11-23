@@ -38,6 +38,8 @@
 #include <utility>
 #include <cmath>
 
+#include "humanStructure_IDLServer.h"
+
 using namespace yarp::math;
 
 /********************************************************/
@@ -68,10 +70,12 @@ class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
     double maxVal;
     
     bool isArmLifted;
+    
 
     yarp::sig::ImageOf<yarp::sig::PixelFloat> depth;
 
 public:
+    int armthresh;
     /********************************************************/
 
     Processing( const std::string &moduleName )
@@ -98,7 +102,6 @@ public:
     /********************************************************/
     bool open()
     {
-
         this->useCallback();
 
         BufferedPort<yarp::os::Bottle >::open( "/" + moduleName + "/skeleton:i" );
@@ -120,9 +123,7 @@ public:
 
         isArmLifted = false;
         
-        yarp::os::Network::connect("/yarpOpenPose/target:o",this->BufferedPort<yarp::os::Bottle >::getName().c_str());
-        yarp::os::Network::connect("/yarpOpenPose/float:o", imageInFloat.getName().c_str());
-        yarp::os::Network::connect("/yarpOpenPose/image:o", imageInPort.getName().c_str());
+        armthresh = 20;
 
         return true;
     }
@@ -228,11 +229,11 @@ public:
             {
                 for (int i = 0; i < skeletonSize; i++)
                 {
-                    if ( relbow[i].y - rwrist[i].y > 20 && relbow[i].y > 0 && rwrist[i].y > 0 )
+                    if ( relbow[i].y - rwrist[i].y > armthresh && relbow[i].y > 0 && rwrist[i].y > 0 )
                     {
                         getIndex = i;
                     }
-                    else if( lelbow[i].y - lwrist[i].y > 20 && lelbow[i].y > 0 && lwrist[i].y > 0 )
+                    else if( lelbow[i].y - lwrist[i].y > armthresh && lelbow[i].y > 0 && lwrist[i].y > 0 )
                     {
                         getIndex = i;
                     }
@@ -246,7 +247,7 @@ public:
 
                         int cog = item->get(0).asInt();//item->get(2).asInt() - ( (item->get(2).asInt() -item->get(0).asInt()) / 2);
 
-                        if ( abs(cog - neck[getIndex].x) < 20)
+                        if ( abs(cog - neck[getIndex].x) < armthresh)
                             index = i;
                     }
                 }
@@ -797,7 +798,7 @@ public:
 };
 
 /********************************************************/
-class Module : public yarp::os::RFModule
+class Module : public yarp::os::RFModule, public humanStructure_IDLServer
 {
     yarp::os::ResourceFinder    *rf;
     yarp::os::RpcServer         rpcPort;
@@ -809,6 +810,12 @@ class Module : public yarp::os::RFModule
 
     double minVal;
     double maxVal;
+
+    /********************************************************/
+    bool attach(yarp::os::RpcServer &source)
+    {
+        return this->yarp().attachAsServer(source);
+    }
 
 public:
 
@@ -832,6 +839,25 @@ public:
         processing->setDepthValues(minVal, maxVal);
 
         attach(rpcPort);
+
+        return true;
+    }
+
+    /********************************************************/
+    int getArmThresh()
+    {
+        return processing->armthresh;
+    }
+
+    /********************************************************/
+    bool setArmThresh(const int32_t threshold)
+    {
+        bool val = true;
+
+        if (threshold > 0)
+            processing->armthresh = threshold;
+        else
+            val = false;
 
         return true;
     }
