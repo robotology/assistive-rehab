@@ -704,8 +704,8 @@ public:
                 for( size_t i = 0; i< cnt.size(); i++ )
                 {
                     mu[i] = moments( cnt[i], false );
-                    mc[i] = cv::Point2f( mu[i].m10/mu[i].m00 , mu[i].m01/mu[i].m00 );
-                    double res = cv::norm(cv::Point(mc[i].x, mc[i].y) - maxPoint);
+                    mc[i] = cv::Point2f( (float)(mu[i].m10/mu[i].m00), (float)(mu[i].m01/mu[i].m00) );
+                    double res = cv::norm(cv::Point((int)(mc[i].x), (int)(mc[i].y)) - maxPoint);
 
                     yDebug() << "res" << res;
                     if (res<minValue)

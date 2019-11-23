@@ -9,7 +9,6 @@
 *
 * IDL Interface to \ref human structure module.
 */
-
 service humanStructure_IDLServer
 {
     /**
