@@ -312,7 +312,7 @@ public:
         yarp::sig::ImageOf<yarp::sig::PixelRgb> &outImage = imageOutPort.prepare();
         yarp::sig::ImageOf<yarp::sig::PixelMono> &outDepth = imageOutDepthPort.prepare();
         yarp::sig::ImageOf<yarp::sig::PixelMono> &outSegment = imageOutSegmentPort.prepare();
-        yarp::os::Bottle &triggerSpeech  = armPort.prepare();
+
 
         while (imageInPort.getInputCount() < 1 || imageInFloat.getInputCount() < 1 )
         {
@@ -760,7 +760,6 @@ public:
                     cv::addWeighted(overlayObject, opacity, out_cv, 1 - opacity, 0, out_cv);
                 }
                 //send arm trigger
-                triggerSpeech.clear();
                 if (index > -1 && isArmLifted==false)
                 {
                     yarp::os::Bottle cmd,rep;
@@ -775,8 +774,6 @@ public:
                     isArmLifted = false;
                     armPort.write(cmd,rep);
                 }
-                else
-                    triggerSpeech.clear();
             }
             else
                 followSkeletonIndex = -1;
