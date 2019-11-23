@@ -36,6 +36,7 @@
 #include <vector>
 #include <iostream>
 #include <utility>
+#include <cmath>
 
 using namespace yarp::math;
 
@@ -66,7 +67,7 @@ class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
     double minVal;
     double maxVal;
     
-    double isArmLifted;
+    bool isArmLifted;
 
     yarp::sig::ImageOf<yarp::sig::PixelFloat> depth;
 
