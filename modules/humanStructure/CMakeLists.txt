@@ -4,6 +4,8 @@
 
 project(humanStructure)
 
+yarp_add_idl(IDL_GEN_FILES ${PROJECT_NAME}.thrift)
+
 message(STATUS "YARP_LIBRARIES = ${YARP_LIBRARIES}")
 foreach(target ${YARP_LIBRARIES})
     get_property(x TARGET ${target} PROPERTY INTERFACE_LINK_LIBRARIES)
@@ -15,7 +17,7 @@ source_group("DOC Files" FILES ${doc_files})
 
 include_directories(${OpenCV_INCLUDE_DIRS})
 
-add_executable(${PROJECT_NAME} main.cpp ${doc_files})
+add_executable(${PROJECT_NAME} main.cpp ${doc_files} ${IDL_GEN_FILES})
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} ${OpenCV_LIBRARIES})
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
