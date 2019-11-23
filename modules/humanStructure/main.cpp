@@ -52,9 +52,9 @@ class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelMono> >   imageOutSegmentPort;
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelFloat>>   imageInFloat;
     yarp::os::BufferedPort<yarp::os::Bottle >    targetPort;
-    yarp::os::BufferedPort<yarp::os::Bottle >    armPort;
     yarp::os::BufferedPort<yarp::os::Bottle >    blobPort;
     yarp::os::RpcClient camPort;
+    yarp::os::RpcClient armPort;
 
     int followSkeletonIndex;
     cv::Mat overlayFrame;
@@ -763,15 +763,17 @@ public:
                 triggerSpeech.clear();
                 if (index > -1 && isArmLifted==false)
                 {
+                    yarp::os::Bottle cmd,rep;
+                    cmd.addVocab(yarp::os::Vocab::encode("start"));
                     isArmLifted = true;
-                    triggerSpeech.addString("start");
-                    armPort.write();
+                    armPort.write(cmd,rep);
                 }
                 else if (isArmLifted==true && index < 0)
                 {
+                    yarp::os::Bottle cmd,rep;
+                    cmd.addVocab(yarp::os::Vocab::encode("stop"));
                     isArmLifted = false;
-                    triggerSpeech.addString("stop");
-                    armPort.write();
+                    armPort.write(cmd,rep);
                 }
                 else
                     triggerSpeech.clear();
