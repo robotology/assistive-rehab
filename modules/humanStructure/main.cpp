@@ -763,17 +763,23 @@ public:
                 //send arm trigger
                 if (index > -1 && isArmLifted==false)
                 {
-                    yarp::os::Bottle cmd,rep;
-                    cmd.addString("start");
-                    isArmLifted = true;
-                    armPort.write(cmd,rep);
+                    if (armPort.getOutputCount() > 0)
+                    {
+                        yarp::os::Bottle cmd,rep;
+                        cmd.addString("start");
+                        isArmLifted = true;
+                        armPort.write(cmd,rep);
+                    }
                 }
                 else if (isArmLifted==true && index < 0)
                 {
-                    yarp::os::Bottle cmd,rep;
-                    cmd.addString("stop");
-                    isArmLifted = false;
-                    armPort.write(cmd,rep);
+                    if (armPort.getOutputCount() > 0)
+                    {
+                        yarp::os::Bottle cmd,rep;
+                        cmd.addString("stop");
+                        isArmLifted = false;
+                        armPort.write(cmd,rep);
+                    }
                 }
             }
             else

@@ -372,6 +372,12 @@
     </connection>
 
     <connection>
+        <from>/managerTUG/trigger:o</from>
+        <to>/googleSpeech/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
         <from>/managerTUG/left_arm:rpc</from>
         <to>/ctpservice/left_arm/rpc</to>
         <protocol>fast_tcp</protocol>
