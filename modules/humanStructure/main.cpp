@@ -764,14 +764,14 @@ public:
                 if (index > -1 && isArmLifted==false)
                 {
                     yarp::os::Bottle cmd,rep;
-                    cmd.addVocab(yarp::os::Vocab::encode("start"));
+                    cmd.addString("start");
                     isArmLifted = true;
                     armPort.write(cmd,rep);
                 }
                 else if (isArmLifted==true && index < 0)
                 {
                     yarp::os::Bottle cmd,rep;
-                    cmd.addVocab(yarp::os::Vocab::encode("stop"));
+                    cmd.addString("stop");
                     isArmLifted = false;
                     armPort.write(cmd,rep);
                 }
