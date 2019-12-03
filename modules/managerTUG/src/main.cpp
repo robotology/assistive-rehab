@@ -41,7 +41,7 @@ class QuestionManager: public BufferedPort<Bottle>
     BufferedPort<Bottle> answerPort;
     BufferedPort<Bottle> *speechPort;
     RpcClient *speechRpc;
-    bool freezing,asked,replied;
+    bool freezing,asked,replied,silent;
     double time;
     mutex mtx;
 
@@ -58,6 +58,7 @@ public:
         freezing=false;
         asked=false;
         replied=false;
+        silent=true;
     }
 
     /********************************************************/
@@ -104,24 +105,39 @@ public:
     void onRead( yarp::os::Bottle &question )
     {
         lock_guard<mutex> lg(mtx);
-        yInfo()<<"Received a question...";
-        freezing=true;
-        asked=true;
-        replied=false;
-        string keyword;
-        bool got_kw=false;
-        while (true)
+        if(!silent)
         {
-            got_kw=getAnswer(keyword);
-            if (got_kw)
+            yInfo()<<"Received a question...";
+            freezing=true;
+            asked=true;
+            replied=false;
+            string keyword;
+            bool got_kw=false;
+            while (true)
             {
-                break;
+                got_kw=getAnswer(keyword);
+                if (got_kw)
+                {
+                    break;
+                }
             }
+            string answer=speak_map[keyword];
+            replied=reply(answer);
+            freezing=false;
+            asked=false;
         }
-        string answer=speak_map[keyword];
-        replied=reply(answer);
-        freezing=false;
-        asked=false;
+    }
+
+    /********************************************************/
+    void wakeUp()
+    {
+        silent=false;
+    }
+
+    /********************************************************/
+    void suspend()
+    {
+        silent=true;
     }
 
     /********************************************************/
@@ -400,6 +416,7 @@ class Manager : public RFModule, public managerTUG_IDL
         bool ret=false;
         state=State::idle;
         ok_go=false;
+        question_manager->suspend();
 
         for (auto it=speak_map.begin(); it!=speak_map.end(); it++)
         {
@@ -519,6 +536,7 @@ class Manager : public RFModule, public managerTUG_IDL
         lock_guard<mutex> lg(mtx);
         bool ret=false;
         ok_go=false;
+        question_manager->suspend();
 
         for (auto it=speak_map.begin(); it!=speak_map.end(); it++)
         {
@@ -826,6 +844,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::engaged)
         {
+            question_manager->wakeUp();
             Bottle cmd,rep;
             cmd.addString("setLinePose");
             cmd.addList().read(finishline_pose);
