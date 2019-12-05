@@ -116,6 +116,29 @@
 
    @subsubsection sec-tug tug.ini
    This section describes the conf file tug.ini.
+   The `general` section includes the following parameters:
+
+   \code
+   [general]
+   type                           test
+   finish-line-thresh             0.3
+   standing-thresh                0.025
+   distance                       3.0
+   time-high                      10.0
+   time-medium                    20.0
+   vel_estimator_N                100
+   vel_estimator_D                5.0
+   \endcode
+
+   with:
+   - `finish-line-thresh`: threshold on the distance between foot and finish line [m];
+   - `standing-thresh`: threshold on the speed of the shoulder center height [m/s];
+   - `distance`: the distance to travel [m];
+   - `time-high`: the time the user should take to travel `distance` and get a high score [s];
+   - `time-high`: the time the user should take to travel `distance` and get a medium score [s];
+   - `vel_estimator_N`: maximum length of the window used to estimate the shoulder height speed;
+   - `vel_estimator_D`: threshold applied to the linear estimator.
+
    For this exercise we compute the range of motion of six joints and the step parameters, specifically step length, step width, cadence and speed.
    The sections describing the range of motion metrics are the same defined in \ref sec-abduction.
    There is an additional section for extracting the step parameters:

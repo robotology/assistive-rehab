@@ -16,8 +16,6 @@
     <param default="managerTUG" desc="Name of the module. All the open ports will be tagged with the prefix /module_name.">module_name</param>
     <param default="0.1" desc="Periodicity of the module.">period</param>
     <param default="speak-it" desc="Configuration file name for the speak.">speak-file</param>
-    <param default="0.2" desc="Threshold on the distance between foot and finish line [m].">finish-line-thresh</param>
-    <param default="0.2" desc="Threshold on the speed of the shoulder center height [m/s].">standing-thresh</param>
     <param default="(1.5 -3.0 110.0)" desc="Robot initial pose (x,y,theta) wrt world frame when starting the TUG.">starting-pose</param>
     <param default="3.0" desc="Time ctpService takes to complete the pointing movement.">pointing-time</param>
     <param default="(-10.0,20.0,-10.0,35.0,0.0,0.030,0.0,0.0)" desc="List of joint positions for reaching arm home position (deg). Provided to ctpService.">pointing-home</param>

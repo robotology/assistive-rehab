@@ -183,8 +183,13 @@ Exercise* Manager::loadExerciseList(const Bottle &bGeneral, const string &ex_tag
     {
         int N=bGeneral.find("vel_estimator_N").asInt();
         double D=bGeneral.find("vel_estimator_D").asDouble();
+        finishline_thresh=bGeneral.find("finish-line-thresh").asDouble();
+        standing_thresh=bGeneral.find("standing-thresh").asDouble();
+        double distance=bGeneral.check("distance",Value(6.0)).asDouble();
+        double time_high=bGeneral.check("time-high",Value(10.0)).asDouble();
+        double time_medium=bGeneral.check("time-medium",Value(20.0)).asDouble();
         lin_est_shoulder=new AWLinEstimator(N,D); //(16,0.01);
-        return new Tug();
+        return new Tug(finishline_thresh,standing_thresh,distance,time_high,time_medium);
     }
     return NULL;
 }
@@ -793,26 +798,67 @@ bool Manager::stop()
     return true;
 }
 
-/********************************************************/
-bool Manager::isStanding(const double standing_thresh)
+/****************************************************************/
+Property Manager::publishState()
 {
-    lock_guard<mutex> lg(mtx);
-    yInfo()<<"shoulder height speed"<<shoulder_center_height_vel;
-    return (shoulder_center_height_vel>standing_thresh);
+    Property p;
+    if (bResult.size()>0)
+    {
+        for (size_t i=0;i<bResult.size();i++)
+        {
+            p.put(processors[i]->getProcessedMetric(),bResult.get(i));
+        }
+    }
+    if (state==State::idle)
+    {
+        p.put("human-state", "idle");
+    }
+    else if (state==State::crossed)
+    {
+        p.put("human-state", "crossed");
+    }
+    else if (state==State::sitting)
+    {
+        p.put("human-state", "sitting");
+    }
+    else if (state==State::standing)
+    {
+        p.put("human-state", "standing");
+    }
+    if (curr_exercise!=NULL)
+    {
+        Bottle bEx;
+        bEx.addList().read(curr_exercise->publish());
+        p.put("exercise",bEx.get(0));
+    }
+    return p;
 }
 
 /********************************************************/
-bool Manager::isSitting(const double standing_thresh)
+Property Manager::getState()
 {
     lock_guard<mutex> lg(mtx);
+    return publishState();
+}
+
+/********************************************************/
+bool Manager::isStanding()
+{
+    yInfo()<<"shoulder height speed"<<shoulder_center_height_vel;
+    standing=(shoulder_center_height_vel>standing_thresh);
+    return standing;
+}
+
+/********************************************************/
+bool Manager::isSitting()
+{
     yInfo()<<"shoulder height speed"<<shoulder_center_height_vel;
     return (shoulder_center_height_vel<-standing_thresh);
 }
 
 /********************************************************/
-bool Manager::hasCrossedFinishLine(const double finishline_thresh)
+bool Manager::hasCrossedFinishLine()
 {
-    lock_guard<mutex> lg(mtx);
     Vector foot_right=skeletonIn[KeyPointTag::ankle_right]->getPoint();
     Vector foot_left=skeletonIn[KeyPointTag::ankle_left]->getPoint();
 
@@ -836,8 +882,8 @@ bool Manager::hasCrossedFinishLine(const double finishline_thresh)
     Vector v1=lp_world-pline;
     double dist_fr_line=norm(cross(v1,fr_lp))/norm(v1);
     double dist_fl_line=norm(cross(v1,fl_lp))/norm(v1);
-//    yInfo()<<"dist foot right line"<<dist_fr_line;
-//    yInfo()<<"dist foot left line"<<dist_fl_line;
+    yInfo()<<"dist foot right line"<<dist_fr_line;
+    yInfo()<<"dist foot left line"<<dist_fl_line;
 
     return (dist_fr_line<finishline_thresh && dist_fl_line<finishline_thresh);
 }
@@ -956,6 +1002,8 @@ bool Manager::configure(ResourceFinder &rf)
     prop_tag="";
     curr_exercise=NULL;
     curr_metric=NULL;
+    state=State::idle;
+    standing=false;
     return true;
 }
 
@@ -969,7 +1017,6 @@ bool Manager::interruptModule()
     actionPort.interrupt();
     rpcPort.interrupt();
     yInfo() << "Interrupted module";
-
     return true;
 }
 
@@ -997,7 +1044,6 @@ bool Manager::close()
     actionPort.close();
     rpcPort.close();
     yInfo() << "Closed ports";
-
     return true;
 }
 
@@ -1030,12 +1076,32 @@ bool Manager::updateModule()
                 {
                     //update time array
                     time_samples.push_back(Time::now()-tstart);
+                    if (curr_exercise->getName()==ExerciseTag::tug)
+                    {
+                        if (!standing)
+                        {
+                            if (isStanding())
+                            {
+                                state=State::standing;
+                            }
+                        }
+                        else if (hasCrossedFinishLine())
+                        {
+                            state=State::crossed;
+                        }
+                        else if (isSitting())
+                        {
+                            state=State::sitting;
+                        }
 
+                    }
+                    bResult.clear();
                     for(int i=0; i<processors.size(); i++)
                     {
                         processors[i]->update(skeletonIn);
                         processors[i]->estimate();
                         Property result=processors[i]->getResult();
+                        bResult.addList().read(result);
                         if(result.check(prop_tag) &&
                                 processors[i]->getProcessedMetric()==curr_metric->getParams().find("name").asString())
                         {
@@ -1043,8 +1109,8 @@ bool Manager::updateModule()
                             scopebottleout.addDouble(res);
                         }
                     }
+                    scopePort.write();
                 }
-                scopePort.write();
             }
             else
                 yInfo() << "Please specify metric";

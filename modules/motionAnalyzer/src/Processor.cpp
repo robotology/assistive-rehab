@@ -315,13 +315,11 @@ void Step_Processor::estimateSpatialParams(const double &dist,const double &widt
         {
             steplen/=stepvec.size();
         }
-
         int laststrike=stepvec.size()>numsteps ? strikes.back() : 0.0;
         stepwidth=feetwidth[laststrike];
         numsteps=(int)strikes.size();
     }
 }
-
 
 /********************************************************/
 double Step_Processor::estimateCadence()
@@ -351,10 +349,6 @@ pair<deque<double>,deque<int>> Step_Processor::findPeaks(const Vector &d, const 
             {
                 val.pop_front();
             }
-            if (idx.size()>step_window)
-            {
-                idx.pop_front();
-            }
         }
         else if(i==d.size() && d[i]>=d[i-1] && d[i]>minv)
         {
@@ -364,10 +358,6 @@ pair<deque<double>,deque<int>> Step_Processor::findPeaks(const Vector &d, const 
             {
                 val.pop_front();
             }
-            if (idx.size()>step_window)
-            {
-                idx.pop_front();
-            }
         }
         else if(d[i]>=d[i-1] && d[i]>=d[i+1] && d[i]>minv)
         {
@@ -376,10 +366,6 @@ pair<deque<double>,deque<int>> Step_Processor::findPeaks(const Vector &d, const 
             if (val.size()>step_window)
             {
                 val.pop_front();
-            }
-            if (idx.size()>step_window)
-            {
-                idx.pop_front();
             }
         }
     }

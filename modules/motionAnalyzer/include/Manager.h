@@ -42,6 +42,9 @@ class Manager : public yarp::os::RFModule,
     yarp::os::RpcClient actionPort;
     yarp::os::BufferedPort<yarp::os::Bottle> scopePort;
 
+    enum class State { idle, sitting, standing, crossed } state;
+    bool standing;
+
     yarp::os::ResourceFinder *rf;
 
     std::map<std::string,Exercise*> motion_repertoire;
@@ -76,10 +79,12 @@ class Manager : public yarp::os::RFModule,
     std::mutex mtx;
     yarp::sig::Vector shoulder_height;
     iCub::ctrl::AWLinEstimator *lin_est_shoulder;
-    double shoulder_center_height_vel;
+    double shoulder_center_height_vel,standing_thresh,finishline_thresh;
     std::vector<double> line_pose;
     yarp::sig::Matrix world_frame;
     yarp::sig::Vector num,den;
+
+    yarp::os::Bottle bResult;
 
     bool loadMotionList(yarp::os::ResourceFinder &rf);
     yarp::os::Property loadFeedbackList(const yarp::os::Bottle &bExercise, const std::string &ex_tag);
@@ -105,10 +110,8 @@ class Manager : public yarp::os::RFModule,
     bool setTemplateTag(const std::string &template_tag) override;
     bool mirrorTemplate(const bool robot_skeleton_mirror) override;
     bool stopFeedback() override;
-    bool isStanding(const double standing_thresh) override;
-    bool isSitting(const double standing_thresh) override;
-    bool hasCrossedFinishLine(const double finishline_thresh) override;
     bool setLinePose(const std::vector<double> &line_pose) override;
+    yarp::os::Property getState() override;
 
     bool writeStructToMat(const std::string& name, const std::vector< std::vector< std::pair<std::string,yarp::sig::Vector> > >& keypoints_skel, mat_t *matfp);
     bool writeStructToMat(const std::string& name, const Exercise *ex, mat_t *matfp);
@@ -122,6 +125,10 @@ class Manager : public yarp::os::RFModule,
     void print(const std::vector< std::vector< std::pair<std::string,yarp::sig::Vector> > >& keypoints_skel);
 
     void getSkeleton();
+    bool isStanding();
+    bool isSitting();
+    bool hasCrossedFinishLine();
+    yarp::os::Property publishState();
     bool attach(yarp::os::RpcServer &source) override;
 
 public:
