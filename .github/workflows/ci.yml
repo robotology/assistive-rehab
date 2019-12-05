@@ -68,14 +68,14 @@ jobs:
       run: |
         # ycm
         cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/robotology/ycm.git --depth 1 --branch devel
+        git clone https://github.com/robotology/ycm.git --depth 1 --branch master
         cd ycm && mkdir -p build && cd build
         cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROBOTOLOGY_ROOT}/scripts/buildsystems/vcpkg.cmake \
                      -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=Release ..
         cmake --build . --config ${{ matrix.build_type }} --target INSTALL 
         # yarp
         cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/robotology/yarp.git --depth 1 --branch devel
+        git clone https://github.com/robotology/yarp.git --depth 1 --branch master
         cd yarp && mkdir -p build && cd build
         cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROBOTOLOGY_ROOT}/scripts/buildsystems/vcpkg.cmake \
                      -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install \
@@ -130,13 +130,13 @@ jobs:
         #cmake --build . --config ${{ matrix.build_type }} --target install 
         # ycm
         cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/robotology/ycm.git --depth 1 --branch devel
+        git clone https://github.com/robotology/ycm.git --depth 1 --branch master
         cd ycm && mkdir -p build && cd build
         cmake -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=Release ..
         cmake --build . --config ${{ matrix.build_type }} --target install 
         # yarp
         cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/robotology/yarp.git --depth 1 --branch devel
+        git clone https://github.com/robotology/yarp.git --depth 1 --branch master
         cd yarp && mkdir -p build && cd build
         cmake  -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=Release ..
         cmake --build . --config ${{ matrix.build_type }} --target install 
