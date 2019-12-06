@@ -53,7 +53,7 @@
 
     <module>
        <name>attentionManager</name>
-       <parameters></parameters>
+       <parameters>--frame world</parameters>
        <node>r1-console-linux</node>
     </module>
 

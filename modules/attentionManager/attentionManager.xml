@@ -22,6 +22,7 @@
     <param default="false" desc="Enable virtual modality.">virtual-mode</param>
     <param default="robot" desc="Tag of the robot's skeleton.">robot-skeleton-name</param>
     <param default="30" desc="Order of the median filter applied to the estimates of the end-line.">line-filter-order</param>
+    <param default="camera" desc="Frame wrt which the skeleton is transformed (camera or world).">frame</param>
   </arguments>
 
   <authors>

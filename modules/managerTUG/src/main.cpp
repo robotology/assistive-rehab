@@ -258,7 +258,7 @@ class Manager : public RFModule, public managerTUG_IDL
     State prev_state;
     string tag;
     double t0,tstart,t;
-    int encourage_cnt;
+    int encourage_cnt,reinforce_engage_cnt;
     unordered_map<string,string> speak_map;
     unordered_map<string,int> speak_count_map;
     bool interrupting;
@@ -823,6 +823,8 @@ class Manager : public RFModule, public managerTUG_IDL
                     speak("engage",true);
                     state=State::follow;
                     encourage_cnt=0;
+                    reinforce_engage_cnt=0;
+                    t0=Time::now();
                 }
             }
         }
@@ -838,6 +840,19 @@ class Manager : public RFModule, public managerTUG_IDL
                 {
                     speak("accepted",true);
                     state=State::engaged;
+                }
+                else if (Time::now()-t0>10.0)
+                {
+                    if (++reinforce_engage_cnt<=1)
+                    {
+                        speak("reinforce-engage",true);
+                        t0=Time::now();
+                    }
+                    else
+                    {
+                        speak("disengaged",true);
+                        disengage();
+                    }
                 }
             }
         }
