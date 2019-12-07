@@ -3,7 +3,7 @@
 # Authors: Ugo Pattacini <ugo.pattacini@iit.it>
 
 cmake_minimum_required(VERSION 3.5)
-project(AssistiveRehab LANGUAGES CXX C VERSION 1.0.0)
+project(AssistiveRehab LANGUAGES CXX C VERSION 0.4.0)
 
 include(GNUInstallDirs)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}")
@@ -35,7 +35,7 @@ find_package(ICUBcontrib REQUIRED)
 find_package(ICUB REQUIRED)
 find_package(CER)
 
-find_package(YARP 3.2.101 REQUIRED COMPONENTS OS sig dev math cv rosmsg)
+find_package(YARP 3.3.0 REQUIRED COMPONENTS os sig dev math cv rosmsg)
 find_package(OpenCV REQUIRED)
 find_package(VTK 8.1.0)
 list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})
@@ -89,7 +89,6 @@ file(GLOB ini app/conf/*.ini)
 file(GLOB xml app/conf/*.xml)
 file(GLOB scripts app/scripts/*.template)
 file(GLOB ipynb report/*.ipynb)
-file(GLOB sh app/scripts/*.sh report/*.sh)
 file(GLOB train_with_me_conf app/conf/train-with-me/*)
 file(GLOB train_with_me_scripts app/scripts/train-with-me/*.template)
 set(TRAIN_WITH_ME "train-with-me")
@@ -100,8 +99,11 @@ yarp_install(FILES ${ipynb} DESTINATION ${ICUBCONTRIB_CONTEXTS_INSTALL_DIR}/${PR
 yarp_install(FILES ${train_with_me_conf} DESTINATION ${ICUBCONTRIB_CONTEXTS_INSTALL_DIR}/${PROJECT_NAME}/${TRAIN_WITH_ME})
 yarp_install(FILES ${train_with_me_scripts} DESTINATION ${ICUBCONTRIB_APPLICATIONS_TEMPLATES_INSTALL_DIR}/${PROJECT_NAME}/${TRAIN_WITH_ME})
 
-add_custom_target(copy_sh_in_build ALL)
-add_custom_command(TARGET copy_sh_in_build POST_BUILD
-                   COMMAND ${CMAKE_COMMAND} -E copy ${sh} ${CMAKE_BINARY_DIR}/bin/${CMAKE_CFG_INTDIR}
-                   COMMENT "Copying ${sh} to ${CMAKE_BINARY_DIR}/bin/${CMAKE_CFG_INTDIR}/")
-install(PROGRAMS ${sh} DESTINATION bin)
+if(UNIX)
+  file(GLOB sh app/scripts/*.sh report/*.sh)
+  add_custom_target(copy_sh_in_build ALL)
+  add_custom_command(TARGET copy_sh_in_build POST_BUILD
+                     COMMAND ${CMAKE_COMMAND} -E copy ${sh} ${CMAKE_BINARY_DIR}/bin/${CMAKE_CFG_INTDIR}
+                     COMMENT "Copying ${sh} to ${CMAKE_BINARY_DIR}/bin/${CMAKE_CFG_INTDIR}/")
+  install(PROGRAMS ${sh} DESTINATION bin)
+endif()
