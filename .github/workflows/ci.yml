@@ -71,7 +71,7 @@ jobs:
         git clone https://github.com/robotology/ycm.git --depth 1 --branch master
         cd ycm && mkdir -p build && cd build
         cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROBOTOLOGY_ROOT}/scripts/buildsystems/vcpkg.cmake \
-                     -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=Release ..
+                     -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
         cmake --build . --config ${{ matrix.build_type }} --target INSTALL 
         # yarp
         cd ${GITHUB_WORKSPACE}
@@ -79,7 +79,7 @@ jobs:
         cd yarp && mkdir -p build && cd build
         cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROBOTOLOGY_ROOT}/scripts/buildsystems/vcpkg.cmake \
                      -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install \
-                     -DCMAKE_BUILD_TYPE=Release ..
+                     -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
         cmake --build . --config ${{ matrix.build_type }} --target INSTALL
         # icub-main
         cd ${GITHUB_WORKSPACE}
@@ -87,7 +87,7 @@ jobs:
         cd icub-main && mkdir -p build && cd build
         cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROBOTOLOGY_ROOT}/scripts/buildsystems/vcpkg.cmake \
                      -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install \
-                     -DCMAKE_BUILD_TYPE=Release -DENABLE_icubmod_cartesiancontrollerserver=ON -DENABLE_icubmod_cartesiancontrollerclient=ON \
+                     -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DENABLE_icubmod_cartesiancontrollerserver=ON -DENABLE_icubmod_cartesiancontrollerclient=ON \
                      -DENABLE_icubmod_gazecontrollerclient=ON ..
         cmake --build . --config ${{ matrix.build_type }} --target INSTALL 
         # cer
@@ -95,14 +95,14 @@ jobs:
         git clone https://github.com/robotology/cer.git --depth 1 --branch devel
         cd cer && mkdir -p build && cd build
         cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROBOTOLOGY_ROOT}/scripts/buildsystems/vcpkg.cmake \
-                     -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=Release ..
+                     -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
         cmake --build . --config ${{ matrix.build_type }} --target INSTALL
         # icub-contrib-common
         cd ${GITHUB_WORKSPACE}
         git clone https://github.com/robotology/icub-contrib-common.git --depth 1
         cd icub-contrib-common && mkdir -p build && cd build
         cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROBOTOLOGY_ROOT}/scripts/buildsystems/vcpkg.cmake \
-                     -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=Release ..        
+                     -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..        
         cmake --build . --config ${{ matrix.build_type }} --target INSTALL
         
     - name: Source-based Dependencies [Ubuntu] 
@@ -114,50 +114,50 @@ jobs:
         git clone https://github.com/opencv/opencv.git --depth 1 --branch 3.4.0
         git clone https://github.com/opencv/opencv_contrib.git --depth 1 --branch 3.4.0
         cd opencv && mkdir -p build && cd build
-        cmake -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DOPENCV_EXTRA_MODULES_PATH=${GITHUB_WORKSPACE}/opencv_contrib/modules -DCMAKE_BUILD_TYPE=Release ..
+        cmake -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DOPENCV_EXTRA_MODULES_PATH=${GITHUB_WORKSPACE}/opencv_contrib/modules -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
         cmake --build . --config ${{ matrix.build_type }} --target install 
         # vtk
         cd ${GITHUB_WORKSPACE}
         git clone https://github.com/Kitware/VTK.git --depth 1 --branch v8.1.0
         cd VTK && mkdir -p build && cd build
-        cmake -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release ..
+        cmake -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
         cmake --build . --config ${{ matrix.build_type }} --target install 
         # tensorflow_cc
         #cd ${GITHUB_WORKSPACE}
         #git clone https://github.com/FloopCZ/tensorflow_cc.git --depth 1 --branch master
         #cd tensorflow_cc/tensorflow_cc && mkdir -p build && cd build
-        #cmake -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DTENSORFLOW_STATIC=OFF -DTENSORFLOW_SHARED=ON -DCMAKE_BUILD_TYPE=Release ..
+        #cmake -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DTENSORFLOW_STATIC=OFF -DTENSORFLOW_SHARED=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
         #cmake --build . --config ${{ matrix.build_type }} --target install 
         # ycm
         cd ${GITHUB_WORKSPACE}
         git clone https://github.com/robotology/ycm.git --depth 1 --branch master
         cd ycm && mkdir -p build && cd build
-        cmake -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=Release ..
+        cmake -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
         cmake --build . --config ${{ matrix.build_type }} --target install 
         # yarp
         cd ${GITHUB_WORKSPACE}
         git clone https://github.com/robotology/yarp.git --depth 1 --branch master
         cd yarp && mkdir -p build && cd build
-        cmake  -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=Release ..
+        cmake  -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
         cmake --build . --config ${{ matrix.build_type }} --target install 
         # icub-main
         cd ${GITHUB_WORKSPACE}
         git clone https://github.com/robotology/icub-main.git --depth 1 --branch devel
         cd icub-main && mkdir -p build && cd build
-        cmake  -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=Release \
+        cmake  -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
                -DENABLE_icubmod_cartesiancontrollerserver=ON -DENABLE_icubmod_cartesiancontrollerclient=ON -DENABLE_icubmod_gazecontrollerclient=ON ..
         cmake --build . --config ${{ matrix.build_type }} --target install 
         # cer
         cd ${GITHUB_WORKSPACE}
         git clone https://github.com/robotology/cer.git --depth 1 --branch devel
         cd cer && mkdir -p build && cd build
-        cmake  -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=Release ..
+        cmake  -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
         cmake --build . --config ${{ matrix.build_type }} --target install 
         # icub-contrib-common
         cd ${GITHUB_WORKSPACE}
         git clone https://github.com/robotology/icub-contrib-common.git --depth 1
         cd icub-contrib-common && mkdir -p build && cd build
-        cmake  -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=Release ..
+        cmake  -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
         cmake --build . --config ${{ matrix.build_type }} --target install 
  
     # ===================
@@ -171,7 +171,7 @@ jobs:
         cd build
         cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROBOTOLOGY_ROOT}/scripts/buildsystems/vcpkg.cmake \
                      -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-                     -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON ..
+                     -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DBUILD_TESTING=ON ..
 
     - name: Configure [Ubuntu]
       if: matrix.os == 'ubuntu-latest'
@@ -180,7 +180,7 @@ jobs:
         mkdir -p build
         cd build    
         cmake -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install \
-              -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON ..
+              -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DBUILD_TESTING=ON ..
       
     - name: Build
       shell: bash
@@ -188,7 +188,7 @@ jobs:
         cd build
         # Fix for using YARP idl generators (that link ACE) in Windows 
         # See https://github.com/robotology/idyntree/issues/569 for more details
-        export PATH=$PATH:${GITHUB_WORKSPACE}/install/bin:${VCPKG_ROBOTOLOGY_ROOT}/installed/x64-windows/bin:${VCPKG_ROBOTOLOGY_ROOT}/installed/x64-windows/debug/bin
+        export PATH=$PATH:${GITHUB_WORKSPACE}/install/bin:${VCPKG_ROBOTOLOGY_ROOT}/installed/x64-windows/bin
         cmake --build . --config ${{ matrix.build_type }}
         
     - name: Install [Windows]
