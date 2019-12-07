@@ -47,9 +47,7 @@ jobs:
         ${VCPKG_ROBOTOLOGY_ROOT}/vcpkg.exe --overlay-ports=C:/robotology-vcpkg-binary-ports install --triplet x64-windows ace freeglut ode gsl eigen3 opencv3[core,contrib]
         rm -rf ${VCPKG_ROBOTOLOGY_ROOT}/buildtrees
         ${VCPKG_ROBOTOLOGY_ROOT}/vcpkg.exe --overlay-ports=C:/robotology-vcpkg-binary-ports install --triplet x64-windows vtk ipopt-binary matio hdf5 fftw3
-        rm -rf ${VCPKG_ROBOTOLOGY_ROOT}/buildtrees
-        rm -rf ${VCPKG_ROBOTOLOGY_ROOT}/packages
-        rm -rf ${VCPKG_ROBOTOLOGY_ROOT}/downloads
+        rm -rf ${VCPKG_ROBOTOLOGY_ROOT}/buildtrees ${VCPKG_ROBOTOLOGY_ROOT}/packages ${VCPKG_ROBOTOLOGY_ROOT}/downloads
         
     - name: Dependencies [Ubuntu]
       if: matrix.os == 'ubuntu-latest'
@@ -170,8 +168,8 @@ jobs:
         mkdir -p build
         cd build
         cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROBOTOLOGY_ROOT}/scripts/buildsystems/vcpkg.cmake \
-                     -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-                     -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DBUILD_TESTING=ON ..
+                     -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install \
+                     -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DBUILD_TESTING=ON ..
 
     - name: Configure [Ubuntu]
       if: matrix.os == 'ubuntu-latest'
@@ -204,4 +202,3 @@ jobs:
       run: |
         cd build
         cmake --build . --config ${{ matrix.build_type }} --target install
-      
