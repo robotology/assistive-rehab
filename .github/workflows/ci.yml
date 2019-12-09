@@ -202,4 +202,3 @@ jobs:
       run: |
         cd build
         cmake --build . --config ${{ matrix.build_type }} --target install
-
