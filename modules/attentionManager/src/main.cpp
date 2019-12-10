@@ -58,6 +58,7 @@ class Attention : public RFModule, public attentionManager_IDL
     string tag;
     string keypoint;
     string robot_skeleton_name;
+    string frame;
 
     mutex mtx;
     BufferedPort<Bottle> opcPort;
@@ -220,18 +221,25 @@ class Attention : public RFModule, public attentionManager_IDL
     /****************************************************************/
     bool is_with_raised_hand(const shared_ptr<Skeleton> &s) const
     {
+        int dir=1;
+        double k=1.0;
+        if (frame=="world")
+        {
+            dir=2;
+            k=-1.0;
+        }
         if ((*s)[KeyPointTag::elbow_left]->isUpdated() &&
             (*s)[KeyPointTag::hand_left]->isUpdated())
         {
-            if (((*s)[KeyPointTag::elbow_left]->getPoint()[1]>
-                 (*s)[KeyPointTag::hand_left]->getPoint()[1]))
+            if (k*(((*s)[KeyPointTag::elbow_left]->getPoint()[dir]-
+                    (*s)[KeyPointTag::hand_left]->getPoint()[dir]))>0)
                 return true;
         }
         if ((*s)[KeyPointTag::elbow_right]->isUpdated() &&
             (*s)[KeyPointTag::hand_right]->isUpdated())
         {
-            if (((*s)[KeyPointTag::elbow_right]->getPoint()[1]>
-                 (*s)[KeyPointTag::hand_right]->getPoint()[1]))
+            if (k*(((*s)[KeyPointTag::elbow_right]->getPoint()[dir]-
+                    (*s)[KeyPointTag::hand_right]->getPoint()[dir]))>0)
                 return true;
         }
         return false;
@@ -426,6 +434,7 @@ class Attention : public RFModule, public attentionManager_IDL
         inactivity_thres=rf.check("inactivity-thres",Value(0.05)).asDouble();
         virtual_mode=rf.check("virtual-mode",Value(false)).asBool();
         robot_skeleton_name=rf.check("robot-skeleton-name",Value("robot")).asString();
+        frame=rf.check("frame",Value("camera")).asString();
 
         opcPort.open("/attentionManager/opc:i");
         gazeCmdPort.open("/attentionManager/gaze/cmd:rpc");
