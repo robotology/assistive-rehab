@@ -19,6 +19,12 @@
     <param default="0.3" desc="Threshold on the distance between foot and finish line [m].">finish-line-thresh</param>
     <param default="0.2" desc="Threshold on the speed of the shoulder center height [m/s].">standing-thresh</param>
     <param default="(1.5 -3.0 110.0)" desc="Robot initial pose (x,y,theta) wrt world frame when starting the TUG.">starting-pose</param>
+    <param default="3.0" desc="Time ctpService takes to complete the pointing movement.">pointing-time</param>
+    <param default="(-10.0,20.0,-10.0,35.0,0.0,0.030,0.0,0.0)" desc="List of joint positions for reaching arm home position (deg). Provided to ctpService.">pointing-home</param>
+    <param default="(70.0,12.0,-10.0,10.0,0.0,0.050,0.0,0.0)" desc="List of joint positions for pointing at the chair (deg). Provided to ctpService.">pointing-start</param>
+    <param default="(35.0,12.0,-10.0,10.0,0.0,0.050,0.0,0.0)" desc="List of joint positions for pointing at the finish line (deg). Provided to ctpService.">pointing-finish</param>
+    <param default="0.6" desc="Threshold on the y distance between elbow and elbow, to detect if the arm is raised (normalized).">arm-thresh</param>
+    <param default="true" desc="If true, the module detects if the hand is raised for triggering speech.">detect-hand-up</param>
   </arguments>
 
   <authors>

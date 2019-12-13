@@ -76,6 +76,19 @@ public:
     }
 
     /********************************************************/
+    bool connected()
+    {
+        if(answerPort.getInputCount() < 1 || this->getInputCount() < 1)
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    /********************************************************/
     void close()
     {
         BufferedPort<yarp::os::Bottle >::close();
@@ -111,6 +124,7 @@ public:
             freezing=true;
             asked=true;
             replied=false;
+            reply(speak_map["asking"]);
             string keyword;
             bool got_kw=false;
             while (true)
@@ -232,6 +246,167 @@ public:
 };
 
 /****************************************************************/
+class HandManager : public Thread
+{
+    string module_name;
+    BufferedPort<Bottle> *opcPort;
+    RpcClient handPort;
+    Skeleton *skeleton;
+    double arm_thresh;
+    string tag,part;
+    bool isArmLifted;
+
+public:
+
+    /********************************************************/
+    HandManager(const string &module_name, const double &arm_thresh, BufferedPort<Bottle> *opcPort)
+    {
+        this->module_name=module_name;
+        this->arm_thresh=arm_thresh;
+        this->opcPort=opcPort;
+        handPort.open("/"+module_name+"/trigger:o");
+        isArmLifted=false;
+        tag="";
+        part="";
+    }
+
+    /********************************************************/
+    bool connected()
+    {
+        if (handPort.getOutputCount() < 1)
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    /********************************************************/
+    void set_tag(const string &tag)
+    {
+        this->tag=tag;
+    }
+
+    /********************************************************/
+    void run() override
+    {
+        while(!isStopping())
+        {
+            if (opcPort->getInputCount() > 0)
+            {
+                if (!tag.empty())
+                {
+                    get_skeleton();
+                    if (isArmLifted==false)
+                    {
+                        if (is_with_raised_hand())
+                        {
+                            yarp::os::Bottle cmd,rep;
+                            cmd.addString("start");
+                            isArmLifted=true;
+                            handPort.write(cmd,rep);
+                            if (rep.get(0).asVocab()==Vocab::encode("ok"))
+                            {
+                                yInfo()<<"Starting speech";
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (!is_raised())
+                        {
+                            yarp::os::Bottle cmd,rep;
+                            cmd.addString("stop");
+                            isArmLifted=false;
+                            handPort.write(cmd,rep);
+                            if (rep.get(0).asVocab()==Vocab::encode("ok"))
+                            {
+                                yInfo()<<"Stopping speech";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /****************************************************************/
+    void onStop() override
+    {
+        delete skeleton;
+        handPort.close();
+    }
+
+    /****************************************************************/
+    void get_skeleton()
+    {
+        if (Bottle* b=opcPort->read(true))
+        {
+            if (!b->get(1).isString())
+            {
+                for (int i=1; i<b->size(); i++)
+                {
+                    Property prop;
+                    prop.fromString(b->get(i).asList()->toString());
+                    string skel_tag=prop.find("tag").asString();
+                    if (skel_tag==tag)
+                    {
+                        skeleton=skeleton_factory(prop);
+                        skeleton->normalize();
+                    }
+                }
+            }
+        }
+    }
+
+    /****************************************************************/
+    bool is_with_raised_hand()
+    {
+        if (is_raised("left"))
+        {
+            part="left";
+            return true;
+        }
+        if (is_raised("right"))
+        {
+            part="right";
+            return true;
+        }
+
+        return false;
+    }
+
+    /****************************************************************/
+    bool is_raised() const
+    {
+        return is_raised(part);
+    }
+
+    /****************************************************************/
+    bool is_raised(const string &p) const
+    {
+        string elbow=(p=="left"?KeyPointTag::elbow_left:KeyPointTag::elbow_right);
+        string hand=(p=="left"?KeyPointTag::hand_left:KeyPointTag::hand_right);
+        if (!p.empty())
+        {
+            if ((*skeleton)[elbow]->isUpdated() &&
+                (*skeleton)[hand]->isUpdated())
+            {
+                if (((*skeleton)[hand]->getPoint()[2]-(*skeleton)[elbow]->getPoint()[2])>arm_thresh)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+};
+
+/****************************************************************/
 class SpeechParam
 {
     ostringstream ss;
@@ -249,7 +424,8 @@ class Manager : public RFModule, public managerTUG_IDL
     string module_name;
     string speak_file;
     double period;
-    double finish_line_thresh,standing_thresh,pointing_time;
+    double finish_line_thresh,standing_thresh,pointing_time,arm_thresh;
+    bool detect_hand_up;
     Vector starting_pose,pointing_home,pointing_start,pointing_finish;
 
     const int ok=Vocab::encode("ok");
@@ -263,7 +439,7 @@ class Manager : public RFModule, public managerTUG_IDL
     unordered_map<string,int> speak_count_map;
     bool interrupting;
     mutex mtx;
-    bool start_ex,ok_go;
+    bool start_ex,ok_go,connected;
 
     Vector finishline_pose;
     double line_length;
@@ -282,6 +458,7 @@ class Manager : public RFModule, public managerTUG_IDL
     BufferedPort<Bottle> opcPort;
 
     QuestionManager *question_manager;
+    HandManager *hand_manager;
 
     /****************************************************************/
     bool attach(RpcServer &source) override
@@ -492,6 +669,11 @@ class Manager : public RFModule, public managerTUG_IDL
     bool start() override
     {
         lock_guard<mutex> lg(mtx);
+        if (!connected)
+        {
+            yError()<<"Not connected";
+            return false;
+        }
         state=State::idle;
         bool ret=false;
         Bottle cmd,rep;
@@ -608,6 +790,8 @@ class Manager : public RFModule, public managerTUG_IDL
         speak_file=rf.check("speak-file",Value("speak-it")).asString();
         finish_line_thresh=rf.check("finish-line-thresh",Value(0.2)).asDouble();
         standing_thresh=rf.check("standing-thresh",Value(0.2)).asDouble();
+        arm_thresh=rf.check("arm-thresh",Value(0.6)).asDouble();
+        detect_hand_up=rf.check("detect-hand-up",Value(true)).asBool();
         starting_pose={1.5,-3.0,110.0};
         if(rf.check("starting-pose"))
         {
@@ -685,12 +869,27 @@ class Manager : public RFModule, public managerTUG_IDL
         attach(cmdPort);
 
         question_manager=new QuestionManager(module_name,speak_map,&speechStreamPort,&speechRpcPort);
-        question_manager->open();
+        if (!question_manager->open())
+        {
+            yError()<<"Could not open question manager";
+            return false;
+        }
+
+        if(detect_hand_up)
+        {
+            hand_manager=new HandManager(module_name,arm_thresh,&opcPort);
+            if (!hand_manager->start())
+            {
+                yError()<<"Could not start hand manager";
+                return false;
+            }
+        }
 
         state=State::idle;
         interrupting=false;
         world_configured=false;
         ok_go=false;
+        connected=false;
         t0=tstart=Time::now();
 
         return true;
@@ -709,10 +908,30 @@ class Manager : public RFModule, public managerTUG_IDL
         if((analyzerPort.getOutputCount()==0) || (speechStreamPort.getOutputCount()==0) ||
                 (speechRpcPort.getOutputCount()==0) || (attentionPort.getOutputCount()==0) ||
                 (navigationPort.getOutputCount()==0) || (linePort.getOutputCount()==0) ||
-                (leftarmPort.getOutputCount()==0) || (rightarmPort.getOutputCount())==0)
+                (leftarmPort.getOutputCount()==0) || (rightarmPort.getOutputCount())==0 ||
+                (opcPort.getInputCount()==0) || !question_manager->connected())
         {
             yInfo()<<"not connected";
+            connected=false;
             return true;
+        }
+
+        if (detect_hand_up)
+        {
+            if (!hand_manager->connected())
+            {
+                yInfo()<<"not connected";
+                connected=false;
+                return true;
+            }
+            else
+            {
+                connected=true;
+            }
+        }
+        else
+        {
+            connected=true;
         }
 
         //get finish line
@@ -839,6 +1058,11 @@ class Manager : public RFModule, public managerTUG_IDL
                 if (rep.get(0).asVocab()==ok)
                 {
                     speak("accepted",true);
+                    speak("questions",true);
+                    if (detect_hand_up)
+                    {
+                        hand_manager->set_tag(tag);
+                    }
                     state=State::engaged;
                 }
                 else if (Time::now()-t0>10.0)
@@ -941,9 +1165,9 @@ class Manager : public RFModule, public managerTUG_IDL
         if (state==State::explain)
         {
             string part=which_part();
-            point(pointing_start,part);
+            point(pointing_start,part,true);
             speak("sit",true);
-            point(pointing_home,part);
+            point(pointing_home,part,false);
             speak("explain-start",true);
             speak("explain-walk",true);
             Bottle cmd,rep;
@@ -1022,9 +1246,9 @@ class Manager : public RFModule, public managerTUG_IDL
         {
             Bottle cmd,rep;
             string part=which_part();
-            point(pointing_finish,part);
+            point(pointing_finish,part,true);
             speak("explain-line",true);
-            point(pointing_home,part);
+            point(pointing_home,part,false);
             speak("explain-end",true);
             cmd.addString("track_skeleton");
             cmd.addString(tag);
@@ -1230,11 +1454,27 @@ class Manager : public RFModule, public managerTUG_IDL
     }
 
     /****************************************************************/
-    bool point(const Vector &target, const string &part)
+    bool point(const Vector &target, const string &part, const bool wait)
     {
         if(part.empty())
         {
             return false;
+        }
+
+        //if a question was received, we wait until an answer is given, before pointing
+        bool received_question=question_manager->gotQuestion();
+        if (received_question && wait)
+        {
+            bool can_point=false;
+            yInfo()<<"Replying to question first";
+            while (true)
+            {
+                can_point=question_manager->hasReplied();
+                if (can_point)
+                {
+                    break;
+                }
+            }
         }
 
         RpcClient *tmpPort;
@@ -1341,6 +1581,11 @@ class Manager : public RFModule, public managerTUG_IDL
         question_manager->interrupt();
         question_manager->close();
         delete question_manager;
+        if (detect_hand_up)
+        {
+            hand_manager->stop();
+            delete hand_manager;
+        }
         analyzerPort.close();
         speechRpcPort.close();
         attentionPort.close();
