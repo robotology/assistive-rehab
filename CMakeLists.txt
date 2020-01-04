@@ -75,7 +75,7 @@ install_basic_package_files(${PROJECT_NAME} VERSION ${${PROJECT_NAME}_VERSION}
                                             COMPATIBILITY AnyNewerVersion
                                             EXPORT ${PROJECT_NAME}
                                             VARS_PREFIX ${PROJECT_NAME}
-                                            DEPENDENCIES "YARP REQUIRED" "OpenCV REQUIRED"
+                                            DEPENDENCIES "YARP REQUIRED" "ICUB REQUIRED" "OpenCV REQUIRED" "IPOPT REQUIRED"
                                             NO_CHECK_REQUIRED_COMPONENTS_MACRO)
 include(AddUninstallTarget)
 
