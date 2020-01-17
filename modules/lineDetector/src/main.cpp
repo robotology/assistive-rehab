@@ -809,15 +809,10 @@ class Detector : public RFModule, public lineDetector_IDL
                 if (rep.size()>=4)
                 {
                     yarp::os::Bottle *intrinsics = rep.get(3).asList();
-                    yarp::os::Bottle *focal_x = intrinsics->get(1).asList();
-                    yarp::os::Bottle *focal_y = intrinsics->get(2).asList();
-                    yarp::os::Bottle *principal_x = intrinsics->get(4).asList();
-                    yarp::os::Bottle *principal_y = intrinsics->get(5).asList();
-
-                    fx = focal_x->get(1).asDouble();
-                    fy = focal_y->get(1).asDouble();
-                    px = principal_x->get(1).asDouble();
-                    py = principal_y->get(1).asDouble();
+                    fx = intrinsics->find("focalLengthX").asDouble();
+                    fy = intrinsics->find("focalLengthY").asDouble();
+                    px = intrinsics->find("principalPointX").asDouble();
+                    py = intrinsics->find("principalPointY").asDouble();
 
                     yInfo()<<"Camera intrinsics:"<<fx<<fy<<px<<py;
 
