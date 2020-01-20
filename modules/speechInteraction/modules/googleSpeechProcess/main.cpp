@@ -274,10 +274,14 @@ public:
         bool foundTMOD = false;
         bool foundTMARK = false;
         bool foundADVMOD = false;
-        int verbinc = 0;
-        int nouninc = 0;
-        
+        std::vector<int> verbinc;
+        std::vector<int> nouninc;
+
         outTargets.clear();
+        noun.clear();
+        nouninc.clear();
+        verb.clear();
+        verbinc.clear();
         
         for ( int i = 0; i <wordList.size(); i++)
         {
@@ -289,7 +293,8 @@ public:
                 if (strcmp(wordList.get(i).asList()->find("label").asString().c_str(),"ROOT") == 0)
                 {
                     foundVerb = true;
-                    verbinc = i;
+                    verb.addString(wordList.get(i).asList()->find("lemma").asString());
+                    verbinc.push_back(i);
                 }
             }
             if (strcmp(root.toString().c_str(), "NOUN") == 0)
@@ -297,22 +302,26 @@ public:
                 if (strcmp(wordList.get(i).asList()->find("label").asString().c_str(),"POBJ") == 0)
                 {
                     foundPOBJ = true;
-                    nouninc = i;
+                    noun.addString(wordList.get(i).asList()->find("lemma").asString());
+                    nouninc.push_back(i);
                 }
                 if (strcmp(wordList.get(i).asList()->find("label").asString().c_str(),"DOBJ") == 0)
                 {
                     foundDOBJ = true;
-                    nouninc = i;
+                    noun.addString(wordList.get(i).asList()->find("lemma").asString());
+                    nouninc.push_back(i);
                 }
                 if (strcmp(wordList.get(i).asList()->find("label").asString().c_str(),"NSUBJ") == 0)
                 {
                     foundNSUBJ = true;
-                    nouninc = i;
+                    noun.addString(wordList.get(i).asList()->find("lemma").asString());
+                    nouninc.push_back(i);
                 }
                 if (strcmp(wordList.get(i).asList()->find("label").asString().c_str(),"TMOD") == 0)
                 {
                     foundTMOD = true;
-                    nouninc = i;
+                    noun.addString(wordList.get(i).asList()->find("lemma").asString());
+                    nouninc.push_back(i);
                 }
             }
             if (strcmp(root.toString().c_str(), "ADV") == 0)
@@ -320,17 +329,20 @@ public:
                 if (strcmp(wordList.get(i).asList()->find("label").asString().c_str(),"ROOT") == 0)
                 {
                     foundADV = true;
-                    nouninc = i;
+                    noun.addString(wordList.get(i).asList()->find("lemma").asString());
+                    nouninc.push_back(i);
                 }
                 if (strcmp(wordList.get(i).asList()->find("label").asString().c_str(),"ACOMP") == 0)
                 {
                     foundACOMP = true;
-                    nouninc = i;
+                    noun.addString(wordList.get(i).asList()->find("lemma").asString());
+                    nouninc.push_back(i);
                 }
                 if (strcmp(wordList.get(i).asList()->find("label").asString().c_str(),"ADVMOD") == 0)
                 {
                     foundADVMOD = true;
-                    nouninc = i;
+                    noun.addString(wordList.get(i).asList()->find("lemma").asString());
+                    nouninc.push_back(i);
                 }
             }
             if (strcmp(root.toString().c_str(), "ADJ") == 0)
@@ -338,7 +350,8 @@ public:
                 if (strcmp(wordList.get(i).asList()->find("label").asString().c_str(),"ACOMP") == 0)
                 {
                     foundACOMP = true;
-                    nouninc = i;
+                    noun.addString(wordList.get(i).asList()->find("lemma").asString());
+                    nouninc.push_back(i);
                 }
             }
             if (strcmp(root.toString().c_str(), "ADP") == 0)
@@ -346,43 +359,48 @@ public:
                 if (strcmp(wordList.get(i).asList()->find("label").asString().c_str(),"MARK") == 0)
                 {
                     foundTMARK = true;
-                    nouninc = i;
+                    noun.addString(wordList.get(i).asList()->find("lemma").asString());
+                    nouninc.push_back(i);
                 }
             }
         }
-        
-        verb.clear();
-        noun.clear();
-    
+
         if (foundVerb)
         {
-            verb.addString(wordList.get(verbinc).asList()->find("lemma").asString());
-            yInfo() << "have verb " << verb.toString().c_str() << wordList.get(verbinc).asList()->toString().c_str();
+            for (int i=0; i<verbinc.size(); i++)
+            {
+                int vinc = verbinc[i];
+                yInfo() << "have root verb" << verb.get(i).asString().c_str() << wordList.get(vinc).asList()->toString().c_str();
+            }
         }
         
         if (foundPOBJ || foundDOBJ || foundADV || foundACOMP || foundNSUBJ || foundTMOD || foundTMARK || foundADVMOD)
         {
-            noun.addString(wordList.get(nouninc).asList()->find("lemma").asString());
-        
-            int nounInt = wordList.get(nouninc).asList()->find("root").asInt();
-            std::string nounLabel = wordList.get(nounInt).asList()->find("label").asString();
-            
-            yInfo() << "have noun " << noun.toString().c_str() << wordList.get(nouninc).asList()->toString().c_str();
-            yInfo() << "have nounLabel " << nounLabel.c_str() << wordList.get(nounInt).asList()->toString().c_str();
+            for (int i=0; i<nouninc.size(); i++)
+            {
+                int ninc = nouninc[i];
+                int nounInt = wordList.get(ninc).asList()->find("root").asInt();
+                std::string nounLabel = wordList.get(nounInt).asList()->find("label").asString();
+                yInfo() << "have noun " << noun.get(i).asString().c_str() << wordList.get(ninc).asList()->toString().c_str();
+                yInfo() << "have nounLabel " << nounLabel.c_str() << wordList.get(nounInt).asList()->toString().c_str();
+            }
             
             for (auto it=key_map.begin(); it!=key_map.end(); it++)
             {
                 std::string key = it->first;
-                std::vector<std::string> value = it->second;
-                for (int i=0; i<value.size(); i++)
+                std::vector<std::string> values = it->second;
+                for (int i=0; i<values.size(); i++)
                 {
-                    std::string vi = value[i];
-                    if (strcmp(noun.toString().c_str(), vi.c_str()) == 0)
+                    std::string vi = values[i];
+                    for (int j=0; j<noun.size(); j++)
                     {
-                        yInfo()<< "We need to send bottle with" << key;
-                        outTargets.addString(key);
+                        std::string nounToCompare = noun.get(j).asString();
+                        if (strcmp(nounToCompare.c_str(),vi.c_str()) == 0)
+                        {
+                            yInfo()<< "We need to send bottle with" << key;
+                            outTargets.addString(key);
+                        }
                     }
-
                 }
             }
             
