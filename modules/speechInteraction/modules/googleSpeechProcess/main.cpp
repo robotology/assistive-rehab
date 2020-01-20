@@ -26,6 +26,7 @@
 #include <fstream>
 #include <iterator>
 #include <string>
+#include <unordered_map>
 
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/ResourceFinder.h>
@@ -49,6 +50,7 @@ using namespace google::cloud::language::v1;
 class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
 {
     std::string moduleName;
+    std::unordered_map<std::string,std::vector<std::string>> key_map;
     yarp::os::RpcServer handlerPort;
     yarp::os::BufferedPort<yarp::os::Bottle> targetPort;
     
@@ -57,9 +59,10 @@ class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
 public:
     /********************************************************/
 
-    Processing( const std::string &moduleName )
+    Processing( const std::string &moduleName, const std::unordered_map<std::string, std::vector<std::string>> &key_map )
     {
         this->moduleName = moduleName;
+        this->key_map = key_map;
     }
 
     /********************************************************/
@@ -367,31 +370,20 @@ public:
             yInfo() << "have noun " << noun.toString().c_str() << wordList.get(nouninc).asList()->toString().c_str();
             yInfo() << "have nounLabel " << nounLabel.c_str() << wordList.get(nounInt).asList()->toString().c_str();
             
-            if (strcmp(noun.toString().c_str(), "veloce" ) == 0 || strcmp(noun.toString().c_str(), "andatura" ) == 0  ||
-                strcmp(noun.toString().c_str(), "velocita" ) == 0 || strcmp(noun.toString().c_str(), "velocemente" ) == 0 ||
-                strcmp(noun.toString().c_str(), "piano" ) == 0 )
+            for (auto it=key_map.begin(); it!=key_map.end(); it++)
             {
-                yInfo()<< "We need to send bottle with SPEED";
-                outTargets.addString("speed");
-            }
-            
-            if (strcmp(noun.toString().c_str(), "bastone" ) == 0 || strcmp(noun.toString().c_str(), "sedia" ) == 0  ||
-                strcmp(noun.toString().c_str(), "muro" ) == 0 )
-            {
-                yInfo()<< "We need to send bottle with AID";
-                outTargets.addString("aid");
-            }
-            
-            if (strcmp(noun.toString().c_str(), "ripetizione" ) == 0 || strcmp(noun.toString().c_str(), "volta" ) == 0 )
-            {
-                yInfo()<< "We need to send bottle with REPETITION";
-                outTargets.addString("repetition");
-            }
-            
-            if (strcmp(noun.toString().c_str(), "cosa" ) == 0 || strcmp(noun.toString().c_str(), "come" ) == 0  || strcmp(noun.toString().c_str(), "bene" ) == 0)
-            {
-                yInfo()<< "We need to send bottle with FEEDBACK";
-                outTargets.addString("feedback");
+                std::string key = it->first;
+                std::vector<std::string> value = it->second;
+                for (int i=0; i<value.size(); i++)
+                {
+                    std::string vi = value[i];
+                    if (strcmp(noun.toString().c_str(), vi.c_str()) == 0)
+                    {
+                        yInfo()<< "We need to send bottle with" << key;
+                        outTargets.addString(key);
+                    }
+
+                }
             }
             
             /*if (strcmp(nounLabel.c_str(), "XCOMP") == 0)
@@ -543,6 +535,8 @@ class Module : public yarp::os::RFModule, public googleSpeechProcess_IDL
     Processing                  *processing;
     friend class                processing;
 
+    std::unordered_map<std::string,std::vector<std::string>> key_map;
+
     bool                        closing;
 
     /********************************************************/
@@ -557,7 +551,38 @@ public:
     bool configure(yarp::os::ResourceFinder &rf)
     {
         this->rf=&rf;
-        std::string moduleName = rf.check("name", yarp::os::Value("yarp-google-speech-process"), "module name (string)").asString();
+        yarp::os::Bottle &general = rf.findGroup("general");
+        if (general.isNull())
+        {
+            yError()<<"Unable to find \"general\"";
+            return false;
+        }
+        std::string moduleName = general.check("name", yarp::os::Value("yarp-google-speech-process"), "module name (string)").asString();
+        int numKey = general.find("num-keywords").asInt();
+        for (int i=0; i<numKey; i++)
+        {
+            std::string keywi = "keyword-"+std::to_string(i);
+            yarp::os::Bottle &bKeyword = rf.findGroup(keywi);
+            if (bKeyword.isNull())
+            {
+                yError()<<"Unable to find"<<keywi;
+                return false;
+            }
+            if (!bKeyword.check("key") || !bKeyword.check("value"))
+            {
+                yError()<<"Unable to find \"key\" and/or \"value\"";
+                return false;
+            }
+            std::string key = bKeyword.find("key").asString();
+            yarp::os::Bottle *bValue = bKeyword.find("value").asList();
+            std::vector<std::string> value(bValue->size());
+            for (int j=0; j<bValue->size(); j++)
+            {
+                value[j] = bValue->get(j).asString();
+            }
+
+            key_map[key] = value;
+        }
 
         setName(moduleName.c_str());
 
@@ -565,7 +590,7 @@ public:
 
         closing = false;
 
-        processing = new Processing( moduleName );
+        processing = new Processing( moduleName, key_map );
 
         /* now start the thread to do the work */
         processing->open();
