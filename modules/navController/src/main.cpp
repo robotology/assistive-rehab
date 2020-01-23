@@ -31,6 +31,7 @@
 #include <yarp/os/RpcClient.h>
 #include <yarp/os/RpcServer.h>
 #include <yarp/os/LogStream.h>
+#include <yarp/dev/OdometryData.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
 #include <yarp/math/Math.h>
@@ -42,6 +43,7 @@
 
 using namespace std;
 using namespace yarp::os;
+using namespace yarp::dev;
 using namespace yarp::sig;
 using namespace yarp::math;
 using namespace iCub::ctrl;
@@ -67,7 +69,7 @@ class Navigator : public RFModule, public navController_IDL {
   Vector skeleton_location{zeros(3)};
 
   RpcClient navCmdPort;
-  BufferedPort<Bottle> navLocPort;
+  BufferedPort<OdometryData> navLocPort;
   BufferedPort<Bottle> navCtrlPort;
   BufferedPort<Bottle> opcPort;
   BufferedPort<Property> statePort;
@@ -88,14 +90,12 @@ class Navigator : public RFModule, public navController_IDL {
     Matrix H0{eye(4, 4)};
     Location() = default;
     Location(const double x_, const double y_, const double theta_) : x(x_), y(y_), theta(theta_) { }
-    bool getFrom(BufferedPort<Bottle>& navLocPort) {
-      if (Bottle* b = navLocPort.read(false)) {
-        if (b->size() >= 3) {
-          x = b->get(0).asDouble();
-          y = b->get(1).asDouble();
-          theta = b->get(2).asDouble();
-          return true;
-        }
+    bool getFrom(BufferedPort<OdometryData>& navLocPort) {
+      if (OdometryData* odom = navLocPort.read(false)) {
+        x = odom->odom_x;
+        y = odom->odom_y;
+        theta = odom->odom_theta;
+        return true;
       }
       return false;
     }
