@@ -274,6 +274,7 @@ public:
         bool foundTMOD = false;
         bool foundTMARK = false;
         bool foundADVMOD = false;
+        bool foundNPADVMOD = false;
         std::vector<int> verbinc;
         std::vector<int> nouninc;
 
@@ -320,6 +321,12 @@ public:
                 if (strcmp(wordList.get(i).asList()->find("label").asString().c_str(),"TMOD") == 0)
                 {
                     foundTMOD = true;
+                    noun.addString(wordList.get(i).asList()->find("lemma").asString());
+                    nouninc.push_back(i);
+                }
+                if (strcmp(wordList.get(i).asList()->find("label").asString().c_str(),"NPADVMOD") == 0)
+                {
+                    foundNPADVMOD = true;
                     noun.addString(wordList.get(i).asList()->find("lemma").asString());
                     nouninc.push_back(i);
                 }
