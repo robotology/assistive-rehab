@@ -54,7 +54,7 @@ jobs:
         git clone https://github.com/microsoft/vcpkg.git --depth 1 --branch 2019.10 ${VCPKG_ROBOTOLOGY_ROOT}
         git clone https://github.com/robotology/robotology-vcpkg-binary-ports.git ${VCPKG_ROBOTOLOGY_BIN_PORTS_ROOT}
         ${VCPKG_ROBOTOLOGY_ROOT}/bootstrap-vcpkg.sh
-        ${VCPKG_ROBOTOLOGY_ROOT}/vcpkg.exe --overlay-ports=${VCPKG_ROBOTOLOGY_BIN_PORTS_ROOT} install --triplet x64-windows ace freeglut gsl eigen3 opencv3[core,contrib]
+        ${VCPKG_ROBOTOLOGY_ROOT}/vcpkg.exe --overlay-ports=${VCPKG_ROBOTOLOGY_BIN_PORTS_ROOT} install --triplet x64-windows ace freeglut gsl eigen3 opencv[core,contrib]
         rm -rf ${VCPKG_ROBOTOLOGY_ROOT}/buildtrees ${VCPKG_ROBOTOLOGY_ROOT}/packages ${VCPKG_ROBOTOLOGY_ROOT}/downloads
         ${VCPKG_ROBOTOLOGY_ROOT}/vcpkg.exe --overlay-ports=${VCPKG_ROBOTOLOGY_BIN_PORTS_ROOT} install --triplet x64-windows vtk ipopt-binary matio hdf5 fftw3
         rm -rf ${VCPKG_ROBOTOLOGY_ROOT}/buildtrees ${VCPKG_ROBOTOLOGY_ROOT}/packages ${VCPKG_ROBOTOLOGY_ROOT}/downloads
@@ -119,8 +119,8 @@ jobs:
       run: |
         # opencv
         cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/opencv/opencv.git --depth 1 --branch 3.4.0
-        git clone https://github.com/opencv/opencv_contrib.git --depth 1 --branch 3.4.0
+        git clone https://github.com/opencv/opencv.git --depth 1 --branch 4.2.0
+        git clone https://github.com/opencv/opencv_contrib.git --depth 1 --branch 4.2.0
         cd opencv && mkdir -p build && cd build
         cmake -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DOPENCV_EXTRA_MODULES_PATH=${GITHUB_WORKSPACE}/opencv_contrib/modules -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
         cmake --build . --config ${{ matrix.build_type }} --target install 
