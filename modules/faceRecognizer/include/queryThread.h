@@ -34,9 +34,9 @@
 #include <yarp/math/Math.h>
 #include <yarp/math/Rand.h>
 
-#include <highgui.h>
+#include <opencv2/core/core_c.h>
+#include <opencv2/imgproc/imgproc_c.h>
 #include <opencv2/imgproc.hpp>
-#include <cv.h>
 
 #include <cstdio>
 #include <mutex>
