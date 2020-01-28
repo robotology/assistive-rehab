@@ -1263,7 +1263,8 @@ class Manager : public RFModule, public managerTUG_IDL
                     cmd.addString(KeyPointTag::knee_left);
                     if (attentionPort.write(cmd,rep))
                     {
-                        speak("start",true);
+                        speak("ready",true);
+                        speak("go",false);
                         cmd.clear();
                         rep.clear();
                         cmd.addString("start");
@@ -1274,6 +1275,7 @@ class Manager : public RFModule, public managerTUG_IDL
                             {
                                 state=State::assess_standing;
                                 t0=tstart=Time::now();
+                                yInfo()<<"Start!";
                             }
                         }
                     }
@@ -1374,9 +1376,9 @@ class Manager : public RFModule, public managerTUG_IDL
             {
                 if(rep.get(0).asVocab()==ok)
                 {
-                    t=Time::now()-tstart;
-                    yInfo()<<"Test finished in"<<t<<"seconds";
                     state=State::finished;
+                    t=Time::now()-tstart;
+                    yInfo()<<"Stop!";
                 }
                 else
                 {
@@ -1390,6 +1392,8 @@ class Manager : public RFModule, public managerTUG_IDL
                         else
                         {
                             state=State::not_passed;
+                            t=Time::now()-tstart;
+                            yInfo()<<"Not passed in"<<t<<"seconds";
                         }
                     }
                 }
@@ -1398,6 +1402,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::finished)
         {
+            yInfo()<<"Test finished in"<<t<<"seconds";
             vector<SpeechParam> p;
             p.push_back(round(t*10.0)/10.0);
             Bottle cmd,rep;
