@@ -24,7 +24,7 @@ theme:
         icon: dashboard
 
 # Copyright
-copyright: 'Copyright &copy; 2019 Istituto Italiano di Tecnologia - iCub Facility'
+copyright: 'Copyright &copy; 2019 Istituto Italiano di Tecnologia - iCub Tech'
 
 # Extensions
 markdown_extensions:
