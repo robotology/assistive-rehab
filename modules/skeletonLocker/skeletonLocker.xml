@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="yarpmanifest.xsl"?>
+
+<module>
+  <name>skeletonLocker</name>
+  <doxygen-group>skeletonLocker</doxygen-group>
+  <description>This module enforces spatiotemporal consistency on a skeleton selected by tag.</description>
+  <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
+  <version>0.3.0</version>
+
+  <description-long>
+    This module works on the top of \ref skeletonRetriever and tracks a skeleton based on its spatiotemporal consistence,
+    identified through its tag using the provided thrift services. This skeleton has two pivots (shoulder center and hip center)
+    associated with a sphere, whose radius increases over time up to a maximum of `max-radius`, with an exponential law described by `time-trend`.
+    For each skeleton streamed by the \ref objectsPropertiesCollector, the module checks if one pivot belongs to the sphere and below the distance
+    defined by `radius` parameter. The module adds an additional skeleton to the \ref objectsPropertiesCollector appending the string "-locked"
+    to its current tag.
+  </description-long>
+
+  <arguments>
+    <param default="skeletonLocker" desc="Name of the module.">name</param>
+    <param default="0.01" desc="Periodicity of the module (s).">period</param>
+    <param default="0.6" desc="Starting radius below which a skeleton is associated to the current one (m).">radius</param>
+    <param default="30.0" desc="Temporal decay applied to the sphere radius (s).">time-trend</param>
+    <param default="0.75" desc="Maximum radius of the sphere associated to the locked skeleton (m).">max-radius</param>
+  </arguments>
+
+  <authors>
+    <author email="valentina.vasco@iit.it"> Valentina Vasco </author>
+  </authors>
+
+  <data>
+      <input>
+          <type>Bottle</type>
+          <port>/skeletonLocker/opc:i</port>
+          <description>
+            Receives 3D skeletons from \ref objectsPropertiesCollector.
+          </description>
+      </input>
+      <output>
+          <type>rpc</type>
+          <port>/skeletonLocker/opc:rpc</port>
+          <description>
+            Sends command to \ref objectsPropertiesCollector.
+          </description>
+      </output>
+      <output>
+          <type>Bottle</type>
+          <port>/skeletonLocker/viewer:o</port>
+          <description>
+            Sends locked skeleton to \ref skeletonViewer.
+          </description>
+      </output>
+  </data>
+
+  <services>
+    <server>
+      <type>skeletonLocker_IDL</type>
+      <idl>idl.thrift</idl>
+      <port>/skeletonLocker/rpc</port>
+      <description>service port</description>
+    </server>
+  </services>
+
+</module>
