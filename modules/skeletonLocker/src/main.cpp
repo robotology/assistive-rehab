@@ -53,13 +53,10 @@ public:
     double score;
 
     /****************************************************************/
-    MetaSkeleton()
+    MetaSkeleton() : timer(0.0), opc_id(opc_id_invalid), radius(0.0), score(numeric_limits<double>::infinity())
     {
-        opc_id=opc_id_invalid;
         skeleton=shared_ptr<SkeletonStd>(new SkeletonStd());
         pivots.assign(2,numeric_limits<double>::infinity()*ones(3));
-        score=numeric_limits<double>::infinity();
-        radius=0.0;
     }
 
 };
@@ -78,7 +75,7 @@ class Locker : public RFModule , public skeletonLocker_IDL
     string moduleName;
     double period;
     double radius;
-    double time_trend;
+    double alpha;
     double max_radius;
 
     MetaSkeleton* locked;
@@ -91,6 +88,8 @@ class Locker : public RFModule , public skeletonLocker_IDL
     string tag_locked;
 
     mutex mtx;
+
+public:
 
     /****************************************************************/
     bool attach(RpcServer &source) override
@@ -117,7 +116,7 @@ class Locker : public RFModule , public skeletonLocker_IDL
         moduleName=rf.check("name",Value("skeletonLocker")).asString();
         period=rf.check("period",Value(0.01)).asDouble();
         radius=rf.check("radius",Value(0.6)).asDouble();
-        time_trend=rf.check("time-trend",Value(30.0)).asDouble();
+        alpha=rf.check("alpha",Value(0.3)).asDouble();
         max_radius=rf.check("max-radius",Value(0.75)).asDouble();
 
         opcInPort.open("/"+moduleName+"/opc:i");
@@ -227,12 +226,11 @@ class Locker : public RFModule , public skeletonLocker_IDL
                     opcSet(*locked);
                 }
             }
-            cout<<"Skeletons: "<<endl;
+
             for (int i=0; i<new_skeletons.size(); i++)
             {
-                cout<<new_skeletons[i].skeleton->getTag()<<" score: "<<new_skeletons[i].score<<" locked skeleton radius: "<<locked->radius<<endl;
+                yInfo()<<new_skeletons[i].skeleton->getTag()<<"has score:"<<new_skeletons[i].score<<"and locked skeleton has radius:"<<locked->radius;
             }
-            cout<<endl;
         }
 
         locked=&l;
@@ -240,11 +238,11 @@ class Locker : public RFModule , public skeletonLocker_IDL
         {
             added=opcAdd(*locked);
         }
-        locked->timer=t-t0;
+        locked->timer=t0-t;
         locked->radius=radius;
-        if (locked->timer<0.0)
+        if (locked->timer>0.0)
         {
-            double r=radius*(exp(-locked->timer/time_trend));
+            double r=(max_radius-radius)*tanh(alpha*locked->timer)+radius;
             locked->radius=(r<=max_radius?r:max_radius);
         }
         t0=Time::now();
