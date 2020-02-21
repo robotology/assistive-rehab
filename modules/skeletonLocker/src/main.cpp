@@ -53,23 +53,22 @@ public:
     double score;
 
     /****************************************************************/
-    MetaSkeleton() : timer(0.0), opc_id(opc_id_invalid), radius(0.0), score(numeric_limits<double>::infinity())
+    MetaSkeleton() : timer(0.0), opc_id(opc_id_invalid), radius(0.0),
+        score(numeric_limits<double>::infinity()), skeleton(shared_ptr<SkeletonStd>(new SkeletonStd()))
     {
-        skeleton=shared_ptr<SkeletonStd>(new SkeletonStd());
         pivots.assign(2,numeric_limits<double>::infinity()*ones(3));
     }
 
 };
 
 /****************************************************************/
-class Locker : public RFModule , public skeletonLocker_IDL
+class Locker : public RFModule, public skeletonLocker_IDL
 {
     // ports
     BufferedPort<Bottle> opcInPort;
     BufferedPort<Bottle> viewerPort;
     RpcClient opcRpcPort;
     RpcServer rpcPort;
-    RpcClient retrieverPort;
 
     // params
     string moduleName;
@@ -77,6 +76,10 @@ class Locker : public RFModule , public skeletonLocker_IDL
     double radius;
     double alpha;
     double max_radius;
+
+    mutex mtx;
+
+public:
 
     MetaSkeleton* locked;
     MetaSkeleton l;
@@ -87,9 +90,12 @@ class Locker : public RFModule , public skeletonLocker_IDL
     bool added;
     string tag_locked;
 
-    mutex mtx;
+    /****************************************************************/
+    Locker() : added(false), locked(new MetaSkeleton()), t(Time::now()), t0(Time::now()),
+        opc_id_locked(-1), tag_locked("?"), skeleton_tag("?")
+    {
 
-public:
+    }
 
     /****************************************************************/
     bool attach(RpcServer &source) override
@@ -122,13 +128,8 @@ public:
         opcInPort.open("/"+moduleName+"/opc:i");
         viewerPort.open("/"+moduleName+"/viewer:o");
         opcRpcPort.open("/"+moduleName+"/opc:rpc");
-        retrieverPort.open("/"+moduleName+"/retriever:rpc");
         rpcPort.open("/"+moduleName+"/rpc");
         attach(rpcPort);
-
-        locked=new MetaSkeleton();
-        t=t0=Time::now();
-        added=false;
 
         return true;
     }
@@ -365,7 +366,6 @@ public:
         opcInPort.close();
         viewerPort.close();
         opcRpcPort.close();
-        retrieverPort.close();
         rpcPort.close();
         return true;
     }
