@@ -12,7 +12,7 @@
 
 #include <limits>
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 
 #include <yarp/os/Network.h>
 #include <yarp/os/LogStream.h>
@@ -392,4 +392,3 @@ int main(int argc, char *argv[])
     Locker locker;
     return locker.runModule(rf);
 }
-
