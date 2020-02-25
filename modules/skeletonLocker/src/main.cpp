@@ -104,6 +104,17 @@ public:
     }
 
     /****************************************************************/
+    bool remove_locked() override
+    {
+        lock_guard<mutex> lg(mtx);
+        skeleton_tag=tag_locked="";
+        if (locked->opc_id>=0)
+            return opcDel(*locked);
+
+        return false;
+    }
+
+    /****************************************************************/
     bool set_skeleton_tag(const string &tag) override
     {
         lock_guard<mutex> lg(mtx);
