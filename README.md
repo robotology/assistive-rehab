@@ -8,4 +8,4 @@ Assistive and Rehabilitative Robotics
 ![ci](https://github.com/robotology/assistive-rehab/workflows/Continuous%20Integration/badge.svg)
 ![gh-pages](https://github.com/robotology/assistive-rehab/workflows/GitHub%20Pages/badge.svg)
 
-Check out the [:globe_with_meridians: website](https://robotology.github.io/assistive-rehab/doc/mkdocs/site/index.html).
+Check out the [website 🌐](https://robotology.github.io/assistive-rehab/doc/mkdocs/site/index.html).
