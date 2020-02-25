@@ -604,70 +604,41 @@ class Manager : public RFModule, public managerTUG_IDL
 
         bool ok_nav=false;
         Bottle cmd,rep;
-        cmd.addString("stop");
-        if (attentionPort.write(cmd,rep))
+        cmd.addString("is_navigating");
+        if (navigationPort.write(cmd,rep))
         {
             if (rep.get(0).asVocab()==ok)
             {
                 cmd.clear();
                 rep.clear();
-                cmd.addString("is_navigating");
+                cmd.addString("stop");
                 if (navigationPort.write(cmd,rep))
                 {
                     if (rep.get(0).asVocab()==ok)
-                    {
-                        cmd.clear();
-                        rep.clear();
-                        cmd.addString("stop");
-                        if (navigationPort.write(cmd,rep))
-                        {
-                            if (rep.get(0).asVocab()==ok)
-                            {
-                                ok_nav=true;
-                            }
-                        }
-                    }
-                    else
                     {
                         ok_nav=true;
                     }
                 }
             }
+            else
+            {
+                ok_nav=true;
+            }
         }
 
         if (ok_nav)
         {
-            cmd.clear();
-            rep.clear();
-            cmd.addString("go_to_wait");
-            cmd.addDouble(starting_pose[0]);
-            cmd.addDouble(starting_pose[1]);
-            cmd.addDouble(starting_pose[2]);
-            if (navigationPort.write(cmd,rep))
+            if (go_to(starting_pose,true))
             {
-                if (rep.get(0).asVocab()==ok)
+                yInfo()<<"Back to initial position";
+                cmd.clear();
+                rep.clear();
+                cmd.addString("set_auto");
+                if (attentionPort.write(cmd,rep))
                 {
-                    yInfo()<<"Back to initial position";
-                    cmd.clear();
-                    rep.clear();
-                    cmd.addString("set_auto");
-                    if (attentionPort.write(cmd,rep))
+                    if (rep.get(0).asVocab()==ok)
                     {
-                        if (rep.get(0).asVocab()==ok)
-                        {
-                            cmd.clear();
-                            rep.clear();
-                            cmd.addString("remove_locked");
-                            if (lockerPort.write(cmd,rep))
-                            {
-                                if (rep.get(0).asVocab()==ok)
-                                {
-                                    yInfo()<<"Removed locked skeleton";
-                                    ret=true;
-                                }
-
-                            }
-                        }
+                        ret=remove_locked();
                     }
                 }
             }
@@ -675,6 +646,44 @@ class Manager : public RFModule, public managerTUG_IDL
 
         t0=Time::now();
         return ret;
+    }
+
+    /****************************************************************/
+    bool go_to(const Vector &target, const bool &wait)
+    {
+        Bottle cmd,rep;
+        if (wait)
+            cmd.addString("go_to_wait");
+        else
+            cmd.addString("go_to");
+        cmd.addDouble(target[0]);
+        cmd.addDouble(target[1]);
+        cmd.addDouble(target[2]);
+        yDebug()<<cmd.toString();
+        if (navigationPort.write(cmd,rep))
+        {
+            if (rep.get(0).asVocab()==ok)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /****************************************************************/
+    bool remove_locked()
+    {
+        Bottle cmd,rep;
+        cmd.addString("remove_locked");
+        if (lockerPort.write(cmd,rep))
+        {
+            if (rep.get(0).asVocab()==ok)
+            {
+                yInfo()<<"Removed locked skeleton";
+                return true;
+            }
+        }
+        return false;
     }
 
     /****************************************************************/
@@ -688,32 +697,23 @@ class Manager : public RFModule, public managerTUG_IDL
         }
         state=State::idle;
         bool ret=false;
-        Bottle cmd,rep;
-        cmd.addString("go_to_wait");
-        cmd.addDouble(starting_pose[0]);
-        cmd.addDouble(starting_pose[1]);
-        cmd.addDouble(starting_pose[2]);
-        if (navigationPort.write(cmd,rep))
+        if (go_to(starting_pose,true))
         {
-            if (rep.get(0).asVocab()==ok)
+            yInfo()<<"Going to initial position";
+            Bottle cmd,rep;
+            cmd.addString("stop");
+            if (attentionPort.write(cmd,rep))
             {
-                yInfo()<<"Going to initial position";
-                cmd.clear();
-                rep.clear();
-                cmd.addString("stop");
-                if (attentionPort.write(cmd,rep))
+                if (rep.get(0).asVocab()==ok)
                 {
-                    if (rep.get(0).asVocab()==ok)
+                    cmd.clear();
+                    rep.clear();
+                    cmd.addString("set_auto");
+                    if (attentionPort.write(cmd,rep))
                     {
-                        cmd.clear();
-                        rep.clear();
-                        cmd.addString("set_auto");
-                        if (attentionPort.write(cmd,rep))
+                        if (rep.get(0).asVocab()==ok)
                         {
-                            if (rep.get(0).asVocab()==ok)
-                            {
-                                ret=true;
-                            }
+                            ret=true;
                         }
                     }
                 }
@@ -728,75 +728,14 @@ class Manager : public RFModule, public managerTUG_IDL
     bool stop() override
     {
         lock_guard<mutex> lg(mtx);
-        bool ret=false;
-        ok_go=false;
-        question_manager->suspend();
-
-        for (auto it=speak_map.begin(); it!=speak_map.end(); it++)
-        {
-            string key=it->first;
-            speak_count_map[key]=0;
-        }
-
-        bool ok_nav=false;
+        bool ret=disengage();
         Bottle cmd,rep;
         cmd.addString("stop");
         if (attentionPort.write(cmd,rep))
         {
-            if (rep.get(0).asVocab()==ok)
+            if (rep.get(0).asVocab()==fail)
             {
-                cmd.clear();
-                rep.clear();
-                cmd.addString("is_navigating");
-                if (navigationPort.write(cmd,rep))
-                {
-                    if (rep.get(0).asBool()==true)
-                    {
-                        cmd.clear();
-                        rep.clear();
-                        cmd.addString("stop");
-                        if (navigationPort.write(cmd,rep))
-                        {
-                            if (rep.get(0).asVocab()==ok)
-                            {
-                                ok_nav=true;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        ok_nav=true;
-                    }
-                }
-            }
-        }
-
-        if (ok_nav)
-        {
-            cmd.clear();
-            rep.clear();
-            cmd.addString("go_to_wait");
-            cmd.addDouble(starting_pose[0]);
-            cmd.addDouble(starting_pose[1]);
-            cmd.addDouble(starting_pose[2]);
-            if (navigationPort.write(cmd,rep))
-            {
-                if (rep.get(0).asVocab()==ok)
-                {
-                    yInfo()<<"Back to initial position";
-                    cmd.clear();
-                    rep.clear();
-                    cmd.addString("remove_locked");
-                    if (lockerPort.write(cmd,rep))
-                    {
-                        if (rep.get(0).asVocab()==ok)
-                        {
-                            yInfo()<<"Removed locked skeleton";
-                            ret=true;
-                        }
-
-                    }
-                }
+                return false;
             }
         }
 
@@ -1251,20 +1190,7 @@ class Manager : public RFModule, public managerTUG_IDL
                 }
                 double y=finishline_pose[1]-0.5;
                 double theta=starting_pose[2];
-                cmd.clear();
-                rep.clear();
-                cmd.addString("go_to");
-                cmd.addDouble(x);
-                cmd.addDouble(y);
-                cmd.addDouble(theta);
-                yDebug()<<cmd.toString();
-                if (navigationPort.write(cmd,rep))
-                {
-                    if (rep.get(0).asVocab()==ok)
-                    {
-                        ok_go=true;
-                    }
-                }
+                ok_go=go_to(Vector({x,y,theta}),false);
             }
 
             if (ok_go)
@@ -1556,8 +1482,9 @@ class Manager : public RFModule, public managerTUG_IDL
     }
 
     /****************************************************************/
-    bool hasLine(Property &prop)
+    Property opcRead(const string &t)
     {
+        Property prop;
         if (opcPort.getInputCount()>0)
         {
             if (Bottle* b=opcPort.read(true))
@@ -1566,15 +1493,28 @@ class Manager : public RFModule, public managerTUG_IDL
                 {
                     for (int i=1; i<b->size(); i++)
                     {
-                        prop.fromString(b->get(i).asList()->toString());
-                        if (prop.find("finish-line").asList())
+                        Property temp;
+                        temp.fromString(b->get(i).asList()->toString());
+                        if (temp.check(t))
                         {
-                            return true;
+                            prop=temp;
                         }
                     }
                 }
             }
         }
+        return prop;
+    }
+
+    /****************************************************************/
+    bool hasLine(Property &prop)
+    {
+        prop=opcRead("finish-line");
+        if (!prop.isNull())
+        {
+            return true;
+        }
+
         return false;
     }
 
@@ -1620,25 +1560,16 @@ class Manager : public RFModule, public managerTUG_IDL
     string findLocked()
     {
         string t("");
-        if (opcPort.getInputCount()>0)
+        Property prop=opcRead("tag");
+        if (!prop.isNull())
         {
-            if (Bottle* b=opcPort.read(true))
+            t=prop.find("tag").asString();
+            if (t.find("-locked")!=string::npos)
             {
-                if (!b->get(1).isString())
-                {
-                    for (int i=1; i<b->size(); i++)
-                    {
-                        Property prop;
-                        prop.fromString(b->get(i).asList()->toString());
-                        t=prop.find("tag").asString();
-                        if (t.find("-locked")!=string::npos)
-                        {
-                            yInfo()<<"Found locked skeleton"<<t;
-                        }
-                    }
-                }
+                yInfo()<<"Found locked skeleton"<<t;
             }
         }
+
         return t;
     }
 
