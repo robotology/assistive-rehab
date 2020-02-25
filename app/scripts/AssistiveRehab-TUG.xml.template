@@ -52,6 +52,11 @@
     </module>
 
     <module>
+       <name>skeletonLocker</name>
+       <node>r1-console-linux</node>
+    </module>
+
+    <module>
        <name>attentionManager</name>
        <parameters>--frame world</parameters>
        <node>r1-console-linux</node>
@@ -97,7 +102,6 @@
 
     <module>
         <name>managerTUG</name>
-        <parameters>--standing-thresh 0.2 --finish-line-thresh 0.3</parameters>
         <node>r1-console-linux</node>
     </module>
 
@@ -211,6 +215,18 @@
 
     <connection>
         <from>/opc/broadcast:o</from>
+        <to>/skeletonLocker/opc:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonLocker/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/opc/broadcast:o</from>
         <to>/attentionManager/opc:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
@@ -288,12 +304,6 @@
     </connection>
 
     <connection>
-        <from>/skeletonRetriever/viewer:o</from>
-        <to>/skeletonViewer:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
         <from>/robotSkeletonPublisher/opc:rpc</from>
         <to>/opc/rpc</to>
         <protocol>fast_tcp</protocol>
@@ -307,6 +317,12 @@
 
     <connection>
         <from>/robotSkeletonPublisher/viewer:o</from>
+        <to>/skeletonViewer:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonLocker/viewer:o</from>
         <to>/skeletonViewer:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
@@ -350,6 +366,12 @@
     <connection>
         <from>/managerTUG/navigation:rpc</from>
         <to>/navController/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/locker:rpc</from>
+        <to>/skeletonLocker/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
 

@@ -23,4 +23,12 @@ service skeletonLocker_IDL
     * @return true/false on success/failure.
     */
    bool set_skeleton_tag(1:string tag)
+
+   /**
+    * Remove locked skeleton.
+    * @return true/false on success/failure.
+    */
+   bool remove_locked()
+
 }
+

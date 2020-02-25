@@ -430,7 +430,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
     const int ok=Vocab::encode("ok");
     const int fail=Vocab::encode("fail");
-    enum class State { stopped, idle, seek_skeleton, follow, assess_standing, assess_crossing, line_crossed, frozen, engaged, explain, reach_line, starting, not_passed, finished } state;
+    enum class State { stopped, idle, lock, seek_locked, follow, assess_standing, assess_crossing, line_crossed, frozen, engaged, explain, reach_line, starting, not_passed, finished } state;
     State prev_state;
     string tag;
     double t0,tstart,t;
@@ -456,6 +456,7 @@ class Manager : public RFModule, public managerTUG_IDL
     RpcClient leftarmPort;
     RpcClient rightarmPort;
     BufferedPort<Bottle> opcPort;
+    RpcClient lockerPort;
 
     QuestionManager *question_manager;
     HandManager *hand_manager;
@@ -654,7 +655,18 @@ class Manager : public RFModule, public managerTUG_IDL
                     {
                         if (rep.get(0).asVocab()==ok)
                         {
-                            ret=true;
+                            cmd.clear();
+                            rep.clear();
+                            cmd.addString("remove_locked");
+                            if (lockerPort.write(cmd,rep))
+                            {
+                                if (rep.get(0).asVocab()==ok)
+                                {
+                                    yInfo()<<"Removed locked skeleton";
+                                    ret=true;
+                                }
+
+                            }
                         }
                     }
                 }
@@ -772,7 +784,18 @@ class Manager : public RFModule, public managerTUG_IDL
                 if (rep.get(0).asVocab()==ok)
                 {
                     yInfo()<<"Back to initial position";
-                    ret=true;
+                    cmd.clear();
+                    rep.clear();
+                    cmd.addString("remove_locked");
+                    if (lockerPort.write(cmd,rep))
+                    {
+                        if (rep.get(0).asVocab()==ok)
+                        {
+                            yInfo()<<"Removed locked skeleton";
+                            ret=true;
+                        }
+
+                    }
                 }
             }
         }
@@ -866,6 +889,7 @@ class Manager : public RFModule, public managerTUG_IDL
         rightarmPort.open("/"+module_name+"/right_arm:rpc");
         cmdPort.open("/"+module_name+"/cmd:rpc");
         opcPort.open("/"+module_name+"/opc:i");
+        lockerPort.open("/"+module_name+"/locker:rpc");
         attach(cmdPort);
 
         question_manager=new QuestionManager(module_name,speak_map,&speechStreamPort,&speechRpcPort);
@@ -909,7 +933,8 @@ class Manager : public RFModule, public managerTUG_IDL
                 (speechRpcPort.getOutputCount()==0) || (attentionPort.getOutputCount()==0) ||
                 (navigationPort.getOutputCount()==0) || (linePort.getOutputCount()==0) ||
                 (leftarmPort.getOutputCount()==0) || (rightarmPort.getOutputCount())==0 ||
-                (opcPort.getInputCount()==0) || !question_manager->connected())
+                (lockerPort.getOutputCount()==0) || (opcPort.getInputCount()==0) ||
+                !question_manager->connected())
         {
             yInfo()<<"not connected";
             connected=false;
@@ -1007,7 +1032,7 @@ class Manager : public RFModule, public managerTUG_IDL
         {
             if (Time::now()-t0>10.0)
             {
-                state=State::seek_skeleton;
+                state=State::lock;
             }
         }
 
@@ -1024,18 +1049,36 @@ class Manager : public RFModule, public managerTUG_IDL
             }
         }
 
-        if (state==State::seek_skeleton)
+        if (state==State::lock)
         {
             if (!follow_tag.empty())
             {
-                tag=follow_tag;
+                Bottle cmd,rep;
+                cmd.addString("set_skeleton_tag");
+                cmd.addString(follow_tag);
+                if (lockerPort.write(cmd,rep))
+                {
+                    if (rep.get(0).asVocab()==ok)
+                    {
+                        yInfo()<<"skeleton"<<follow_tag<<"locked";
+                        state=State::seek_locked;
+                    }
+                }
+            }
+        }
+
+        if (state==State::seek_locked)
+        {
+            tag=findLocked();
+            if (!tag.empty())
+            {
                 Bottle cmd,rep;
                 cmd.addString("look");
                 cmd.addString(tag);
                 cmd.addString(KeyPointTag::shoulder_center);
                 if (attentionPort.write(cmd,rep))
                 {
-                    yInfo()<<"Following"<<follow_tag;
+                    yInfo()<<"Following"<<tag;
                     vector<SpeechParam> p;
                     p.push_back(SpeechParam(tag[0]!='#'?tag:string("")));
                     speak("invite-start",true,p);
@@ -1574,6 +1617,32 @@ class Manager : public RFModule, public managerTUG_IDL
     }
 
     /****************************************************************/
+    string findLocked()
+    {
+        string t("");
+        if (opcPort.getInputCount()>0)
+        {
+            if (Bottle* b=opcPort.read(true))
+            {
+                if (!b->get(1).isString())
+                {
+                    for (int i=1; i<b->size(); i++)
+                    {
+                        Property prop;
+                        prop.fromString(b->get(i).asList()->toString());
+                        t=prop.find("tag").asString();
+                        if (t.find("-locked")!=string::npos)
+                        {
+                            yInfo()<<"Found locked skeleton"<<t;
+                        }
+                    }
+                }
+            }
+        }
+        return t;
+    }
+
+    /****************************************************************/
     bool interruptModule() override
     {
         interrupting=true;
@@ -1601,6 +1670,7 @@ class Manager : public RFModule, public managerTUG_IDL
         speechStreamPort.close();
         opcPort.close();
         cmdPort.close();
+        lockerPort.close();
         return true;
     }
 };
