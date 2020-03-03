@@ -29,6 +29,8 @@ endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+find_package(YCM)
+
 # packages that shall come first as they include find_package(YARP)
 # otherwise, we might have conflicts when selecting specific YARP components
 find_package(ICUBcontrib REQUIRED)

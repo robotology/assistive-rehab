@@ -8,6 +8,7 @@
 - Supported Operating Systems: Linux, Windows, macOS
 - C++11 compiler
 - CMake 3.5
+- [ycm](https://github.com/robotology/ycm)
 - [icub-contrib-common](https://github.com/robotology/icub-contrib-common)
 - [yarp](https://github.com/robotology/yarp) (3.1.100 or higher)
 - [iCub](https://github.com/robotology/icub-main)
