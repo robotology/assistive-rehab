@@ -99,15 +99,21 @@ yarp_install(FILES ${train_with_me_scripts} DESTINATION ${ICUBCONTRIB_APPLICATIO
 if(UNIX)
   file(GLOB sh app/scripts/*.sh report/*.sh)
   add_custom_target(copy_sh_in_build ALL)
-  add_custom_command(TARGET copy_sh_in_build POST_BUILD
-                     COMMAND ${CMAKE_COMMAND} -E copy ${sh} ${CMAKE_BINARY_DIR}/bin/${CMAKE_CFG_INTDIR}
-                     COMMENT "Copying ${sh} to ${CMAKE_BINARY_DIR}/bin/${CMAKE_CFG_INTDIR}/")
+  foreach(_sh IN ITEMS ${sh})
+    get_filename_component(_sh_name ${_sh} NAME)
+    add_custom_command(TARGET copy_sh_in_build POST_BUILD
+                       COMMAND ${CMAKE_COMMAND} -E copy ${_sh} ${CMAKE_BINARY_DIR}/bin/${CMAKE_CFG_INTDIR}/${_sh_name}
+                       COMMENT "Copying ${_sh} to ${CMAKE_BINARY_DIR}/bin/${CMAKE_CFG_INTDIR}/${_sh_name}")
+  endforeach()
   install(PROGRAMS ${sh} DESTINATION bin)
 endif()
 
 file(GLOB js app/scripts/*.js)
 add_custom_target(copy_js_in_build ALL)
-add_custom_command(TARGET copy_js_in_build POST_BUILD
-                   COMMAND ${CMAKE_COMMAND} -E copy ${js} ${CMAKE_BINARY_DIR}/bin/${CMAKE_CFG_INTDIR}
-                   COMMENT "Copying ${js} to ${CMAKE_BINARY_DIR}/bin/${CMAKE_CFG_INTDIR}/")
+foreach(_js IN ITEMS ${js})
+  get_filename_component(_js_name ${_js} NAME)
+  add_custom_command(TARGET copy_js_in_build POST_BUILD
+                     COMMAND ${CMAKE_COMMAND} -E copy ${_js} ${CMAKE_BINARY_DIR}/bin/${CMAKE_CFG_INTDIR}/${_js_name}
+                     COMMENT "Copying ${_js} to ${CMAKE_BINARY_DIR}/bin/${CMAKE_CFG_INTDIR}/${_js_name}")
+endforeach()
 install(PROGRAMS ${js} DESTINATION bin)
