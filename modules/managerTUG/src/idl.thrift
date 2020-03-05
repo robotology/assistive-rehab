@@ -29,4 +29,10 @@ service managerTUG_IDL
     */
    bool stop();
 
+   /**
+    * Trigger speech.
+    * @return true/false on success/failure.
+    */
+   bool trigger();
+
 }

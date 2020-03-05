@@ -34,6 +34,133 @@ using namespace yarp::sig;
 using namespace yarp::math;
 using namespace assistive_rehab;
 
+class TriggerManager: public Thread
+{
+    string module_name;
+    double min_timeout;
+    double max_timeout;
+    double t0,t;
+    RpcClient *triggerPort;
+    bool first_trigger,last_start_trigger,got_trigger;
+    mutex mtx;
+
+public:
+
+    /********************************************************/
+    TriggerManager(const string &module_name, const double &min_timeout, const double &max_timeout, RpcClient *triggerPort)
+    {
+        this->module_name=module_name;
+        this->min_timeout=min_timeout;
+        this->max_timeout=max_timeout;
+        this->triggerPort=triggerPort;
+        t0=t=Time::now();
+        first_trigger=true;
+        last_start_trigger=false;
+        got_trigger=false;
+    }
+
+    /********************************************************/
+    ~TriggerManager()
+    {
+    }
+
+    /********************************************************/
+    void run() override
+    {
+        while(!isStopping())
+        {
+            lock_guard<mutex> lg(mtx);
+            double dt_from_last=t-t0;
+            double time_elapsed=Time::now()-t;
+
+            //if we received a trigger
+            if (got_trigger)
+            {
+                got_trigger=false;
+                if (first_trigger)
+                {
+                    //if it's the first trigger, we assume it's a start
+                    first_trigger=false;
+                    trigger_speech("start");
+                    t0=t;
+                    continue;
+                }
+
+                //if trigger occurs after the minimum timeout
+                if (dt_from_last>=min_timeout)
+                {
+                    //if last was a start trigger
+                    if (last_start_trigger)
+                    {
+                        //we send a stop
+                        last_start_trigger=false;
+                        trigger_speech("stop");
+                    }
+                    else //if last was a stop trigger
+                    {
+                        //we send a start
+                        last_start_trigger=true;
+                        trigger_speech("start");
+                    }
+                    t0=t;
+                }
+                else
+                {
+                    yInfo()<<"Trigger occurred before min timeout";
+                    yInfo()<<"Discarding trigger";
+                }
+                continue;
+            }
+
+            //if we haven't received a trigger in the last max_timeout seconds
+            //and last trigger received was a start
+            if (last_start_trigger)
+            {
+                //we send a stop
+                if (time_elapsed>max_timeout)
+                {
+                    last_start_trigger=false;
+                    yInfo()<<"Exceeded max timeout";
+                    trigger_speech("stop");
+                    t0=t;
+                }
+            }
+        }
+    }
+
+    /********************************************************/
+    bool trigger_speech(const string &s)
+    {
+        yarp::os::Bottle cmd,rep;
+        cmd.addString(s);
+        if (triggerPort->write(cmd,rep))
+        {
+            if (rep.get(0).asVocab()==Vocab::encode("ok"))
+            {
+                yInfo()<<"Sending"<<s<<"to speech";
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /********************************************************/
+    void trigger()
+    {
+        lock_guard<mutex> lg(mtx);
+        t=Time::now();
+        got_trigger=true;
+        if (first_trigger)
+        {
+            t0=t;
+            last_start_trigger=true;
+        }
+        yInfo()<<"Got button trigger from the previous after"<<t-t0<<"seconds";
+    }
+
+};
+
+/********************************************************/
 class QuestionManager: public BufferedPort<Bottle>
 {
     string module_name;
@@ -250,7 +377,7 @@ class HandManager : public Thread
 {
     string module_name;
     BufferedPort<Bottle> *opcPort;
-    RpcClient handPort;
+    RpcClient *triggerPort;
     Skeleton *skeleton;
     double arm_thresh;
     string tag,part;
@@ -259,28 +386,15 @@ class HandManager : public Thread
 public:
 
     /********************************************************/
-    HandManager(const string &module_name, const double &arm_thresh, BufferedPort<Bottle> *opcPort)
+    HandManager(const string &module_name, const double &arm_thresh, BufferedPort<Bottle> *opcPort, RpcClient *triggerPort)
     {
         this->module_name=module_name;
         this->arm_thresh=arm_thresh;
         this->opcPort=opcPort;
-        handPort.open("/"+module_name+"/trigger:o");
+        this->triggerPort=triggerPort;
         isArmLifted=false;
         tag="";
         part="";
-    }
-
-    /********************************************************/
-    bool connected()
-    {
-        if (handPort.getOutputCount() < 1)
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
     }
 
     /********************************************************/
@@ -306,7 +420,7 @@ public:
                             yarp::os::Bottle cmd,rep;
                             cmd.addString("start");
                             isArmLifted=true;
-                            handPort.write(cmd,rep);
+                            triggerPort->write(cmd,rep);
                             if (rep.get(0).asVocab()==Vocab::encode("ok"))
                             {
                                 yInfo()<<"Starting speech";
@@ -320,7 +434,7 @@ public:
                             yarp::os::Bottle cmd,rep;
                             cmd.addString("stop");
                             isArmLifted=false;
-                            handPort.write(cmd,rep);
+                            triggerPort->write(cmd,rep);
                             if (rep.get(0).asVocab()==Vocab::encode("ok"))
                             {
                                 yInfo()<<"Stopping speech";
@@ -336,7 +450,6 @@ public:
     void onStop() override
     {
         delete skeleton;
-        handPort.close();
     }
 
     /****************************************************************/
@@ -427,6 +540,7 @@ class Manager : public RFModule, public managerTUG_IDL
     double finish_line_thresh,standing_thresh,pointing_time,arm_thresh;
     bool detect_hand_up;
     Vector starting_pose,pointing_home,pointing_start,pointing_finish;
+    double min_timeout,max_timeout;
 
     const int ok=Vocab::encode("ok");
     const int fail=Vocab::encode("fail");
@@ -457,9 +571,11 @@ class Manager : public RFModule, public managerTUG_IDL
     RpcClient rightarmPort;
     BufferedPort<Bottle> opcPort;
     RpcClient lockerPort;
+    RpcClient triggerPort;
 
     QuestionManager *question_manager;
     HandManager *hand_manager;
+    TriggerManager *trigger_manager;
 
     /****************************************************************/
     bool attach(RpcServer &source) override
@@ -725,6 +841,14 @@ class Manager : public RFModule, public managerTUG_IDL
     }
 
     /****************************************************************/
+    bool trigger() override
+    {
+        lock_guard<mutex> lg(mtx);
+        trigger_manager->trigger();
+        return true;
+    }
+
+    /****************************************************************/
     bool stop() override
     {
         lock_guard<mutex> lg(mtx);
@@ -753,7 +877,9 @@ class Manager : public RFModule, public managerTUG_IDL
         finish_line_thresh=rf.check("finish-line-thresh",Value(0.2)).asDouble();
         standing_thresh=rf.check("standing-thresh",Value(0.2)).asDouble();
         arm_thresh=rf.check("arm-thresh",Value(0.6)).asDouble();
-        detect_hand_up=rf.check("detect-hand-up",Value(true)).asBool();
+        detect_hand_up=rf.check("detect-hand-up",Value(false)).asBool();
+        min_timeout=rf.check("min-timeout",Value(1.0)).asDouble();
+        max_timeout=rf.check("max-timeout",Value(10.0)).asDouble();
         starting_pose={1.5,-3.0,110.0};
         if(rf.check("starting-pose"))
         {
@@ -829,6 +955,7 @@ class Manager : public RFModule, public managerTUG_IDL
         cmdPort.open("/"+module_name+"/cmd:rpc");
         opcPort.open("/"+module_name+"/opc:i");
         lockerPort.open("/"+module_name+"/locker:rpc");
+        triggerPort.open("/"+module_name+"/trigger:rpc");
         attach(cmdPort);
 
         question_manager=new QuestionManager(module_name,speak_map,&speechStreamPort,&speechRpcPort);
@@ -840,12 +967,19 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if(detect_hand_up)
         {
-            hand_manager=new HandManager(module_name,arm_thresh,&opcPort);
+            hand_manager=new HandManager(module_name,arm_thresh,&opcPort,&triggerPort);
             if (!hand_manager->start())
             {
                 yError()<<"Could not start hand manager";
                 return false;
             }
+        }
+
+        trigger_manager=new TriggerManager(module_name,min_timeout,max_timeout,&triggerPort);
+        if (!trigger_manager->start())
+        {
+            yError()<<"Could not open trigger manager";
+            return false;
         }
 
         state=State::idle;
@@ -873,29 +1007,11 @@ class Manager : public RFModule, public managerTUG_IDL
                 (navigationPort.getOutputCount()==0) || (linePort.getOutputCount()==0) ||
                 (leftarmPort.getOutputCount()==0) || (rightarmPort.getOutputCount())==0 ||
                 (lockerPort.getOutputCount()==0) || (opcPort.getInputCount()==0) ||
-                !question_manager->connected())
+                (triggerPort.getOutputCount()==0) || !question_manager->connected())
         {
             yInfo()<<"not connected";
-            connected=false;
-            return true;
-        }
-
-        if (detect_hand_up)
-        {
-            if (!hand_manager->connected())
-            {
-                yInfo()<<"not connected";
-                connected=false;
-                return true;
-            }
-            else
-            {
-                connected=true;
-            }
-        }
-        else
-        {
             connected=true;
+            return true;
         }
 
         //get finish line
@@ -1591,6 +1707,8 @@ class Manager : public RFModule, public managerTUG_IDL
             hand_manager->stop();
             delete hand_manager;
         }
+        trigger_manager->stop();
+        delete trigger_manager;
         analyzerPort.close();
         speechRpcPort.close();
         attentionPort.close();
@@ -1602,6 +1720,7 @@ class Manager : public RFModule, public managerTUG_IDL
         opcPort.close();
         cmdPort.close();
         lockerPort.close();
+        triggerPort.close();
         return true;
     }
 };
