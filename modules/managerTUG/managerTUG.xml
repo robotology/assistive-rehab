@@ -25,6 +25,8 @@
     <param default="(35.0,12.0,-10.0,10.0,0.0,0.050,0.0,0.0)" desc="List of joint positions for pointing at the finish line (deg). Provided to ctpService.">pointing-finish</param>
     <param default="0.6" desc="Threshold on the y distance between elbow and elbow, to detect if the arm is raised (normalized).">arm-thresh</param>
     <param default="true" desc="If true, the module detects if the hand is raised for triggering speech.">detect-hand-up</param>
+    <param default="1.0" desc="">min-timeout</param>
+    <param default="10.0" desc="">max-timeout</param>
   </arguments>
 
   <authors>
@@ -32,6 +34,27 @@
   </authors>
 
   <data>
+    <input>
+        <type>Bottle</type>
+        <port>/managerTUG/opc:i</port>
+        <description>
+          Receives skeletons and lines from \ref objectsPropertiesCollector.
+        </description>
+    </input>
+    <input>
+        <type>Bottle</type>
+        <port>/managerTUG/question:i</port>
+        <description>
+          Receives a trigger from \ref googleSpeech when a question is asked.
+        </description>
+    </input>
+    <input>
+        <type>Bottle</type>
+        <port>/managerTUG/answer:i</port>
+        <description>
+          Receives the answer to the question from \ref googleSpeechProcessing.
+        </description>
+    </input>
     <output>
         <type>rpc</type>
         <port>/managerTUG/attention:rpc</port>
@@ -58,6 +81,41 @@
         <port>/managerTUG/speech:o</port>
         <description>
           Streams out the verbal interaction. To be connected to \ref iSpeak.
+        </description>
+    </output>
+    <output>
+        <type>rpc</type>
+        <port>/managerTUG/navigation:rpc</port>
+        <description>
+          Sends commands to \ref navController to let the robot navigate to fixed points.
+        </description>
+    </output>
+    <output>
+        <type>rpc</type>
+        <port>/managerTUG/left_arm:rpc</port>
+        <description>
+          Sends commands to \ref ctpService to let the robot's left arm point at lines.
+        </description>
+    </output>
+    <output>
+        <type>rpc</type>
+        <port>/managerTUG/right_arm:rpc</port>
+        <description>
+          Sends commands to \ref ctpService to let the robot's right arm point at lines.
+        </description>
+    </output>
+    <output>
+        <type>rpc</type>
+        <port>/managerTUG/locker:rpc</port>
+        <description>
+          Sends commands to \ref skeletonLocker to set the skeleton to lock.
+        </description>
+    </output>
+    <output>
+        <type>rpc</type>
+        <port>/managerTUG/trigger:rpc</port>
+        <description>
+          Sends commands to \ref googleSpeech to start/stop speech recognition.
         </description>
     </output>
   </data>

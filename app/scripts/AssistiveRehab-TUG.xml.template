@@ -355,12 +355,6 @@
     </connection>
 
     <connection>
-        <from>/managerTUG/line:rpc</from>
-        <to>/lineDetector/cmd:rpc</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
         <from>/managerTUG/speech:o</from>
         <to>/iSpeak</to>
         <protocol>fast_tcp</protocol>
