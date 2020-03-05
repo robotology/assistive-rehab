@@ -4,7 +4,7 @@
         <name>node-button.js</name>
         <parameters></parameters>
         <deployer>js</deployer>
-        <node>r1-console-linux</node>
+        <node>localhost</node>
         <dependencies>
             <port timeout="10">/managerTUG/cmd:rpc</port>
         </dependencies>

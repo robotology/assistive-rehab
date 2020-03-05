@@ -9,8 +9,7 @@ if (conf.host) {
     listen_host = conf.host;
 }
 else {
-    listen_host = '192.168.100.139';
-    // listen_host = '192.168.100.193';
+    listen_host = '192.168.100.193';
 }
 if (conf.listen_port) {
     listen_port = conf.listen_port;
