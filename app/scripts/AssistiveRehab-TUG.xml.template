@@ -1,5 +1,14 @@
 <application>
 <name>Assistive Rehabilitation TUG App</name>
+    <module>
+        <name>node-button.js</name>
+        <parameters></parameters>
+        <deployer>js</deployer>
+        <node>r1-console-linux</node>
+        <dependencies>
+            <port timeout="10">/managerTUG/cmd:rpc</port>
+        </dependencies>
+    </module>
 
     <module>
         <name>yarpdev</name>
