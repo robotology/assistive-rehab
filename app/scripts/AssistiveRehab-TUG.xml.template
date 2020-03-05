@@ -394,7 +394,7 @@
     </connection>
 
     <connection>
-        <from>/managerTUG/trigger:o</from>
+        <from>/managerTUG/trigger:rpc</from>
         <to>/googleSpeech/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
