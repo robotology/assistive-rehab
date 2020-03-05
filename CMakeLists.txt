@@ -102,3 +102,10 @@ if(UNIX)
                      COMMENT "Copying ${sh} to ${CMAKE_BINARY_DIR}/bin/${CMAKE_CFG_INTDIR}/")
   install(PROGRAMS ${sh} DESTINATION bin)
 endif()
+
+file(GLOB js app/scripts/*.js)
+add_custom_target(copy_js_in_build ALL)
+add_custom_command(TARGET copy_js_in_build POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy ${js} ${CMAKE_BINARY_DIR}/bin/${CMAKE_CFG_INTDIR}
+                   COMMENT "Copying ${js} to ${CMAKE_BINARY_DIR}/bin/${CMAKE_CFG_INTDIR}/")
+install(PROGRAMS ${js} DESTINATION bin)

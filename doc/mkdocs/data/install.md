@@ -15,6 +15,7 @@
 - [OpenCV](https://github.com/opencv/opencv) (3.4.0 or higher)
 - [yarpOpenPose](https://github.com/robotology/human-sensing)
 - [Ipopt](https://github.com/coin-or/Ipopt)
+- [yarp.js](https://github.com/robotology/yarp.js)
 
 !!! note "yarp"
     - `ENABLE_yarpcar_mjpeg ON`: to allow mjpeg compression.
