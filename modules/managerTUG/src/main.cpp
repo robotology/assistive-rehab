@@ -566,7 +566,6 @@ class Manager : public RFModule, public managerTUG_IDL
     RpcClient navigationPort;
     BufferedPort<Bottle> speechStreamPort;
     RpcServer cmdPort;
-    RpcClient linePort;
     RpcClient leftarmPort;
     RpcClient rightarmPort;
     BufferedPort<Bottle> opcPort;
@@ -948,7 +947,6 @@ class Manager : public RFModule, public managerTUG_IDL
         speechRpcPort.open("/"+module_name+"/speech:rpc");
         attentionPort.open("/"+module_name+"/attention:rpc");
         navigationPort.open("/"+module_name+"/navigation:rpc");
-        linePort.open("/"+module_name+"/line:rpc");
         speechStreamPort.open("/"+module_name+"/speech:o");
         leftarmPort.open("/"+module_name+"/left_arm:rpc");
         rightarmPort.open("/"+module_name+"/right_arm:rpc");
@@ -1004,10 +1002,10 @@ class Manager : public RFModule, public managerTUG_IDL
         lock_guard<mutex> lg(mtx);
         if((analyzerPort.getOutputCount()==0) || (speechStreamPort.getOutputCount()==0) ||
                 (speechRpcPort.getOutputCount()==0) || (attentionPort.getOutputCount()==0) ||
-                (navigationPort.getOutputCount()==0) || (linePort.getOutputCount()==0) ||
-                (leftarmPort.getOutputCount()==0) || (rightarmPort.getOutputCount())==0 ||
-                (lockerPort.getOutputCount()==0) || (opcPort.getInputCount()==0) ||
-                (triggerPort.getOutputCount()==0) || !question_manager->connected())
+                (navigationPort.getOutputCount()==0) || (leftarmPort.getOutputCount()==0) ||
+                (rightarmPort.getOutputCount())==0 || (lockerPort.getOutputCount()==0) ||
+                (opcPort.getInputCount()==0) || (triggerPort.getOutputCount()==0) ||
+                !question_manager->connected())
         {
             yInfo()<<"not connected";
             connected=true;
@@ -1713,7 +1711,6 @@ class Manager : public RFModule, public managerTUG_IDL
         speechRpcPort.close();
         attentionPort.close();
         navigationPort.close();
-        linePort.close();
         leftarmPort.close();
         rightarmPort.close();
         speechStreamPort.close();
