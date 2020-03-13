@@ -13,7 +13,7 @@
       <uri>model://ground_plane</uri>
     </include>
    
-    <!-- R1 fixed to ground -->
+    <!-- R1 -->
     <model name='SIM_CER_ROBOT'>
       <include>
     	<uri>model://cer</uri>
@@ -30,6 +30,63 @@
       <uri>model://aruco_board_finish</uri>
       <pose>4.0 0.0 0.0 0.0 0.0 3.14</pose>
     </include>
+
+    <!-- Human model -->
+    <actor name="human">
+      <skin>
+        <filename>walk.dae</filename>
+      </skin>
+      <animation name="sitting">
+        <filename>sitting.dae</filename>
+      </animation>
+      <animation name="stand_up">
+        <filename>stand_up.dae</filename>
+      </animation>
+      <animation name="walking">
+        <filename>walk.dae</filename>
+        <interpolate_x>true</interpolate_x>
+      </animation>
+      <animation name="sit_down">
+        <filename>sit_down.dae</filename>
+      </animation>
+      <script>
+        <loop>true</loop>
+        <!--<delay_start>10.0</delay_start>-->
+        <trajectory id="0" type="sitting"/>
+        <trajectory id="1" type="stand_up"/>
+        <trajectory id="2" type="walking">
+          <waypoint>
+            <time>0</time>
+            <pose>0 0 0 0 0 0</pose>
+          </waypoint>
+          <waypoint>
+            <time>2</time>
+            <pose>2.0 0 0 0 0 0</pose>
+          </waypoint>
+          <waypoint>
+            <time>4</time>
+            <pose>4.5 0 0 0 0 0</pose>
+          </waypoint>
+          <waypoint>
+            <time>4.5</time>
+            <pose>4.0 0 0 0 0 3.14</pose>
+          </waypoint>
+          <waypoint>
+            <time>6</time>
+            <pose>2.0 0 0 0 0 3.14</pose>
+          </waypoint>
+          <waypoint>
+            <time>8</time>
+            <pose>0 0 0 0 0 3.14</pose>
+          </waypoint>
+          <waypoint>
+            <time>8.5</time>
+            <pose>0 0 0 0 0 0</pose>
+          </waypoint>
+        </trajectory>
+        <trajectory id="3" type="sit_down"/>
+      </script>
+    </actor>
 
     <!-- Camera -->
     <gui fullscreen='0'>
