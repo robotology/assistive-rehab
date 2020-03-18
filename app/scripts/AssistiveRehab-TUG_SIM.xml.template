@@ -14,7 +14,7 @@
 
     <module>
         <name>gazebo</name>
-        <workdir>$ENV{ROBOT_CODE}/assistive-rehab/app/conf</workdir>
+        <workdir>$ENV{ROBOT_CODE}/assistive-rehab/app/gazebo/tug</workdir>
         <parameters>tug-scenario.sdf</parameters>
         <node>localhost</node>
     </module>

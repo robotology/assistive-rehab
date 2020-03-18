@@ -10,7 +10,7 @@
 
   <description-long>
    This module takes as input the RGB image containing two lines composed of a set of markers and publishes the estimated poses of the markers with respect to the camera and to robot root.
-   It makes use of an OpenCV ArUco Board of 6x1 markers. The used boards can be found in `app/conf` (the two images were sticked togheter for printing a marker big enough to be visible from a certain distance). Gazebo models of the ArUco Boards can be found in `app/gazebo` (note that the variable `GAZEBO_MODEL_PATH` has to point to this folder).
+   It makes use of an OpenCV ArUco Board of 6x1 markers. The used boards can be found in `modules/lineDetector/app/conf` (the two images were sticked togheter for printing a marker big enough to be visible from a certain distance). Gazebo models of the ArUco Boards can be found in `app/gazebo/tug` (note that the variable `GAZEBO_MODEL_PATH` has to point to this folder).
    The detected start and finish lines are published into the \ref objectsPropertiesCollector, with the pose estimated with respect to the robot camera (`pose_camera`) and to the robot root (`pose_root`), as following:
 
    \code
