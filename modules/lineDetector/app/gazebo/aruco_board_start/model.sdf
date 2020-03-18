@@ -1,0 +1,28 @@
+<?xml version='1.0'?>
+<sdf version='1.5'>
+  <model name='aruco_board_start'>
+
+     <link name='marker'>
+      <pose frame=''>0 0 0 0 0 0</pose>
+      <visual name='visual'>
+        <geometry>
+          <box>
+            <size>0.13 0.78 0.001</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://aruco_board_start/materials/scripts</uri>
+            <uri>model://aruco_board_start/materials/textures</uri>
+            <name>ArucoBoardStart/Marker</name>
+          </script>
+        </material>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <cast_shadows>false</cast_shadows>
+        <transparency>false</transparency>
+      </visual>
+    </link> 
+    <static>true</static>
+    <allow_auto_disable>true</allow_auto_disable>
+  </model>
+</sdf>
