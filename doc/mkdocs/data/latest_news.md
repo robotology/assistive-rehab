@@ -1,5 +1,7 @@
 # Latest news
 
+__March 19, 2020__ : Added new [tutorial](aruco_gazebo.md) to detect Aruco boards in `gazebo`. Check it out!
+
 __July 10, 2019__ : Checkout our latest [release v0.4.0](https://github.com/robotology/assistive-rehab/releases/tag/v0.4.0)!
 
 What's new?

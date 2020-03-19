@@ -67,6 +67,7 @@ nav:
         - How to temporally align two signals: 'align_signals.md'
         - How to run the main applications: 'main_apps.md'
         - How to run the virtual demo: 'virtual_demo.md'
+        - How to detect Aruco boards in gazebo: 'aruco_gazebo.md'
     - Milestones:
         - Y1M5: 'Y1M5.md'
         - Y1Q3: 'Y1Q3.md'

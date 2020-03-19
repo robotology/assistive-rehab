@@ -8,3 +8,4 @@ If you want to learn how to exploit our framework to create something similar fo
 - [How to temporally align two signals](align_signals.md)
 - [How to run the main applications](main_apps.md)
 - [How to run the virtual demo](virtual_demo.md)
+- [How to detect Aruco boards in gazebo](aruco_gazebo.md)
