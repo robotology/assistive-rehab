@@ -2,19 +2,7 @@
 <name>Assistive Rehabilitation TUG SIM App</name>
 
     <module>
-        <name>node-button.js</name>
-        <parameters></parameters>
-        <deployer>js</deployer>
-        <node>localhost</node>
-        <workdir>$ENV{ROBOT_CODE}/assistive-rehab/app/scripts</workdir>
-        <!-- <dependencies>
-            <port timeout="10">/managerTUG/cmd:rpc</port>
-        </dependencies> -->
-    </module>
-
-    <module>
         <name>gazebo</name>
-        <workdir>$ENV{ROBOT_CODE}/assistive-rehab/app/gazebo/tug</workdir>
         <parameters>tug-scenario.sdf</parameters>
         <node>localhost</node>
     </module>
