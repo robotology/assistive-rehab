@@ -1,0 +1,44 @@
+<?xml version="1.0" ?>
+<sdf version='1.6'>
+
+<world name="default">
+
+    <!-- Global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- Ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+   
+    <!-- R1 fixed to ground -->
+    <model name='SIM_CER_ROBOT'>
+      <include>
+    	<uri>model://cer</uri>
+	<pose>5.5 0.0 0.16 0.0 0.0 3.14</pose>
+      </include>
+    </model>
+
+    <!-- Aruco lines -->
+    <include>
+      <uri>model://aruco_board_start</uri>
+      <pose>0.5 0.0 0.0 0.0 0.0 3.14</pose>  
+    </include>
+    <include>
+      <uri>model://aruco_board_finish</uri>
+      <pose>4.0 0.0 0.0 0.0 0.0 3.14</pose>
+    </include>
+
+    <!-- Camera -->
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose frame=''>2.26322 -6.5226 2.11727 -0 0.207643 1.5602</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+
+  </world>
+</sdf>
