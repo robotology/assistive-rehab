@@ -3,7 +3,7 @@
 
     <module>
         <name>gazebo</name>
-        <parameters>tug-scenario.sdf</parameters>
+        <parameters>tug-scenario.world</parameters>
         <node>localhost</node>
     </module>
 
