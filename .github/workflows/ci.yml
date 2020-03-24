@@ -19,7 +19,9 @@ jobs:
     strategy:
       matrix:
         build_type: [Release]
-        os: [windows-latest, ubuntu-latest]
+        #os: [windows-latest, ubuntu-latest]
+        # windows-latest temporarily disabled because of https://github.com/actions/virtual-environments/issues/605
+        os: [ubuntu-latest]
 
     steps:
     - uses: actions/checkout@master
