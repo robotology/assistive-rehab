@@ -11,6 +11,9 @@ on:
   # * is a special character in YAML so you have to quote this string
   # Execute a "nightly" build at 2 AM UTC 
   - cron:  '0 2 * * *'
+
+env:
+  vcpkg_robotology_TAG: v0.0.3
     
 jobs:
   build:
@@ -19,22 +22,11 @@ jobs:
     strategy:
       matrix:
         build_type: [Release]
-        #os: [windows-latest, ubuntu-latest]
-        # windows-latest temporarily disabled because of https://github.com/actions/virtual-environments/issues/605
-        os: [ubuntu-latest]
+        os: [windows-latest, ubuntu-latest]
 
     steps:
     - uses: actions/checkout@master
-        
-    - name: Set up environment variables [Windows]
-      if: matrix.os == 'windows-latest'
-      shell: bash
-      run: |
-        # the following fix the problem described in https://github.community/t5/GitHub-Actions/Windows-tests-worked-yesterday-broken-today/m-p/43839#M5530
-        echo "::add-path::C:\Program Files\Git\bin"
-        echo "::set-env name=VCPKG_ROBOTOLOGY_ROOT::C:/vcpkg-robotology"
-        echo "::set-env name=VCPKG_ROBOTOLOGY_BIN_PORTS_ROOT::C:/vcpkg-robotology-binary-ports"
-        
+
     - name: Display environment variables
       shell: bash
       run: env
@@ -49,17 +41,28 @@ jobs:
     # ============
     # DEPENDENCIES
     # ============
-    - name: Dependencies [Windows]
+    - name: Download Vcpkg Prebuilt Dependencies [Windows]
+      if: matrix.os == 'windows-latest'
+      run: |
+        # To avoid spending a huge time compiling vcpkg dependencies, we download a root that comes precompiled with all the ports that we need 
+        choco install -y wget unzip
+        # To avoid problems with non-relocatable packages, we unzip the archive exactly in the same C:/robotology/vcpkg 
+        # that has been used to create the pre-compiled archive
+        cd C:/
+        md C:/robotology
+        md C:/robotology/vcpkg
+        wget https://github.com/robotology/robotology-superbuild-dependencies-vcpkg/releases/download/${env:vcpkg_robotology_TAG}/vcpkg-robotology.zip
+        unzip vcpkg-robotology.zip -d C:/robotology/vcpkg
+        # Overwrite the VCPKG_INSTALLATION_ROOT env variable defined by GitHub Actions to point to our vcpkg
+        echo "::set-env name=VCPKG_INSTALLATION_ROOT::C:/robotology/vcpkg"
+        
+    - name: Build Vcpkg Dependencies [Windows]
       if: matrix.os == 'windows-latest'
       shell: bash
       run: |
-        git clone https://github.com/microsoft/vcpkg.git --depth 1 --branch 2019.10 ${VCPKG_ROBOTOLOGY_ROOT}
-        git clone https://github.com/robotology/robotology-vcpkg-binary-ports.git ${VCPKG_ROBOTOLOGY_BIN_PORTS_ROOT}
-        ${VCPKG_ROBOTOLOGY_ROOT}/bootstrap-vcpkg.sh
-        ${VCPKG_ROBOTOLOGY_ROOT}/vcpkg.exe --overlay-ports=${VCPKG_ROBOTOLOGY_BIN_PORTS_ROOT} install --triplet x64-windows ace freeglut gsl eigen3 opencv[core,contrib] \
-                                                                                                                            vtk ipopt-binary matio hdf5 fftw3
-        
-    - name: Dependencies [Ubuntu]
+        ${VCPKG_INSTALLATION_ROOT}/vcpkg.exe install --recurse --triplet x64-windows opencv3[contrib] vtk hdf5 fftw3
+
+    - name: Install Dependencies [Ubuntu]
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt update
@@ -70,7 +73,7 @@ jobs:
         #wget https://github.com/bazelbuild/bazel/releases/download/0.26.1/bazel_0.26.1-linux-x86_64.deb
         #sudo dpkg -i bazel_0.26.1-linux-x86_64.deb
         
-    - name: Source-based Dependencies [Windows] 
+    - name: Build Source-based Dependencies [Windows] 
       if: matrix.os == 'windows-latest'
       shell: bash
       run: |
@@ -78,14 +81,14 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         git clone https://github.com/robotology/ycm.git --depth 1 --branch master
         cd ycm && mkdir -p build && cd build
-        cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROBOTOLOGY_ROOT}/scripts/buildsystems/vcpkg.cmake \
+        cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake \
                      -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
         cmake --build . --config ${{ matrix.build_type }} --target INSTALL 
         # yarp
         cd ${GITHUB_WORKSPACE}
         git clone https://github.com/robotology/yarp.git --depth 1 --branch master
         cd yarp && mkdir -p build && cd build
-        cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROBOTOLOGY_ROOT}/scripts/buildsystems/vcpkg.cmake \
+        cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake \
                      -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install \
                      -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
         cmake --build . --config ${{ matrix.build_type }} --target INSTALL
@@ -93,7 +96,7 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         git clone https://github.com/robotology/icub-main.git --depth 1 --branch devel
         cd icub-main && mkdir -p build && cd build
-        cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROBOTOLOGY_ROOT}/scripts/buildsystems/vcpkg.cmake \
+        cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake \
                      -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install \
                      -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DENABLE_icubmod_cartesiancontrollerserver=ON -DENABLE_icubmod_cartesiancontrollerclient=ON \
                      -DENABLE_icubmod_gazecontrollerclient=ON ..
@@ -102,18 +105,18 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         git clone https://github.com/robotology/cer.git --depth 1 --branch devel
         cd cer && mkdir -p build && cd build
-        cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROBOTOLOGY_ROOT}/scripts/buildsystems/vcpkg.cmake \
+        cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake \
                      -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
         cmake --build . --config ${{ matrix.build_type }} --target INSTALL
         # icub-contrib-common
         cd ${GITHUB_WORKSPACE}
         git clone https://github.com/robotology/icub-contrib-common.git --depth 1
         cd icub-contrib-common && mkdir -p build && cd build
-        cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROBOTOLOGY_ROOT}/scripts/buildsystems/vcpkg.cmake \
+        cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake \
                      -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..        
         cmake --build . --config ${{ matrix.build_type }} --target INSTALL
         
-    - name: Source-based Dependencies [Ubuntu] 
+    - name: Build Source-based Dependencies [Ubuntu] 
       if: matrix.os == 'ubuntu-latest'
       shell: bash
       run: |
@@ -178,7 +181,7 @@ jobs:
       run: |
         mkdir -p build
         cd build
-        cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROBOTOLOGY_ROOT}/scripts/buildsystems/vcpkg.cmake \
+        cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake \
                      -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install \
                      -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DBUILD_TESTING=ON ..
 
@@ -197,7 +200,7 @@ jobs:
         cd build
         # Fix for using YARP idl generators (that link ACE) in Windows 
         # See https://github.com/robotology/idyntree/issues/569 for more details
-        export PATH=$PATH:${GITHUB_WORKSPACE}/install/bin:${VCPKG_ROBOTOLOGY_ROOT}/installed/x64-windows/bin
+        export PATH=$PATH:${GITHUB_WORKSPACE}/install/bin:${VCPKG_INSTALLATION_ROOT}/installed/x64-windows/bin
         cmake --build . --config ${{ matrix.build_type }}
         
     - name: Install
