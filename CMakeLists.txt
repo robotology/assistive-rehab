@@ -80,6 +80,8 @@ if(BUILD_TESTING)
   add_subdirectory(tests)
 endif()
 
+add_subdirectory(app/gazebo/tug/plugins/tuginterface)
+
 file(GLOB ini app/conf/*.ini)
 file(GLOB xml app/conf/*.xml)
 file(GLOB scripts app/scripts/*.template)
