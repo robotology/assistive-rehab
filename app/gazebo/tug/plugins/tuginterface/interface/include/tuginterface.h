@@ -32,30 +32,23 @@ private:
     yarp::os::RpcServer m_rpcport;
     yarp::os::Network   m_network;
     yarp::os::Property m_parameters;
-
-    double m_lastUpdateTime;
+    std::string portname;
 
     physics::WorldPtr world;
     physics::ActorPtr actor;
-    physics::Actor::SkeletonAnimation_M skel_animations;
     double velocity;
-    double tolerance;
-    double t0;
-    physics::TrajectoryInfoPtr trajectoryInfo;
-    yarp::sig::Matrix waypoints;
-    int waypoint_id;
+    int numwaypoints;
+    yarp::sig::Matrix targets;
+    std::map<double, ignition::math::Pose3d> waypoints_map;
 
-    enum class State { started, finished, stopped, idle } state;
 
 public:
     TugInterface();
     ~TugInterface();
     
-    void Load(physics::ModelPtr _parent, sdf::ElementPtr /*_sdf*/);
+    void Load(physics::ModelPtr _model, sdf::ElementPtr /*_sdf*/);
     void OnUpdate(const gazebo::common::UpdateInfo & /*_info*/);
-    double updateCurrPose(ignition::math::Pose3d &pose, const ignition::math::Vector3d &targ,
-                          const double &dt, const double &t, const ignition::math::Vector3d &o,
-                          const double &angle);
+    bool configure(const sdf::ElementPtr &/*_sdf*/);
     
 };
 

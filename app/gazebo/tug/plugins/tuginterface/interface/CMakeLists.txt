@@ -2,8 +2,8 @@
 # Authors: Valentina Vasco
 # CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
 
-set(${PROJECT_NAME}_source src/tuginterface.cpp src/tugserver.cpp)
-set(${PROJECT_NAME}_headers include/tuginterface.h include/tugserver.h)
+set(${PROJECT_NAME}_source src/tuginterface.cpp src/tugserver.cpp src/utils.cpp)
+set(${PROJECT_NAME}_headers include/tuginterface.h include/tugserver.h include/utils.h)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                     ${Boost_INCLUDE_DIRS}

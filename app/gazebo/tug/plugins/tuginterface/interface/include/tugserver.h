@@ -22,10 +22,10 @@ class TugServer: public TugInterfaceServer
 private:
     gazebo::physics::WorldPtr world;
     gazebo::physics::ActorPtr actor;
-    bool starting;
     double speed;
-    gazebo::physics::TrajectoryInfoPtr trajectory;
-    yarp::sig::Matrix waypoints;
+    int numwaypoints;
+    yarp::sig::Matrix targets;
+    std::map<double, ignition::math::Pose3d> wp_map;
 
 public:
     TugServer();
@@ -56,12 +56,7 @@ public:
      */
     virtual double getSpeed();
 
-    void init(const double &speed, const gazebo::physics::TrajectoryInfoPtr &trajectory,
-              const yarp::sig::Matrix &waypoints);
-
-    void setStarting(const bool &trigger);
-
-    void update(bool &trigger, double &vel);
+    void init(const double &speed, const int numwaypoints, const yarp::sig::Matrix &waypoints);
 
     void attachWorldPointer(gazebo::physics::WorldPtr p)
     {

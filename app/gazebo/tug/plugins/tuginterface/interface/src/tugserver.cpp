@@ -11,13 +11,14 @@
 #include <yarp/sig/Matrix.h>
 #include <yarp/math/Math.h>
 
+#include <include/utils.h>
 #include <include/tugserver.h>
 
 using namespace std;
 using namespace gazebo;
 
 /****************************************************************/
-TugServer::TugServer() : starting(false), speed(0.0)
+TugServer::TugServer() : world(0), actor(0), numwaypoints(0), speed(0.0)
 {
 
 }
@@ -32,7 +33,6 @@ TugServer::~TugServer()
 bool TugServer::start()
 {
     actor->Play();
-    starting=true;
     yInfo()<<"Playing script";
     return true;
 }
@@ -41,7 +41,6 @@ bool TugServer::start()
 bool TugServer::stop()
 {
     actor->Stop();
-    starting=false;
     yInfo()<<"Stop script";
     return true;
 }
@@ -50,21 +49,15 @@ bool TugServer::stop()
 bool TugServer::setSpeed(const double speed)
 {
     this->speed=speed;
-    ignition::math::Vector3d sp=actor->WorldPose().Pos();
-    yarp::sig::Vector t0(3,0.0);
-    t0[0]=sp[0];
-    t0[1]=sp[1];
-    t0[2]=sp[2];
-    double duration=0.0;
-    for (int i=0; i<waypoints.rows(); i++)
-    {
-        yarp::sig::Vector t1=waypoints.getRow(i).subVector(0,2);
-        duration+=yarp::math::norm(t1-t0)/this->speed;
-        t0=t1;
-    }
-    trajectory->endTime=trajectory->startTime+duration;
-    trajectory->duration=duration;
-    actor->SetCustomTrajectory(trajectory);
+    wp_map.clear();
+    wp_map=createMap(targets,speed);
+    wp_map=generateWaypoints(numwaypoints,speed,wp_map);
+
+    sdf::ElementPtr world_sdf=world->SDF();
+    sdf::ElementPtr actor_sdf=world_sdf->GetElement("actor");
+    updateScript(actor_sdf,wp_map);
+    actor->UpdateParameters(actor_sdf);
+
     yInfo()<<"Setting speed to"<<speed;
     return true;
 }
@@ -76,26 +69,14 @@ double TugServer::getSpeed()
 }
 
 /****************************************************************/
-void TugServer::update(bool &trigger, double &vel)
+void TugServer::init(const double &speed, const int numwaypoints,
+                     const yarp::sig::Matrix &targets)
 {
-    trigger=starting;
-    vel=speed;
-}
-
-/****************************************************************/
-void TugServer::init(const double &speed, const physics::TrajectoryInfoPtr &trajectory,
-                     const yarp::sig::Matrix &waypoints)
-{
-    this->trajectory=trajectory;
     this->speed=speed;
-    this->waypoints=waypoints;
+    this->numwaypoints=numwaypoints;
+    this->targets=targets;
 }
 
-/****************************************************************/
-void TugServer::setStarting(const bool &trigger)
-{
-    this->starting=trigger;
-}
 
 
 
