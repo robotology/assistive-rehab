@@ -30,4 +30,11 @@ service TugInterfaceServer
      */
     double getSpeed();
 
+    /**
+     * Pause actor for time seconds.
+     * @param time seconds during which actor is paused.
+     * @return returns walking speed
+     */
+    bool pause(1: double time);
+
 }

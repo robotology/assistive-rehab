@@ -46,6 +46,24 @@ bool TugServer::stop()
 }
 
 /****************************************************************/
+bool TugServer::pause(const double time)
+{
+    yInfo()<<"Pausing for"<<time<<"seconds";
+    double t0=yarp::os::Time::now();
+    world->SetPaused(true);
+    while(true)
+    {
+        if ((yarp::os::Time::now()-t0)>=time)
+        {
+            world->SetPaused(false);
+            break;
+        }
+    }
+    return true;
+}
+
+
+/****************************************************************/
 bool TugServer::setSpeed(const double speed)
 {
     this->speed=speed;

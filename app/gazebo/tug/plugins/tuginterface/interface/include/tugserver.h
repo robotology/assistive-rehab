@@ -56,6 +56,13 @@ public:
      */
     virtual double getSpeed();
 
+    /**
+     * Pause actor for time seconds.
+     * @param time seconds during which actor is paused.
+     * @return returns walking speed
+     */
+    virtual bool pause(const double time);
+
     void init(const double &speed, const int numwaypoints, const yarp::sig::Matrix &waypoints);
 
     void attachWorldPointer(gazebo::physics::WorldPtr p)
