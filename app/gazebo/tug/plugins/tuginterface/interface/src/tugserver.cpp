@@ -18,7 +18,7 @@ using namespace std;
 using namespace gazebo;
 
 /****************************************************************/
-TugServer::TugServer() : world(0), actor(0), numwaypoints(0), speed(0.0)
+TugServer::TugServer() : world(0), actor(0), lin_speed(0.0), ang_speed(0.0)
 {
 
 }
@@ -55,18 +55,39 @@ bool TugServer::pause(const double time)
 }
 
 /****************************************************************/
+bool TugServer::goTo(const double x, const double y, const double theta)
+{
+    ignition::math::Pose3d cp=actor->WorldPose();
+    ignition::math::Pose3d t(x,y,0.0,0.0,0.0,(M_PI/180.0)*theta);
+
+    yarp::sig::Vector cpy(6,0.0);
+    cpy[0]=cp.Pos().X();
+    cpy[1]=cp.Pos().Y();
+
+    yarp::sig::Vector ty(6,0.0);
+    ty[0]=t.Pos().X();
+    ty[1]=t.Pos().Y();
+    ty[2]=t.Pos().Z();
+    ty[3]=t.Rot().Roll();
+    ty[4]=t.Rot().Pitch();
+    ty[5]=t.Rot().Yaw();
+
+    yarp::sig::Matrix T(2,6);
+    T.setRow(0,cpy);
+    T.setRow(1,ty);
+
+    updateMap(T);
+    actor->Play("walk");
+
+    yInfo()<<"Going to"<<x<<y;
+    return true;
+}
+
+/****************************************************************/
 bool TugServer::setSpeed(const double speed)
 {
-    this->speed=speed;
-    wp_map.clear();
-    wp_map=createMap(targets,speed);
-    wp_map=generateWaypoints(numwaypoints,speed,wp_map);
-
-    sdf::ElementPtr world_sdf=world->SDF();
-    sdf::ElementPtr actor_sdf=world_sdf->GetElement("actor");
-    updateScript(actor_sdf,wp_map);
-    actor->UpdateParameters(actor_sdf);
-
+    this->lin_speed=speed;
+    updateMap(targets);
     yInfo()<<"Setting speed to"<<speed;
     return true;
 }
@@ -74,7 +95,7 @@ bool TugServer::setSpeed(const double speed)
 /****************************************************************/
 double TugServer::getSpeed()
 {
-    return this->speed;
+    return this->lin_speed;
 }
 
 /****************************************************************/
@@ -92,6 +113,7 @@ std::vector<std::string> TugServer::getAnimationList()
 /****************************************************************/
 bool TugServer::play(const std::string &name, const bool complete, const int id)
 {  
+    updateMap(targets);
     physics::Actor::SkeletonAnimation_M skel_m=actor->SkeletonAnimations();
     if (!name.empty() && !skel_m[name])
     {
@@ -118,11 +140,23 @@ bool TugServer::play(const std::string &name, const bool complete, const int id)
 }
 
 /****************************************************************/
-void TugServer::init(const double &speed, const int numwaypoints,
+void TugServer::updateMap(const yarp::sig::Matrix &t)
+{
+    std::map<double, ignition::math::Pose3d> wp_map=createMap(t,this->lin_speed,this->ang_speed);
+    wp_map=generateWaypoints(this->lin_speed,this->ang_speed,wp_map);
+
+    sdf::ElementPtr world_sdf=world->SDF();
+    sdf::ElementPtr actor_sdf=world_sdf->GetElement("actor");
+    updateScript(actor_sdf,wp_map);
+    actor->UpdateParameters(actor_sdf);
+}
+
+/****************************************************************/
+void TugServer::init(const double &lin_speed, const double &ang_speed,
                      const yarp::sig::Matrix &targets)
 {
-    this->speed=speed;
-    this->numwaypoints=numwaypoints;
+    this->lin_speed=lin_speed;
+    this->ang_speed=ang_speed;
     this->targets=targets;
 }
 

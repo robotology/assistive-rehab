@@ -44,27 +44,36 @@ void updateScript(sdf::ElementPtr &actor_sdf, const std::map<double, ignition::m
 }
 
 /****************************************************************/
-std::map<double, ignition::math::Pose3d> createMap(const yarp::sig::Matrix &t,const double &vel)
+std::map<double, ignition::math::Pose3d> createMap(const yarp::sig::Matrix &t,const double &lin_vel,
+                                                   const double &ang_vel)
 {
     std::map<double, ignition::math::Pose3d> m;
-    yarp::sig::Vector t0=t.getRow(0).subVector(0,2);
+    yarp::sig::Vector t0=t.getRow(0);
     double duration=0.0;
     for (int i=0; i<t.rows(); i++)
     {
-        yarp::sig::Vector t1=t.getRow(i).subVector(0,2);
-        yarp::sig::Vector o=t.getRow(i).subVector(3,5);
-        double dist=yarp::math::norm(t1-t0);
-        duration+=dist/vel;
+        yarp::sig::Vector t1=t.getRow(i);
+        double dist=yarp::math::norm(t1.subVector(0,2)-t0.subVector(0,2));
+        if (dist>0.0)
+        {
+            duration+=dist/lin_vel;
+        }
+        else
+        {
+            double angle=(180.0/M_PI)*fabs(t1[5]-t0[5]);
+            duration+=angle/ang_vel;
+        }
         ignition::math::Pose3d p;
-        p.Set(t1[0],t1[1],t1[2],o[0],o[1],o[2]);
-        m[duration]=p;
+        p.Set(t1[0],t1[1],t1[2],t1[3],t1[4],t1[5]);
+        m.insert(std::pair<double, ignition::math::Pose3d>(duration,p));
         t0=t1;
     }
+
     return m;
 }
 
 /****************************************************************/
-std::map<double, ignition::math::Pose3d> generateWaypoints(const int ntot, const double &vel,
+std::map<double, ignition::math::Pose3d> generateWaypoints(const double &lin_vel, const double &ang_vel,
                                                            const std::map<double, ignition::math::Pose3d> &m)
 {
     std::map<double, ignition::math::Pose3d> mout;
@@ -75,22 +84,43 @@ std::map<double, ignition::math::Pose3d> generateWaypoints(const int ntot, const
     double t=t0;
     for (; pIter!=m.end(); pIter++)
     {
-        ignition::math::Pose3d target1=pIter->second;
-        ignition::math::Vector3d e=target1.CoordPositionSub(target0);
-        double norm_e=e.Length();
-        ignition::math::Vector3d dir=e/norm_e;
-        ignition::math::Pose3d v;
-        double segment=norm_e/ntot;
-        for (int step=0;step<=ntot-1;step++)
+        auto it=m.find(t);
+        if (it!=m.end())
         {
-            double seg=(step+1)*segment;
-            ignition::math::Vector3d pos(target0.Pos().X()+seg*dir[0],
-                    target0.Pos().Y()+seg*dir[1],
-                    target0.Pos().Z()+seg*dir[2]);
-            ignition::math::Vector3d ori=target1.Rot().Euler();
-            v.Set(pos,ori);
-            t+=segment/vel;
-            mout[t]=v;
+            mout[t]=it->second;
+        }
+        ignition::math::Pose3d target1=pIter->second;
+        ignition::math::Vector3d e_pos=target1.Pos()-target0.Pos();
+        double norm_epos=e_pos.Length();
+        double prev_yaw;
+        if (norm_epos>0.0) //target not reached
+        {
+            int ntot=ceil(norm_epos/0.5);
+            ignition::math::Vector3d dir=e_pos/norm_epos;
+            ignition::math::Pose3d v;
+            double segment=norm_epos/ntot;
+            prev_yaw=atan2(dir[1],dir[0]);
+            for (int step=0;step<=ntot-1;step++)
+            {
+                double seg=(step+1)*segment;
+                ignition::math::Vector3d pos(target0.Pos().X()+seg*dir[0],
+                        target0.Pos().Y()+seg*dir[1],
+                        target0.Pos().Z()+seg*dir[2]);
+                ignition::math::Vector3d ori(0.0,0.0,prev_yaw);
+                v.Set(pos,ori);
+                t+=segment/lin_vel;
+                mout[t]=v;
+            }
+        }
+        else
+        {
+            prev_yaw=target0.Rot().Yaw();
+        }
+        double delta=fabs(target1.Rot().Yaw()-prev_yaw);
+        if (delta>0.0)
+        {
+            t+=(180.0/M_PI)*fabs(target1.Rot().Yaw())/ang_vel;
+            mout[t]=target1;
         }
         target0=target1;
     }

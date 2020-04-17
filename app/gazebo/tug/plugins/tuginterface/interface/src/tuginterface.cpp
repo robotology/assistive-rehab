@@ -96,8 +96,8 @@ bool TugInterface::configure(const sdf::ElementPtr &_sdf)
             return false;
         }
     }
-    velocity=m_parameters.find("velocity").asDouble();
-    numwaypoints=m_parameters.find("numwaypoints").asInt();
+    linear_velocity=m_parameters.find("linear-velocity").asDouble();
+    angular_velocity=m_parameters.find("angular-velocity").asDouble();
     starting_animation=m_parameters.find("starting_animation").asString();
     return true;
 }
@@ -107,7 +107,7 @@ void TugInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 {
     if (!yarp::os::Network::checkNetwork(GazeboYarpPlugins::yarpNetworkInitializationTimeout))
     {
-        yError() << "TugInterface::Load error: yarp network does not seem to be available, is the yarpserver running?";
+        yError()<<"TugInterface::Load error: yarp network does not seem to be available, is the yarpserver running?";
         return;
     }
 
@@ -120,8 +120,8 @@ void TugInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
         return;
     }
 
-    waypoints_map=createMap(targets,velocity);
-    waypoints_map=generateWaypoints(numwaypoints,velocity,waypoints_map);
+    waypoints_map=createMap(targets,linear_velocity,angular_velocity);
+    waypoints_map=generateWaypoints(linear_velocity,angular_velocity,waypoints_map);
 
     sdf::ElementPtr world_sdf=world->SDF();
     sdf::ElementPtr actor_sdf=world_sdf->GetElement("actor");
@@ -143,7 +143,7 @@ void TugInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
     m_rpcport.open(portname);
     server.yarp().attachAsServer(m_rpcport);
-    server.init(velocity,numwaypoints,targets);
+    server.init(linear_velocity,angular_velocity,targets);
 
     // Listen to the update event. This event is broadcast every
     // simulation iteration.

@@ -46,4 +46,13 @@ service TugInterfaceServer
      */
     bool pause(1: double time);
 
+    /**
+     * Reach a target location.
+     * @param x is the x-coordinate of the target location (meters).
+     * @param y is the y-coordinate of the target location (meters).
+     * @param theta is the theta-coordinate of the target location (degrees).
+     * @return true/false on success/failure.
+     */
+    bool goTo(1: double x, 2: double y, 3: double theta);
+
 }
