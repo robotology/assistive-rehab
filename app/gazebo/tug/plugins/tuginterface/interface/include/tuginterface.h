@@ -38,6 +38,7 @@ private:
     physics::ActorPtr actor;
     double velocity;
     int numwaypoints;
+    std::string starting_animation;
     yarp::sig::Matrix targets;
     std::map<double, ignition::math::Pose3d> waypoints_map;
 

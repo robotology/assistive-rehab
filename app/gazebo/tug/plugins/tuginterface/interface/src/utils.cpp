@@ -39,8 +39,7 @@ void updateScript(sdf::ElementPtr &actor_sdf, const std::map<double, ignition::m
         traj=traj->GetNextElement("trajectory");
     }
 
-    string s;
-    yInfo()<<"Adding to script:"<<script->ToString(s);
+    yInfo()<<"Adding to script:"<<script->ToString("");
 
 }
 
@@ -82,7 +81,7 @@ std::map<double, ignition::math::Pose3d> generateWaypoints(const int ntot, const
         ignition::math::Vector3d dir=e/norm_e;
         ignition::math::Pose3d v;
         double segment=norm_e/ntot;
-        for (int step=0;step<ntot-1;step++)
+        for (int step=0;step<=ntot-1;step++)
         {
             double seg=(step+1)*segment;
             ignition::math::Vector3d pos(target0.Pos().X()+seg*dir[0],
@@ -95,9 +94,7 @@ std::map<double, ignition::math::Pose3d> generateWaypoints(const int ntot, const
         }
         target0=target1;
     }
-    mout.insert(m.begin(),m.end());
     return mout;
-
 }
 
 

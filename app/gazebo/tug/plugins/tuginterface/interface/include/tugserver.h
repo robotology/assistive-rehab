@@ -32,12 +32,6 @@ public:
     ~TugServer();
 
     /**
-     * Start script for moving actor.
-     * @return returns true or false on success / failure
-     */
-    virtual bool start();
-
-    /**
      * Stop script for moving actor.
      * @return returns true or false on success / failure
      */
@@ -52,9 +46,24 @@ public:
 
     /**
      * Get walking speed.
-     * @return returns walking speed
+     * @return returns walking speed.
      */
     virtual double getSpeed();
+
+    /**
+     * Get the list of animations associated with the actor.
+     * @return returns list of animations associated with the actor.
+     */
+    virtual std::vector<std::string> getAnimationList();
+
+    /**
+     * Play specified animation.
+     * @param name string indicating the animation. If not specified, all animations are played according to their id.
+     * @param complete if true, the whole script is played starting from the specified animation.
+     * @param id int indicating the id of animation. To be specified if the animation is played several times during the script.
+     * @return returns true / false on success / failure.
+     */
+    virtual bool play(const std::string &name, const bool complete, const int id);
 
     /**
      * Pause actor for time seconds.

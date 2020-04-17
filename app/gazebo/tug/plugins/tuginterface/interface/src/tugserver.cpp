@@ -30,14 +30,6 @@ TugServer::~TugServer()
 }
 
 /****************************************************************/
-bool TugServer::start()
-{
-    actor->Play();
-    yInfo()<<"Playing script";
-    return true;
-}
-
-/****************************************************************/
 bool TugServer::stop()
 {
     actor->Stop();
@@ -62,7 +54,6 @@ bool TugServer::pause(const double time)
     return true;
 }
 
-
 /****************************************************************/
 bool TugServer::setSpeed(const double speed)
 {
@@ -84,6 +75,46 @@ bool TugServer::setSpeed(const double speed)
 double TugServer::getSpeed()
 {
     return this->speed;
+}
+
+/****************************************************************/
+std::vector<std::string> TugServer::getAnimationList()
+{
+    physics::Actor::SkeletonAnimation_M skel_m=actor->SkeletonAnimations();
+    std::vector<std::string> animations;
+    for (auto it=skel_m.begin(); it!=skel_m.end(); it++)
+    {
+        animations.push_back(it->first);
+    }
+    return animations;
+}
+
+/****************************************************************/
+bool TugServer::play(const std::string &name, const bool complete, const int id)
+{  
+    physics::Actor::SkeletonAnimation_M skel_m=actor->SkeletonAnimations();
+    if (!name.empty() && !skel_m[name])
+    {
+        yError() << "Animation not found";
+        return false;
+    }
+    if (name.empty())
+    {
+        yInfo()<<"Playing whole script";
+    }
+    else
+    {
+        if (complete)
+        {
+            yInfo()<<"Playing script starting from"<<name;
+        }
+        else
+        {
+            yInfo()<<"Playing only"<<name;
+        }
+    }
+    actor->Play(name,complete,id);
+    return true;
 }
 
 /****************************************************************/

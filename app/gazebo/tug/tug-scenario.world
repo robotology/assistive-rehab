@@ -34,10 +34,16 @@
     <!-- Human model -->
     <actor name="human">
       <skin>
-        <filename>walk.dae</filename>
+        <filename>stand.dae</filename>
       </skin>
+      <animation name="stand">
+        <filename>stand.dae</filename>
+      </animation>
       <animation name="stand_up">
         <filename>stand_up.dae</filename>
+      </animation>
+      <animation name="sitting">
+        <filename>sitting.dae</filename>
       </animation>
       <animation name="walk">
         <filename>walk.dae</filename>
@@ -49,14 +55,23 @@
       <script>
         <loop>false</loop>
         <auto_start>false</auto_start>
-        <trajectory id="0" type="stand_up"/>
-        <trajectory id="1" type="walk"/>
-        <trajectory id="2" type="sit_down"/>
+        <trajectory id="0" type="stand"/>
+        <trajectory id="1" type="sit_down"/>
+        <trajectory id="2" type="sitting"/>
+        <trajectory id="3" type="stand_up"/>
+        <trajectory id="4" type="walk"/>
+        <trajectory id="5" type="sit_down"/>
       </script>
       <plugin name='tug_interface' filename='libgazebo_assistiverehab_tuginterface.so'>
         <yarpConfigurationFile>model://tugInterface.ini</yarpConfigurationFile>
       </plugin>
     </actor>
+
+    <!-- Chair -->
+    <include>
+      <uri>model://VisitorChair</uri>
+      <pose>-0.50 0.0 0.0 0.0 0.0 1.57</pose>
+    </include>
 
     <!-- Walking helpers -->
     <!-- Nested models from SDF 1.5 and gazebo 7 -->

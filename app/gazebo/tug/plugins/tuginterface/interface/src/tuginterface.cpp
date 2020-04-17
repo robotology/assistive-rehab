@@ -98,6 +98,7 @@ bool TugInterface::configure(const sdf::ElementPtr &_sdf)
     }
     velocity=m_parameters.find("velocity").asDouble();
     numwaypoints=m_parameters.find("numwaypoints").asInt();
+    starting_animation=m_parameters.find("starting_animation").asString();
     return true;
 }
 
@@ -110,7 +111,6 @@ void TugInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
         return;
     }
 
-    //setting up proxy
     world=_model->GetWorld();
     actor=boost::dynamic_pointer_cast<physics::Actor>(_model);
 
@@ -127,6 +127,17 @@ void TugInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     sdf::ElementPtr actor_sdf=world_sdf->GetElement("actor");
     updateScript(actor_sdf,waypoints_map);
     actor->UpdateParameters(actor_sdf);
+
+    auto animations=actor->SkeletonAnimations();
+    if (!animations[starting_animation])
+    {
+        yWarning()<<starting_animation<<"not found";
+    }
+    else
+    {
+        actor->Play(starting_animation);
+    }
+
     server.attachWorldPointer(world);
     server.attachActorPointer(actor);
 
