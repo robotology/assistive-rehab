@@ -96,8 +96,8 @@ bool TugInterface::configure(const sdf::ElementPtr &_sdf)
             return false;
         }
     }
-    linear_velocity=m_parameters.find("linear-velocity").asDouble();
-    angular_velocity=m_parameters.find("angular-velocity").asDouble();
+    vel.lin_vel=m_parameters.find("linear-velocity").asDouble();
+    vel.ang_vel=m_parameters.find("angular-velocity").asDouble();
     starting_animation=m_parameters.find("starting_animation").asString();
     return true;
 }
@@ -120,8 +120,8 @@ void TugInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
         return;
     }
 
-    waypoints_map=createMap(targets,linear_velocity,angular_velocity);
-    waypoints_map=generateWaypoints(linear_velocity,angular_velocity,waypoints_map);
+    waypoints_map=createMap(targets,vel);
+    waypoints_map=generateWaypoints(vel,waypoints_map);
 
     sdf::ElementPtr world_sdf=world->SDF();
     sdf::ElementPtr actor_sdf=world_sdf->GetElement("actor");
@@ -143,7 +143,7 @@ void TugInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
     m_rpcport.open(portname);
     server.yarp().attachAsServer(m_rpcport);
-    server.init(linear_velocity,angular_velocity,targets);
+    server.init(vel,targets);
 
     // Listen to the update event. This event is broadcast every
     // simulation iteration.

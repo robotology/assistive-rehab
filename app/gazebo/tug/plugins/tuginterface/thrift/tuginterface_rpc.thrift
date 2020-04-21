@@ -2,6 +2,19 @@
 # Authors: Valentina Vasco
 # CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
 
+struct Pose 
+{
+1: double x;     /* x position [m] */
+2: double y;     /* y position [m] */
+3: double theta;   /* rotation along yaw axis [deg]*/
+}
+
+struct Animation 
+{
+1: string name="";     /* animation name */
+2: i32 id=-1;          /* animation id */
+}
+
 service TugInterfaceServer
 {
 
@@ -32,12 +45,11 @@ service TugInterfaceServer
 
     /**
      * Play specified animation.
-     * @param name string indicating the animation. If not specified, all animations are played according to their id.
+     * @param animation in the form (name, id). If not specified, all animations are played according to their id. The id has to be specified if the animation is played several times during the script.
      * @param complete if true, the whole script is played starting from the specified animation.
-     * @param id int indicating the id of animation. To be specified if the animation is played several times during the script.
      * @return returns true / false on success / failure.
      */
-    bool play(1: string name="", 2: bool complete=false, 3: i32 id=-1);
+    bool play(1: Animation animation, 2: bool complete=false);
 
     /**
      * Pause actor for time seconds.
@@ -48,11 +60,9 @@ service TugInterfaceServer
 
     /**
      * Reach a target location.
-     * @param x is the x-coordinate of the target location (meters).
-     * @param y is the y-coordinate of the target location (meters).
-     * @param theta is the theta-coordinate of the target location (degrees).
+     * @param p pose in the form x,y,theta.
      * @return true/false on success/failure.
      */
-    bool goTo(1: double x, 2: double y, 3: double theta);
+    bool goTo(1: Pose p);
 
 }

@@ -15,15 +15,17 @@
 #include <gazebo/physics/World.hh>
 #include <gazebo/physics/Actor.hh>
 
+#include <include/utils.h>
 #include <../include/TugInterfaceServer.h>
+#include <../include/Pose.h>
+#include <../include/Animation.h>
 
 class TugServer: public TugInterfaceServer
 {
 private:
     gazebo::physics::WorldPtr world;
     gazebo::physics::ActorPtr actor;
-    double lin_speed;
-    double ang_speed;
+    Velocity vel;
     yarp::sig::Matrix targets;
 
 public:
@@ -57,12 +59,12 @@ public:
 
     /**
      * Play specified animation.
-     * @param name string indicating the animation. If not specified, all animations are played according to their id.
+     * @param animation in the form (name, id). If not specified, all animations are played according to their id.
+     * The id has to be specified if the animation is played several times during the script.
      * @param complete if true, the whole script is played starting from the specified animation.
-     * @param id int indicating the id of animation. To be specified if the animation is played several times during the script.
      * @return returns true / false on success / failure.
      */
-    virtual bool play(const std::string &name, const bool complete, const int id);
+    virtual bool play(const Animation &animation, const bool complete);
 
     /**
      * Pause actor for time seconds.
@@ -73,17 +75,14 @@ public:
 
     /**
      * Reach a target location.
-     * @param x is the x-coordinate of the target location (meters).
-     * @param y is the y-coordinate of the target location (meters).
-     * @param theta is the theta-coordinate of the target location (degrees).
+     * @param p pose in the form x,y,theta.
      * @return true/false on success/failure.
      */
-    virtual bool goTo(const double x, const double y, const double theta);
+    virtual bool goTo(const Pose &p);
 
     void updateMap(const yarp::sig::Matrix &t);
 
-    void init(const double &lin_speed, const double &ang_speed,
-              const yarp::sig::Matrix &waypoints);
+    void init(const Velocity &vel, const yarp::sig::Matrix &waypoints);
 
     void attachWorldPointer(gazebo::physics::WorldPtr p)
     {

@@ -44,8 +44,7 @@ void updateScript(sdf::ElementPtr &actor_sdf, const std::map<double, ignition::m
 }
 
 /****************************************************************/
-std::map<double, ignition::math::Pose3d> createMap(const yarp::sig::Matrix &t,const double &lin_vel,
-                                                   const double &ang_vel)
+std::map<double, ignition::math::Pose3d> createMap(const yarp::sig::Matrix &t, const Velocity &vel)
 {
     std::map<double, ignition::math::Pose3d> m;
     yarp::sig::Vector t0=t.getRow(0);
@@ -56,12 +55,12 @@ std::map<double, ignition::math::Pose3d> createMap(const yarp::sig::Matrix &t,co
         double dist=yarp::math::norm(t1.subVector(0,1)-t0.subVector(0,1));
         if (dist>0.0)
         {
-            duration+=dist/lin_vel;
+            duration+=dist/vel.lin_vel;
         }
         else
         {
             double angle=(180.0/M_PI)*fabs(t1[2]-t0[2]);
-            duration+=angle/ang_vel;
+            duration+=angle/vel.ang_vel;
         }
         ignition::math::Pose3d p;
         p.Set(t1[0],t1[1],0.0,0.0,0.0,t1[2]);
@@ -73,7 +72,7 @@ std::map<double, ignition::math::Pose3d> createMap(const yarp::sig::Matrix &t,co
 }
 
 /****************************************************************/
-std::map<double, ignition::math::Pose3d> generateWaypoints(const double &lin_vel, const double &ang_vel,
+std::map<double, ignition::math::Pose3d> generateWaypoints(const Velocity &vel,
                                                            const std::map<double, ignition::math::Pose3d> &m)
 {
     std::map<double, ignition::math::Pose3d> mout;
@@ -106,7 +105,7 @@ std::map<double, ignition::math::Pose3d> generateWaypoints(const double &lin_vel
                 ignition::math::Vector3d pos(target0.Pos().X()+seg*dir[0],target0.Pos().Y()+seg*dir[1],0.0);
                 ignition::math::Vector3d ori(0.0,0.0,prev_yaw);
                 v.Set(pos,ori);
-                t+=segment/lin_vel;
+                t+=segment/vel.lin_vel;
                 mout[t]=v;
             }
         }
@@ -117,7 +116,7 @@ std::map<double, ignition::math::Pose3d> generateWaypoints(const double &lin_vel
         double delta=fabs(target1.Rot().Yaw()-prev_yaw);
         if (delta>0.0)
         {
-            t+=(180.0/M_PI)*fabs(target1.Rot().Yaw())/ang_vel;
+            t+=(180.0/M_PI)*fabs(target1.Rot().Yaw())/vel.ang_vel;
             mout[t]=target1;
         }
         target0=target1;

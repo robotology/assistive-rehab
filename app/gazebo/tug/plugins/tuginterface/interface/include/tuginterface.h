@@ -19,6 +19,7 @@
 #include <yarp/sig/Matrix.h>
 
 #include <include/tugserver.h>
+#include <include/utils.h>
 
 namespace gazebo
 {
@@ -36,8 +37,7 @@ private:
 
     physics::WorldPtr world;
     physics::ActorPtr actor;
-    double linear_velocity;
-    double angular_velocity;
+    Velocity vel;
     std::string starting_animation;
     yarp::sig::Matrix targets;
     std::map<double, ignition::math::Pose3d> waypoints_map;
