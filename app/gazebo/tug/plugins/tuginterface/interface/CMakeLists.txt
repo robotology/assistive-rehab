@@ -6,6 +6,7 @@ set(gazebo_assistiverehab_tuginterface_source src/tuginterface.cpp src/tugserver
 set(gazebo_assistiverehab_tuginterface_headers include/tuginterface.h include/tugserver.h include/utils.h)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}
+                    ${TIRPC_HEADERS}
                     ${Boost_INCLUDE_DIRS}
                     ${GAZEBO_INCLUDE_DIRS})
 link_directories(${GAZEBO_LIBRARY_DIRS})
@@ -13,7 +14,6 @@ link_directories(${GAZEBO_LIBRARY_DIRS})
 add_library(gazebo_assistiverehab_tuginterface SHARED
     ${gazebo_assistiverehab_tuginterface_source} ${gazebo_assistiverehab_tuginterface_headers})
 target_compile_definitions(gazebo_assistiverehab_tuginterface PRIVATE _USE_MATH_DEFINES)
-
 target_link_libraries(gazebo_assistiverehab_tuginterface GazeboYARPPlugins::gazebo_yarp_singleton
                                    ${YARP_LIBRARIES}
                                    ${GAZEBO_LIBRARIES}

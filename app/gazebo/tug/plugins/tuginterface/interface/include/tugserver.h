@@ -16,9 +16,10 @@
 #include <gazebo/physics/Actor.hh>
 
 #include <include/utils.h>
-#include <../include/TugInterfaceServer.h>
-#include <../include/Pose.h>
-#include <../include/Animation.h>
+
+#include <TugInterfaceServer.h>
+#include <Pose.h>
+#include <Animation.h>
 
 class TugServer: public TugInterfaceServer
 {
