@@ -53,18 +53,18 @@ std::map<double, ignition::math::Pose3d> createMap(const yarp::sig::Matrix &t,co
     for (int i=0; i<t.rows(); i++)
     {
         yarp::sig::Vector t1=t.getRow(i);
-        double dist=yarp::math::norm(t1.subVector(0,2)-t0.subVector(0,2));
+        double dist=yarp::math::norm(t1.subVector(0,1)-t0.subVector(0,1));
         if (dist>0.0)
         {
             duration+=dist/lin_vel;
         }
         else
         {
-            double angle=(180.0/M_PI)*fabs(t1[5]-t0[5]);
+            double angle=(180.0/M_PI)*fabs(t1[2]-t0[2]);
             duration+=angle/ang_vel;
         }
         ignition::math::Pose3d p;
-        p.Set(t1[0],t1[1],t1[2],t1[3],t1[4],t1[5]);
+        p.Set(t1[0],t1[1],0.0,0.0,0.0,t1[2]);
         m.insert(std::pair<double, ignition::math::Pose3d>(duration,p));
         t0=t1;
     }
@@ -103,9 +103,7 @@ std::map<double, ignition::math::Pose3d> generateWaypoints(const double &lin_vel
             for (int step=0;step<=ntot-1;step++)
             {
                 double seg=(step+1)*segment;
-                ignition::math::Vector3d pos(target0.Pos().X()+seg*dir[0],
-                        target0.Pos().Y()+seg*dir[1],
-                        target0.Pos().Z()+seg*dir[2]);
+                ignition::math::Vector3d pos(target0.Pos().X()+seg*dir[0],target0.Pos().Y()+seg*dir[1],0.0);
                 ignition::math::Vector3d ori(0.0,0.0,prev_yaw);
                 v.Set(pos,ori);
                 t+=segment/lin_vel;

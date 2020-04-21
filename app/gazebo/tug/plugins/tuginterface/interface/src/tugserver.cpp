@@ -60,19 +60,16 @@ bool TugServer::goTo(const double x, const double y, const double theta)
     ignition::math::Pose3d cp=actor->WorldPose();
     ignition::math::Pose3d t(x,y,0.0,0.0,0.0,(M_PI/180.0)*theta);
 
-    yarp::sig::Vector cpy(6,0.0);
+    yarp::sig::Vector cpy(3,0.0);
     cpy[0]=cp.Pos().X();
     cpy[1]=cp.Pos().Y();
 
-    yarp::sig::Vector ty(6,0.0);
+    yarp::sig::Vector ty(3,0.0);
     ty[0]=t.Pos().X();
     ty[1]=t.Pos().Y();
-    ty[2]=t.Pos().Z();
-    ty[3]=t.Rot().Roll();
-    ty[4]=t.Rot().Pitch();
-    ty[5]=t.Rot().Yaw();
+    ty[2]=t.Rot().Yaw();
 
-    yarp::sig::Matrix T(2,6);
+    yarp::sig::Matrix T(2,3);
     T.setRow(0,cpy);
     T.setRow(1,ty);
 

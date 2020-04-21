@@ -77,7 +77,7 @@ bool TugInterface::configure(const sdf::ElementPtr &_sdf)
     yarp::os::Bottle *tBottle=m_parameters.find("targets").asList();
     if (!tBottle->isNull())
     {
-        int ncols=6;
+        int ncols=3;
         if ((tBottle->size()%ncols)==0)
         {
             int nrows=tBottle->size()/ncols;
@@ -92,7 +92,7 @@ bool TugInterface::configure(const sdf::ElementPtr &_sdf)
         }
         else
         {
-            yError()<<"Targets provided has"<<tBottle->size()<<"elements, but it must have a number of elements multiple of 6";
+            yError()<<"Targets provided has"<<tBottle->size()<<"elements, but it must have a number of elements multiple of 3";
             return false;
         }
     }
