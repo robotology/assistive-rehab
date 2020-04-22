@@ -16,12 +16,10 @@ theme:
     palette:
         # primary: blue grey
         accent: amber
-    feature:
-        tabs: true
-    # favicon:
-    #     icon: dashboard
-    logo:
-        icon: dashboard
+    features:
+        - tabs
+    icon:
+        logo: material/robot
 
 # Copyright
 copyright: 'Copyright &copy; 2019 Istituto Italiano di Tecnologia - iCub Tech'
