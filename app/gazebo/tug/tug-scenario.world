@@ -13,7 +13,7 @@
       <uri>model://ground_plane</uri>
     </include>
    
-    <!-- R1 fixed to ground -->
+    <!-- R1 -->
     <model name='SIM_CER_ROBOT'>
       <include>
     	<uri>model://cer</uri>
@@ -30,6 +30,64 @@
       <uri>model://aruco_board_finish</uri>
       <pose>4.0 0.0 0.0 0.0 0.0 3.14</pose>
     </include>
+
+    <!-- Human model -->
+    <actor name="human">
+      <skin>
+        <filename>stand.dae</filename>
+      </skin>
+      <animation name="stand">
+        <filename>stand.dae</filename>
+      </animation>
+      <animation name="stand_up">
+        <filename>stand_up.dae</filename>
+      </animation>
+      <animation name="sitting">
+        <filename>sitting.dae</filename>
+      </animation>
+      <animation name="walk">
+        <filename>walk.dae</filename>
+        <interpolate_x>true</interpolate_x>
+      </animation>
+      <animation name="sit_down">
+        <filename>sit_down.dae</filename>
+      </animation>
+      <script>
+        <loop>false</loop>
+        <auto_start>false</auto_start>
+        <trajectory id="0" type="stand"/>
+        <trajectory id="1" type="sit_down"/>
+        <trajectory id="2" type="sitting"/>
+        <trajectory id="3" type="stand_up"/>
+        <trajectory id="4" type="walk"/>
+        <trajectory id="5" type="sit_down"/>
+      </script>
+      <plugin name='tug_interface' filename='libgazebo_assistiverehab_tuginterface.so'>
+        <yarpConfigurationFile>model://tugInterface.ini</yarpConfigurationFile>
+      </plugin>
+    </actor>
+
+    <!-- Chair -->
+    <include>
+      <uri>model://VisitorChair</uri>
+      <pose>-0.50 0.0 0.0 0.0 0.0 1.57</pose>
+    </include>
+
+    <!-- Walking helpers -->
+    <!-- Nested models from SDF 1.5 and gazebo 7 -->
+    <!-- <model name='walking_helpers'>
+      <static>true</static>
+      <model name='walking_cane'>
+        <include>
+          <uri>model://WalkingCane</uri>
+        </include>
+      </model>
+      <model name='walker'>
+        <include>
+          <uri>model://Walker</uri>
+        </include>
+      </model>
+    </model> -->
 
     <!-- Camera -->
     <gui fullscreen='0'>
