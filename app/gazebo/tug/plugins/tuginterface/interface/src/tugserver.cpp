@@ -74,7 +74,7 @@ bool TugServer::goTo(const Pose &p)
     T.setRow(1,ty);
 
     updateMap(T);
-    actor->Play("walk");
+    actor->PlayWithAnimationName("walk");
 
     yInfo()<<"Going to"<<p.x<<p.y;
     return true;
@@ -121,6 +121,7 @@ bool TugServer::play(const Animation &animation, const bool complete)
     if (name.empty())
     {
         yInfo()<<"Playing whole script";
+        actor->Play();
     }
     else
     {
@@ -133,8 +134,16 @@ bool TugServer::play(const Animation &animation, const bool complete)
             yInfo()<<"Playing"<<name;
         }
     }
-    int id=animation.id;
-    actor->Play(name,complete,id);
+    if (animation.id>=0)
+    {
+        unsigned int id=animation.id;
+        actor->PlayWithAnimationName(name,complete,id);
+    }
+    else
+    {
+        actor->PlayWithAnimationName(name,complete);
+    }
+
     return true;
 }
 
