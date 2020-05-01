@@ -101,6 +101,7 @@
 
     <module>
         <name>managerTUG</name>
+       <parameters>--simulation true</parameters>
         <node>localhost</node>
     </module>
 
@@ -334,12 +335,6 @@
     </connection>
 
     <connection>
-        <from>/cer_gaze-controller/state:o</from>
-        <to>/navController/gaze:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
         <from>/skeletonLocker/viewer:o</from>
         <to>/skeletonViewer:i</to>
         <protocol>fast_tcp</protocol>
@@ -420,6 +415,12 @@
     <connection>
         <from>/managerTUG/right_arm:rpc</from>
         <to>/ctpservice/right_arm/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/gazebo:rpc</from>
+        <to>/tug_input_port</to>
         <protocol>fast_tcp</protocol>
     </connection>
 </application>

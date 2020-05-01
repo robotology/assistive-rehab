@@ -9,6 +9,7 @@
 #ifndef GAZEBO_ASSISTIVEREHAB_TUGSERVER
 #define GAZEBO_ASSISTIVEREHAB_TUGSERVER
 
+#include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
 
 #include <gazebo/gazebo.hh>
@@ -68,11 +69,23 @@ public:
     virtual bool play(const Animation &animation, const bool complete);
 
     /**
-     * Pause actor for time seconds.
-     * @param time seconds during which actor is paused.
-     * @return returns walking speed
+     * Pause actor.
+     * @param time [optional] seconds during which actor is paused (if time > 0).
+     * @return returns true / false on success / failure.
      */
     virtual bool pause(const double time);
+
+    /**
+     * Play from last animation.
+     * @return returns true / false on success / failure.
+     */
+    virtual bool playFromLast();
+
+    /**
+     * Get current animation being played.
+     * @return returns string defining the current animation being played.
+     */
+    virtual std::string getState();
 
     /**
      * Reach a target location.
@@ -80,6 +93,28 @@ public:
      * @return true/false on success/failure.
      */
     virtual bool goTo(const Pose &p);
+
+    /**
+     * Blocking version of reach for a target location. The service returns ack only
+     * when target is reached.
+     * @param p pose in the form x,y,theta.
+     * @return true/false on success/failure.
+     */
+    virtual bool goToWait(const Pose &p);
+
+    /**
+     * Reach a sequence of targets.
+     * @param p list of poses in the form x1,y1,theta1,x2,y2,theta2.
+     * @return true/false on success/failure.
+     */
+    virtual bool goToSeq(const std::vector<double> &p);
+
+    /**
+     * Set target to reach during walk animation.
+     * @param p pose in the form x,y,theta.
+     * @return returns true or false on success / failure
+     */
+    virtual bool setTarget(const Pose &p);
 
     void updateMap(const yarp::sig::Matrix &t);
 

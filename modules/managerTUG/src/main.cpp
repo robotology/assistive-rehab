@@ -528,6 +528,7 @@ class Manager : public RFModule, public managerTUG_IDL
     bool detect_hand_up;
     Vector starting_pose,pointing_home,pointing_start,pointing_finish;
     double min_timeout,max_timeout;
+    bool simulation;
 
     const int ok=Vocab::encode("ok");
     const int fail=Vocab::encode("fail");
@@ -558,6 +559,7 @@ class Manager : public RFModule, public managerTUG_IDL
     BufferedPort<Bottle> opcPort;
     RpcClient lockerPort;
     RpcClient triggerPort;
+    RpcClient gazeboPort;
 
     AnswerManager *answer_manager;
     HandManager *hand_manager;
@@ -850,6 +852,7 @@ class Manager : public RFModule, public managerTUG_IDL
         detect_hand_up=rf.check("detect-hand-up",Value(false)).asBool();
         min_timeout=rf.check("min-timeout",Value(1.0)).asDouble();
         max_timeout=rf.check("max-timeout",Value(10.0)).asDouble();
+        simulation=rf.check("simulation",Value(false)).asBool();
         starting_pose={1.5,-3.0,110.0};
         if(rf.check("starting-pose"))
         {
@@ -925,6 +928,10 @@ class Manager : public RFModule, public managerTUG_IDL
         opcPort.open("/"+module_name+"/opc:i");
         lockerPort.open("/"+module_name+"/locker:rpc");
         triggerPort.open("/"+module_name+"/trigger:rpc");
+        if (simulation)
+        {
+            gazeboPort.open("/"+module_name+"/gazebo:rpc");
+        }
         attach(cmdPort);
 
         answer_manager=new AnswerManager(module_name,speak_map,&speechStreamPort,&speechRpcPort);
@@ -981,7 +988,7 @@ class Manager : public RFModule, public managerTUG_IDL
                 !answer_manager->connected())
         {
             yInfo()<<"not connected";
-            connected=true;
+            connected=false;
             return true;
         }
 
@@ -1236,6 +1243,13 @@ class Manager : public RFModule, public managerTUG_IDL
             point(pointing_start,part,true);
             speak("sit",true);
             point(pointing_home,part,false);
+            if (simulation)
+            {
+                Bottle cmd,rep;
+                cmd.addString("play");
+                cmd.addString("sit_down");
+                gazeboPort.write(cmd,rep);
+            }
             speak("explain-start",true);
             speak("explain-walk",true);
             Bottle cmd,rep;
@@ -1320,17 +1334,49 @@ class Manager : public RFModule, public managerTUG_IDL
                     {
                         speak("ready",true);
                         speak("go",false);
-                        cmd.clear();
-                        rep.clear();
-                        cmd.addString("start");
-                        cmd.addInt(1);
-                        if (analyzerPort.write(cmd,rep))
+
+                        if (simulation)
                         {
-                            if (rep.get(0).asVocab()==ok)
+                            cmd.clear();
+                            rep.clear();
+                            cmd.addString("play");
+                            cmd.addString("stand_up");
+                            cmd.addInt(-1);
+                            cmd.addInt(1);
+                            if (gazeboPort.write(cmd,rep))
                             {
-                                state=State::assess_standing;
-                                t0=tstart=Time::now();
-                                yInfo()<<"Start!";
+                                if (rep.get(0).asVocab()==ok)
+                                {
+                                    cmd.clear();
+                                    rep.clear();
+                                    cmd.addString("start");
+                                    cmd.addInt(1);
+                                    if (analyzerPort.write(cmd,rep))
+                                    {
+                                        if (rep.get(0).asVocab()==ok)
+                                        {
+                                            state=State::assess_standing;
+                                            t0=tstart=Time::now();
+                                            yInfo()<<"Start!";
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            cmd.clear();
+                            rep.clear();
+                            cmd.addString("start");
+                            cmd.addInt(1);
+                            if (analyzerPort.write(cmd,rep))
+                            {
+                                if (rep.get(0).asVocab()==ok)
+                                {
+                                    state=State::assess_standing;
+                                    t0=tstart=Time::now();
+                                    yInfo()<<"Start!";
+                                }
                             }
                         }
                     }
@@ -1691,6 +1737,10 @@ class Manager : public RFModule, public managerTUG_IDL
         cmdPort.close();
         lockerPort.close();
         triggerPort.close();
+        if (simulation)
+        {
+            gazeboPort.close();
+        }
         return true;
     }
 };

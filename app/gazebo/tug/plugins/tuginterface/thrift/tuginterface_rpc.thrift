@@ -52,11 +52,23 @@ service TugInterfaceServer
     bool play(1: Animation animation, 2: bool complete=false);
 
     /**
-     * Pause actor for time seconds.
-     * @param time seconds during which actor is paused.
-     * @return returns walking speed
+     * Pause actor.
+     * @param time [optional] seconds during which actor is paused (if time > 0).
+     * @return returns true / false on success / failure.
      */
-    bool pause(1: double time);
+    bool pause(1: double time=0.0);
+
+    /**
+     * Play from last animation.
+     * @return returns true / false on success / failure.
+     */
+    bool playFromLast();
+
+    /**
+     * Get current animation being played.
+     * @return returns string defining the current animation being played.
+     */
+    string getState();
 
     /**
      * Reach a target location.
@@ -65,4 +77,25 @@ service TugInterfaceServer
      */
     bool goTo(1: Pose p);
 
+    /**
+     * Blocking version of reach for a target location. The service returns ack only
+     * when target is reached.
+     * @param p pose in the form x,y,theta.
+     * @return true/false on success/failure.
+     */
+    bool goToWait(1: Pose p);
+
+    /**
+     * Reach a sequence of targets.
+     * @param p list of poses in the form x1,y1,theta1,x2,y2,theta2.
+     * @return true/false on success/failure.
+     */
+    bool goToSeq(1: list<double> p);
+
+    /**
+     * Set target to reach during walk animation.
+     * @param p pose in the form x,y,theta.
+     * @return returns true or false on success / failure
+     */
+    bool setTarget(1: Pose p);
 }

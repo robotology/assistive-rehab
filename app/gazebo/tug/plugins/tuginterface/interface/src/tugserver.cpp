@@ -42,16 +42,34 @@ bool TugServer::pause(const double time)
 {
     yInfo()<<"Pausing for"<<time<<"seconds";
     double t0=yarp::os::Time::now();
-    world->SetPaused(true);
-    while(true)
+    actor->Stop();
+    if (time > 0.0)
     {
-        if ((yarp::os::Time::now()-t0)>=time)
+        while(true)
         {
-            world->SetPaused(false);
-            break;
+            if ((yarp::os::Time::now()-t0)>=time)
+            {
+                break;
+            }
         }
+        actor->PlayFromLastStop();
     }
+
     return true;
+}
+
+/****************************************************************/
+bool TugServer::playFromLast()
+{
+    yInfo()<<"Playing from last";
+    actor->PlayFromLastStop();
+    return true;
+}
+
+/****************************************************************/
+string TugServer::getState()
+{
+    return actor->GetCurrentAnimation();
 }
 
 /****************************************************************/
@@ -77,6 +95,55 @@ bool TugServer::goTo(const Pose &p)
     actor->PlayWithAnimationName("walk");
 
     yInfo()<<"Going to"<<p.x<<p.y;
+    return true;
+}
+
+/****************************************************************/
+bool TugServer::goToWait(const Pose &p)
+{
+    goTo(p);
+    while(true)
+    {
+        ignition::math::Pose3d cp=actor->WorldPose();
+        double dist=sqrt((cp.Pos().X()-p.x)*(cp.Pos().X()-p.x)+
+                (cp.Pos().Y()-p.y)*(cp.Pos().Y()-p.y));
+        if (dist<=0.05)
+        {
+            break;
+        }
+    }
+    return true;
+}
+
+/****************************************************************/
+bool TugServer::goToSeq(const std::vector<double> &p)
+{
+    if (p.size()%3!=0)
+    {
+        yError()<<"Pose size must be multiple of 3";
+        return false;
+    }
+    int i=0;
+    while (i<p.size()-1)
+    {
+        Pose pi(p[i],p[i+1],p[i+2]);
+        goToWait(pi);
+        i=i+2;
+    }
+    return true;
+}
+
+/****************************************************************/
+bool TugServer::setTarget(const Pose &p)
+{
+    ignition::math::Pose3d t(p.x,p.y,0.0,0.0,0.0,(M_PI/180.0)*p.theta);
+    yarp::sig::Vector ty(3,0.0);
+    ty[0]=t.Pos().X();
+    ty[1]=t.Pos().Y();
+    ty[2]=t.Rot().Yaw();
+    targets.setRow(1,ty);
+    updateMap(targets);
+    yInfo()<<"Setting target to"<<ty.toString();
     return true;
 }
 
