@@ -2,6 +2,22 @@
 <name>Assistive Rehabilitation TUG SIM App</name>
 
     <module>
+        <name>node-button.js</name>
+        <parameters>--host 0.0.0.0 --listen_port 80</parameters>
+        <deployer>node</deployer>
+        <node>localhost</node>
+        <workdir>$ENV{ROBOT_CODE}/assistive-rehab/app/scripts</workdir>
+        <dependencies>
+            <port timeout="10">/managerTUG/cmd:rpc</port>
+        </dependencies>
+    </module>
+
+    <module>
+        <name>googleSpeechProcess</name>
+        <node>virtual-machine</node>
+    </module>
+
+    <module>
         <name>gazebo</name>
         <parameters>tug-scenario.world</parameters>
         <node>localhost</node>
@@ -38,7 +54,7 @@
 
     <module>
        <name>skeletonRetriever</name>
-       <parameters>--camera::fov "(54 42)" --depth::kernel-size 4 --depth::iterations 3 --depth::min-distance 0.5 --depth::max-distance 10.0</parameters>
+       <parameters>--camera::fov "(54 42)" --depth::kernel-size 4 --depth::iterations 3 --depth::min-distance 0.5 --depth::max-distance 10.0 --filter-keypoint-order 5.0</parameters>
        <dependencies>
           <port timeout="5">/opc/rpc</port>
        </dependencies>
@@ -53,6 +69,36 @@
     <module>
        <name>robotSkeletonPublisher</name>
        <parameters>--robot SIM_CER_ROBOT</parameters>
+       <dependencies>
+          <port timeout="10">/SIM_CER_ROBOT/head/command:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/head/rpc:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/head/state:o</port>
+          <port timeout="10">/SIM_CER_ROBOT/head/stateExt:o</port>
+          <port timeout="10">/SIM_CER_ROBOT/torso/command:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/torso/rpc:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/torso/state:o</port>
+          <port timeout="10">/SIM_CER_ROBOT/torso/stateExt:o</port>
+          <port timeout="10">/SIM_CER_ROBOT/torso_tripod/command:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/torso_tripod/rpc:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/torso_tripod/state:o</port>
+          <port timeout="10">/SIM_CER_ROBOT/torso_tripod/stateExt:o</port>
+          <port timeout="10">/SIM_CER_ROBOT/left_arm/command:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/left_arm/rpc:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/left_arm/state:o</port>
+          <port timeout="10">/SIM_CER_ROBOT/left_arm/stateExt:o</port>
+          <port timeout="10">/SIM_CER_ROBOT/right_arm/command:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/right_arm/rpc:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/right_arm/state:o</port>
+          <port timeout="10">/SIM_CER_ROBOT/right_arm/stateExt:o</port>
+          <port timeout="10">/SIM_CER_ROBOT/left_wrist_tripod/command:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/left_wrist_tripod/rpc:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/left_wrist_tripod/state:o</port>
+          <port timeout="10">/SIM_CER_ROBOT/left_wrist_tripod/stateExt:o</port>
+          <port timeout="10">/SIM_CER_ROBOT/right_wrist_tripod/command:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/right_wrist_tripod/rpc:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/right_wrist_tripod/state:o</port>
+          <port timeout="10">/SIM_CER_ROBOT/right_wrist_tripod/stateExt:o</port>
+       </dependencies>
        <node>localhost</node>
     </module>
 
@@ -66,15 +112,21 @@
        <name>baseControl</name>
        <parameters>--context baseControl_SIM --from baseCtrl_cer_sim.ini --GENERAL::use_ROS false --skip_robot_interface_check</parameters>
        <node>localhost</node>
+       <dependencies>
+          <port timeout="10">/SIM_CER_ROBOT/mobile_base/command:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/mobile_base/rpc:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/mobile_base/state:o</port>
+          <port timeout="10">/SIM_CER_ROBOT/mobile_base/stateExt:o</port>
+       </dependencies>
     </module>
 
     <module>
        <name>navController</name>
-       <parameters>--velocity-angular-saturation 15.0</parameters>
+       <parameters>--velocity-angular-saturation 15.0 --distance-target 6.0 --velocity-linear-magnitude 0.6</parameters>
        <dependencies>
-         <port>/baseControl/rpc</port>
-         <port>/baseControl/odometry:o</port>
-         <port>/baseControl/control:i</port>
+         <port timeout="15">/baseControl/rpc</port>
+         <port timeout="15">/baseControl/odometry:o</port>
+         <port timeout="15">/baseControl/control:i</port>
        </dependencies>
        <node>localhost</node>
     </module>
@@ -82,6 +134,20 @@
     <module>
        <name>cer_gaze-controller</name>
        <parameters>--robot SIM_CER_ROBOT --cameras::context cameraCalibration --cameras::file cerSimEyes_320x240.ini --joints-limits::pitch "(-20.0 20.0)" --joints-limits::yaw "(-40.0 40.0)"</parameters>
+       <dependencies>
+          <port timeout="10">/SIM_CER_ROBOT/head/command:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/head/rpc:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/head/state:o</port>
+          <port timeout="10">/SIM_CER_ROBOT/head/stateExt:o</port>
+          <port timeout="10">/SIM_CER_ROBOT/torso/command:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/torso/rpc:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/torso/state:o</port>
+          <port timeout="10">/SIM_CER_ROBOT/torso/stateExt:o</port>
+          <port timeout="10">/SIM_CER_ROBOT/torso_tripod/command:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/torso_tripod/rpc:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/torso_tripod/state:o</port>
+          <port timeout="10">/SIM_CER_ROBOT/torso_tripod/stateExt:o</port>
+       </dependencies>
        <ensure>
           <wait when="stop">3</wait>
        </ensure>
@@ -97,53 +163,56 @@
     <module>
         <name>lineDetector</name>
         <node>localhost</node>
+       <dependencies>
+         <port timeout="20">/navController/rpc</port>
+       </dependencies>
     </module>
 
     <module>
         <name>managerTUG</name>
-       <parameters>--simulation true</parameters>
+       <parameters>--simulation true --starting-pose "(2.2 -6.0 110.0)" --standing-thresh 0.05 --finish-line-thresh 0.3</parameters>
         <node>localhost</node>
     </module>
 
     <module>
         <name>ctpService</name>
         <parameters>--robot SIM_CER_ROBOT --part right_arm</parameters>
+       <dependencies>
+          <port timeout="10">/SIM_CER_ROBOT/right_arm/command:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/right_arm/rpc:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/right_arm/state:o</port>
+          <port timeout="10">/SIM_CER_ROBOT/right_arm/stateExt:o</port>
+       </dependencies>
         <node>localhost</node>
     </module>
 
     <module>
         <name>ctpService</name>
         <parameters>--robot SIM_CER_ROBOT --part left_arm</parameters>
+       <dependencies>
+          <port timeout="10">/SIM_CER_ROBOT/left_arm/command:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/left_arm/rpc:i</port>
+          <port timeout="10">/SIM_CER_ROBOT/left_arm/state:o</port>
+          <port timeout="10">/SIM_CER_ROBOT/left_arm/stateExt:o</port>
+       </dependencies>
         <node>localhost</node>
     </module>
 
     <module>
         <name>yarpview</name>
-        <parameters>--name /viewer/depth --x 10 --y 40 --p 50 --compact</parameters>
-        <node>localhost</node>
-    </module>
-
-    <module>
-        <name>yarpview</name>
-        <parameters>--name /viewer/skeleton --x 380 --y 40 --p 50 --compact</parameters>
-        <node>localhost</node>
-    </module>
-
-    <module>
-        <name>yarpview</name>
-        <parameters>--name /viewer/line --x 640 --y 40 --p 50 --compact</parameters>
+        <parameters>--name /viewer/skeleton --x 100 --y 40 --w 400 --h 400 --p 50 --compact</parameters>
         <node>localhost</node>
     </module>
 
     <module>
         <name>skeletonViewer</name>
-        <parameters>--x 1120 --y 10 --show-floor on --camera-viewup "(1.0 0.0 0.0)" --camera-position "(-4.0 -2.0 8.0)" --camera-focalpoint "(0.0 -2.0 0.0)"</parameters>
+        <parameters>--x 500 --y 10 --h 400 --show-floor on --floor-center "(0.0 -2.0 0.0)" --camera-viewup "(1.0 0.0 0.0)" --camera-position "(-4.0 -2.0 8.0)" --camera-focalpoint "(0.0 -2.0 0.0)"</parameters>
         <node>localhost</node>
     </module>
 
     <module>
        <name>yarpscope</name>
-       <parameters>--x 100 --y 400 --dx 1000 --dy 600 --context AssistiveRehab --xml motionAnalyzer-scope.xml</parameters>
+       <parameters>--x 1100 --y 50 --dx 800 --dy 400 --remote /motionAnalyzer/scope --bgcolor white --min -0.1 --max 0.8 --color blue --graph_size 3</parameters>
        <node>localhost</node>
     </module>
 
@@ -257,12 +326,6 @@
     </connection>
 
     <connection>
-        <from>/cer_gaze-controller/state:o</from>
-        <to>/motionAnalyzer/gaze:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
         <from>/yarpOpenPose/propag:o</from>
         <to>/lineDetector/img:i</to>
         <protocol>mjpeg</protocol>
@@ -305,18 +368,6 @@
     </connection>
 
     <connection>
-        <from>/yarpOpenPose/float:o</from>
-        <to>/viewer/depth</to>
-        <protocol>fast_tcp+recv.portmonitor+type.dll+file.depthimage</protocol>
-    </connection>
-
-    <connection>
-        <from>/lineDetector/img:o</from>
-        <to>/viewer/line</to>
-        <protocol>mjpeg</protocol>
-    </connection>
-
-    <connection>
         <from>/yarpOpenPose/image:o</from>
         <to>/viewer/skeleton</to>
         <protocol>mjpeg</protocol>
@@ -353,12 +404,6 @@
     </connection>
 
     <connection>
-        <from>/managerTUG/line:rpc</from>
-        <to>/lineDetector/cmd:rpc</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
         <from>/managerTUG/speech:o</from>
         <to>/iSpeak</to>
         <protocol>fast_tcp</protocol>
@@ -383,12 +428,6 @@
     </connection>
 
     <connection>
-        <from>/googleSpeech/question:o</from>
-        <to>/managerTUG/question:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
         <from>/googleSpeechProcess/result:o</from>
         <to>/managerTUG/answer:i</to>
         <protocol>fast_tcp</protocol>
@@ -397,12 +436,6 @@
     <connection>
         <from>/opc/broadcast:o</from>
         <to>/managerTUG/opc:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/managerTUG/trigger:o</from>
-        <to>/googleSpeech/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
