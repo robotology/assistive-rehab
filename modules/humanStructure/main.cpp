@@ -911,7 +911,6 @@ int main(int argc, char *argv[])
     Module module;
     yarp::os::ResourceFinder rf;
 
-    rf.setVerbose();
     rf.setDefaultContext("humanStructure");
     rf.setDefaultConfigFile("config.ini");
     rf.configure(argc,argv);

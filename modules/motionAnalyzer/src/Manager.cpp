@@ -38,7 +38,6 @@ bool Manager::loadMotionList(ResourceFinder &rf)
 {
     lock_guard<mutex> lg(mtx);
 
-    rf.setVerbose();
     rf.setDefaultContext(this->rf->getContext().c_str());
     rf.setDefaultConfigFile(this->rf->find("from").asString().c_str());
     rf.configure(0,NULL);

@@ -409,7 +409,6 @@ int main(int argc, char *argv[])
     Module module;
     yarp::os::ResourceFinder rf;
 
-    rf.setVerbose( true );
     rf.setDefaultContext( "googleSpeech" );
     rf.setDefaultConfigFile( "config.ini" );
     rf.setDefault("name","googleSpeech");

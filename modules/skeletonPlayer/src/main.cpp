@@ -188,7 +188,6 @@ class Player : public RFModule, public skeletonPlayer_IDL
         lock_guard<mutex> lg(mtx);
         ResourceFinder rf;
 
-        rf.setQuiet();
         rf.setDefaultContext(context);
         rf.configure(0,nullptr);
 

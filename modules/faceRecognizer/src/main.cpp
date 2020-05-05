@@ -884,7 +884,6 @@ int main(int argc, char *argv[])
     Module module;
     yarp::os::ResourceFinder rf;
 
-    rf.setVerbose();
     rf.setDefaultContext("faceRecognizer");
     rf.setDefaultConfigFile("config.ini");
     rf.setDefault("name","faceRecognizer");

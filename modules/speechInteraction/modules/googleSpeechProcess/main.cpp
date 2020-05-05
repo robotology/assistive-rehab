@@ -682,7 +682,6 @@ int main(int argc, char *argv[])
     Module module;
     yarp::os::ResourceFinder rf;
 
-    rf.setVerbose( true );
     rf.setDefaultContext( "googleSpeechProcess" );
     rf.setDefaultConfigFile( "config.ini" );
     rf.setDefault("name","googleSpeechProcess");
