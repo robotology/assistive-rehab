@@ -29,6 +29,7 @@ private:
     gazebo::physics::ActorPtr actor;
     Velocity vel;
     yarp::sig::Matrix targets;
+    yarp::sig::Matrix line_frame;
 
 public:
     TugServer();
@@ -67,6 +68,14 @@ public:
      * @return returns true / false on success / failure.
      */
     virtual bool play(const Animation &animation, const bool complete);
+
+    /**
+     * Get model position as defined in world, with respect to start-line.
+     * @param model_name name string defining the name of the model.
+     * @return a property-like object in the form
+     *         (pose_world (x y z ax ay az theta)).
+     */
+    virtual yarp::os::Property getModelPos(const std::string &model_name);
 
     /**
      * Pause actor.
@@ -120,15 +129,9 @@ public:
 
     void init(const Velocity &vel, const yarp::sig::Matrix &waypoints);
 
-    void attachWorldPointer(gazebo::physics::WorldPtr p)
-    {
-        world=p;
-    }
+    void attachWorldPointer(gazebo::physics::WorldPtr p);
 
-    void attachActorPointer(gazebo::physics::ActorPtr p)
-    {
-        actor=p;
-    }
+    void attachActorPointer(gazebo::physics::ActorPtr p);
 
 };
 

@@ -15,6 +15,12 @@ struct Animation
 2: i32 id=-1;          /* animation id */
 }
 
+struct Property { }
+(
+   yarp.name="yarp::os::Property"
+   yarp.includefile="yarp/os/Property.h"
+)
+
 service TugInterfaceServer
 {
 
@@ -50,6 +56,14 @@ service TugInterfaceServer
      * @return returns true / false on success / failure.
      */
     bool play(1: Animation animation, 2: bool complete=false);
+
+    /**
+     * Get model position as defined in world, with respect to start-line.
+     * @param model_name name string defining the name of the model.
+     * @return a property-like object in the form
+     *         (pose_world (x y z ax ay az theta)).
+     */
+    Property getModelPos(1: string model_name);
 
     /**
      * Pause actor.

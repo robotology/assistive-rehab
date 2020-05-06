@@ -39,8 +39,10 @@ class Detector : public RFModule, public lineDetector_IDL
     std::map<std::string,int> line2idx;
     std::vector<int> nx,ny;
     std::vector<double> marker_size,marker_dist;
+    bool simulation,updated_line_viewer;
 
     std::vector<yarp::sig::Vector>lines_pose_world;
+    std::vector<yarp::sig::Vector>lines_size;
     std::vector<iCub::ctrl::MedianFilter*> lines_filter;
     std::mutex mtx_update,mtx_line_detected;
     std::condition_variable line_detected;
@@ -58,6 +60,7 @@ class Detector : public RFModule, public lineDetector_IDL
     yarp::os::BufferedPort<yarp::os::Property> gazeStatePort;
     yarp::os::RpcClient navPort;
     yarp::os::RpcClient viewerPort;
+    yarp::os::RpcClient gazeboPort;
 
     /****************************************************************/
     bool attach(RpcServer &source) override
@@ -141,11 +144,15 @@ class Detector : public RFModule, public lineDetector_IDL
         board.resize(nlines);
         lines_pose_world.resize(nlines);
         lines_filter.resize(nlines);
+        lines_size.resize(nlines);
         for(int i=0; i<nlines;i++)
         {
             board[i]=cv::aruco::GridBoard::create(nx[i],ny[i],marker_size[i],marker_dist[i],dictionary[i]);
             lines_pose_world[i]=yarp::sig::Vector(7,0.0);
             lines_filter[i]=new iCub::ctrl::MedianFilter(line_filter_order,yarp::sig::Vector(7,0.0));
+            lines_size[i]=yarp::sig::Vector(2,0.0);
+            lines_size[i][0]=(marker_dist[i]+marker_size[i])*nx[i];
+            lines_size[i][1]=marker_size[i]*ny[i];
         }
 
         //configure the detector with corner refinement
@@ -188,6 +195,12 @@ class Detector : public RFModule, public lineDetector_IDL
             }
         }
 
+        simulation=rf.check("simulation",Value(false)).asBool();
+        updated_line_viewer=false;
+        if (simulation)
+        {
+            gazeboPort.open("/" + getName() + "/gazebo:rpc");
+        }
         imgInPort.open("/" + getName() + "/img:i");
         imgOutPort.open("/" + getName() + "/img:o");
         camPort.open("/" + getName() + "/cam:rpc");
@@ -197,7 +210,6 @@ class Detector : public RFModule, public lineDetector_IDL
         viewerPort.open("/" + getName() + "/viewer:rpc");
         cmdPort.open("/" + getName() + "/cmd:rpc");
         attach(cmdPort);
-
         return true;
     }
 
@@ -222,6 +234,24 @@ class Detector : public RFModule, public lineDetector_IDL
         update_cam_frame();
         update_nav_frame();
 
+        if (simulation && !updated_line_viewer)
+        {
+            if (viewerPort.getOutputCount()!=0)
+            {
+                if (update_line_sim("start-line") && update_line_sim("finish-line"))
+                {
+                    if (opcAdd("start-line") && opcAdd("finish-line"))
+                    {
+                        yarp::sig::Vector robot_pos;
+                        get_model_pos("SIM_CER_ROBOT",robot_pos);
+                        updated_line_viewer=create_line("start-line") &&
+                                create_line("finish-line") &&
+                                update_odometry(robot_pos[0],robot_pos[1],(180/M_PI)*robot_pos[6]);
+                    }
+                }
+            }
+        }
+
         if (yarp::sig::ImageOf<yarp::sig::PixelRgb> *inImg=imgInPort.read())
         {
             yarp::sig::ImageOf<yarp::sig::PixelRgb> &outImg=imgOutPort.prepare();
@@ -239,6 +269,42 @@ class Detector : public RFModule, public lineDetector_IDL
             imgOutPort.write();
         }
         return true;
+    }
+
+    /****************************************************************/
+    bool get_model_pos(const std::string &model_name, yarp::sig::Vector &v)
+    {
+        Bottle cmd,rep;
+        cmd.addString("getModelPos");
+        cmd.addString(model_name);
+        if (gazeboPort.write(cmd,rep))
+        {
+            Property prop(rep.get(0).toString().c_str());
+            Bottle *model=prop.find(model_name).asList();
+            if (Bottle *mod_bottle=model->find("pose_world").asList())
+            {
+                if(mod_bottle->size()>=7)
+                {
+                    v.resize(7);
+                    v[0]=mod_bottle->get(0).asDouble();
+                    v[1]=mod_bottle->get(1).asDouble();
+                    v[2]=mod_bottle->get(2).asDouble();
+                    v[3]=mod_bottle->get(3).asDouble();
+                    v[4]=mod_bottle->get(4).asDouble();
+                    v[5]=mod_bottle->get(5).asDouble();
+                    v[6]=mod_bottle->get(6).asDouble();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /****************************************************************/
+    bool update_line_sim(const std::string &line_str)
+    {
+        int idx=line2idx[line_str];
+        return get_model_pos(line_str,lines_pose_world[idx]);
     }
 
     /****************************************************************/
@@ -299,6 +365,14 @@ class Detector : public RFModule, public lineDetector_IDL
             }
         }
         return prop;
+    }
+
+    /****************************************************************/
+    bool opcAdd(const std::string &line_tag)
+    {
+        int opc_id=opcCheck(line_tag);
+        int i=line2idx[line_tag];
+        return opcAdd(lines_pose_world[i],lines_size[i],opc_id,line_tag);
     }
 
     /****************************************************************/
@@ -425,10 +499,14 @@ class Detector : public RFModule, public lineDetector_IDL
             yarp::sig::Vector rot=(180/M_PI)*dcm2axis(wf.submatrix(0,2,0,2));
             update_odometry(tr[0],tr[1],rot[3]);
         }
-        create_line(line);
+        bool ret=create_line(line);
+        if (line=="finish-line" && ret)
+        {
+            updated_line_viewer=true;
+        }
         start_detection=false;
 
-        return true;
+        return ret;
     }
 
     /****************************************************************/
@@ -461,7 +539,7 @@ class Detector : public RFModule, public lineDetector_IDL
     }
 
     /****************************************************************/
-    void create_line(const std::string &line_tag)
+    bool create_line(const std::string &line_tag)
     {
         int i=line2idx[line_tag];
         double llen=(marker_dist[i]+marker_size[i])*nx[i];
@@ -503,8 +581,10 @@ class Detector : public RFModule, public lineDetector_IDL
             if(rep.get(0).asBool()==true)
             {
                 yInfo()<<line_tag<<"created on the viewer";
+                return true;
             }
         }
+        return false;
     }
 
     /****************************************************************/
@@ -518,6 +598,7 @@ class Detector : public RFModule, public lineDetector_IDL
             if(rep.get(0).asVocab()==Vocab::encode("ok"))
             {
                 yInfo()<<l<<"deleted";
+                updated_line_viewer=false;
             }
         }
     }
@@ -600,10 +681,7 @@ class Detector : public RFModule, public lineDetector_IDL
                 if (line_cnt>line_filter_order)
                 {
                     int opc_id=opcCheck(line);
-                    yarp::sig::Vector line_size(2);
-                    line_size[0]=(marker_dist[line_idx]+marker_size[line_idx])*nx[line_idx];
-                    line_size[1]=marker_size[line_idx]*ny[line_idx];
-                    opcAdd(lines_pose_world[line_idx],line_size,opc_id,line);
+                    opcAdd(lines_pose_world[line_idx],lines_size[line_idx],opc_id,line);
                     line_detected.notify_all();
                     return true;
                 }
@@ -764,6 +842,10 @@ class Detector : public RFModule, public lineDetector_IDL
     /****************************************************************/
     bool interruptModule() override
     {
+        if (simulation)
+        {
+            gazeboPort.interrupt();
+        }
         imgInPort.interrupt();
         imgOutPort.interrupt();
         camPort.interrupt();
@@ -781,6 +863,11 @@ class Detector : public RFModule, public lineDetector_IDL
         for(int i=0;i<nlines;i++)
         {
             delete lines_filter[i];
+        }
+
+        if (simulation)
+        {
+            gazeboPort.close();
         }
 
         imgInPort.close();
