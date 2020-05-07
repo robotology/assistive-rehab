@@ -72,6 +72,9 @@ bool Manager::loadMotionList(ResourceFinder &rf)
                         if(ex_tag==ExerciseTag::tug)
                         {
                             exercises[i]=new Tug();
+                            int N=bGeneral.find("vel_estimator_N").asInt();
+                            double D=bGeneral.find("vel_estimator_D").asDouble();
+                            lin_est_shoulder=new AWLinEstimator(N,D); //(16,0.01);
                         }
                     }
 
@@ -127,10 +130,14 @@ bool Manager::loadMotionList(ResourceFinder &rf)
                                                     den[l]=bDen->get(l).asDouble();
                                                 }
                                             }
+                                            double step_thresh=bMetricEx.find("step_thresh").asDouble();
+                                            double step_window=bMetricEx.find("step_window").asDouble();
+                                            double time_window=bMetricEx.find("time_window").asDouble();
                                             double minv=bMetricEx.find("min").asDouble();
                                             double maxv=bMetricEx.find("max").asDouble();
                                             Metric *step;
-                                            step=new Step(metric_type,metric_tag,num,den,minv,maxv);
+                                            step=new Step(metric_type,metric_tag,num,den,step_thresh,step_window,
+                                                          time_window,minv,maxv);
                                             exercises[i]->addMetric(step);
                                         }
                                         if(metric_type==MetricType::end_point)
@@ -749,6 +756,10 @@ bool Manager::start(const bool use_robot_template)
         }
     }
 
+    for(int i=0; i<processors.size(); i++)
+    {
+        processors[i]->setStartingTime(Time::now());
+    }
     tstart_session=Time::now()-tstart;
     return true;
 
@@ -779,6 +790,11 @@ bool Manager::stop()
     if(starting)
     {
         yInfo()<<"stopping";
+        for(int i=0; i<processors.size(); i++)
+        {
+            processors[i]->reset();
+        }
+
         if(curr_exercise->getType()==ExerciseType::rehabilitation)
         {
             Bottle cmd, reply;
@@ -874,8 +890,8 @@ bool Manager::hasCrossedFinishLine(const double finishline_thresh)
     Vector v1=lp_world-pline;
     double dist_fr_line=norm(cross(v1,fr_lp))/norm(v1);
     double dist_fl_line=norm(cross(v1,fl_lp))/norm(v1);
-    yInfo()<<"dist foot right line"<<dist_fr_line;
-    yInfo()<<"dist foot left line"<<dist_fl_line;
+//    yInfo()<<"dist foot right line"<<dist_fr_line;
+//    yInfo()<<"dist foot left line"<<dist_fl_line;
 
     return (dist_fr_line<finishline_thresh && dist_fl_line<finishline_thresh);
 }
@@ -945,7 +961,8 @@ void Manager::getSkeleton()
                                                 vector<pair<string,Vector>> keyps=skeletonIn.get_unordered();
                                                 all_keypoints.push_back(keyps);
                                             }
-                                            if(skeletonIn[KeyPointTag::shoulder_center]->isUpdated())
+                                            if(skeletonIn[KeyPointTag::shoulder_center]->isUpdated()
+                                                    && curr_exercise->getName()==ExerciseTag::tug)
                                             {
                                                 Vector shoulder_center=skeletonIn[KeyPointTag::shoulder_center]->getPoint();
                                                 AWPolyElement el(shoulder_center,Time::now());
@@ -1003,7 +1020,6 @@ bool Manager::configure(ResourceFinder &rf)
     prop_tag="";
     curr_exercise=NULL;
     curr_metric=NULL;
-    lin_est_shoulder=new AWLinEstimator(16,0.01);
 
     return true;
 }
@@ -1027,13 +1043,16 @@ bool Manager::close()
 {
     for(int i=0; i<exercises.size(); i++)
     {
+        if (exercises[i]->getName()==ExerciseTag::tug)
+        {
+            delete lin_est_shoulder;
+        }
         delete exercises[i];
     }
     for(int i=0; i<processors.size(); i++)
     {
         delete processors[i];
     }
-    delete lin_est_shoulder;
     yInfo() << "Freed memory";
 
     opcPort.close();
@@ -1069,14 +1088,14 @@ bool Manager::updateModule()
         {
             if(curr_exercise!=NULL && curr_metric!=NULL)
             {
+                //write on output port
+                Bottle &scopebottleout=scopePort.prepare();
+                scopebottleout.clear();
                 if(updated)
                 {
                     //update time array
                     time_samples.push_back(Time::now()-tstart);
 
-                    //write on output port
-                    Bottle &scopebottleout=scopePort.prepare();
-                    scopebottleout.clear();
                     for(int i=0; i<processors.size(); i++)
                     {
                         processors[i]->update(skeletonIn);
@@ -1089,8 +1108,8 @@ bool Manager::updateModule()
                             scopebottleout.addDouble(res);
                         }
                     }
-                    scopePort.write();
                 }
+                scopePort.write();
             }
             else
                 yInfo() << "Please specify metric";
@@ -1272,8 +1291,8 @@ matvar_t * Manager::writeStructToMat(const Metric* m)
     }
     if(metric_type==MetricType::step)
     {
-        int numFields=6;
-        const char *subfields[numFields]={"num","den","max","min","tstart","tend"};
+        int numFields=7;
+        const char *subfields[numFields]={"num","den","max","min","tstart","tend","step_thresh"};
         size_t dim_struct[2]={1,1};
         submatvar=Mat_VarCreateStruct(metric_name.c_str(),2,dim_struct,subfields,numFields);
         matvar_t *subfield;
@@ -1304,6 +1323,11 @@ matvar_t * Manager::writeStructToMat(const Metric* m)
         size_t dims_field_tend[2]={1,1};
         subfield = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tend,&tend_session,MAT_F_DONT_COPY_DATA);
         Mat_VarSetStructFieldByName(submatvar,subfields[5],0,subfield);
+
+        size_t dims_field_thresh[2]={1,1};
+        double step_thresh=params.find("step_thresh").asDouble();
+        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_thresh,&step_thresh,MAT_F_DONT_COPY_DATA);
+        Mat_VarSetStructFieldByName(submatvar,subfields[6],0,subfield);
     }
     if(metric_type==MetricType::end_point)
     {

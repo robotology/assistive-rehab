@@ -123,11 +123,16 @@
    \code
    [step_0]
    num                            (0.0219 0.1097 0.2194 0.2194 0.1097 0.0219)
-   den                            (1 -0.9853 0.9738 -0.3864 0.1112 -0.0113)
+   den                            (1.0000 -0.9853 0.9738 -0.3864 0.1112 -0.0113)
+   step_thresh                    0.25
+   step_window                    3
+   time_window                    3.0
    \endcode
 
    `num` and `den` define the filter applied to the distance between feet for computing the step parameters.
-
+   A step is identified as occurring between two consecutive maximum values of the distance between the feet.
+   The average step length is evaluated by first computing such distance along the sagittal plane and extracting the last
+   `step_window` maximum values exceeding `step_thresh`. Only the maximum values occurring within the last `time_window` seconds from the last detected step are considered.
   </description-long>
 
   <arguments>
