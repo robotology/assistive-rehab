@@ -2,8 +2,8 @@
 
 #This script converts ipynb notebook file into html
 
-FILENAME_ITA=$(yarp resource --context AssistiveRehab --from report-ita.ipynb | awk '{gsub(/\"/,"")};1')
-FILENAME_ENG=$(yarp resource --context AssistiveRehab --from report-eng.ipynb | awk '{gsub(/\"/,"")};1')
+FILENAME_ITA=$(yarp resource --context AssistiveRehab --from report-ita.ipynb | tail -n1 | awk '{gsub(/\"/,"")};1')
+FILENAME_ENG=$(yarp resource --context AssistiveRehab --from report-eng.ipynb | tail -n1 | awk '{gsub(/\"/,"")};1')
 CURR_DIR=$PWD
 
 #Convert to notebook

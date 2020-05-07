@@ -37,7 +37,7 @@ find_package(ICUBcontrib REQUIRED)
 find_package(ICUB REQUIRED)
 find_package(CER)
 
-find_package(YARP 3.3.101 REQUIRED COMPONENTS os sig dev math cv rosmsg)
+find_package(YARP 3.3.103 REQUIRED COMPONENTS os sig dev math cv rosmsg)
 find_package(OpenCV REQUIRED)
 find_package(VTK 8.1.0)
 list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})
