@@ -6,8 +6,8 @@ speed() {
     Q_3="Che andatura devo avere"  
     NUMBER=$[ ( $RANDOM % 3 )  + 1 ]
     Q=Q_${NUMBER}
-    printf "\nAsking : ${!Q}\n"
     echo ${!Q} | yarp write ... /googleSpeechProcess/text:i
+    echo "$(tput setab 1)$(tput setaf 7)Asking: ${!Q}$(tput sgr0)"
 }
 
 aid() {
@@ -15,8 +15,8 @@ aid() {
     Q_2="Posso usare il deambulatore"
     NUMBER=$[ ( $RANDOM % 2 )  + 1 ]
     Q=Q_${NUMBER}
-    printf "\nAsking : ${!Q}\n"
     echo ${!Q} | yarp write ... /googleSpeechProcess/text:i
+    echo "$(tput setab 1)$(tput setaf 7)Asking: ${!Q}$(tput sgr0)"
 }
 
 repetition() {
@@ -24,8 +24,8 @@ repetition() {
     Q_2="Quante ripetizioni devo fare"
     NUMBER=$[ ( $RANDOM % 2 )  + 1 ]
     Q=Q_${NUMBER}
-    printf "\nAsking : ${!Q}\n"
     echo ${!Q} | yarp write ... /googleSpeechProcess/text:i
+    echo "$(tput setab 1)$(tput setaf 7)Asking: ${!Q}$(tput sgr0)"
 }
 
 feedback() {
@@ -33,8 +33,8 @@ feedback() {
     Q_2="Sto andando bene"
     NUMBER=$[ ( $RANDOM % 2 )  + 1 ]
     Q=Q_${NUMBER}
-    printf "\nAsking : ${!Q}\n"
     echo ${!Q} | yarp write ... /googleSpeechProcess/text:i
+    echo "$(tput setab 1)$(tput setaf 7)Asking: ${!Q}$(tput sgr0)"
 }
 
 #######################################################################################
