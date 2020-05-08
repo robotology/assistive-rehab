@@ -52,24 +52,24 @@ bool TugServer::pause(const double time)
                 break;
             }
         }
-        actor->PlayFromLastStop();
+        actor->PlayFromLastStop(true);
     }
 
     return true;
 }
 
 /****************************************************************/
-bool TugServer::playFromLast()
+bool TugServer::playFromLast(const bool complete)
 {
     yInfo()<<"Playing from last";
-    actor->PlayFromLastStop();
+    actor->PlayFromLastStop(complete);
     return true;
 }
 
 /****************************************************************/
 string TugServer::getState()
 {
-    return actor->GetCurrentAnimation();
+    return actor->GetCurrentAnimation().first;
 }
 
 /****************************************************************/

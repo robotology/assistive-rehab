@@ -74,9 +74,10 @@ service TugInterfaceServer
 
     /**
      * Play from last animation.
+     * @param complete if true, the whole script is played starting from last stop.
      * @return returns true / false on success / failure.
      */
-    bool playFromLast();
+    bool playFromLast(1: bool complete=false);
 
     /**
      * Get current animation being played.

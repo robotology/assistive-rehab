@@ -366,6 +366,7 @@ public:
     {
         Bottle cmd,rep;
         cmd.addString("playFromLast");
+        cmd.addInt(1);
         if (gazeboPort->write(cmd,rep))
         {
             if (rep.get(0).asVocab()==Vocab::encode("ok"))
@@ -775,27 +776,13 @@ class Manager : public RFModule, public managerTUG_IDL
             speak_count_map[key]=0;
         }
 
-        bool ok_nav=false;
         Bottle cmd,rep;
-        cmd.addString("is_navigating");
-        if (navigationPort.write(cmd,rep))
+        cmd.addString("stop");
+        if (analyzerPort.write(cmd,rep))
         {
             if (rep.get(0).asVocab()==ok)
             {
-                cmd.clear();
-                rep.clear();
-                cmd.addString("stop");
-                if (navigationPort.write(cmd,rep))
-                {
-                    if (rep.get(0).asVocab()==ok)
-                    {
-                        ok_nav=true;
-                    }
-                }
-            }
-            else
-            {
-                ok_nav=true;
+                yInfo()<<"Stopping motion analysis";
             }
         }
 
@@ -806,7 +793,22 @@ class Manager : public RFModule, public managerTUG_IDL
             cmd.addString("getState");
             if (gazeboPort.write(cmd,rep))
             {
-                if (rep.get(0).asString()=="walk")
+                if (rep.get(0).asString()=="stand_up")
+                {
+                    cmd.clear();
+                    rep.clear();
+                    cmd.addString("playFromLastStop");
+                    gazeboPort.write(cmd,rep);
+                }
+                else if (rep.get(0).asString()=="sitting" || rep.get(0).asString()=="sit_down")
+                {
+                    cmd.clear();
+                    rep.clear();
+                    cmd.addString("play");
+                    cmd.addString("sitting");
+                    gazeboPort.write(cmd,rep);
+                }
+                else if (rep.get(0).asString()=="walk")
                 {
                     cmd.clear();
                     rep.clear();
@@ -826,13 +828,31 @@ class Manager : public RFModule, public managerTUG_IDL
                         }
                     }
                 }
-                else
+            }
+        }
+
+        bool ok_nav=false;
+        cmd.clear();
+        rep.clear();
+        cmd.addString("is_navigating");
+        if (navigationPort.write(cmd,rep))
+        {
+            if (rep.get(0).asVocab()==ok)
+            {
+                cmd.clear();
+                rep.clear();
+                cmd.addString("stop");
+                if (navigationPort.write(cmd,rep))
                 {
-                    cmd.clear();
-                    rep.clear();
-                    cmd.addString("playFromLast");
-                    gazeboPort.write(cmd,rep);
+                    if (rep.get(0).asVocab()==ok)
+                    {
+                        ok_nav=true;
+                    }
                 }
+            }
+            else
+            {
+                ok_nav=true;
             }
         }
 
@@ -1149,9 +1169,9 @@ class Manager : public RFModule, public managerTUG_IDL
         if((analyzerPort.getOutputCount()==0) || (speechStreamPort.getOutputCount()==0) ||
                 (speechRpcPort.getOutputCount()==0) || (attentionPort.getOutputCount()==0) ||
                 (navigationPort.getOutputCount()==0) || (leftarmPort.getOutputCount()==0) ||
-                (rightarmPort.getOutputCount())==0 ||
-                (opcPort.getInputCount()==0)) // || (triggerPort.getOutputCount()==0)) // ||
-//                !answer_manager->connected()) || (lockerPort.getOutputCount()==0)
+                (rightarmPort.getOutputCount())==0 || (opcPort.getInputCount()==0) ||
+                (triggerPort.getOutputCount()==0) || !answer_manager->connected() ||
+                (lockerPort.getOutputCount()==0))
         {
             yInfo()<<"not connected";
             connected=false;
@@ -1341,7 +1361,7 @@ class Manager : public RFModule, public managerTUG_IDL
                 vector<SpeechParam> p;
                 p.push_back(SpeechParam(tag[0]!='#'?tag:string("")));
                 speak("engage-start",true,p);
-                speak("questions",true);
+                speak("questions-sim",true);
                 if (detect_hand_up)
                 {
                     hand_manager->set_tag(tag);
@@ -1568,7 +1588,7 @@ class Manager : public RFModule, public managerTUG_IDL
                     rep.clear();
                     cmd.addString("look");
                     cmd.addString(tag);
-                    cmd.addString(KeyPointTag::knee_left);
+                    cmd.addString(KeyPointTag::hip_center);
                     if (attentionPort.write(cmd,rep))
                     {
                         speak("ready",true);
@@ -1588,7 +1608,7 @@ class Manager : public RFModule, public managerTUG_IDL
                                     cmd.clear();
                                     rep.clear();
                                     cmd.addString("start");
-                                    cmd.addInt(1);
+                                    cmd.addInt(0);
                                     if (analyzerPort.write(cmd,rep))
                                     {
                                         if (rep.get(0).asVocab()==ok)
@@ -1606,7 +1626,7 @@ class Manager : public RFModule, public managerTUG_IDL
                             cmd.clear();
                             rep.clear();
                             cmd.addString("start");
-                            cmd.addInt(1);
+                            cmd.addInt(0);
                             if (analyzerPort.write(cmd,rep))
                             {
                                 if (rep.get(0).asVocab()==ok)

@@ -86,9 +86,10 @@ public:
 
     /**
      * Play from last animation.
+     * @param complete if true, the whole script is played starting from last stop.
      * @return returns true / false on success / failure.
      */
-    virtual bool playFromLast();
+    virtual bool playFromLast(const bool complete);
 
     /**
      * Get current animation being played.
