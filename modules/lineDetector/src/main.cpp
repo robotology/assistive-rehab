@@ -604,6 +604,56 @@ class Detector : public RFModule, public lineDetector_IDL
     }
 
     /****************************************************************/
+    yarp::sig::Matrix toYarpMat(const cv::Mat &Rmat)
+    {
+        yarp::sig::Matrix R(Rmat.rows,Rmat.cols);
+        for(int i=0;i<Rmat.rows;i++)
+        {
+            for(int j=0;j<Rmat.cols;j++)
+            {
+                R(i,j)=Rmat.at<double>(i,j);
+            }
+        }
+        return R;
+    }
+
+    /****************************************************************/
+    yarp::sig::Matrix update_world_frame(const std::string &line, const yarp::sig::Matrix &R,
+                                         const yarp::sig::Vector &pose)
+    {
+        yarp::sig::Matrix M=eye(4);
+        if (line=="start-line")
+        {
+            lineFrame.resize(4,4);
+            lineFrame.setSubmatrix(R,0,0);
+            lineFrame.setCol(3,pose);
+            lineFrame.setRow(3,yarp::sig::Vector(3,0.0));
+            yarp::sig::Matrix T=SE3inv(camFrame*lineFrame);
+            M=T*camFrame;
+        }
+        if (line=="finish-line")
+        {
+            M=navFrame*camFrame;
+        }
+        return M;
+    }
+
+    /****************************************************************/
+    void estimate_line(const yarp::sig::Matrix &wf, const yarp::sig::Vector &pose,
+                       const int line_idx)
+    {
+        yarp::sig::Vector rot=yarp::math::dcm2axis(wf.submatrix(0,2,0,2));
+        yarp::sig::Vector est_pose_world(7,0.0);
+        est_pose_world.setSubvector(0,wf*pose);
+        est_pose_world.setSubvector(3,rot);
+        lines_pose_world[line_idx]=lines_filter[line_idx]->filt(est_pose_world);
+        yarp::sig::Vector v=lines_pose_world[line_idx].subVector(3,5);
+        if (norm(v)>0.0)
+            v/=norm(v);
+        lines_pose_world[line_idx].setSubvector(3,v);
+    }
+
+    /****************************************************************/
     bool detect_helper(const cv::Mat &inImgMat)
     {
         //detect markers
@@ -611,24 +661,19 @@ class Detector : public RFModule, public lineDetector_IDL
         std::vector<int> ids;
         std::vector<std::vector<cv::Point2f> > corners;
         cv::aruco::detectMarkers(inImgMat,dictionary[line_idx],corners,ids);
-
         if (ids.size()>0)
         {
             std::vector<std::vector<cv::Point2f> > rejected;
             cv::Ptr<cv::aruco::GridBoard> curr_board=board[line_idx];
 
             //perform refinement
-            cv::aruco::refineDetectedMarkers(inImgMat,curr_board,corners,ids,rejected,
-                                             cam_intrinsic,cam_distortion);
-
+            cv::aruco::refineDetectedMarkers(inImgMat,curr_board,corners,ids,rejected,cam_intrinsic,cam_distortion);
             cv::aruco::drawDetectedMarkers(inImgMat,corners,ids);
 
             //estimate pose
             //use cv::Mat and not cv::Vec3d to avoid issues with
             //cv::aruco::estimatePoseBoard() initial guess
-            int valid=cv::aruco::estimatePoseBoard(corners,ids,curr_board,
-                                                   cam_intrinsic,cam_distortion,
-                                                   rvec,tvec,true);
+            int valid=cv::aruco::estimatePoseBoard(corners,ids,curr_board,cam_intrinsic,cam_distortion,rvec,tvec,true);
 
             //if at least one board marker detected
             if (valid>0)
@@ -636,48 +681,11 @@ class Detector : public RFModule, public lineDetector_IDL
                 cv::aruco::drawAxis(inImgMat,cam_intrinsic,cam_distortion,rvec,tvec,0.5);
                 cv::Mat Rmat;
                 cv::Rodrigues(rvec,Rmat);
-                yarp::sig::Matrix R(3,3);
-                for(int i=0;i<Rmat.rows;i++)
-                {
-                    for(int j=0;j<Rmat.cols;j++)
-                    {
-                        R(i,j)=Rmat.at<double>(i,j);
-                    }
-                }
-
-                yarp::sig::Vector pose(4);
-                pose[0]=tvec[0];
-                pose[1]=tvec[1];
-                pose[2]=tvec[2];
-                pose[3]=1.0;
-
-                if (line=="start-line")
-                {
-                    lineFrame.resize(4,4);
-                    lineFrame.setSubmatrix(R,0,0);
-                    lineFrame.setCol(3,pose);
-                    lineFrame.setRow(3,yarp::sig::Vector(3,0.0));
-                    yarp::sig::Matrix T=SE3inv(camFrame*lineFrame);
-                    worldFrame=T*camFrame;
-                }
-
-                if (line=="finish-line")
-                {
-                    worldFrame=navFrame*camFrame;
-                }
-
-                yarp::sig::Vector rot=yarp::math::dcm2axis(worldFrame.submatrix(0,2,0,2));
-                yarp::sig::Vector est_pose_world(7,0.0);
-                est_pose_world.setSubvector(0,worldFrame*pose);
-                est_pose_world.setSubvector(3,rot);
-
-                lines_pose_world[line_idx]=lines_filter[line_idx]->filt(est_pose_world);
-                yarp::sig::Vector v=lines_pose_world[line_idx].subVector(3,5);
-                if (norm(v)>0.0)
-                    v/=norm(v);
-                lines_pose_world[line_idx].setSubvector(3,v);
+                yarp::sig::Matrix R=toYarpMat(Rmat);
+                yarp::sig::Vector pose({tvec[0],tvec[1],tvec[2],1.0});
+                worldFrame=update_world_frame(line,R,pose);
+                estimate_line(worldFrame,pose,line_idx);
                 line_cnt++;
-
                 if (line_cnt>line_filter_order)
                 {
                     int opc_id=opcCheck(line);
