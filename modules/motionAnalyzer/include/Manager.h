@@ -82,6 +82,10 @@ class Manager : public yarp::os::RFModule,
     yarp::sig::Vector num,den;
 
     bool loadMotionList(yarp::os::ResourceFinder &rf);
+    yarp::os::Property loadFeedbackList(const yarp::os::Bottle &bExercise, const std::string &ex_tag);
+    Metric *loadMetricsList(const yarp::os::Bottle &bMetricEx, const std::string &metric_tag,
+                            const std::string &metric_type);
+    Exercise* loadExerciseList(const yarp::os::Bottle &bGeneral, const std::string &ex_tag);
     bool loadExercise(const std::string &exercise_tag) override;
     std::vector<std::string> listExercises() override;
     std::vector<std::string> listMetricProps() override;
@@ -92,6 +96,9 @@ class Manager : public yarp::os::RFModule,
     std::string getCurrMetricProp() override;
     std::vector<std::string> listMetrics() override;
     std::string getExercise() override;
+    bool runScaler();
+    bool runActionRecognizer(const yarp::sig::Matrix &T);
+    bool runDtw(const yarp::sig::Matrix &T);
     bool start(const bool use_robot_template) override;
     bool stop() override;
     bool setPart(const std::string &part) override;
@@ -105,6 +112,11 @@ class Manager : public yarp::os::RFModule,
 
     bool writeStructToMat(const std::string& name, const std::vector< std::vector< std::pair<std::string,yarp::sig::Vector> > >& keypoints_skel, mat_t *matfp);
     bool writeStructToMat(const std::string& name, const Exercise *ex, mat_t *matfp);
+    void createSubfield(matvar_t *submatvar, double *val, size_t *dims, const char *name);
+    void createSubfield(matvar_t *submatvar, const std::string &val_str, size_t *dims, const char *name);
+    matvar_t *createRomField(const yarp::os::Property &params);
+    matvar_t* createStepField(const yarp::os::Property &params);
+    matvar_t* createEpField(const yarp::os::Property &params);
     matvar_t * writeStructToMat(const Metric *m);
     bool writeKeypointsToFile(mat_t *matfp);
     void print(const std::vector< std::vector< std::pair<std::string,yarp::sig::Vector> > >& keypoints_skel);
