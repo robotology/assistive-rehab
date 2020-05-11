@@ -460,7 +460,7 @@ public:
 
     /********************************************************/
     HandManager(const string &module_name, const double &arm_thresh, BufferedPort<Bottle> *opcPort, RpcClient *triggerPort)
-        : tag(""), part("")
+        : tag(""), part(""), skeleton(NULL)
 
     {
         this->module_name=module_name;
@@ -763,117 +763,150 @@ class Manager : public RFModule, public managerTUG_IDL
     }
 
     /****************************************************************/
+    string get_animation()
+    {
+        string s="";
+        Bottle cmd,rep;
+        cmd.addString("getState");
+        if (gazeboPort.write(cmd,rep))
+        {
+            s=rep.get(0).asString();
+        }
+        return s;
+    }
+
+    /****************************************************************/
+    bool play_animation(const string &name)
+    {
+        Bottle cmd,rep;
+        if (name=="go_back")
+        {
+            cmd.addString("goToWait");
+            cmd.addDouble(0.0);
+            cmd.addDouble(0.0);
+            cmd.addDouble(0.0);
+        }
+        else
+        {
+            cmd.addString("play");
+            cmd.addString(name);
+        }
+        if (gazeboPort.write(cmd,rep))
+        {
+            if (rep.get(0).asVocab()==ok)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /****************************************************************/
+    bool play_from_last()
+    {
+        Bottle cmd,rep;
+        cmd.addString("playFromLastStop");
+        if (gazeboPort.write(cmd,rep))
+        {
+            if (rep.get(0).asVocab()==ok)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    /****************************************************************/
+    bool set_auto()
+    {
+        Bottle cmd,rep;
+        cmd.addString("set_auto");
+        if (attentionPort.write(cmd,rep))
+        {
+            if (rep.get(0).asVocab()==ok)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /****************************************************************/
+    bool send_stop(const RpcClient &port)
+    {
+        Bottle cmd,rep;
+        cmd.addString("stop");
+        if (port.write(cmd,rep))
+        {
+            if (rep.get(0).asVocab()==ok)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /****************************************************************/
+    bool is_navigating()
+    {
+        Bottle cmd,rep;
+        cmd.addString("is_navigating");
+        if (navigationPort.write(cmd,rep))
+        {
+            if (rep.get(0).asVocab()==ok)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /****************************************************************/
     bool disengage()
     {
         bool ret=false;
         state=State::idle;
         ok_go=false;
         answer_manager->suspend();
-
         for (auto it=speak_map.begin(); it!=speak_map.end(); it++)
         {
             string key=it->first;
             speak_count_map[key]=0;
         }
-
-        Bottle cmd,rep;
-        cmd.addString("stop");
-        if (analyzerPort.write(cmd,rep))
-        {
-            if (rep.get(0).asVocab()==ok)
-            {
-                yInfo()<<"Stopping motion analysis";
-            }
-        }
-
+        send_stop(analyzerPort);
         if (simulation)
         {
-            cmd.clear();
-            rep.clear();
-            cmd.addString("getState");
-            if (gazeboPort.write(cmd,rep))
+            string s=get_animation();
+            if (s=="stand_up")
             {
-                if (rep.get(0).asString()=="stand_up")
+                play_from_last();
+            }
+            else if (s=="sitting" || s=="sit_down")
+            {
+                play_animation("sitting");
+            }
+            else if (s=="walk")
+            {
+                if (play_animation("go_back"))
                 {
-                    cmd.clear();
-                    rep.clear();
-                    cmd.addString("playFromLastStop");
-                    gazeboPort.write(cmd,rep);
-                }
-                else if (rep.get(0).asString()=="sitting" || rep.get(0).asString()=="sit_down")
-                {
-                    cmd.clear();
-                    rep.clear();
-                    cmd.addString("play");
-                    cmd.addString("sitting");
-                    gazeboPort.write(cmd,rep);
-                }
-                else if (rep.get(0).asString()=="walk")
-                {
-                    cmd.clear();
-                    rep.clear();
-                    cmd.addString("goToWait");
-                    cmd.addDouble(0.0);
-                    cmd.addDouble(0.0);
-                    cmd.addDouble(0.0);
-                    if (gazeboPort.write(cmd,rep))
-                    {
-                        if (rep.get(0).asVocab()==ok)
-                        {
-                            cmd.clear();
-                            rep.clear();
-                            cmd.addString("play");
-                            cmd.addString("stand");
-                            gazeboPort.write(cmd,rep);
-                        }
-                    }
+                    play_animation("stand");
                 }
             }
         }
-
-        bool ok_nav=false;
-        cmd.clear();
-        rep.clear();
-        cmd.addString("is_navigating");
-        if (navigationPort.write(cmd,rep))
+        bool ok_nav=true;
+        if (is_navigating())
         {
-            if (rep.get(0).asVocab()==ok)
-            {
-                cmd.clear();
-                rep.clear();
-                cmd.addString("stop");
-                if (navigationPort.write(cmd,rep))
-                {
-                    if (rep.get(0).asVocab()==ok)
-                    {
-                        ok_nav=true;
-                    }
-                }
-            }
-            else
-            {
-                ok_nav=true;
-            }
+            ok_nav=send_stop(navigationPort);
         }
-
         if (ok_nav)
         {
             if (go_to(starting_pose,true))
             {
                 yInfo()<<"Back to initial position";
-                cmd.clear();
-                rep.clear();
-                cmd.addString("set_auto");
-                if (attentionPort.write(cmd,rep))
-                {
-                    if (rep.get(0).asVocab()==ok)
-                    {
-                        ret=true;
-                    }
-                }
+                ret=set_auto();
             }
         }
-
         t0=Time::now();
         return ret;
     }
@@ -930,26 +963,11 @@ class Manager : public RFModule, public managerTUG_IDL
         if (go_to(starting_pose,true))
         {
             yInfo()<<"Going to initial position";
-            Bottle cmd,rep;
-            cmd.addString("stop");
-            if (attentionPort.write(cmd,rep))
+            if (send_stop(attentionPort))
             {
-                if (rep.get(0).asVocab()==ok)
-                {
-                    cmd.clear();
-                    rep.clear();
-                    cmd.addString("set_auto");
-                    if (attentionPort.write(cmd,rep))
-                    {
-                        if (rep.get(0).asVocab()==ok)
-                        {
-                            ret=true;
-                        }
-                    }
-                }
+                ret=set_auto();
             }
         }
-
         start_ex=ret;
         return start_ex;
     }
