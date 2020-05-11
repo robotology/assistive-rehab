@@ -3,7 +3,7 @@
 
     <module>
         <name>node-button.js</name>
-        <parameters>--host 0.0.0.0 --listen_port 80</parameters>
+        <parameters>--host 0.0.0.0 --listenPort 80</parameters>
         <deployer>node</deployer>
         <node>localhost</node>
         <workdir>$ENV{ROBOT_CODE}/assistive-rehab/app/scripts</workdir>

@@ -277,7 +277,7 @@ public:
     /********************************************************/
     AnswerManager(const string &module_name, const unordered_map<string,string> &speak_map,
                   const bool &simulation, BufferedPort<Bottle> *speechPort, RpcClient *speechRpc,
-                  RpcClient *gazeboPort)
+                  RpcClient *gazeboPort) : time (0.0)
     {
         this->module_name=module_name;
         this->speak_map=speak_map;
@@ -460,14 +460,14 @@ public:
 
     /********************************************************/
     HandManager(const string &module_name, const double &arm_thresh, BufferedPort<Bottle> *opcPort, RpcClient *triggerPort)
+        : tag(""), part("")
+
     {
         this->module_name=module_name;
         this->arm_thresh=arm_thresh;
         this->opcPort=opcPort;
         this->triggerPort=triggerPort;
         isArmLifted=false;
-        tag="";
-        part="";
     }
 
     /********************************************************/

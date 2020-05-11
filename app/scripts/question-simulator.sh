@@ -3,7 +3,8 @@
 speed() {
     Q_1="A che velocita devo andare"
     Q_2="Quanto devo andare veloce"
-    Q_3="Che andatura devo avere"  
+    Q_3="Che andatura devo avere"
+    echo "List of possible questions: ${Q_1}, ${Q_2}, ${Q_3}"
     NUMBER=$[ ( $RANDOM % 3 )  + 1 ]
     Q=Q_${NUMBER}
     echo ${!Q} | yarp write ... /googleSpeechProcess/text:i
@@ -13,6 +14,7 @@ speed() {
 aid() {
     Q_1="Posso usare il mio bastone"
     Q_2="Posso usare il deambulatore"
+    echo "List of possible questions: ${Q_1}, ${Q_2}"
     NUMBER=$[ ( $RANDOM % 2 )  + 1 ]
     Q=Q_${NUMBER}
     echo ${!Q} | yarp write ... /googleSpeechProcess/text:i
@@ -22,6 +24,7 @@ aid() {
 repetition() {
     Q_1="Quante volte devo ripetere l'esercizio"
     Q_2="Quante ripetizioni devo fare"
+    echo "List of possible questions: ${Q_1}, ${Q_2}"
     NUMBER=$[ ( $RANDOM % 2 )  + 1 ]
     Q=Q_${NUMBER}
     echo ${!Q} | yarp write ... /googleSpeechProcess/text:i
@@ -31,6 +34,7 @@ repetition() {
 feedback() {
     Q_1="Come sto facendo l'esercizio"
     Q_2="Sto andando bene"
+    echo "List of possible questions: ${Q_1}, ${Q_2}"
     NUMBER=$[ ( $RANDOM % 2 )  + 1 ]
     Q=Q_${NUMBER}
     echo ${!Q} | yarp write ... /googleSpeechProcess/text:i
@@ -40,13 +44,8 @@ feedback() {
 #######################################################################################
 # "MAIN" FUNCTION:                                                                    #
 #######################################################################################
-userinput=""
 while read key
 do
-  #if [ $key != "$speed"]
-  #  then
-  #  printf "\nCan't ask this one\n"
-  #fi
   $key
 done
 

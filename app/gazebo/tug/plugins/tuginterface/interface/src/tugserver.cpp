@@ -237,7 +237,14 @@ yarp::os::Property TugServer::getModelPos(const string &model_name)
 
     yarp::os::Property &subprop=prop.addGroup(model_name);
     yarp::os::Bottle b_pose;
-    b_pose.addList().read(yarp::math::cat(tr,rot));
+    yarp::os::Bottle &tmp=b_pose.addList();
+    tmp.addDouble(tr[0]);
+    tmp.addDouble(tr[1]);
+    tmp.addDouble(tr[2]);
+    tmp.addDouble(rot[0]);
+    tmp.addDouble(rot[1]);
+    tmp.addDouble(rot[2]);
+    tmp.addDouble(rot[3]);
     subprop.put("pose_world",b_pose.get(0));
     return prop;
 }
