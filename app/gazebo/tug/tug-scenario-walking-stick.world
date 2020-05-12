@@ -1,0 +1,132 @@
+<?xml version="1.0" ?>
+<sdf version='1.6'>
+
+<world name="default">
+
+    <!-- Global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- Ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+   
+    <!-- R1 -->
+    <!-- <model name='SIM_CER_ROBOT'>
+      <include>
+    	<uri>model://cer</uri>
+	<pose>5.5 0.0 0.16 0.0 0.0 3.14</pose>
+      </include>
+    </model> -->
+
+    <!-- Aruco lines -->
+    <include>
+      <uri>model://aruco_board_start</uri>
+      <pose>0.5 0.0 0.0 0.0 0.0 3.14</pose>  
+    </include>
+    <include>
+      <uri>model://aruco_board_finish</uri>
+      <pose>4.0 0.0 0.0 0.0 0.0 3.14</pose>
+    </include>
+
+    <model name='WalkingCane'>
+      <include> <!-- Attached to actor hip -->
+        <uri>model://WalkingCane</uri>
+        <!-- <pose>-0.2 -1.0 0.2 -1.57 1.57 0.0</pose> -->
+      </include>
+      <joint name="fixed_to_actor" type="fixed">
+        <child>human_with_stick::RightHand</child>
+        <parent>WalkingCane::body</parent>
+        <axis>
+          <limit>
+            <lower>0</lower>
+            <upper>0</upper>
+          </limit>
+          <xyz>0 1 0</xyz>
+          <use_parent_model_frame>0</use_parent_model_frame>
+        </axis>
+      </joint>
+    </model>
+
+    <!-- Human model -->
+    <actor name="human_with_stick">
+    <skin> 
+        <filename>walk.dae</filename>
+      </skin>
+      <!-- <animation name="stand">
+        <filename>stand.dae</filename>
+      </animation> -->
+      <animation name="sitting">
+        <filename>sitting.dae</filename>
+      </animation>
+      <animation name="stand_up">
+        <filename>stand_up.dae</filename>
+      </animation>
+      <animation name="walking">
+        <filename>walk.dae</filename>
+        <interpolate_x>true</interpolate_x>
+      </animation>
+      <animation name="sit_down">
+        <filename>sit_down.dae</filename>
+      </animation>
+      <script>
+        <loop>false</loop>
+        <auto_start>false</auto_start>
+        <trajectory id="0" type="sitting"/>
+        <trajectory id="1" type="stand_up"/>
+        <trajectory id="2" type="walking">
+          <waypoint>
+            <time>0</time>
+            <pose>0 0 0 0 0 0</pose>
+          </waypoint>
+          <waypoint>
+            <time>2</time>
+            <pose>2.0 0 0 0 0 0</pose>
+          </waypoint>
+          <waypoint>
+            <time>4</time>
+            <pose>4.5 0 0 0 0 0</pose>
+          </waypoint>
+          <waypoint>
+            <time>4.5</time>
+            <pose>4.0 0 0 0 0 3.14</pose>
+          </waypoint>
+          <waypoint>
+            <time>6</time>
+            <pose>2.0 0 0 0 0 3.14</pose>
+          </waypoint>
+          <waypoint>
+            <time>8</time>
+            <pose>0 0 0 0 0 3.14</pose>
+          </waypoint>
+          <waypoint>
+            <time>8.5</time>
+            <pose>0 0 0 0 0 0</pose>
+          </waypoint>  
+        </trajectory>
+        <trajectory id="3" type="sit_down"/>
+      </script>
+      <plugin name='tug_interface' filename='libgazebo_assistiverehab_tuginterface.so'>
+        <yarpConfigurationFile>model://tugInterface.ini</yarpConfigurationFile>
+      </plugin>
+    </actor>
+
+    <!-- Chair -->
+    <!-- <include>
+    	<uri>model://VisitorChair</uri>
+	<pose>-0.2 -0.2 0.0 0.0 0.0 1.57</pose>
+    </include> -->
+
+    <!-- Camera -->
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose frame=''>2.26322 -6.5226 2.11727 -0 0.207643 1.5602</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+
+  </world>
+</sdf>

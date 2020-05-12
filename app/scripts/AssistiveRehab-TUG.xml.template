@@ -1,5 +1,14 @@
 <application>
 <name>Assistive Rehabilitation TUG App</name>
+    <module>
+        <name>node-button.js</name>
+        <parameters></parameters>
+        <deployer>js</deployer>
+        <node>localhost</node>
+        <dependencies>
+            <port timeout="10">/managerTUG/cmd:rpc</port>
+        </dependencies>
+    </module>
 
     <module>
         <name>yarpdev</name>
@@ -346,12 +355,6 @@
     </connection>
 
     <connection>
-        <from>/managerTUG/line:rpc</from>
-        <to>/lineDetector/cmd:rpc</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
         <from>/managerTUG/speech:o</from>
         <to>/iSpeak</to>
         <protocol>fast_tcp</protocol>
@@ -394,7 +397,7 @@
     </connection>
 
     <connection>
-        <from>/managerTUG/trigger:o</from>
+        <from>/managerTUG/trigger:rpc</from>
         <to>/googleSpeech/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>

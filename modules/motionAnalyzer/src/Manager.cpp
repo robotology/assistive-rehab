@@ -34,14 +34,168 @@ using namespace yarp::math;
 using namespace iCub::ctrl;
 using namespace assistive_rehab;
 
+/********************************************************/
+vector<string> toStringVector(const Bottle &b, const string &key)
+{
+    vector<string> v;
+    if(Bottle *bOut=b.find(key).asList())
+    {
+        for(size_t k=0; k<bOut->size(); k++)
+            v.push_back(bOut->get(k).asString());
+    }
+    return v;
+}
+
+/********************************************************/
+Vector toVector(const Bottle &b, const string &key)
+{
+    Vector v;
+    if(Bottle *bOut=b.find(key).asList())
+    {
+        for(size_t k=0; k<bOut->size(); k++)
+            v.push_back(bOut->get(k).asDouble());
+    }
+    return v;
+}
+
+/********************************************************/
+Property toProp(const Bottle &b, const string &ex_tag)
+{
+    int duration=b.find("duration").asInt();
+    double twarp=b.find("twarp").asDouble();
+    Property pout;
+    pout.put("duration",duration);
+    pout.put("twarp",twarp);
+    vector<string> joint_list=toStringVector(b,"joint_list");
+    if (ex_tag==ExerciseTag::abduction_left || ex_tag==ExerciseTag::internal_rotation_left ||
+            ex_tag==ExerciseTag::external_rotation_left)
+    {
+        Vector sx_thresh=toVector(b,"sx_thresh");
+        Vector sy_thresh=toVector(b,"sy_thresh");
+        Vector sz_thresh=toVector(b,"sz_thresh");
+        Vector range_freq=toVector(b,"range_freq");
+        Vector psd_thresh=toVector(b,"psd_thresh");
+        Property &p=pout.addGroup("thresh");
+        Property &pjoint=p.addGroup("joint");
+        Property &psx=p.addGroup("sx");
+        Property &psy=p.addGroup("sy");
+        Property &psz=p.addGroup("sz");
+        Property &freq=p.addGroup("freq");
+        Property &psd=p.addGroup("psd");
+        for(int i=0;i<joint_list.size();i++)
+        {
+            pjoint.put("joint_"+to_string(i),joint_list[i]);
+            psx.put("sx_thresh_"+to_string(i),sx_thresh[i]);
+            psy.put("sy_thresh_"+to_string(i),sy_thresh[i]);
+            psz.put("sz_thresh_"+to_string(i),sz_thresh[i]);
+            freq.put("range_freq_"+to_string(i),range_freq[i]);
+            psd.put("psd_thresh_"+to_string(i),psd_thresh[i]);
+        }
+    }
+    if (ex_tag==ExerciseTag::reaching_left)
+    {
+        Vector radius=toVector(b,"radius");
+        Vector zscore=toVector(b,"zscore_thresh");
+        Vector inliers=toVector(b,"inliers_thresh");
+        Property &p=pout.addGroup("thresh");
+        Property &pjoint=p.addGroup("joint");
+        Property &pr=p.addGroup("radius");
+        Property &pscore=p.addGroup("zscore_thresh");
+        Property &pinliers=p.addGroup("inliers_thresh");
+        for(int i=0;i<joint_list.size();i++)
+        {
+            pjoint.put("joint_"+to_string(i),joint_list[i]);
+            pr.put("radius_"+to_string(i),radius[i]);
+            pscore.put("zscore_thresh_"+to_string(i),zscore[i]);
+            pinliers.put("inliers_thresh_"+to_string(i),inliers[i]);
+        }
+    }
+    return pout;
+}
+
+/********************************************************/
+Property Manager::loadFeedbackList(const Bottle &bExercise, const string &ex_tag)
+{
+    Property feedparams;
+    Bottle &bFeedback=bExercise.findGroup("feedback");
+    if(!bFeedback.isNull())
+    {
+        feedparams.clear();
+        feedparams=toProp(bFeedback,ex_tag);
+    }
+    return feedparams;
+}
+
+/********************************************************/
+Metric* Manager::loadMetricsList(const Bottle &bMetricEx, const string &metric_tag,
+                                 const string &metric_type)
+{
+    if(!bMetricEx.isNull())
+    {
+        if(metric_type==MetricType::rom)
+        {
+            string tag_joint=bMetricEx.find("tag_joint").asString();
+            Vector ref_dir=toVector(bMetricEx,"ref_dir");
+            string ref_joint=bMetricEx.check("ref_joint", Value("")).asString();;
+            string tag_plane=bMetricEx.find("tag_plane").asString();
+            double minv=bMetricEx.find("min").asDouble();
+            double maxv=bMetricEx.find("max").asDouble();
+            return new Rom(metric_type,metric_tag,tag_joint,tag_plane,ref_dir,ref_joint,minv,maxv);
+        }
+        if(metric_type==MetricType::step)
+        {
+            num=toVector(bMetricEx,"num");
+            den=toVector(bMetricEx,"den");
+            double step_thresh=bMetricEx.find("step_thresh").asDouble();
+            double step_window=bMetricEx.find("step_window").asDouble();
+            double time_window=bMetricEx.find("time_window").asDouble();
+            double minv=bMetricEx.find("min").asDouble();
+            double maxv=bMetricEx.find("max").asDouble();
+            return new Step(metric_type,metric_tag,num,den,step_thresh,step_window,time_window,minv,maxv);
+        }
+        if(metric_type==MetricType::end_point)
+        {
+            string tag_joint=bMetricEx.find("tag_joint").asString();
+            Vector ref_dir=toVector(bMetricEx,"ref_dir");
+            string tag_plane=bMetricEx.find("tag_plane").asString();
+            double minv=bMetricEx.find("min").asDouble();
+            double maxv=bMetricEx.find("max").asDouble();
+            Vector target=toVector(bMetricEx,"target");
+            return new EndPoint(metric_type,metric_tag,tag_joint,tag_plane,ref_dir,minv,maxv,target);
+        }
+    }
+    return NULL;
+}
+
+/********************************************************/
+Exercise* Manager::loadExerciseList(const Bottle &bGeneral, const string &ex_tag)
+{
+    if(ex_tag==ExerciseTag::abduction_left || ex_tag==ExerciseTag::internal_rotation_left ||
+            ex_tag==ExerciseTag::external_rotation_left)
+    {
+        return new RangeOfMotion(ex_tag);
+    }
+    if(ex_tag==ExerciseTag::reaching_left)
+    {
+        return new ReachingLeft();
+    }
+    if(ex_tag==ExerciseTag::tug)
+    {
+        int N=bGeneral.find("vel_estimator_N").asInt();
+        double D=bGeneral.find("vel_estimator_D").asDouble();
+        lin_est_shoulder=new AWLinEstimator(N,D); //(16,0.01);
+        return new Tug();
+    }
+    return NULL;
+}
+
+/********************************************************/
 bool Manager::loadMotionList(ResourceFinder &rf)
 {
     lock_guard<mutex> lg(mtx);
-
     rf.setDefaultContext(this->rf->getContext().c_str());
     rf.setDefaultConfigFile(this->rf->find("from").asString().c_str());
     rf.configure(0,NULL);
-
     Bottle &bGeneral = rf.findGroup("general");
     if(!bGeneral.isNull())
     {
@@ -55,26 +209,8 @@ bool Manager::loadMotionList(ResourceFinder &rf)
                 Bottle &bExercise = rf.findGroup(ex_tag);
                 if(!bExercise.isNull())
                 {
-                    Bottle &bGeneral=bExercise.findGroup("general");
-                    if(!bGeneral.isNull())
-                    {
-                        string type=bGeneral.find("type").asString();
-                        if(ex_tag==ExerciseTag::abduction_left ||
-                                ex_tag==ExerciseTag::internal_rotation_left ||
-                                ex_tag==ExerciseTag::external_rotation_left)
-                        {
-                            exercises[i]=new RangeOfMotion(ex_tag);
-                        }
-                        if(ex_tag==ExerciseTag::reaching_left)
-                        {
-                            exercises[i]=new ReachingLeft();
-                        }
-                        if(ex_tag==ExerciseTag::tug)
-                        {
-                            exercises[i]=new Tug();
-                        }
-                    }
-
+                    Bottle &bGeneralEx = bExercise.findGroup("general");
+                    exercises[i]=loadExerciseList(bGeneralEx, ex_tag);
                     //for each exercise we can evaluate different metrics
                     //check which metric has to be evaluated for this exercise
                     Bottle &bMetrics = bExercise.findGroup("metrics");
@@ -86,202 +222,25 @@ bool Manager::loadMotionList(ResourceFinder &rf)
                         {
                             for(int j=0; j<bMetricTags->size(); j++)
                             {
-                                string metric_type=bMetricTags->get(j).asString();
-                                int nmetrics=bMetricNumber->get(j).asInt();
+                                string metric_type = bMetricTags->get(j).asString();
+                                int nmetrics = bMetricNumber->get(j).asInt();
                                 for(int k=0; k<nmetrics; k++)
-                                {                                   
-                                    string metric_tag=metric_type+"_"+to_string(k);
-                                    Bottle &bMetricEx=bExercise.findGroup(metric_tag);
-                                    if(!bMetricEx.isNull())
-                                    {
-                                        if(metric_type==MetricType::rom)
-                                        {
-                                            string tag_joint = bMetricEx.find("tag_joint").asString();
-                                            Vector ref_dir(3,0.0);
-                                            if(Bottle *bRefDir = bMetricEx.find("ref_dir").asList())
-                                            {
-                                                ref_dir[0] = bRefDir->get(0).asDouble();
-                                                ref_dir[1] = bRefDir->get(1).asDouble();
-                                                ref_dir[2] = bRefDir->get(2).asDouble();
-                                            }
-                                            string ref_joint=bMetricEx.check("ref_joint", Value("")).asString();;
-                                            string tag_plane=bMetricEx.find("tag_plane").asString();
-                                            double minv=bMetricEx.find("min").asDouble();
-                                            double maxv=bMetricEx.find("max").asDouble();
-
-                                            Metric *rom;
-                                            rom=new Rom(metric_type,metric_tag,tag_joint,tag_plane,ref_dir,ref_joint,minv,maxv);
-                                            exercises[i]->addMetric(rom);
-                                        }                                      
-                                        if(metric_type==MetricType::step)
-                                        {
-                                            Bottle *bNum=bMetricEx.find("num").asList();
-                                            Bottle *bDen=bMetricEx.find("den").asList();
-                                            if(!bNum->isNull() && !bDen->isNull())
-                                            {
-                                                num.resize(bNum->size());
-                                                den.resize(bDen->size());
-                                                for(size_t l=0; l<bNum->size(); l++)
-                                                {
-                                                    num[l]=bNum->get(l).asDouble();
-                                                    den[l]=bDen->get(l).asDouble();
-                                                }
-                                            }
-                                            double minv=bMetricEx.find("min").asDouble();
-                                            double maxv=bMetricEx.find("max").asDouble();
-                                            Metric *step;
-                                            step=new Step(metric_type,metric_tag,num,den,minv,maxv);
-                                            exercises[i]->addMetric(step);
-                                        }
-                                        if(metric_type==MetricType::end_point)
-                                        {
-                                            string tag_joint=bMetricEx.find("tag_joint").asString();
-                                            Vector ref_dir(3,0.0);
-                                            if(Bottle *bRefDir = bMetricEx.find("ref_dir").asList())
-                                            {
-                                                ref_dir[0] = bRefDir->get(0).asDouble();
-                                                ref_dir[1] = bRefDir->get(1).asDouble();
-                                                ref_dir[2] = bRefDir->get(2).asDouble();
-                                            }
-                                            string tag_plane=bMetricEx.find("tag_plane").asString();
-                                            double minv=bMetricEx.find("min").asDouble();
-                                            double maxv=bMetricEx.find("max").asDouble();
-                                            Vector target(3,0.0);
-                                            if(Bottle *bTarget=bMetricEx.find("target").asList())
-                                            {
-                                                target[0]=bTarget->get(0).asDouble();
-                                                target[1]=bTarget->get(1).asDouble();
-                                                target[2]=bTarget->get(2).asDouble();
-                                            }
-                                            Metric *ep;
-                                            ep=new EndPoint(metric_type,metric_tag,tag_joint,tag_plane,ref_dir,minv,maxv,target);
-                                            exercises[i]->addMetric(ep);
-                                        }
-                                    }
+                                {
+                                    string metric_tag = metric_type+"_"+to_string(k);
+                                    Bottle &bMetricEx = bExercise.findGroup(metric_tag);
+                                    Metric *m = loadMetricsList(bMetricEx, metric_tag, metric_type);
+                                    exercises[i]->addMetric(m);
                                 }
                             }
                         }
                     }
-
                     //each exercise can have a specific feedback
-                    Bottle &bFeedback=bExercise.findGroup("feedback");
-                    if(!bFeedback.isNull())
-                    {
-                        Property feedparams;
-                        if(ex_tag==ExerciseTag::abduction_left ||
-                                ex_tag==ExerciseTag::internal_rotation_left ||
-                                ex_tag==ExerciseTag::external_rotation_left)
-                        {
-                            int duration=bFeedback.find("duration").asInt();
-                            double twarp=bFeedback.find("twarp").asDouble();
-                            vector<string> joint_list;
-                            if(Bottle *bJointList=bFeedback.find("joint_list").asList())
-                            {
-                                for(size_t k=0; k<bJointList->size(); k++)
-                                    joint_list.push_back(bJointList->get(k).asString());
-                            }
-                            Vector sx_thresh;
-                            if(Bottle *bSxThresh=bFeedback.find("sx_thresh").asList())
-                            {
-                                for(size_t k=0; k<bSxThresh->size(); k++)
-                                    sx_thresh.push_back(bSxThresh->get(k).asDouble());
-                            }
-                            Vector sy_thresh;
-                            if(Bottle *bSyThresh=bFeedback.find("sy_thresh").asList())
-                            {
-                                for(size_t k=0; k<bSyThresh->size(); k++)
-                                    sy_thresh.push_back(bSyThresh->get(k).asDouble());
-                            }
-                            Vector sz_thresh;
-                            if(Bottle *bSzThresh=bFeedback.find("sz_thresh").asList())
-                            {
-                                for(size_t k=0; k<bSzThresh->size(); k++)
-                                    sz_thresh.push_back(bSzThresh->get(k).asDouble());
-                            }
-                            Vector range_freq;
-                            if(Bottle *bFreqThresh=bFeedback.find("range_freq").asList())
-                            {
-                                for(size_t k=0; k<bFreqThresh->size(); k++)
-                                    range_freq.push_back(bFreqThresh->get(k).asInt());
-                            }
-                            Vector psd_thresh;
-                            if(Bottle *bPsdThresh=bFeedback.find("psd_thresh").asList())
-                            {
-                                for(size_t k=0; k<bPsdThresh->size(); k++)
-                                    psd_thresh.push_back(bPsdThresh->get(k).asDouble());
-                            }
-
-                            feedparams.clear();
-                            feedparams.put("duration",duration);
-                            feedparams.put("twarp",twarp);
-                            Property &p=feedparams.addGroup("thresh");
-                            Property &pjoint=p.addGroup("joint");
-                            Property &psx=p.addGroup("sx");
-                            Property &psy=p.addGroup("sy");
-                            Property &psz=p.addGroup("sz");
-                            Property &freq=p.addGroup("freq");
-                            Property &psd=p.addGroup("psd");
-                            for(int i=0;i<joint_list.size();i++)
-                            {
-                                pjoint.put("joint_"+to_string(i),joint_list[i]);
-                                psx.put("sx_thresh_"+to_string(i),sx_thresh[i]);
-                                psy.put("sy_thresh_"+to_string(i),sy_thresh[i]);
-                                psz.put("sz_thresh_"+to_string(i),sz_thresh[i]);
-                                freq.put("range_freq_"+to_string(i),range_freq[i]);
-                                psd.put("psd_thresh_"+to_string(i),psd_thresh[i]);
-                            }
-                        }
-                        if(ex_tag==ExerciseTag::reaching_left)
-                        {
-                            int duration=bFeedback.find("duration").asInt();
-                            double twarp=bFeedback.find("twarp").asDouble();
-                            vector<string> joint_list;
-                            if(Bottle *bJointList=bFeedback.find("joint_list").asList())
-                            {
-                                for(size_t k=0; k<bJointList->size(); k++)
-                                    joint_list.push_back(bJointList->get(k).asString());
-                            }
-                            Vector radius;
-                            if(Bottle *bRadius=bFeedback.find("radius").asList())
-                            {
-                                for(size_t k=0; k<bRadius->size(); k++)
-                                    radius.push_back(bRadius->get(k).asDouble());
-                            }
-                            Vector zscore;
-                            if(Bottle *bZscore=bFeedback.find("zscore_thresh").asList())
-                            {
-                                for(size_t k=0; k<bZscore->size(); k++)
-                                    zscore.push_back(bZscore->get(k).asDouble());
-                            }
-                            Vector inliers;
-                            if(Bottle *bInliersThresh=bFeedback.find("inliers_thresh").asList())
-                            {
-                                for(size_t k=0; k<bInliersThresh->size(); k++)
-                                    inliers.push_back(bInliersThresh->get(k).asDouble());
-                            }
-
-                            feedparams.clear();
-                            feedparams.put("duration",duration);
-                            feedparams.put("twarp",twarp);
-                            Property &p=feedparams.addGroup("thresh");
-                            Property &pjoint=p.addGroup("joint");
-                            Property &pr=p.addGroup("radius");
-                            Property &pscore=p.addGroup("zscore_thresh");
-                            Property &pinliers=p.addGroup("inliers_thresh");
-                            for(int i=0;i<joint_list.size();i++)
-                            {
-                                pjoint.put("joint_"+to_string(i),joint_list[i]);
-                                pr.put("radius_"+to_string(i),radius[i]);
-                                pscore.put("zscore_thresh_"+to_string(i),zscore[i]);
-                                pinliers.put("inliers_thresh_"+to_string(i),inliers[i]);
-                            }
-                        }
-                        exercises[i]->setFeedbackParams(feedparams);
-                    }
-                    //add the exercise to the repertoire
-                    motion_repertoire.insert(pair<string,Exercise*>(ex_tag,exercises[i]));
-                    motion_repertoire[ex_tag]->print();
+                    Property feedparams = loadFeedbackList(bExercise, ex_tag);
+                    exercises[i]->setFeedbackParams(feedparams);
                 }
+                //add the exercise to the repertoire
+                motion_repertoire.insert(pair<string,Exercise*>(ex_tag,exercises[i]));
+                motion_repertoire[ex_tag]->print();
             }
         }
     }
@@ -290,7 +249,6 @@ bool Manager::loadMotionList(ResourceFinder &rf)
         yError() << "Error in loading parameters. Stopping module!";
         return false;
     }
-
     return true;
 }
 
@@ -469,20 +427,6 @@ bool Manager::selectSkel(const string &skel_tag)
             return false;
         }
     }
-
-#ifndef NDEBUG
-    yInfo() << "Debugging";
-    {
-        double t1 = Time::now();
-        while( (Time::now()-t1) < 15.0 )
-        {
-            //do nothing
-            yInfo() << "Waiting to start";
-        }
-        return start();
-    }
-#endif
-
     return true;
 }
 
@@ -612,131 +556,143 @@ bool Manager::selectMetric(const string &metric_tag)
 }
 
 /********************************************************/
+bool sendCmd(const RpcClient &port, const Bottle &cmd)
+{
+    Bottle reply;
+    port.write(cmd,reply);
+    if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+    {
+        yError() << "failure from" << port.getName();
+        return false;
+    }
+    return true;
+}
+
+/********************************************************/
+bool Manager::runScaler()
+{
+    Property params=curr_exercise->getFeedbackParams();
+    Bottle cmd;
+    cmd.addVocab(Vocab::encode("load"));
+    cmd.addString(template_tag + ".log");
+    cmd.addString(rf->getContext());
+    if(!sendCmd(scalerPort,cmd))
+    {
+        yError()<<"skeletonScaler could not load"<<template_tag;
+        return false;
+    }
+    cmd.clear();
+    cmd.addVocab(Vocab::encode("tags"));
+    cmd.addString(skel_tag);
+    if (!sendCmd(scalerPort,cmd))
+    {
+        yError()<<"skeletonScaler could not load"<<skel_tag;
+        return false;
+    }
+    cmd.clear();
+    cmd.addVocab(Vocab::encode("run"));
+    cmd.addDouble(params.find("twarp").asDouble());
+    if (!sendCmd(scalerPort,cmd))
+    {
+        yError()<<"Could not run skeletonScaler";
+        return false;
+    }
+    return true;
+}
+
+/********************************************************/
+bool Manager::runActionRecognizer(const Matrix &T)
+{
+    Property params=curr_exercise->getFeedbackParams();
+    Bottle cmd;
+    cmd.addString("setTransformation");
+    cmd.addList().read(T);
+    if (!sendCmd(actionPort,cmd))
+    {
+        yError()<<"actionRecognizer could not load transformation matrix";
+        return false;
+    }
+    cmd.clear();
+    cmd.addVocab(Vocab::encode("run"));
+    cmd.addInt(params.find("duration").asInt());
+    if (!sendCmd(actionPort,cmd))
+    {
+        yError()<<"Could not run actionRecognizer";
+        return false;
+    }
+    return true;
+}
+
+/********************************************************/
+bool Manager::runDtw(const Matrix &T)
+{
+    Bottle cmd;
+    if (this->use_robot_template)
+    {
+        yInfo()<<"Using robot template";
+        cmd.addString("setRobotTemplate");
+        cmd.addInt(this->use_robot_template);
+        cmd.addInt(this->robot_skeleton_mirror);
+        if (!sendCmd(dtwPort,cmd))
+        {
+            yError()<<"feedbackProducer could not load robot template";
+            return false;
+        }
+    }
+    cmd.clear();
+    cmd.addString("setTransformation");
+    cmd.addList().read(T);
+    if (!sendCmd(dtwPort,cmd))
+    {
+        yError()<<"feedbackProducer could not load transformation matrix";
+        return false;
+    }
+    cmd.clear();
+    cmd.addString("start");
+    if (!sendCmd(dtwPort,cmd))
+    {
+        yError()<<"Could not run feedbackProducer";
+        return false;
+    }
+    return true;
+}
+
+/********************************************************/
 bool Manager::start(const bool use_robot_template)
 {
-    lock_guard<mutex> lg(mtx);
-                
+    lock_guard<mutex> lg(mtx);                
     this->use_robot_template = use_robot_template;
     yInfo() << "Start!";
     starting=true;
-
     if(curr_exercise->getType()==ExerciseType::rehabilitation)
     {
         bool out=false;
         while(out==false)
         {
             getSkeleton();
-
             //we do not start if we haven't selected a skeleton tag
             if(skel_tag.empty() || !updated)
             {
                 yWarning() << "Please select a proper skeleton tag";
                 return false;
             }
-
             out=skeletonIn.update_planes();
             Time::yield();
         }
-
         Matrix T;
         for(int i=0; i<processors.size(); i++)
         {
             processors[i]->setInitialConf(skeletonIn,T);
         }
-
-        Property params=curr_exercise->getFeedbackParams();
-        Bottle cmd,reply;
         if(this->use_robot_template == 0)
         {
             yInfo() << "Using pre-recorded template";
-            cmd.clear();
-            reply.clear();
-            cmd.addVocab(Vocab::encode("load"));
-            string file=template_tag + ".log";
-            cmd.addString(file);
-            string context=rf->getContext();
-            cmd.addString(context);
-            scalerPort.write(cmd,reply);
-            if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+            if (!runScaler())
             {
-                yError() << "skeletonScaler could not load" << file << "file";
-                return false;
-            }
-
-            cmd.clear();
-            reply.clear();
-            cmd.addVocab(Vocab::encode("tags"));
-            cmd.addString(skel_tag);
-            scalerPort.write(cmd,reply);
-            if(reply.get(0).asVocab()!=Vocab::encode("ok"))
-            {
-                yError() << "skeletonScaler could not select" << skel_tag;
-                return false;
-            }
-
-            cmd.clear();
-            reply.clear();
-            cmd.addVocab(Vocab::encode("run"));
-            cmd.addDouble(params.find("twarp").asDouble());
-            scalerPort.write(cmd,reply);
-            if(reply.get(0).asVocab()!=Vocab::encode("ok"))
-            {
-                yError() << "Could not run skeletonScaler";
                 return false;
             }
         }
-        else
-        {
-            yInfo() << "Using robot template";
-            cmd.clear();
-            reply.clear();
-            cmd.addString("setRobotTemplate");
-            cmd.addInt(this->use_robot_template);
-            cmd.addInt(this->robot_skeleton_mirror);
-            dtwPort.write(cmd,reply);
-            if(reply.get(0).asVocab()!=Vocab::encode("ok"))
-            {
-                yError() << "Could not set robot template to feedbackProducer";
-                return false;
-            }
-        }
-
-        reply.clear();
-        cmd.clear();
-        cmd.addString("setTransformation");
-        cmd.addList().read(T);
-        yDebug() << T.toString();
-        dtwPort.write(cmd,reply);
-        if(!reply.get(0).asVocab()==Vocab::encode("ok"))
-        {
-            yError() << "Could not set tranformation in feedbackProducer";
-            return false;
-        }
-
-        reply.clear();
-        actionPort.write(cmd,reply);
-        if(!reply.get(0).asVocab()==Vocab::encode("ok"))
-        {
-            yError() << "Could not set tranformation in actionRecognizer";
-            return false;
-        }
-
-        cmd.clear();
-        reply.clear();
-        cmd.addVocab(Vocab::encode("run"));
-        cmd.addInt(params.find("duration").asInt());
-        actionPort.write(cmd,reply);
-        if(reply.get(0).asVocab()!=Vocab::encode("ok"))
-        {
-            yError() << "Could not run actionRecognizer";
-            return false;
-        }
-
-        reply.clear();
-        cmd.clear();
-        cmd.addString("start");
-        dtwPort.write(cmd,reply);
-        if(reply.get(0).asVocab()==Vocab::encode("ok"))
+        if (runActionRecognizer(T) && runDtw(T))
         {
             tstart_session=Time::now()-tstart;
             starting=true;
@@ -744,14 +700,15 @@ bool Manager::start(const bool use_robot_template)
         }
         else
         {
-            yError() << "Could not run feedbackProducer";
             return false;
         }
     }
-
+    for(int i=0; i<processors.size(); i++)
+    {
+        processors[i]->setStartingTime(Time::now());
+    }
     tstart_session=Time::now()-tstart;
     return true;
-
 }
 
 /********************************************************/
@@ -779,6 +736,11 @@ bool Manager::stop()
     if(starting)
     {
         yInfo()<<"stopping";
+        for(int i=0; i<processors.size(); i++)
+        {
+            processors[i]->reset();
+        }
+
         if(curr_exercise->getType()==ExerciseType::rehabilitation)
         {
             Bottle cmd, reply;
@@ -874,8 +836,8 @@ bool Manager::hasCrossedFinishLine(const double finishline_thresh)
     Vector v1=lp_world-pline;
     double dist_fr_line=norm(cross(v1,fr_lp))/norm(v1);
     double dist_fl_line=norm(cross(v1,fl_lp))/norm(v1);
-    yInfo()<<"dist foot right line"<<dist_fr_line;
-    yInfo()<<"dist foot left line"<<dist_fl_line;
+//    yInfo()<<"dist foot right line"<<dist_fr_line;
+//    yInfo()<<"dist foot left line"<<dist_fl_line;
 
     return (dist_fr_line<finishline_thresh && dist_fl_line<finishline_thresh);
 }
@@ -896,11 +858,7 @@ void Manager::getSkeleton()
     cmd.addVocab(Vocab::encode("ask"));
     Bottle &content = cmd.addList().addList();
     content.addString("skeleton");
-
-//    yInfo() << "Query opc: " << cmd.toString();
     opcPort.write(cmd, reply);
-//    yInfo() << "Reply from opc:" << reply.toString();
-
     if(reply.size() > 1)
     {
         if(reply.get(0).asVocab() == Vocab::encode("ack"))
@@ -915,7 +873,6 @@ void Manager::getSkeleton()
                         for(int i=0; i<idValues->size(); i++)
                         {
                             int id = idValues->get(i).asInt();
-
                             //given the id, get the value of the property
                             cmd.clear();
                             cmd.addVocab(Vocab::encode("get"));
@@ -923,11 +880,7 @@ void Manager::getSkeleton()
                             Bottle replyProp;
                             content.addString("id");
                             content.addInt(id);
-
-//                            yInfo() << "Command sent to the port: " << cmd.toString();
                             opcPort.write(cmd, replyProp);
-//                            yInfo() << "Reply from opc:" << replyProp.toString();
-
                             if(replyProp.get(0).asVocab() == Vocab::encode("ack"))
                             {
                                 if(Bottle *propField = replyProp.get(1).asList())
@@ -945,7 +898,7 @@ void Manager::getSkeleton()
                                                 vector<pair<string,Vector>> keyps=skeletonIn.get_unordered();
                                                 all_keypoints.push_back(keyps);
                                             }
-                                            if(skeletonIn[KeyPointTag::shoulder_center]->isUpdated())
+                                            if(skeletonIn[KeyPointTag::shoulder_center]->isUpdated() && curr_exercise->getName()==ExerciseTag::tug)
                                             {
                                                 Vector shoulder_center=skeletonIn[KeyPointTag::shoulder_center]->getPoint();
                                                 AWPolyElement el(shoulder_center,Time::now());
@@ -1003,8 +956,6 @@ bool Manager::configure(ResourceFinder &rf)
     prop_tag="";
     curr_exercise=NULL;
     curr_metric=NULL;
-    lin_est_shoulder=new AWLinEstimator(16,0.01);
-
     return true;
 }
 
@@ -1027,13 +978,16 @@ bool Manager::close()
 {
     for(int i=0; i<exercises.size(); i++)
     {
+        if (exercises[i]->getName()==ExerciseTag::tug)
+        {
+            delete lin_est_shoulder;
+        }
         delete exercises[i];
     }
     for(int i=0; i<processors.size(); i++)
     {
         delete processors[i];
     }
-    delete lin_est_shoulder;
     yInfo() << "Freed memory";
 
     opcPort.close();
@@ -1069,14 +1023,14 @@ bool Manager::updateModule()
         {
             if(curr_exercise!=NULL && curr_metric!=NULL)
             {
+                //write on output port
+                Bottle &scopebottleout=scopePort.prepare();
+                scopebottleout.clear();
                 if(updated)
                 {
                     //update time array
                     time_samples.push_back(Time::now()-tstart);
 
-                    //write on output port
-                    Bottle &scopebottleout=scopePort.prepare();
-                    scopebottleout.clear();
                     for(int i=0; i<processors.size(); i++)
                     {
                         processors[i]->update(skeletonIn);
@@ -1089,8 +1043,8 @@ bool Manager::updateModule()
                             scopebottleout.addDouble(res);
                         }
                     }
-                    scopePort.write();
                 }
+                scopePort.write();
             }
             else
                 yInfo() << "Please specify metric";
@@ -1203,169 +1157,140 @@ bool Manager::writeStructToMat(const string& name, const Exercise* ex, mat_t *ma
 }
 
 /********************************************************/
+void Manager::createSubfield(matvar_t *submatvar, double *val, size_t *dims, const char *name)
+{
+    matvar_t *subfield;
+    subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims,&val,MAT_F_DONT_COPY_DATA);
+    Mat_VarSetStructFieldByName(submatvar,name,0,subfield);
+}
+
+/********************************************************/
+void Manager::createSubfield(matvar_t *submatvar, const string &val_str, size_t *dims, const char *name)
+{
+    char *val=new char[val_str.length()+1];
+    strcpy(val, val_str.c_str());
+    matvar_t *subfield;
+    subfield=Mat_VarCreate(NULL,MAT_C_CHAR,MAT_T_UTF8,2,dims,val,0);
+    Mat_VarSetStructFieldByName(submatvar,name,0,subfield);
+    delete [] val;
+}
+
+/********************************************************/
+matvar_t* Manager::createRomField(const Property &params)
+{
+    string metric_name=params.find("name").asString();
+    int numFields=8;
+    const char *subfields[numFields]={"tag_joint","ref_joint","ref_dir","tag_plane","max","min","tstart","tend"};
+    size_t dim_struct[2]={1,1};
+    matvar_t* submatvar;
+    submatvar=Mat_VarCreateStruct(metric_name.c_str(),2,dim_struct,subfields,numFields);
+    string joint_met=params.find("tag_joint").asString();
+    size_t dims_field_joint[2]={1,joint_met.size()};
+    createSubfield(submatvar,joint_met,dims_field_joint,subfields[0]);
+    string ref_joint=params.find("ref_joint").asString();
+    size_t dims_field_refjoint[2]={1,ref_joint.size()};
+    createSubfield(submatvar,ref_joint,dims_field_refjoint,subfields[1]);
+    size_t dims_field_dir[2]={1,3};
+    Bottle *bRef=params.find("ref_dir").asList();
+    Vector ref_met(3,0.0);
+    ref_met[0]=bRef->get(0).asDouble();
+    ref_met[1]=bRef->get(1).asDouble();
+    ref_met[2]=bRef->get(2).asDouble();
+    createSubfield(submatvar,ref_met.data(),dims_field_dir,subfields[2]);
+    string tag_plane=params.find("tag_plane").asString();
+    size_t dims_field_tagplane[2]={1,tag_plane.size()};
+    createSubfield(submatvar,tag_plane,dims_field_tagplane,subfields[3]);
+    size_t dims[2]={1,1};
+    double max_val=params.find("max").asDouble();
+    double min_val=params.find("min").asDouble();
+    createSubfield(submatvar,&max_val,dims,subfields[4]);
+    createSubfield(submatvar,&min_val,dims,subfields[5]);
+    createSubfield(submatvar,&tstart_session,dims,subfields[6]);
+    createSubfield(submatvar,&tend_session,dims,subfields[7]);
+    return submatvar;
+}
+
+/********************************************************/
+matvar_t* Manager::createStepField(const Property &params)
+{
+    string metric_name=params.find("name").asString();
+    int numFields=7;
+    const char *subfields[numFields]={"num","den","max","min","tstart","tend","step_thresh"};
+    size_t dim_struct[2]={1,1};
+    matvar_t* submatvar;
+    submatvar=Mat_VarCreateStruct(metric_name.c_str(),2,dim_struct,subfields,numFields);
+    size_t dims_field_num[2]={1,num.size()};
+    size_t dims_field_den[2]={1,den.size()};
+    createSubfield(submatvar,num.data(),dims_field_num,subfields[0]);
+    createSubfield(submatvar,den.data(),dims_field_den,subfields[1]);
+    size_t dims[2]={1,1};
+    double max_val=params.find("max").asDouble();
+    double min_val=params.find("min").asDouble();
+    double step_thresh=params.find("step_thresh").asDouble();
+    createSubfield(submatvar,&max_val,dims,subfields[2]);
+    createSubfield(submatvar,&min_val,dims,subfields[3]);
+    createSubfield(submatvar,&tstart_session,dims,subfields[4]);
+    createSubfield(submatvar,&tend_session,dims,subfields[5]);
+    createSubfield(submatvar,&step_thresh,dims,subfields[6]);
+    return submatvar;
+}
+
+/********************************************************/
+matvar_t* Manager::createEpField(const Property &params)
+{
+    string metric_name=params.find("name").asString();
+    matvar_t* submatvar;
+    int numFields=8;
+    const char *subfields[numFields]={"tag_joint","ref_dir","tag_plane","max","min","target","tstart","tend"};
+    size_t dim_struct[2]={1,1};
+    submatvar=Mat_VarCreateStruct(metric_name.c_str(),2,dim_struct,subfields,numFields);
+    string joint_met=params.find("tag_joint").asString();
+    size_t dims_field_joint[2]={1,joint_met.size()};
+    createSubfield(submatvar,joint_met,dims_field_joint,subfields[0]);
+    size_t dims_field_dir[2]={1,3};
+    Bottle *bRef=params.find("ref_dir").asList();
+    Vector ref_met(3,0.0);
+    ref_met[0]=bRef->get(0).asDouble();
+    ref_met[1]=bRef->get(1).asDouble();
+    ref_met[2]=bRef->get(2).asDouble();
+    createSubfield(submatvar,ref_met.data(),dims_field_dir,subfields[1]);
+    string tag_plane=params.find("tag_plane").asString();
+    size_t dims_field_tagplane[2]={1,tag_plane.size()};
+    createSubfield(submatvar,tag_plane,dims_field_tagplane,subfields[2]);
+    size_t dims[2]={1,1};
+    double max_val=params.find("max").asDouble();
+    double min_val=params.find("min").asDouble();
+    createSubfield(submatvar,&max_val,dims,subfields[3]);
+    createSubfield(submatvar,&min_val,dims,subfields[4]);
+    size_t dims_field_target[2]={1,3};
+    Bottle *bTarget=params.find("target").asList();
+    Vector target(3,0.0);
+    target[0]=bTarget->get(0).asDouble();
+    target[1]=bTarget->get(1).asDouble();
+    target[2]=bTarget->get(2).asDouble();
+    createSubfield(submatvar,target.data(),dims_field_target,subfields[5]);
+    createSubfield(submatvar,&tstart_session,dims,subfields[6]);
+    createSubfield(submatvar,&tend_session,dims,subfields[7]);
+    return submatvar;
+}
+
+/********************************************************/
 matvar_t * Manager::writeStructToMat(const Metric* m)
 {
-    matvar_t* submatvar;
+    matvar_t* submatvar=NULL;
     Property params=m->getParams();
-    string metric_name=params.find("name").asString();
     string metric_type=params.find("type").asString();
     if(metric_type==MetricType::rom)
     {
-        int numFields=8;
-        const char *subfields[numFields]={"tag_joint","ref_joint","ref_dir","tag_plane",
-                                          "max","min","tstart","tend"};
-        size_t dim_struct[2]={1,1};
-        submatvar=Mat_VarCreateStruct(metric_name.c_str(),2,dim_struct,subfields,numFields);
-        matvar_t *subfield;
-        string joint_met=params.find("tag_joint").asString();
-        char *joint_c=new char[joint_met.length()+1];
-        strcpy(joint_c, joint_met.c_str());
-        size_t dims_field_joint[2]={1,joint_met.size()};
-        subfield=Mat_VarCreate(NULL,MAT_C_CHAR,MAT_T_UTF8,2,dims_field_joint,joint_c,0);
-        Mat_VarSetStructFieldByName(submatvar,subfields[0],0,subfield);
-        delete [] joint_c;
-
-        string ref_joint=params.find("ref_joint").asString();
-        char *joint_ref=new char[ref_joint.length()+1];
-        strcpy(joint_ref,ref_joint.c_str());
-        size_t dims_field_refjoint[2]={1,ref_joint.size()};
-        subfield=Mat_VarCreate(NULL,MAT_C_CHAR,MAT_T_UTF8,2,dims_field_refjoint,joint_ref,0);
-        Mat_VarSetStructFieldByName(submatvar,subfields[1],0,subfield);
-        delete [] joint_ref;
-
-        size_t dims_field_dir[2]={1,3};
-        Bottle *bRef=params.find("ref_dir").asList();
-        Vector ref_met(3,0.0);
-        ref_met[0]=bRef->get(0).asDouble();
-        ref_met[1]=bRef->get(1).asDouble();
-        ref_met[2]=bRef->get(2).asDouble();
-        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_dir,ref_met.data(),0);
-        Mat_VarSetStructFieldByName(submatvar,subfields[2],0,subfield);
-
-        string tag_plane=params.find("tag_plane").asString();
-        char *plane_tag=new char[tag_plane.length()+1];
-        strcpy(plane_tag,tag_plane.c_str());
-        size_t dims_field_tagplane[2]={1,tag_plane.size()};
-        subfield=Mat_VarCreate(NULL,MAT_C_CHAR,MAT_T_UTF8,2,dims_field_tagplane,plane_tag,0);
-        Mat_VarSetStructFieldByName(submatvar,subfields[3],0,subfield);
-        delete [] plane_tag;
-
-        size_t dims_field_max[2]={1,1};
-        double max_val=params.find("max").asDouble();
-        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_max,&max_val,MAT_F_DONT_COPY_DATA);
-        Mat_VarSetStructFieldByName(submatvar,subfields[4],0,subfield);
-
-        size_t dims_field_min[2]={1,1};
-        double min_val=params.find("min").asDouble();
-        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_min,&min_val,MAT_F_DONT_COPY_DATA);
-        Mat_VarSetStructFieldByName(submatvar,subfields[5],0,subfield);
-
-        size_t dims_field_tstart[2]={1,1};
-        cout<< "started at "<<tstart_session;
-        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tstart,&tstart_session,MAT_F_DONT_COPY_DATA);
-        Mat_VarSetStructFieldByName(submatvar,subfields[6],0,subfield);
-
-        cout<<" ended at "<<tend_session<<endl;
-        size_t dims_field_tend[2]={1,1};
-        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tend,&tend_session,MAT_F_DONT_COPY_DATA);
-        Mat_VarSetStructFieldByName(submatvar,subfields[7],0,subfield);
+        submatvar=createRomField(params);
     }
     if(metric_type==MetricType::step)
     {
-        int numFields=6;
-        const char *subfields[numFields]={"num","den","max","min","tstart","tend"};
-        size_t dim_struct[2]={1,1};
-        submatvar=Mat_VarCreateStruct(metric_name.c_str(),2,dim_struct,subfields,numFields);
-        matvar_t *subfield;
-        size_t dims_field_num[2]={1,num.size()};
-        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_num,num.data(),0);
-        Mat_VarSetStructFieldByName(submatvar,subfields[0],0,subfield);
-
-        size_t dims_field_den[2]={1,den.size()};
-        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_den,den.data(),0);
-        Mat_VarSetStructFieldByName(submatvar,subfields[1],0,subfield);
-
-        size_t dims_field_max[2]={1,1};
-        double max_val=params.find("max").asDouble();
-        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_max,&max_val,MAT_F_DONT_COPY_DATA);
-        Mat_VarSetStructFieldByName(submatvar,subfields[2],0,subfield);
-
-        size_t dims_field_min[2]={1,1};
-        double min_val=params.find("min").asDouble();
-        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_min,&min_val,MAT_F_DONT_COPY_DATA);
-        Mat_VarSetStructFieldByName(submatvar,subfields[3],0,subfield);
-
-        size_t dims_field_tstart[2]={1,1};
-        cout<<"started at "<<tstart_session;
-        subfield = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tstart,&tstart_session,MAT_F_DONT_COPY_DATA);
-        Mat_VarSetStructFieldByName(submatvar,subfields[4],0,subfield);
-
-        cout<<" ended at "<<tend_session<<endl;
-        size_t dims_field_tend[2]={1,1};
-        subfield = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tend,&tend_session,MAT_F_DONT_COPY_DATA);
-        Mat_VarSetStructFieldByName(submatvar,subfields[5],0,subfield);
+        submatvar=createStepField(params);
     }
     if(metric_type==MetricType::end_point)
     {
-        int numFields=8;
-        const char *subfields[numFields]={"tag_joint","ref_dir","tag_plane","max","min","target",
-                                          "tstart","tend"};
-        size_t dim_struct[2]={1,1};
-        submatvar=Mat_VarCreateStruct(metric_name.c_str(),2,dim_struct,subfields,numFields);
-        matvar_t *subfield;
-        string joint_met=params.find("tag_joint").asString();
-        char *joint_c=new char[joint_met.length()+1];
-        strcpy(joint_c, joint_met.c_str());
-        size_t dims_field_joint[2]={1,joint_met.size()};
-        subfield=Mat_VarCreate(NULL,MAT_C_CHAR,MAT_T_UTF8,2,dims_field_joint,joint_c,0);
-        Mat_VarSetStructFieldByName(submatvar,subfields[0],0,subfield);
-        delete [] joint_c;
-
-        size_t dims_field_dir[2]={1,3};
-        Bottle *bRef=params.find("ref_dir").asList();
-        Vector ref_met(3,0.0);
-        ref_met[0]=bRef->get(0).asDouble();
-        ref_met[1]=bRef->get(1).asDouble();
-        ref_met[2]=bRef->get(2).asDouble();
-        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_dir,ref_met.data(),0);
-        Mat_VarSetStructFieldByName(submatvar,subfields[1],0,subfield);
-
-        string tag_plane=params.find("tag_plane").asString();
-        char *plane_tag=new char[tag_plane.length()+1];
-        strcpy(plane_tag,tag_plane.c_str());
-        size_t dims_field_tagplane[2]={1,tag_plane.size()};
-        subfield=Mat_VarCreate(NULL,MAT_C_CHAR,MAT_T_UTF8,2,dims_field_tagplane,plane_tag,0);
-        Mat_VarSetStructFieldByName(submatvar,subfields[2],0,subfield);
-        delete [] plane_tag;
-
-        size_t dims_field_max[2]={1,1};
-        double max_val=params.find("max").asDouble();
-        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_max,&max_val,MAT_F_DONT_COPY_DATA);
-        Mat_VarSetStructFieldByName(submatvar,subfields[3],0,subfield);
-
-        size_t dims_field_min[2]={1,1};
-        double min_val=params.find("min").asDouble();
-        subfield = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_min,&min_val,MAT_F_DONT_COPY_DATA);
-        Mat_VarSetStructFieldByName(submatvar,subfields[4],0,subfield);
-
-        size_t dims_field_target[2]={1,3};
-        Bottle *bTarget=params.find("target").asList();
-        Vector target(3,0.0);
-        target[0]=bTarget->get(0).asDouble();
-        target[1]=bTarget->get(1).asDouble();
-        target[2]=bTarget->get(2).asDouble();
-        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_target,target.data(),0);
-        Mat_VarSetStructFieldByName(submatvar,subfields[5],0,subfield);
-
-        size_t dims_field_tstart[2]={1,1};
-        cout<<"started at "<<tstart_session;
-        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tstart,&tstart_session,MAT_F_DONT_COPY_DATA);
-        Mat_VarSetStructFieldByName(submatvar,subfields[6],0,subfield);
-
-        cout<<" ended at "<<tend_session<<endl;
-        size_t dims_field_tend[2]={1,1};
-        subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field_tend,&tend_session,MAT_F_DONT_COPY_DATA);
-        Mat_VarSetStructFieldByName(submatvar,subfields[7],0,subfield);
+        submatvar=createEpField(params);
     }
     return submatvar;
 }

@@ -44,16 +44,16 @@ public:
     Processor();
     virtual ~Processor() {;}
     void setInitialConf(assistive_rehab::SkeletonStd &skeleton_, yarp::sig::Matrix &T);
+    void setStartingTime(const double &tnow);
     void update(assistive_rehab::SkeletonStd& curr_skeleton_);
     yarp::sig::Vector projectOnPlane(const yarp::sig::Vector &v,const yarp::sig::Vector &plane);
     yarp::sig::Vector toCurrFrame(const std::string &tag);
-    void stop();
 
     yarp::sig::Vector getPlaneNormal() const { return plane_normal; }
     virtual void estimate() = 0;
     virtual yarp::os::Property getResult() = 0;
     virtual std::string getProcessedMetric() const = 0;
-
+    virtual void reset() = 0;
 };
 
 class Rom_Processor : public Processor
@@ -68,7 +68,7 @@ public:
     void estimate() override;
     yarp::os::Property getResult() override;
     std::string getProcessedMetric() const { return rom->getParams().find("name").asString(); }
-
+    void reset() override;
 };
 
 class Step_Processor : public Processor
@@ -76,8 +76,10 @@ class Step_Processor : public Processor
     Step* step;
     yarp::sig::Vector feetdist;
     yarp::sig::Vector feetwidth;
+    yarp::sig::Vector tdist;
     iCub::ctrl::Filter* filter_dist;
     iCub::ctrl::Filter* filter_width;
+    double step_thresh,step_window,time_window;
 
     double steplen,prev_steplen;
     double stepwidth,prev_stepwidth;
@@ -86,7 +88,6 @@ class Step_Processor : public Processor
     double speed,prev_speed;
 
 public:
-
     Step_Processor();
     Step_Processor(const Metric *step_);
     ~Step_Processor();
@@ -94,9 +95,11 @@ public:
     void estimate() override;
     yarp::os::Property getResult() override;
     std::string getProcessedMetric() const { return step->getParams().find("name").asString(); }
+    void reset() override;
 
-    std::pair<std::vector<double>,std::vector<int> > findPeaks(const yarp::sig::Vector &d);
-    void estimateSpatialParams(const yarp::sig::Vector &dist, const yarp::sig::Vector &width);
+    std::pair< std::deque<double>,std::deque<int> > findPeaks(const yarp::sig::Vector &d,
+                                                              const double &minv, double &tlast);
+    void estimateSpatialParams(const double &dist,const double &width);
     double estimateCadence();
     double estimateSpeed();
 
@@ -136,11 +139,11 @@ public:
     void estimate() override;
     yarp::os::Property getResult() override;
     std::string getProcessedMetric() const { return ep->getParams().find("name").asString(); }
+    void reset() override;
 
     double getVel() { return vel; }
     double getSmoothness() { return smoothness; }
     double getTrajectory(const yarp::sig::Vector &v);
-
 };
 
 #endif

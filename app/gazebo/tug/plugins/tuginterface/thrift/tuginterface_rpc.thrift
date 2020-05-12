@@ -15,6 +15,12 @@ struct Animation
 2: i32 id=-1;          /* animation id */
 }
 
+struct Property { }
+(
+   yarp.name="yarp::os::Property"
+   yarp.includefile="yarp/os/Property.h"
+)
+
 service TugInterfaceServer
 {
 
@@ -52,11 +58,32 @@ service TugInterfaceServer
     bool play(1: Animation animation, 2: bool complete=false);
 
     /**
-     * Pause actor for time seconds.
-     * @param time seconds during which actor is paused.
-     * @return returns walking speed
+     * Get model position as defined in world, with respect to start-line.
+     * @param model_name name string defining the name of the model.
+     * @return a property-like object in the form
+     *         (pose_world (x y z ax ay az theta)).
      */
-    bool pause(1: double time);
+    Property getModelPos(1: string model_name);
+
+    /**
+     * Pause actor.
+     * @param time [optional] seconds during which actor is paused (if time > 0).
+     * @return returns true / false on success / failure.
+     */
+    bool pause(1: double time=0.0);
+
+    /**
+     * Play from last animation.
+     * @param complete if true, the whole script is played starting from last stop.
+     * @return returns true / false on success / failure.
+     */
+    bool playFromLast(1: bool complete=false);
+
+    /**
+     * Get current animation being played.
+     * @return returns string defining the current animation being played.
+     */
+    string getState();
 
     /**
      * Reach a target location.
@@ -65,4 +92,25 @@ service TugInterfaceServer
      */
     bool goTo(1: Pose p);
 
+    /**
+     * Blocking version of reach for a target location. The service returns ack only
+     * when target is reached.
+     * @param p pose in the form x,y,theta.
+     * @return true/false on success/failure.
+     */
+    bool goToWait(1: Pose p);
+
+    /**
+     * Reach a sequence of targets.
+     * @param p list of poses in the form x1,y1,theta1,x2,y2,theta2.
+     * @return true/false on success/failure.
+     */
+    bool goToSeq(1: list<double> p);
+
+    /**
+     * Set target to reach during walk animation.
+     * @param p pose in the form x,y,theta.
+     * @return returns true or false on success / failure
+     */
+    bool setTarget(1: Pose p);
 }

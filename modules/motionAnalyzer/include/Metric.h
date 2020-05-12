@@ -78,17 +78,21 @@ private:
     std::string name;
     yarp::sig::Vector num;
     yarp::sig::Vector den;
-    double minv,maxv;
+    double minv,maxv,thresh,step_window,time_window;
 
 public:
     Step() {;}
     Step(const std::string &type_, const std::string &name_, const yarp::sig::Vector &num_,
-         const yarp::sig::Vector &den_, const double &minv_, const double &maxv_);
+         const yarp::sig::Vector &den_, const double &thresh_, const double &step_window_,
+         const double &time_window_, const double &minv_, const double &maxv_);
     Step(const Step &r);
     Step& operator = (const Step &r);
 
     yarp::sig::Vector getNum() const { return num; }
     yarp::sig::Vector getDen() const { return den; }
+    double getThresh() const { return thresh; }
+    double getStepWindow() const { return step_window; }
+    double getTimeWindow() const { return time_window; }
 
     yarp::os::Property getParams() const override;
     void print(std::ostream &os=std::cout) const override;

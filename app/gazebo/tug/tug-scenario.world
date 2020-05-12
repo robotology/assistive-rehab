@@ -17,19 +17,23 @@
     <model name='SIM_CER_ROBOT'>
       <include>
     	<uri>model://cer</uri>
-	<pose>5.5 0.0 0.16 0.0 0.0 3.14</pose>
       </include>
+      <pose>6.5 1.5 0.16 0.0 0.0 3.14</pose>
     </model>
 
     <!-- Aruco lines -->
-    <include>
-      <uri>model://aruco_board_start</uri>
-      <pose>0.5 0.0 0.0 0.0 0.0 3.14</pose>  
-    </include>
-    <include>
-      <uri>model://aruco_board_finish</uri>
-      <pose>4.0 0.0 0.0 0.0 0.0 3.14</pose>
-    </include>
+    <model name='start-line'>
+      <include>
+        <uri>model://aruco_board_start</uri>
+      </include>
+      <pose>0.5 0.0 0.0 0.0 0.0 1.59</pose>
+    </model>
+    <model name='finish-line'>
+      <include>
+        <uri>model://aruco_board_finish</uri>
+      </include>
+      <pose>3.5 0.0 0.0 0.0 0.0 1.59</pose>
+    </model>
 
     <!-- Human model -->
     <actor name="human">
@@ -68,10 +72,12 @@
     </actor>
 
     <!-- Chair -->
-    <include>
-      <uri>model://VisitorChair</uri>
+    <model name='chair'>
+      <include>
+        <uri>model://VisitorChair</uri>
+      </include>
       <pose>-0.50 0.0 0.0 0.0 0.0 1.57</pose>
-    </include>
+    </model>
 
     <!-- Walking helpers -->
     <!-- Nested models from SDF 1.5 and gazebo 7 -->
@@ -92,7 +98,7 @@
     <!-- Camera -->
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose frame=''>2.26322 -6.5226 2.11727 -0 0.207643 1.5602</pose>
+        <pose frame=''>3.60989 -8.90123 2.55734 0 0.199643 1.5722</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>

@@ -135,7 +135,7 @@ void TugInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     }
     else
     {
-        actor->Play(starting_animation);
+        actor->PlayWithAnimationName(starting_animation);
     }
 
     server.attachWorldPointer(world);

@@ -89,6 +89,12 @@ void Processor::setInitialConf(SkeletonStd &skeleton_, Matrix &T)
     t0=Time::now();
 }
 
+/********************************************************/
+void Processor::setStartingTime(const double &tnow)
+{
+    t0=tnow;
+}
+
 /****************************************************************/
 void Processor::update(SkeletonStd &curr_skeleton_)
 {
@@ -122,6 +128,7 @@ Rom_Processor::Rom_Processor()
 Rom_Processor::Rom_Processor(const Metric* rom_)
 {
     rom=(Rom*)rom_;
+    range=0.0;
     prev_range=0.0;
 }
 
@@ -194,6 +201,13 @@ yarp::os::Property Rom_Processor::getResult()
     return result;
 }
 
+/********************************************************/
+void Rom_Processor::reset()
+{
+    range=0.0;
+    prev_range=0.0;
+}
+
 /****************************************/
 /*            STEP PROCESSOR            */
 /****************************************/
@@ -208,6 +222,15 @@ Step_Processor::Step_Processor(const Metric* step_)
     step=(Step*)step_;
     filter_dist=new Filter(step->getNum(),step->getDen());
     filter_width=new Filter(step->getNum(),step->getDen());
+    step_thresh=step->getThresh();
+    step_window=step->getStepWindow();
+    time_window=step->getTimeWindow();
+
+    steplen=0.0;
+    stepwidth=0.0;
+    cadence=0.0;
+    speed=0.0;
+    numsteps=0;
 
     prev_steplen=0.0;
     prev_stepwidth=0.0;
@@ -223,15 +246,16 @@ void Step_Processor::estimate()
     {
         Vector k1=toCurrFrame(KeyPointTag::ankle_left);
         Vector k2=toCurrFrame(KeyPointTag::ankle_right);
-        Vector v=k1-k2;
-        double dist=norm(v);
-        feetdist.push_back(dist);
+        Vector sag_plane=curr_skeleton.getSagittal();
+        Vector v=k1-k2;        
+        Vector v_steplen=projectOnPlane(v,sag_plane);
+        double d1=norm(v_steplen);
 
         Vector cor_plane=curr_skeleton.getCoronal();
         Vector v_stepwidth=projectOnPlane(v,cor_plane);
-        feetwidth.push_back(norm(v_stepwidth));
+        double d2=norm(v_stepwidth);
 
-        estimateSpatialParams(feetdist,feetwidth);
+        estimateSpatialParams(d1,d2);
         cadence=estimateCadence();
         speed=estimateSpeed();
 
@@ -259,34 +283,45 @@ Property Step_Processor::getResult()
     result.put(props[1],stepwidth);
     result.put(props[2],cadence);
     result.put(props[3],speed);
+    result.put(props[4],numsteps);
     return result;
 }
 
 /********************************************************/
-void Step_Processor::estimateSpatialParams(const Vector &dist,const Vector &width)
+void Step_Processor::estimateSpatialParams(const double &dist,const double &width)
 {
-    Vector filt_dist(dist.size()),filt_width(width.size());
-    for(int i=0; i<dist.size(); i++)
+    Vector u1({dist}),u2({width});
+    Vector output1=filter_dist->filt(u1);
+    Vector output2=filter_width->filt(u2);
+    feetdist.push_back(output1[0]);
+    feetwidth.push_back(output2[0]);
+    tdist.push_back(Time::now());
+
+    pair<deque<double>,deque<int>> step_params;
+    double tlast;
+    step_params=findPeaks(feetdist,step_thresh,tlast);
+    deque<double> stepvec=step_params.first;
+    deque<int> strikes=step_params.second;
+
+    steplen=0.0;
+    stepwidth=0.0;
+    if ( (Time::now()-tlast)<=time_window )
     {
-        Vector u1(1),u2(1);
-        u1[0]=dist[i];
-        u2[0]=width[i];
-        Vector output1=filter_dist->filt(u1);
-        Vector output2=filter_width->filt(u2);
-        filt_dist[i]=output1[0];
-        filt_width[i]=output2[0];
+        for(int i=0;i<stepvec.size();i++)
+        {
+            steplen+=stepvec[i];
+        }
+        if (stepvec.size()>0)
+        {
+            steplen/=stepvec.size();
+        }
+
+        int laststrike=stepvec.size()>numsteps ? strikes.back() : 0.0;
+        stepwidth=feetwidth[laststrike];
+        numsteps=(int)strikes.size();
     }
-
-    pair<vector<double>,vector<int>> step_params;
-    step_params=findPeaks(filt_dist);
-    vector<double> stepvec=step_params.first;
-    vector<int> strikes=step_params.second;
-
-    steplen=stepvec.size()>0 ? stepvec.back() : 0.0;
-    int laststrike=strikes.size()>0 ? strikes.back() : 0.0;
-    stepwidth=feetwidth[laststrike];
-    numsteps=(int)strikes.size();
 }
+
 
 /********************************************************/
 double Step_Processor::estimateCadence()
@@ -301,32 +336,76 @@ double Step_Processor::estimateSpeed()
 }
 
 /********************************************************/
-pair<vector<double>,vector<int>> Step_Processor::findPeaks(const Vector& d)
+pair<deque<double>,deque<int>> Step_Processor::findPeaks(const Vector &d, const double &minv,
+                                                         double &tlast)
 {
-    vector<double> val;
-    vector<int> idx;
+    deque<double> val;
+    deque<int> idx;
     for(int i=0; i<d.size(); i++)
     {
-        if(i==0 && d[i]>=d[i+1])
+        if(i==0 && d[i]>=d[i+1] && d[i]>minv)
         {
             val.push_back(d[i]);
             idx.push_back(i);
+            if (val.size()>step_window)
+            {
+                val.pop_front();
+            }
+            if (idx.size()>step_window)
+            {
+                idx.pop_front();
+            }
         }
-        else if(i==d.size() && d[i]>=d[i-1])
+        else if(i==d.size() && d[i]>=d[i-1] && d[i]>minv)
         {
             val.push_back(d[i]);
             idx.push_back(i);
+            if (val.size()>step_window)
+            {
+                val.pop_front();
+            }
+            if (idx.size()>step_window)
+            {
+                idx.pop_front();
+            }
         }
-        else if(d[i]>=d[i-1] && d[i]>=d[i+1])
+        else if(d[i]>=d[i-1] && d[i]>=d[i+1] && d[i]>minv)
         {
             val.push_back(d[i]);
             idx.push_back(i);
+            if (val.size()>step_window)
+            {
+                val.pop_front();
+            }
+            if (idx.size()>step_window)
+            {
+                idx.pop_front();
+            }
         }
     }
-
-    pair<vector<double>,vector<int>> step_params;
+    tlast=0.0;
+    if (idx.size()>0)
+    {
+        tlast=tdist[idx.back()];
+    }
+    pair<deque<double>,deque<int>> step_params;
     step_params=make_pair(val,idx);
     return step_params;
+}
+
+/********************************************************/
+void Step_Processor::reset()
+{
+    steplen=0.0;
+    stepwidth=0.0;
+    cadence=0.0;
+    speed=0.0;
+    numsteps=0;
+
+    prev_steplen=0.0;
+    prev_stepwidth=0.0;
+    prev_cadence=0.0;
+    prev_speed=0.0;
 }
 
 /********************************************************/
@@ -436,4 +515,18 @@ double EndPoint_Processor::getTrajectory(const Vector &v)
     Vector proj=v-dist;
     double traj=norm(proj);
     return traj;
+}
+
+/********************************************************/
+void EndPoint_Processor::reset()
+{
+    ideal_traj=0.0;
+    est_traj=0.0;
+    vel=0.0;
+    smoothness=0.0;
+
+    prev_est_traj=0.0;
+    prev_ideal_traj=0.0;
+    prev_vel=0.0;
+    prev_smoothness=0.0;
 }

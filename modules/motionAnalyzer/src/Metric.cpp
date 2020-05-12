@@ -111,12 +111,16 @@ yarp::os::Property Rom::getParams() const
 /*        Step          */
 /************************/
 Step::Step(const string &type_, const string &name_, const yarp::sig::Vector &num_,
-           const yarp::sig::Vector &den_, const double &minv_, const double &maxv_)
+           const yarp::sig::Vector &den_, const double &thresh_, const double &step_window_,
+           const double &time_window_, const double &minv_, const double &maxv_)
 {
     type=type_;
     name=name_;
     num=num_;
     den=den_;
+    thresh=thresh_;
+    step_window=step_window_;
+    time_window=time_window_;
     minv=minv_;
     maxv=maxv_;
 
@@ -124,6 +128,7 @@ Step::Step(const string &type_, const string &name_, const yarp::sig::Vector &nu
     properties.push_back("step_width");
     properties.push_back("cadence");
     properties.push_back("speed");
+    properties.push_back("num_steps");
 }
 
 Step::Step(const Step &r)
@@ -132,6 +137,9 @@ Step::Step(const Step &r)
     name=r.name;
     num=r.num;
     den=r.den;
+    thresh=r.thresh;
+    step_window=r.step_window;
+    time_window=r.time_window;
     minv=r.minv;
     maxv=r.maxv;
     properties=r.properties;
@@ -143,6 +151,9 @@ Step& Step::operator = (const Step &r)
     name=r.name;
     num=r.num;
     den=r.den;
+    thresh=r.thresh;
+    step_window=r.step_window;
+    time_window=r.time_window;
     minv=r.minv;
     maxv=r.maxv;
     return *this;
@@ -152,6 +163,9 @@ void Step::print(ostream &os) const
 {
     os<<"\t"<<"type= "<<type<<endl<<"\t";
     os<<"name= "<<name<<endl<<"\t";
+    os<<"thresh= "<<thresh<<endl<<"\t";
+    os<<"step window= "<<step_window<<endl<<"\t";
+    os<<"time window= "<<time_window<<endl<<"\t";
     os<<"min= "<<minv<<endl<<"\t";
     os<<"max= "<<maxv<<endl;
 }
@@ -172,6 +186,9 @@ yarp::os::Property Step::getParams() const
 
     params.put("min",minv);
     params.put("max",maxv);
+    params.put("step_thresh",thresh);    
+    params.put("step_window",step_window);
+    params.put("time_window",time_window);
     return params;
 }
 

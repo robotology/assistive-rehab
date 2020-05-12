@@ -9,6 +9,7 @@
 #ifndef GAZEBO_ASSISTIVEREHAB_TUGSERVER
 #define GAZEBO_ASSISTIVEREHAB_TUGSERVER
 
+#include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
 
 #include <gazebo/gazebo.hh>
@@ -28,6 +29,7 @@ private:
     gazebo::physics::ActorPtr actor;
     Velocity vel;
     yarp::sig::Matrix targets;
+    yarp::sig::Matrix line_frame;
 
 public:
     TugServer();
@@ -68,11 +70,32 @@ public:
     virtual bool play(const Animation &animation, const bool complete);
 
     /**
-     * Pause actor for time seconds.
-     * @param time seconds during which actor is paused.
-     * @return returns walking speed
+     * Get model position as defined in world, with respect to start-line.
+     * @param model_name name string defining the name of the model.
+     * @return a property-like object in the form
+     *         (pose_world (x y z ax ay az theta)).
+     */
+    virtual yarp::os::Property getModelPos(const std::string &model_name);
+
+    /**
+     * Pause actor.
+     * @param time [optional] seconds during which actor is paused (if time > 0).
+     * @return returns true / false on success / failure.
      */
     virtual bool pause(const double time);
+
+    /**
+     * Play from last animation.
+     * @param complete if true, the whole script is played starting from last stop.
+     * @return returns true / false on success / failure.
+     */
+    virtual bool playFromLast(const bool complete);
+
+    /**
+     * Get current animation being played.
+     * @return returns string defining the current animation being played.
+     */
+    virtual std::string getState();
 
     /**
      * Reach a target location.
@@ -81,19 +104,35 @@ public:
      */
     virtual bool goTo(const Pose &p);
 
+    /**
+     * Blocking version of reach for a target location. The service returns ack only
+     * when target is reached.
+     * @param p pose in the form x,y,theta.
+     * @return true/false on success/failure.
+     */
+    virtual bool goToWait(const Pose &p);
+
+    /**
+     * Reach a sequence of targets.
+     * @param p list of poses in the form x1,y1,theta1,x2,y2,theta2.
+     * @return true/false on success/failure.
+     */
+    virtual bool goToSeq(const std::vector<double> &p);
+
+    /**
+     * Set target to reach during walk animation.
+     * @param p pose in the form x,y,theta.
+     * @return returns true or false on success / failure
+     */
+    virtual bool setTarget(const Pose &p);
+
     void updateMap(const yarp::sig::Matrix &t);
 
     void init(const Velocity &vel, const yarp::sig::Matrix &waypoints);
 
-    void attachWorldPointer(gazebo::physics::WorldPtr p)
-    {
-        world=p;
-    }
+    void attachWorldPointer(gazebo::physics::WorldPtr p);
 
-    void attachActorPointer(gazebo::physics::ActorPtr p)
-    {
-        actor=p;
-    }
+    void attachActorPointer(gazebo::physics::ActorPtr p);
 
 };
 
