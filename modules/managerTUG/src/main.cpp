@@ -894,6 +894,10 @@ class Manager : public RFModule, public managerTUG_IDL
                 }
             }
         }
+        if (lock)
+        {
+            remove_locked();
+        }
         bool ok_nav=true;
         if (is_navigating())
         {
@@ -958,6 +962,26 @@ class Manager : public RFModule, public managerTUG_IDL
             yError()<<"Not connected";
             return false;
         }
+        if (simulation)
+        {
+            Bottle cmd,rep;
+            cmd.addString("getModelPos");
+            cmd.addString("SIM_CER_ROBOT");
+            if (gazeboPort.write(cmd,rep))
+            {
+                Property prop(rep.get(0).toString().c_str());
+                Bottle *model=prop.find("SIM_CER_ROBOT").asList();
+                if (Bottle *pose=model->find("pose_world").asList())
+                {
+                    if(pose->size()>=7)
+                    {
+                        starting_pose[0]=pose->get(0).asDouble();
+                        starting_pose[1]=pose->get(1).asDouble();
+                        starting_pose[2]=pose->get(6).asDouble()*(180.0/M_PI);
+                    }
+                }
+            }
+        }
         state=State::idle;
         bool ret=false;
         if (go_to(starting_pose,true))
@@ -1009,18 +1033,7 @@ class Manager : public RFModule, public managerTUG_IDL
     bool stop() override
     {
         lock_guard<mutex> lg(mtx);
-        bool ret=disengage();
-        remove_locked();
-        Bottle cmd,rep;
-        cmd.addString("stop");
-        if (attentionPort.write(cmd,rep))
-        {
-            if (rep.get(0).asVocab()==fail)
-            {
-                return false;
-            }
-        }
-
+        bool ret=disengage() && send_stop(attentionPort);
         start_ex=false;
         state=State::stopped;
         return ret;
@@ -1039,7 +1052,7 @@ class Manager : public RFModule, public managerTUG_IDL
         min_timeout=rf.check("min-timeout",Value(1.0)).asDouble();
         max_timeout=rf.check("max-timeout",Value(10.0)).asDouble();
         simulation=rf.check("simulation",Value(false)).asBool();
-        lock=rf.check("lock",Value(false)).asBool();
+        lock=rf.check("lock",Value(true)).asBool();
         target_sim={4.5,0.0,0,0};
         if (rf.check("target-sim"))
         {
@@ -1126,7 +1139,10 @@ class Manager : public RFModule, public managerTUG_IDL
         rightarmPort.open("/"+module_name+"/right_arm:rpc");
         cmdPort.open("/"+module_name+"/cmd:rpc");
         opcPort.open("/"+module_name+"/opc:i");
-        lockerPort.open("/"+module_name+"/locker:rpc");
+        if (lock)
+        {
+            lockerPort.open("/"+module_name+"/locker:rpc");
+        }
         triggerPort.open("/"+module_name+"/trigger:rpc");
         if (simulation)
         {
@@ -1161,16 +1177,13 @@ class Manager : public RFModule, public managerTUG_IDL
                 return false;
             }
         }
-
         set_target(target_sim[0],target_sim[1],target_sim[2]);
-
         state=State::idle;
         interrupting=false;
         world_configured=false;
         ok_go=false;
         connected=false;
         t0=tstart=Time::now();
-
         return true;
     }
 
@@ -1188,12 +1201,27 @@ class Manager : public RFModule, public managerTUG_IDL
                 (speechRpcPort.getOutputCount()==0) || (attentionPort.getOutputCount()==0) ||
                 (navigationPort.getOutputCount()==0) || (leftarmPort.getOutputCount()==0) ||
                 (rightarmPort.getOutputCount())==0 || (opcPort.getInputCount()==0) ||
-                (triggerPort.getOutputCount()==0) || !answer_manager->connected() ||
-                (lockerPort.getOutputCount()==0))
+                !answer_manager->connected())
         {
             yInfo()<<"not connected";
             connected=false;
             return true;
+        }
+        if (lock)
+        {
+            if ((lockerPort.getOutputCount()==0))
+            {
+                connected=false;
+                return true;
+            }
+        }
+        if (!simulation)
+        {
+            if ((triggerPort.getOutputCount()==0))
+            {
+                connected=false;
+                return true;
+            }
         }
         connected=true;
 
@@ -2037,7 +2065,10 @@ class Manager : public RFModule, public managerTUG_IDL
         speechStreamPort.close();
         opcPort.close();
         cmdPort.close();
-        lockerPort.close();
+        if (lock)
+        {
+            lockerPort.close();
+        }
         triggerPort.close();
         if (simulation)
         {
