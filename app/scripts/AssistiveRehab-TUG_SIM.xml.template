@@ -122,7 +122,7 @@
 
     <module>
        <name>navController</name>
-       <parameters>--velocity-angular-saturation 15.0 --distance-target 6.0 --velocity-linear-magnitude 0.6</parameters>
+       <parameters>--velocity-angular-saturation 15.0 --distance-target 5.5 --velocity-linear-magnitude 0.6</parameters>
        <dependencies>
          <port timeout="15">/baseControl/rpc</port>
          <port timeout="15">/baseControl/odometry:o</port>
@@ -171,7 +171,7 @@
 
     <module>
         <name>managerTUG</name>
-       <parameters>--simulation true --starting-pose "(1.5 -6.0 110.0)" --standing-thresh 0.025 --finish-line-thresh 0.3</parameters>
+       <parameters>--simulation true --standing-thresh 0.025 --finish-line-thresh 0.3</parameters>
         <node>localhost</node>
     </module>
 
@@ -378,12 +378,6 @@
         <from>/yarpOpenPose/image:o</from>
         <to>/viewer/skeleton</to>
         <protocol>mjpeg</protocol>
-    </connection>
-
-    <connection>
-        <from>/skeletonRetriever/viewer:o</from>
-        <to>/skeletonViewer:i</to>
-        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>

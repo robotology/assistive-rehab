@@ -962,6 +962,26 @@ class Manager : public RFModule, public managerTUG_IDL
             yError()<<"Not connected";
             return false;
         }
+        if (simulation)
+        {
+            Bottle cmd,rep;
+            cmd.addString("getModelPos");
+            cmd.addString("SIM_CER_ROBOT");
+            if (gazeboPort.write(cmd,rep))
+            {
+                Property prop(rep.get(0).toString().c_str());
+                Bottle *model=prop.find("SIM_CER_ROBOT").asList();
+                if (Bottle *pose=model->find("pose_world").asList())
+                {
+                    if(pose->size()>=7)
+                    {
+                        starting_pose[0]=pose->get(0).asDouble();
+                        starting_pose[1]=pose->get(1).asDouble();
+                        starting_pose[2]=pose->get(6).asDouble()*(180.0/M_PI);
+                    }
+                }
+            }
+        }
         state=State::idle;
         bool ret=false;
         if (go_to(starting_pose,true))
@@ -1157,16 +1177,13 @@ class Manager : public RFModule, public managerTUG_IDL
                 return false;
             }
         }
-
         set_target(target_sim[0],target_sim[1],target_sim[2]);
-
         state=State::idle;
         interrupting=false;
         world_configured=false;
         ok_go=false;
         connected=false;
         t0=tstart=Time::now();
-
         return true;
     }
 
