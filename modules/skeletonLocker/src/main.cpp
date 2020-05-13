@@ -235,7 +235,6 @@ public:
                     locked->skeleton->setTag(tag_locked);
                     locked->opc_id=opc_id_locked;
                     t=Time::now();
-                    opcSet(*locked);
                 }
             }
 
@@ -257,6 +256,7 @@ public:
             double r=(max_radius-radius)*tanh(alpha*locked->timer)+radius;
             locked->radius=(r<=max_radius?r:max_radius);
         }
+        opcSet(*locked);
         t0=Time::now();
 
         viewerUpdate();
