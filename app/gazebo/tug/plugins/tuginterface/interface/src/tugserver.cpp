@@ -128,7 +128,7 @@ bool TugServer::goToSeq(const std::vector<double> &p)
     {
         Pose pi(p[i],p[i+1],p[i+2]);
         goToWait(pi);
-        i=i+2;
+        i=i+3;
     }
     return true;
 }
