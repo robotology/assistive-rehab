@@ -20,7 +20,7 @@ using namespace gazebo;
 /****************************************************************/
 TugServer::TugServer() : world(0), actor(0), vel(0.0,0.0)
 {
-    line_frame=yarp::math::zeros(4,4);
+    line_frame=yarp::math::eye(4,4);
 }
 
 /****************************************************************/
@@ -273,33 +273,40 @@ void TugServer::init(const Velocity &vel,
 void TugServer::attachWorldPointer(gazebo::physics::WorldPtr p)
 {
     world=p;
-    auto model=world->ModelByName("start-line");
-    ignition::math::Pose3d model_pose=model->WorldPose();
-    ignition::math::Vector3d pos=model_pose.Pos();
-    ignition::math::Vector3d angles=model_pose.Rot().Euler();
-    yarp::sig::Vector model_pose_world({pos.X(),pos.Y(),pos.Z(),1.0,angles[0],angles[1],angles[2]});
-    yarp::sig::Matrix model_rot=yarp::math::rpy2dcm(model_pose_world.subVector(4,6));
-    yarp::sig::Matrix T1(4,4);
-    yarp::sig::Vector v1=model_rot.subcol(0,0,4);
-    if (yarp::math::norm(v1)>0.0)
+    if (auto model=world->ModelByName("start-line"))
     {
-        v1/=yarp::math::norm(v1);
+        yInfo()<<"Using start-line as reference frame";
+        ignition::math::Pose3d model_pose=model->WorldPose();
+        ignition::math::Vector3d pos=model_pose.Pos();
+        ignition::math::Vector3d angles=model_pose.Rot().Euler();
+        yarp::sig::Vector model_pose_world({pos.X(),pos.Y(),pos.Z(),1.0,angles[0],angles[1],angles[2]});
+        yarp::sig::Matrix model_rot=yarp::math::rpy2dcm(model_pose_world.subVector(4,6));
+        yarp::sig::Matrix T1(4,4);
+        yarp::sig::Vector v1=model_rot.subcol(0,0,4);
+        if (yarp::math::norm(v1)>0.0)
+        {
+            v1/=yarp::math::norm(v1);
+        }
+        yarp::sig::Vector v2=model_rot.subcol(0,1,4);
+        if (yarp::math::norm(v2)>0.0)
+        {
+            v2/=yarp::math::norm(v2);
+        }
+        yarp::sig::Vector v3=model_rot.subcol(0,2,4);
+        if (yarp::math::norm(v3)>0.0)
+        {
+            v3/=yarp::math::norm(v3);
+        }
+        T1.setCol(0,v1);
+        T1.setCol(1,v2);
+        T1.setCol(2,v3);
+        T1.setCol(3,model_pose_world.subVector(0,3));
+        line_frame=yarp::math::SE3inv(T1);
     }
-    yarp::sig::Vector v2=model_rot.subcol(0,1,4);
-    if (yarp::math::norm(v2)>0.0)
+    else
     {
-        v2/=yarp::math::norm(v2);
+        yInfo()<<"Using gazebo as reference frame";
     }
-    yarp::sig::Vector v3=model_rot.subcol(0,2,4);
-    if (yarp::math::norm(v3)>0.0)
-    {
-        v3/=yarp::math::norm(v3);
-    }
-    T1.setCol(0,v1);
-    T1.setCol(1,v2);
-    T1.setCol(2,v3);
-    T1.setCol(3,model_pose_world.subVector(0,3));
-    line_frame=yarp::math::SE3inv(T1);
 }
 
 /****************************************************************/
