@@ -6,7 +6,7 @@
   <doxygen-group>navController</doxygen-group>
   <description>This module is responsible for interfacing with the robot's base to implement the navigation part.</description>
   <copypolicy>Released under the terms of the BSD 3-Clause License.</copypolicy>
-  <version>0.4.0</version>
+  <version>0.5.0</version>
 
   <description-long>
    This moudule aims to keep the distance from a specified skeleton fixed. To this end, the robot will be navigating along an imaginary straight track.

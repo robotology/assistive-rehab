@@ -1,8 +1,8 @@
-# How to run the main applications
+# How to run the rehabilitation demos
 
-This tutorial will show you how to run the main applications of the repository.
+This tutorial will show you how to run the rehabilitation demos.
 
-The main applications can be found [here](https://github.com/robotology/assistive-rehab/tree/master/app/scripts), namely _AssistiveRehab.xml.template_ and _AssistiveRehab-faces.xml.template_.
+The applications can be found [here](https://github.com/robotology/assistive-rehab/tree/master/app/scripts), namely _AssistiveRehab.xml.template_ and _AssistiveRehab-faces.xml.template_.
 
 ## The basic app: AssistiveRehab.xml
 

@@ -6,7 +6,7 @@
   <doxygen-group>faceRecognizer</doxygen-group>
   <description>This module is responsible for recognizing human faces from an image, where faces have been detected.</description>
   <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
-  <version>0.3.0</version>
+  <version>0.5.0</version>
 
   <description-long>
    This module is responsible for recognizing human faces from an image, where faces have been detected.

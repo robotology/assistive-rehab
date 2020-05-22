@@ -16,6 +16,9 @@ Features like facial expressions, gazing the user and a verbal feedback are also
 
 The related application can be found [here](https://github.com/robotology/assistive-rehab/tree/master/app/scripts), named _AssistiveRehab-TWM-virtual.xml.template_.
 
+!!! abstract "The Train with Me study"
+    This scenario was adopted to compare the users' engagement and movement performance when exercising with a real robot and its virtual counterpart. Results show that both the levels of engagement and the participants’ performance are higher with the real robot than with the virtual one! Check it out in our [paper](https://link.springer.com/chapter/10.1007/978-3-030-35888-4_42).
+
 ## Dependencies
 
 After [installing](https://robotology.github.io/assistive-rehab/doc/mkdocs/site/install/) `assistive-rehab`, you will need the following dependencies:
