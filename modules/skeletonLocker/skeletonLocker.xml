@@ -6,7 +6,7 @@
   <doxygen-group>skeletonLocker</doxygen-group>
   <description>This module enforces spatiotemporal consistency on a skeleton selected by tag.</description>
   <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
-  <version>0.3.0</version>
+  <version>0.5.0</version>
 
   <description-long>
     This module works on the top of \ref skeletonRetriever and tracks a skeleton based on its spatiotemporal consistence,

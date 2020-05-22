@@ -6,7 +6,7 @@
   <doxygen-group>managerTUG</doxygen-group>
   <description>This module supervises the all the modules involved in the Timed Up and Go (TUG).</description>
   <copypolicy>Released under the terms of the BSD 3-Clause License.</copypolicy>
-  <version></version>
+  <version>0.5.0</version>
 
   <description-long>
 
@@ -16,7 +16,7 @@
     <param default="managerTUG" desc="Name of the module. All the open ports will be tagged with the prefix /module_name.">module_name</param>
     <param default="0.1" desc="Periodicity of the module.">period</param>
     <param default="speak-it" desc="Configuration file name for the speak.">speak-file</param>
-    <param default="0.3" desc="Threshold on the distance between foot and finish line [m].">finish-line-thresh</param>
+    <param default="0.2" desc="Threshold on the distance between foot and finish line [m].">finish-line-thresh</param>
     <param default="0.2" desc="Threshold on the speed of the shoulder center height [m/s].">standing-thresh</param>
     <param default="(1.5 -3.0 110.0)" desc="Robot initial pose (x,y,theta) wrt world frame when starting the TUG.">starting-pose</param>
     <param default="3.0" desc="Time ctpService takes to complete the pointing movement.">pointing-time</param>
@@ -25,8 +25,11 @@
     <param default="(35.0,12.0,-10.0,10.0,0.0,0.050,0.0,0.0)" desc="List of joint positions for pointing at the finish line (deg). Provided to ctpService.">pointing-finish</param>
     <param default="0.6" desc="Threshold on the y distance between elbow and elbow, to detect if the arm is raised (normalized).">arm-thresh</param>
     <param default="true" desc="If true, the module detects if the hand is raised for triggering speech.">detect-hand-up</param>
-    <param default="1.0" desc="">min-timeout</param>
-    <param default="10.0" desc="">max-timeout</param>
+    <param default="1.0" desc="Minimum time within the speech trigger can be received from the previous one [s].">min-timeout</param>
+    <param default="10.0" desc="Maximum time within the speech trigger can be received from the previous one [s].">max-timeout</param>
+    <param default="false" desc="If true, the module is configured to work simulation in gazebo.">simulation</param>
+    <param default="true" desc="If true, the skeleton is locked.">lock</param>
+    <param default="(4.5,0.0,0,0)" desc="Sets the target the actor has to reach during the TUG (only is simulation is true).">target-sim</param>
   </arguments>
 
   <authors>
@@ -39,13 +42,6 @@
         <port>/managerTUG/opc:i</port>
         <description>
           Receives skeletons and lines from \ref objectsPropertiesCollector.
-        </description>
-    </input>
-    <input>
-        <type>Bottle</type>
-        <port>/managerTUG/question:i</port>
-        <description>
-          Receives a trigger from \ref googleSpeech when a question is asked.
         </description>
     </input>
     <input>
@@ -116,6 +112,13 @@
         <port>/managerTUG/trigger:rpc</port>
         <description>
           Sends commands to \ref googleSpeech to start/stop speech recognition.
+        </description>
+    </output>
+    <output>
+        <type>rpc</type>
+        <port>/managerTUG/gazebo:rpc</port>
+        <description>
+          Sends commands to gazebo plugin \ref tuginterface when simulation is true.
         </description>
     </output>
   </data>

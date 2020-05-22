@@ -56,19 +56,23 @@ nav:
     - News:
         - Latest: 'latest_news.md'
     - Install: 'install.md'
-    - Documentation [v0.4.0]: https://robotology.github.io/assistive-rehab/doc/doxygen/doc/html/index.html
+    - Documentation [v0.5.0]: https://robotology.github.io/assistive-rehab/doc/doxygen/doc/html/index.html
     - Tutorials:
         - Getting started: 'tutorial_intro.md'
         - How to manage a skeleton object: 'create_new_skeleton.md'
         - How to replay an experiment: 'replay_an_experiment.md'
         - How to run the pipeline in a disembodied manner: 'disembodied.md'
         - How to temporally align two signals: 'align_signals.md'
-        - How to run the main applications: 'main_apps.md'
+        - How to run the rehabilitation demos: 'main_apps.md'
         - How to run the virtual demo: 'virtual_demo.md'
         - How to detect Aruco boards in gazebo: 'aruco_gazebo.md'
+        - How to run the TUG demo in gazebo: 'tug_sim_demo.md'
+        - How to use the gazebo plugin: 'gazebo_plugin.md'
+        - How to configure the wifi button: 'wifi_button.md'
     - Milestones:
         - Y1M5: 'Y1M5.md'
         - Y1Q3: 'Y1Q3.md'
         - Comparison between Y1Q3 and Y1M5: 'comparison_releases.md'
+        - TUG: 'TUG.md'
     - About: 'about.md'
     - License: 'license.md'

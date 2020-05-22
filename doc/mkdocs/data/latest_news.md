@@ -1,5 +1,37 @@
 # Latest news
 
+__May 22, 2020__ : Checkout our latest release [v0.5.0](https://github.com/robotology/assistive-rehab/releases/tag/v0.5.0)!
+
+What's new?
+
+- The clinical test Timed Up and Go ([TUG](TUG.md)) is now ready for both the real robot and within the simulation environment `gazebo`:
+
+[![questions](https://user-images.githubusercontent.com/9716288/82469863-e5ecf280-9ac4-11ea-900e-53e96ee3267d.png)](https://youtu.be/b7_848Rt98E)
+
+Follow the [tutorial](tug_sim_demo.md) to run the demo in `gazebo`!
+
+!!! tip
+    Click on the image to open the video!
+
+- The motion analysis has been extended to the lower limbs: now we can evaluate walking parameters, such as step length and width, walking speed and number of steps.
+
+- We developed the `lineDetector` module to visually detect start and finish lines on the floor, composed of ArUco markers.
+
+- We developed a reactive navigation system, which allows the robot to navigate based on the received perceptual stimuli: the robot can reach fixed points in the environment (such as the start and the finish lines) and follow the user maintaining a fixed distance along a straight path.
+
+!!! note
+    The environment is supposed to be free from obstacles.
+
+- We integrated the Google services API within our application to have a simple *natural* question and answer mechanism:
+    1. the `googleSpeech` module receives the sound from a microphone and retrieves the speech transcript from Google Speech cloud services;
+    2. the `googleSpeechProcess` module receives the speech transcript and analyses the sentence to retrieve its structure and meaning, relying on Google Language Cloud services.
+
+- The speech system can be triggered by a [Mystrom wifi button](https://mystrom.ch/wifi-button/), which avoids the system to be always listening and thus responsive also to background noise: whenever the user presses the button, the robot is ready to answer questions in *italian*!
+
+!!! note
+    The robot can answer a *selected set* of questions related to the TUG. The interaction is still flexible as questions can be posed by the user in natural language, thanks to the capability of the system to interpret the question, rather than simply recognize it.
+
+
 __March 19, 2020__ : Added new [tutorial](aruco_gazebo.md) to detect Aruco boards in `gazebo`. Check it out!
 
 __July 10, 2019__ : Checkout our latest [release v0.4.0](https://github.com/robotology/assistive-rehab/releases/tag/v0.4.0)!
