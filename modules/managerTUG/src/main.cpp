@@ -1710,14 +1710,12 @@ class Manager : public RFModule, public managerTUG_IDL
                     params_set=true;
                 }
             }
-
             if (Bottle *motionRes=rep.get(0).find("step_0").asList())
             {
                 double speed=motionRes->find("speed").asDouble();
                 answer_manager->setSpeed(speed);
                 yInfo()<<"Human moving at"<<speed<<"m/s";
             }
-
             human_state=rep.get(0).find("human-state").asString();
             yInfo()<<"Human state"<<human_state;
         }

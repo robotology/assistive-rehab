@@ -98,7 +98,7 @@ public:
     void reset() override;
 
     std::pair< std::deque<double>,std::deque<int> > findPeaks(const yarp::sig::Vector &d,
-                                                              const double &minv, double &tlast);
+                                                              const double &minv);
     void estimateSpatialParams(const double &dist,const double &width);
     double estimateCadence();
     double estimateSpeed();

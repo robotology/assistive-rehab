@@ -129,6 +129,10 @@ class Manager : public yarp::os::RFModule,
     bool isSitting();
     bool hasCrossedFinishLine();
     yarp::os::Property publishState();
+    void updateState();
+    void estimate();
+    void writeMatio();
+    void reset();
     bool attach(yarp::os::RpcServer &source) override;
 
 public:

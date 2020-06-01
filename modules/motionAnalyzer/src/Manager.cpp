@@ -274,7 +274,6 @@ bool Manager::setTemplateTag(const string &template_tag)
         yError() << "feedbackProducer could not load the template tag";
         return false;
     }
-
 }
 
 /********************************************************/
@@ -741,11 +740,6 @@ bool Manager::stop()
     if(starting)
     {
         yInfo()<<"stopping";
-        for(int i=0; i<processors.size(); i++)
-        {
-            processors[i]->reset();
-        }
-
         if(curr_exercise->getType()==ExerciseType::rehabilitation)
         {
             Bottle cmd, reply;
@@ -767,35 +761,51 @@ bool Manager::stop()
                 }
             }
         }
-
         tend_session=Time::now()-tstart;
-
-        // Use MATIO to write the results in a .mat file
-        string filename_report=out_folder+"/user-"+skeletonIn.getTag()+
-                "-"+curr_exercise->getName()+"-"+to_string(nsession)+".mat";
-        mat_t *matfp=Mat_CreateVer(filename_report.c_str(),NULL,MAT_FT_MAT5);
-        if (matfp==NULL)
-            yError()<<"Error creating MAT file";
-
-        yInfo() << "Writing to file";
-        if(writeKeypointsToFile(matfp))
-        {
-            time_samples.clear();
-            all_keypoints.clear();
-        }
-        else
-            yError() << "Could not save to file";
-
-        yInfo() << "Keypoints saved to file" << filename_report.c_str();
-        Mat_Close(matfp);
-
-        nsession++;
-        starting=false;
-        skel_tag="";
-
+        writeMatio();
+        reset();
         return true;
     }
     return true;
+}
+
+/****************************************************************/
+void Manager::reset()
+{
+    for(int i=0; i<processors.size(); i++)
+    {
+        processors[i]->reset();
+    }
+    nsession++;
+    starting=false;
+    skel_tag="";
+    bResult.clear();
+    curr_exercise=NULL;
+    curr_metric=NULL;
+    standing=false;
+    state=State::idle;
+}
+
+/****************************************************************/
+void Manager::writeMatio()
+{
+    // Use MATIO to write the results in a .mat file
+    string filename_report=out_folder+"/user-"+skeletonIn.getTag()+
+            "-"+curr_exercise->getName()+"-"+to_string(nsession)+".mat";
+    mat_t *matfp=Mat_CreateVer(filename_report.c_str(),NULL,MAT_FT_MAT5);
+    if (matfp==NULL)
+        yError()<<"Error creating MAT file";
+    yInfo() << "Writing to file";
+    if(writeKeypointsToFile(matfp))
+    {
+        time_samples.clear();
+        all_keypoints.clear();
+    }
+    else
+        yError() << "Could not save to file";
+
+    yInfo() << "Keypoints saved to file" << filename_report.c_str();
+    Mat_Close(matfp);
 }
 
 /****************************************************************/
@@ -965,6 +975,48 @@ void Manager::getSkeleton()
 }
 
 /********************************************************/
+void Manager::updateState()
+{
+    if (!standing)
+    {
+        if (isStanding())
+        {
+            state=State::standing;
+        }
+    }
+    else if (hasCrossedFinishLine())
+    {
+        state=State::crossed;
+    }
+    else if (isSitting())
+    {
+        state=State::sitting;
+    }
+}
+
+/********************************************************/
+void Manager::estimate()
+{
+    Bottle &scopebottleout=scopePort.prepare();
+    scopebottleout.clear();
+    bResult.clear();
+    for(int i=0; i<processors.size(); i++)
+    {
+        processors[i]->update(skeletonIn);
+        processors[i]->estimate();
+        Property result=processors[i]->getResult();
+        bResult.addList().read(result);
+        if(result.check(prop_tag) &&
+                processors[i]->getProcessedMetric()==curr_metric->getParams().find("name").asString())
+        {
+            double res=result.find(prop_tag).asDouble();
+            scopebottleout.addDouble(res);
+        }
+    }
+    scopePort.write();
+}
+
+/********************************************************/
 bool Manager::attach(RpcServer &source)
 {
     return this->yarp().attachAsServer(source);
@@ -1057,66 +1109,31 @@ double Manager::getPeriod()
 bool Manager::updateModule()
 {
     lock_guard<mutex> lg(mtx);
-
     //if we query the database
     if(opcPort.getOutputCount()>0)
     {
         //get skeleton and normalize
         getSkeleton();
-
         //if no metric has been defined we do not analyze motion
         if(starting)
         {
             if(curr_exercise!=NULL && curr_metric!=NULL)
             {
-                //write on output port
-                Bottle &scopebottleout=scopePort.prepare();
-                scopebottleout.clear();
                 if(updated)
                 {
                     //update time array
                     time_samples.push_back(Time::now()-tstart);
                     if (curr_exercise->getName()==ExerciseTag::tug)
                     {
-                        if (!standing)
-                        {
-                            if (isStanding())
-                            {
-                                state=State::standing;
-                            }
-                        }
-                        else if (hasCrossedFinishLine())
-                        {
-                            state=State::crossed;
-                        }
-                        else if (isSitting())
-                        {
-                            state=State::sitting;
-                        }
-
+                        updateState();
                     }
-                    bResult.clear();
-                    for(int i=0; i<processors.size(); i++)
-                    {
-                        processors[i]->update(skeletonIn);
-                        processors[i]->estimate();
-                        Property result=processors[i]->getResult();
-                        bResult.addList().read(result);
-                        if(result.check(prop_tag) &&
-                                processors[i]->getProcessedMetric()==curr_metric->getParams().find("name").asString())
-                        {
-                            double res=result.find(prop_tag).asDouble();
-                            scopebottleout.addDouble(res);
-                        }
-                    }
-                    scopePort.write();
+                    estimate();
                 }
             }
             else
                 yInfo() << "Please specify metric";
         }
     }
-
     return true;
 }
 
