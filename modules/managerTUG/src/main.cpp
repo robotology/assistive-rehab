@@ -278,7 +278,7 @@ public:
     /********************************************************/
     AnswerManager(const string &module_name, const unordered_map<string,string> &speak_map,
                   const bool &simulation, BufferedPort<Bottle> *speechPort, RpcClient *speechRpc,
-                  RpcClient *gazeboPort) : time (0.0)
+                  RpcClient *gazeboPort)
     {
         this->module_name=module_name;
         this->speak_map=speak_map;
@@ -288,6 +288,7 @@ public:
         this->gazeboPort=gazeboPort;
         replied=false;
         silent=true;
+        time=0.0;
     }
 
     /********************************************************/
@@ -1710,11 +1711,19 @@ class Manager : public RFModule, public managerTUG_IDL
                     params_set=true;
                 }
             }
-            if (Bottle *motionRes=rep.get(0).find("step_0").asList())
+            if (simulation)
             {
-                double speed=motionRes->find("speed").asDouble();
-                answer_manager->setSpeed(speed);
-                yInfo()<<"Human moving at"<<speed<<"m/s";
+                if (is_active())
+                {
+                    set_walking_speed(rep);
+                }
+            }
+            else
+            {
+                if (!trigger_manager->freeze())
+                {
+                    set_walking_speed(rep);
+                }
             }
             human_state=rep.get(0).find("human-state").asString();
             yInfo()<<"Human state"<<human_state;
@@ -1836,6 +1845,32 @@ class Manager : public RFModule, public managerTUG_IDL
         }
 
         return true;
+    }
+
+    /****************************************************************/
+    void set_walking_speed(const Bottle &r)
+    {
+        if (Bottle *b=r.get(0).find("step_0").asList())
+        {
+            double speed=b->find("speed").asDouble();
+            answer_manager->setSpeed(speed);
+            yInfo()<<"Human moving at"<<speed<<"m/s";
+        }
+    }
+
+    /****************************************************************/
+    bool is_active()
+    {
+        Bottle cmd,rep;
+        cmd.addString("isActive");
+        if (gazeboPort.write(cmd,rep))
+        {
+            if (rep.get(0).asVocab()==Vocab::encode("ok"))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     /****************************************************************/
