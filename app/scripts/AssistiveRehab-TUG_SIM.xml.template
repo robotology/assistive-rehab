@@ -171,7 +171,7 @@
 
     <module>
         <name>managerTUG</name>
-       <parameters>--simulation true --standing-thresh 0.025 --finish-line-thresh 0.3</parameters>
+       <parameters>--simulation true</parameters>
         <node>localhost</node>
     </module>
 

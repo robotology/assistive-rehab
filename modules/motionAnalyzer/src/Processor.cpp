@@ -298,10 +298,14 @@ void Step_Processor::estimateSpatialParams(const double &dist,const double &widt
     tdist.push_back(Time::now());
 
     pair<deque<double>,deque<int>> step_params;
-    double tlast;
-    step_params=findPeaks(feetdist,step_thresh,tlast);
+    double tlast=0.0;
+    step_params=findPeaks(feetdist,step_thresh);
     deque<double> stepvec=step_params.first;
     deque<int> strikes=step_params.second;
+    if (strikes.size()>0)
+    {
+        tlast=tdist[strikes.back()];
+    }
 
     steplen=0.0;
     stepwidth=0.0;
@@ -315,13 +319,11 @@ void Step_Processor::estimateSpatialParams(const double &dist,const double &widt
         {
             steplen/=stepvec.size();
         }
-
         int laststrike=stepvec.size()>numsteps ? strikes.back() : 0.0;
         stepwidth=feetwidth[laststrike];
         numsteps=(int)strikes.size();
     }
 }
-
 
 /********************************************************/
 double Step_Processor::estimateCadence()
@@ -336,57 +338,35 @@ double Step_Processor::estimateSpeed()
 }
 
 /********************************************************/
-pair<deque<double>,deque<int>> Step_Processor::findPeaks(const Vector &d, const double &minv,
-                                                         double &tlast)
+pair<deque<double>,deque<int>> Step_Processor::findPeaks(const Vector &d, const double &minv)
 {
     deque<double> val;
     deque<int> idx;
     for(int i=0; i<d.size(); i++)
     {
-        if(i==0 && d[i]>=d[i+1] && d[i]>minv)
+        if (d[i]<=minv)
         {
-            val.push_back(d[i]);
-            idx.push_back(i);
-            if (val.size()>step_window)
-            {
-                val.pop_front();
-            }
-            if (idx.size()>step_window)
-            {
-                idx.pop_front();
-            }
+            continue;
         }
-        else if(i==d.size() && d[i]>=d[i-1] && d[i]>minv)
+        if(i==0 && d[i]>=d[i+1])
         {
             val.push_back(d[i]);
             idx.push_back(i);
-            if (val.size()>step_window)
-            {
-                val.pop_front();
-            }
-            if (idx.size()>step_window)
-            {
-                idx.pop_front();
-            }
         }
-        else if(d[i]>=d[i-1] && d[i]>=d[i+1] && d[i]>minv)
+        else if(i==d.size() && d[i]>=d[i-1])
         {
             val.push_back(d[i]);
             idx.push_back(i);
-            if (val.size()>step_window)
-            {
-                val.pop_front();
-            }
-            if (idx.size()>step_window)
-            {
-                idx.pop_front();
-            }
+        }
+        else if(d[i]>=d[i-1] && d[i]>=d[i+1])
+        {
+            val.push_back(d[i]);
+            idx.push_back(i);
         }
     }
-    tlast=0.0;
-    if (idx.size()>0)
+    if (val.size()>step_window)
     {
-        tlast=tdist[idx.back()];
+        val.pop_front();
     }
     pair<deque<double>,deque<int>> step_params;
     step_params=make_pair(val,idx);

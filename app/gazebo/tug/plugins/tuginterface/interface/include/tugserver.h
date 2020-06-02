@@ -85,6 +85,12 @@ public:
     virtual bool pause(const double time);
 
     /**
+     * Returns true is actor is active.
+     * @return returns true / false if actor is active / paused.
+     */
+    virtual bool isActive();
+
+    /**
      * Play from last animation.
      * @param complete if true, the whole script is played starting from last stop.
      * @return returns true / false on success / failure.

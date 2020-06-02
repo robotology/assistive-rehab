@@ -377,8 +377,27 @@ void ReachingLeft::setFeedbackParams(const Property &p)
 /************************/
 /*         TUG          */
 /************************/
-Tug::Tug()
+Tug::Tug(const double &finishline_thresh, const double &standing_thresh, const double &distance, const double &time_high, const double &time_medium)
 {
     name=ExerciseTag::tug;
     type=ExerciseType::test;
+    this->finishline_thresh=finishline_thresh;
+    this->standing_thresh=standing_thresh;
+    this->distance=distance;
+    this->time_high=time_high;
+    this->time_medium=time_medium;
 }
+
+yarp::os::Property Tug::publish()
+{
+    Property p;
+//    Property &p_group=p.addGroup("exercise");
+    p.put("name",name);
+    p.put("distance",distance);
+    p.put("finish-line-thresh",finishline_thresh);
+    p.put("standing-thresh",standing_thresh);
+    p.put("time-high",time_high);
+    p.put("time-medium",time_medium);
+    return p;
+}
+

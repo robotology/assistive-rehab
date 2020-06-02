@@ -73,6 +73,12 @@ service TugInterfaceServer
     bool pause(1: double time=0.0);
 
     /**
+     * Returns true is actor is active.
+     * @return returns true / false if actor is active / paused.
+     */
+    bool isActive();
+
+    /**
      * Play from last animation.
      * @param complete if true, the whole script is played starting from last stop.
      * @return returns true / false on success / failure.

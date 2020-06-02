@@ -59,6 +59,12 @@ bool TugServer::pause(const double time)
 }
 
 /****************************************************************/
+bool TugServer::isActive()
+{
+    return actor->IsActive();
+}
+
+/****************************************************************/
 bool TugServer::playFromLast(const bool complete)
 {
     yInfo()<<"Playing from last";

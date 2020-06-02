@@ -54,6 +54,7 @@ public:
     virtual void setFeedbackParams(const yarp::os::Property &p) = 0;
     yarp::os::Property getFeedbackParams() const { return feedparams; }
     virtual yarp::sig::Matrix getFeedbackThresholds() = 0;
+    virtual yarp::os::Property publish() = 0;
 
     void print(std::ostream &os=std::cout);
 
@@ -78,6 +79,7 @@ public:
 
     void setFeedbackParams(const yarp::os::Property &p) override;
     yarp::sig::Matrix getFeedbackThresholds() override;
+    yarp::os::Property publish() override {;}
 
 };
 
@@ -155,17 +157,21 @@ public:
 
     void setFeedbackParams(const yarp::os::Property &p) override;
     yarp::sig::Matrix getFeedbackThresholds() override;
+    yarp::os::Property publish() override {;}
 
 };
 
 class Tug : public Exercise
 {
+    double finishline_thresh,standing_thresh,distance,time_high,time_medium;
 
 public:
-    Tug();
+    Tug(const double &finishline_thresh, const double &standing_thresh, const double &distance,
+        const double &time_high,const double &time_low);
 
     void setFeedbackParams(const yarp::os::Property &p) override {;}
     yarp::sig::Matrix getFeedbackThresholds() override {;}
+    yarp::os::Property publish();
 
 };
 

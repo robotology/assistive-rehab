@@ -270,6 +270,7 @@ class AnswerManager: public BufferedPort<Bottle>
     RpcClient *gazeboPort;
     bool replied,silent;
     double time;
+    double speed,speed_medium,speed_high;
     mutex mtx;
 
 public:
@@ -277,7 +278,7 @@ public:
     /********************************************************/
     AnswerManager(const string &module_name, const unordered_map<string,string> &speak_map,
                   const bool &simulation, BufferedPort<Bottle> *speechPort, RpcClient *speechRpc,
-                  RpcClient *gazeboPort) : time (0.0)
+                  RpcClient *gazeboPort)
     {
         this->module_name=module_name;
         this->speak_map=speak_map;
@@ -287,11 +288,19 @@ public:
         this->gazeboPort=gazeboPort;
         replied=false;
         silent=true;
+        time=0.0;
     }
 
     /********************************************************/
     ~AnswerManager()
     {
+    };
+
+    /********************************************************/
+    void setExerciseParams(const double &distance, const double &time_high, const double &time_medium)
+    {
+        speed_high=(2.0*distance)/time_high;
+        speed_medium=(2.0*distance)/time_medium;
     }
 
     /********************************************************/
@@ -391,9 +400,9 @@ public:
     }
 
     /********************************************************/
-    void setTime(const double &t)
+    void setSpeed(const double &s)
     {
-        this->time=t;
+        this->speed=s;
     }
 
     /********************************************************/
@@ -407,15 +416,15 @@ public:
             {
                 if(keyword=="feedback")
                 {
-                    if(time<=10.0)
+                    if(speed>=speed_high)
                     {
                         keyword+="-high";
                     }
-                    else if(time<=30.0)
+                    else if(speed<speed_high && speed>=speed_medium)
                     {
                         keyword+="-medium";
                     }
-                    else if(time>=30.0)
+                    else if(speed<speed_medium)
                     {
                         keyword+="-low";
                     }
@@ -610,12 +619,13 @@ class Manager : public RFModule, public managerTUG_IDL
     string module_name;
     string speak_file;
     double period;
-    double finish_line_thresh,standing_thresh,pointing_time,arm_thresh;
+    double pointing_time,arm_thresh;
     bool detect_hand_up;
     Vector starting_pose,pointing_home,pointing_start,pointing_finish;
     double min_timeout,max_timeout;
     bool simulation,lock;
     Vector target_sim;
+    string human_state;
 
     const int ok=Vocab::encode("ok");
     const int fail=Vocab::encode("fail");
@@ -628,7 +638,7 @@ class Manager : public RFModule, public managerTUG_IDL
     unordered_map<string,int> speak_count_map;
     bool interrupting;
     mutex mtx;
-    bool start_ex,ok_go,connected;
+    bool start_ex,ok_go,connected,params_set;
 
     Vector finishline_pose;
     double line_length;
@@ -1045,8 +1055,6 @@ class Manager : public RFModule, public managerTUG_IDL
         module_name=rf.check("name",Value("managerTUG")).asString();
         period=rf.check("period",Value(0.1)).asDouble();
         speak_file=rf.check("speak-file",Value("speak-it")).asString();
-        finish_line_thresh=rf.check("finish-line-thresh",Value(0.2)).asDouble();
-        standing_thresh=rf.check("standing-thresh",Value(0.2)).asDouble();
         arm_thresh=rf.check("arm-thresh",Value(0.6)).asDouble();
         detect_hand_up=rf.check("detect-hand-up",Value(false)).asBool();
         min_timeout=rf.check("min-timeout",Value(1.0)).asDouble();
@@ -1118,7 +1126,6 @@ class Manager : public RFModule, public managerTUG_IDL
                 }
             }
         }
-
         this->setName(module_name.c_str());
 
         if (!load_speak(rf.getContext(),speak_file))
@@ -1183,6 +1190,7 @@ class Manager : public RFModule, public managerTUG_IDL
         world_configured=false;
         ok_go=false;
         connected=false;
+        params_set=false;
         t0=tstart=Time::now();
         return true;
     }
@@ -1688,21 +1696,83 @@ class Manager : public RFModule, public managerTUG_IDL
             }
         }
 
-        answer_manager->setTime(Time::now()-tstart);
+        Bottle cmd,rep;
+        cmd.addString("getState");
+        if (analyzerPort.write(cmd,rep))
+        {
+            if (!params_set)
+            {
+                if (Bottle *exerciseParams=rep.get(0).find("exercise").asList())
+                {
+                    double distance=exerciseParams->find("distance").asDouble();
+                    double time_high=exerciseParams->find("time-high").asDouble();
+                    double time_medium=exerciseParams->find("time-medium").asDouble();
+                    answer_manager->setExerciseParams(distance,time_high,time_medium);
+                    params_set=true;
+                }
+            }
+            if (simulation)
+            {
+                if (is_active())
+                {
+                    set_walking_speed(rep);
+                }
+            }
+            else
+            {
+                if (!trigger_manager->freeze())
+                {
+                    set_walking_speed(rep);
+                }
+            }
+            human_state=rep.get(0).find("human-state").asString();
+            yInfo()<<"Human state"<<human_state;
+        }
+
         if (state==State::assess_standing)
         {
             //check if the person stands up
-            Bottle cmd,rep;
-            cmd.addString("isStanding");
-            cmd.addDouble(standing_thresh);
-            if (analyzerPort.write(cmd,rep))
+            if(human_state=="standing")
             {
-                if(rep.get(0).asVocab()==ok)
+                yInfo()<<"Person standing";
+                state=State::assess_crossing;
+                encourage_cnt=0;
+                t0=Time::now();
+            }
+            else
+            {
+                if((Time::now()-t0)>20.0)
                 {
-                    yInfo()<<"Person standing";
-                    state=State::assess_crossing;
-                    encourage_cnt=0;
-                    t0=Time::now();
+                    if(++encourage_cnt<=1)
+                    {
+                        speak("encourage",false);
+                        t0=Time::now();
+                    }
+                    else
+                    {
+                        state=State::not_passed;
+                    }
+                }
+            }
+        }
+
+        if (state==State::assess_crossing)
+        {
+            if(human_state=="crossed")
+            {
+                yInfo()<<"Line crossed!";
+                state=State::line_crossed;
+                speak("line-crossed",true);
+                encourage_cnt=0;
+                t0=Time::now();
+            }
+            else
+            {
+                if(human_state=="sitting")
+                {
+                    yInfo()<<"Test finished but line not crossed";
+                    speak("not-crossed",false);
+                    state=State::not_passed;
                 }
                 else
                 {
@@ -1711,62 +1781,11 @@ class Manager : public RFModule, public managerTUG_IDL
                         if(++encourage_cnt<=1)
                         {
                             speak("encourage",false);
-                            speak("remind-questions",false);
                             t0=Time::now();
                         }
                         else
                         {
                             state=State::not_passed;
-                        }
-                    }
-                }
-            }
-        }
-
-        if (state==State::assess_crossing)
-        {
-            Bottle cmd,rep;
-            cmd.addString("hasCrossedFinishLine");
-            cmd.addDouble(finish_line_thresh);
-            if (analyzerPort.write(cmd,rep))
-            {
-                if(rep.get(0).asVocab()==ok)
-                {
-                    yInfo()<<"Line crossed!";
-                    state=State::line_crossed;
-                    speak("line-crossed",true);
-                    encourage_cnt=0;
-                    t0=Time::now();
-                }
-                else
-                {
-                    cmd.clear();
-                    rep.clear();
-                    cmd.addString("isSitting");
-                    cmd.addDouble(standing_thresh);
-                    if (analyzerPort.write(cmd,rep))
-                    {
-                        if(rep.get(0).asVocab()==ok)
-                        {
-                            yInfo()<<"Test finished but line not crossed";
-                            speak("not-crossed",false);
-                            state=State::not_passed;
-                        }
-                        else
-                        {
-                            if((Time::now()-t0)>20.0)
-                            {
-                                if(++encourage_cnt<=1)
-                                {
-                                    speak("encourage",false);
-                                    speak("remind-questions",false);
-                                    t0=Time::now();
-                                }
-                                else
-                                {
-                                    state=State::not_passed;
-                                }
-                            }
                         }
                     }
                 }
@@ -1776,33 +1795,26 @@ class Manager : public RFModule, public managerTUG_IDL
         if (state==State::line_crossed)
         {
             //detect when the person seats down
-            Bottle cmd,rep;
-            cmd.addString("isSitting");
-            cmd.addDouble(standing_thresh);
-            if (analyzerPort.write(cmd,rep))
+            if(human_state=="sitting")
             {
-                if(rep.get(0).asVocab()==ok)
+                state=State::finished;
+                t=Time::now()-tstart;
+                yInfo()<<"Stop!";
+            }
+            else
+            {
+                if((Time::now()-t0)>30.0)
                 {
-                    state=State::finished;
-                    t=Time::now()-tstart;
-                    yInfo()<<"Stop!";
-                }
-                else
-                {
-                    if((Time::now()-t0)>20.0)
+                    if(++encourage_cnt<=1)
                     {
-                        if(++encourage_cnt<=1)
-                        {
-                            speak("encourage",false);
-                            speak("remind-questions",false);
-                            t0=Time::now();
-                        }
-                        else
-                        {
-                            state=State::not_passed;
-                            t=Time::now()-tstart;
-                            yInfo()<<"Not passed in"<<t<<"seconds";
-                        }
+                        speak("encourage",false);
+                        t0=Time::now();
+                    }
+                    else
+                    {
+                        state=State::not_passed;
+                        t=Time::now()-tstart;
+                        yInfo()<<"Not passed in"<<t<<"seconds";
                     }
                 }
             }
@@ -1833,6 +1845,32 @@ class Manager : public RFModule, public managerTUG_IDL
         }
 
         return true;
+    }
+
+    /****************************************************************/
+    void set_walking_speed(const Bottle &r)
+    {
+        if (Bottle *b=r.get(0).find("step_0").asList())
+        {
+            double speed=b->find("speed").asDouble();
+            answer_manager->setSpeed(speed);
+            yInfo()<<"Human moving at"<<speed<<"m/s";
+        }
+    }
+
+    /****************************************************************/
+    bool is_active()
+    {
+        Bottle cmd,rep;
+        cmd.addString("isActive");
+        if (gazeboPort.write(cmd,rep))
+        {
+            if (rep.get(0).asVocab()==Vocab::encode("ok"))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     /****************************************************************/
