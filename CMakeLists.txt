@@ -3,7 +3,7 @@
 # Authors: Ugo Pattacini <ugo.pattacini@iit.it>
 
 cmake_minimum_required(VERSION 3.5)
-project(AssistiveRehab LANGUAGES CXX C VERSION 0.4.0)
+project(AssistiveRehab LANGUAGES CXX C VERSION 0.5.0)
 
 include(GNUInstallDirs)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}")
