@@ -1,0 +1,42 @@
+<?xml version="1.0" ?>
+<sdf version='1.6'>
+
+<world name="default">
+
+    <!-- Global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- Ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+   
+    <!-- R1 -->
+    <model name='SIM_CER_ROBOT'>
+      <include>
+        <uri>model://cer_320x240</uri>
+      </include>
+      <pose>3.0 0.0 0.0 0.0 0.0 3.14</pose>
+    </model>
+
+    <!-- Human model -->
+    <model name='human'>
+      <include>
+        <uri>model://Luca</uri>
+      </include>
+      <pose>0.0 0.0 0.0 0.0 0.0 0.0</pose>
+    </model>
+
+    <!-- Camera -->
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose frame=''>3.60989 -8.90123 2.55734 0 0.199643 1.5722</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+
+  </world>
+</sdf>
