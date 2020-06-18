@@ -30,10 +30,13 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
 
+#include <yarp/math/Math.h>
+
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 using namespace yarp::sig;
+using namespace yarp::math;
 
 /****************************************************************/
 class Cluster
@@ -88,21 +91,21 @@ class ObstDetector : public RFModule
     double period{0.0};
     string module_name{"obstacleDetector"};
     string robot{"SIM_CER_ROBOT"};
-    PolyDriver *drv{nullptr};
-    IRangefinder2D *iLas{nullptr};
-    double min_angle{0.0};
-    double max_angle{0.0};
-    double angle_step{0.0};
-    double min_dist{0.0};
-    double max_dist{0.0};
-    int hor_res{0};
-    int ver_res{0};
+    PolyDriver *drv_front{nullptr},*drv_back{nullptr};
+    IRangefinder2D *iLas_front{nullptr},*iLas_back{nullptr};
+    double min_angle_front{0.0},min_angle_back{0.0};
+    double max_angle_front{0.0},max_angle_back{0.0};
+    double angle_step_front{0.0},angle_step_back{0.0};
+    double min_dist_front{0.0},min_dist_back{0.0};
+    double max_dist_front{0.0},max_dist_back{0.0};
+    int hor_res_front{0},hor_res_back{0};
+    int ver_res_front{0},ver_res_back{0};
     double dist_thresh{1.5};
     double dist_obstacle{1.5};
     double time_to_live{1.0};
     int min_points{5};
 
-    std::vector<Cluster> clusters;
+    std::vector<Cluster> clusters_front,clusters_back;
     RpcClient navPort;
 
     /****************************************************************/
@@ -111,40 +114,69 @@ class ObstDetector : public RFModule
         period=rf.check("period",Value(0.1)).asDouble();
         module_name=rf.check("name",Value("obstacleDetector")).asString();
         robot=rf.check("robot",Value("SIM_CER_ROBOT")).asString();
-        dist_thresh=rf.check("dist-thresh",Value(1.5)).asDouble();
+        dist_thresh=rf.check("dist-thresh",Value(0.5)).asDouble();
         dist_obstacle=rf.check("dist-obstacle",Value(1.5)).asDouble();
         time_to_live=rf.check("time-to-live",Value(1.0)).asDouble();
         min_points=rf.check("min-points",Value(5)).asInt();
 
         navPort.open("/"+module_name+"/nav:rpc");
         string front_laser_port_name="/"+module_name+"/front_laser:i";
+        string back_laser_port_name="/"+module_name+"/back_laser:i";
 
-        drv=new yarp::dev::PolyDriver;
+        drv_front=new yarp::dev::PolyDriver;
         Property options;
         options.put("device","Rangefinder2DClient");
         options.put("local",front_laser_port_name);
         options.put("remote","/"+robot+"/laser/front:o");
-        bool b=drv->open(options);
+        bool b=drv_front->open(options);
         if (!b)
         {
-            yError()<<"Unable to open polydriver";
-            delete drv;
+            yError()<<"Unable to open polydriver for front laser";
+            delete drv_front;
             return false;
         }
-        drv->view(iLas);
-        if (!iLas)
+        drv_front->view(iLas_front);
+        if (!iLas_front)
         {
-            yError()<<"Unable to get IRangefinder2D interface";
-            delete drv;
+            yError()<<"Unable to get IRangefinder2D interface for front laser";
+            delete drv_front;
             return false;
         }
-        iLas->getScanLimits(min_angle,max_angle);
-        iLas->getHorizontalResolution(angle_step);
-        iLas->getDistanceRange(min_dist,max_dist);
-        hor_res=(int)((max_angle-min_angle)/angle_step);
-        ver_res=(int)((max_dist-min_dist)/0.5);
-        yInfo()<<"Reading laser with angle range ("<<min_angle<<max_angle
-              <<") and distance range ("<<min_dist<<max_dist<<")";
+        iLas_front->getScanLimits(min_angle_front,max_angle_front);
+        iLas_front->getHorizontalResolution(angle_step_front);
+        iLas_front->getDistanceRange(min_dist_front,max_dist_front);
+        hor_res_front=(int)((max_angle_front-min_angle_front)/angle_step_front);
+        ver_res_front=(int)((max_dist_front-min_dist_front)/0.5);
+        yInfo()<<"Reading front laser with angle range ("<<min_angle_front<<max_angle_front
+              <<") and distance range ("<<min_dist_front<<max_dist_front<<")";
+
+        drv_back=new yarp::dev::PolyDriver;
+        options.clear();
+        options.put("device","Rangefinder2DClient");
+        options.put("local",back_laser_port_name);
+        options.put("remote","/"+robot+"/laser/back:o");
+        b=drv_back->open(options);
+        if (!b)
+        {
+            yError()<<"Unable to open polydriver for back laser";
+            delete drv_back;
+            return false;
+        }
+        drv_back->view(iLas_back);
+        if (!iLas_back)
+        {
+            yError()<<"Unable to get IRangefinder2D interface for back laser";
+            delete drv_back;
+            return false;
+        }
+        iLas_back->getScanLimits(min_angle_back,max_angle_back);
+        iLas_back->getHorizontalResolution(angle_step_back);
+        iLas_back->getDistanceRange(min_dist_back,max_dist_back);
+        hor_res_back=(int)((max_angle_back-min_angle_back)/angle_step_back);
+        ver_res_back=(int)((max_dist_back-min_dist_back)/0.5);
+        yInfo()<<"Reading front laser with angle range ("<<min_angle_back<<max_angle_back
+              <<") and distance range ("<<min_dist_back<<max_dist_back<<")";
+
         return true;
     }
 
@@ -157,85 +189,132 @@ class ObstDetector : public RFModule
     /****************************************************************/
     bool updateModule() override
     {
-        std::vector<LaserMeasurementData> data;
-        if(iLas->getLaserMeasurement(data))
+        std::vector<LaserMeasurementData> data_front,data_back;
+        if(iLas_front->getLaserMeasurement(data_front))
         {
-            for (int i=0;i<data.size();i++)
-            {
-                double x,y;
-                data[i].get_cartesian(x,y);
-                if (std::isinf(x) || std::isinf(y))
-                {
-                    continue;
-                }
-                if (clusters.size()>0)
-                {
-                    bool found=false;
-                    for (int j=0;j<clusters.size();j++)
-                    {
-                        double xc=clusters[j].getXcenter();
-                        double yc=clusters[j].getYcenter();
-                        double d=sqrt((x-xc)*(x-xc)+(y-yc)*(y-yc));
-                        //we associate the point to the closest cluster
-                        if (d<dist_thresh)
-                        {
-                            clusters[j].updateCluster(x,y,Time::now());
-                            found=true;
-                            break;
-                        }
-                    }
-                    //if no cluster is found, we create a new one
-                    if (!found)
-                    {
-                        Cluster c;
-                        c.updateCluster(x,y,Time::now());
-                        clusters.push_back(c);
-                    }
-                }
-                else
-                {
-                    //we create a new cluster
-                    Cluster c;
-                    c.updateCluster(x,y,Time::now());
-                    clusters.push_back(c);
-                }
-            }
-            //we filter out clusters with few points or not updated for more than time_to_live
-            for (int i=0;i<clusters.size();i++)
-            {
-                int n=clusters[i].getNumberPoints();
-                double deltat=Time::now()-clusters[i].getTlast();
-                if (n<min_points || deltat>time_to_live)
-                {
-                    yInfo()<<"Removing cluster"<<i<<"with number of points"<<n
-                           <<"and deltat"<<deltat;
-                    clusters.erase(clusters.begin()+i);
-                }
-            }
-            yInfo()<<"Number of obstacles found"<<clusters.size();
+            clusterData(data_front,clusters_front);
+            yInfo()<<"Number of obstacles found from front laser"<<clusters_front.size();
+        }
 
-            double xrobot,yrobot;
-            if (getRobotLocation(xrobot,yrobot))
+        if(iLas_back->getLaserMeasurement(data_back))
+        {
+            clusterData(data_back,clusters_back);
+            yInfo()<<"Number of obstacles found from back laser"<<clusters_back.size();
+        }
+
+        if (clusters_front.size()>0 || clusters_back.size()>0)
+        {
+            double d=getMinDistance();
+            yInfo()<<"Found obstacle at"<<d;
+            if (d<dist_obstacle)
             {
-                for (int i=0;i<clusters.size();i++)
-                {
-                    double xc=clusters[i].getXcenter();
-                    double yc=clusters[i].getYcenter();
-                    double d=sqrt((xrobot-xc)*(xrobot-xc)+(yrobot-yc)*(yrobot-yc));
-                    if (d<dist_obstacle)
-                    {
-                        yInfo()<<"Found obstacle at"<<d;
-                        yInfo()<<"Stopping";
-                        stopNav();
-                    }
-                }
+                yInfo()<<"Stopping";
+                stopNav();
             }
         }
         return true;
     }
 
     /****************************************************************/
-    bool getRobotLocation(double &x, double y)
+    void clusterData(std::vector<LaserMeasurementData> &data, std::vector<Cluster> &clusters)
+    {
+        for (int i=0;i<data.size();i++)
+        {
+            double x,y;
+            data[i].get_cartesian(x,y);
+            if (std::isinf(x) || std::isinf(y))
+            {
+                continue;
+            }
+            if (clusters.size()>0)
+            {
+                bool found=false;
+                for (int j=0;j<clusters.size();j++)
+                {
+                    double xc=clusters[j].getXcenter();
+                    double yc=clusters[j].getYcenter();
+                    double d=sqrt((x-xc)*(x-xc)+(y-yc)*(y-yc));
+                    //we associate the point to the closest cluster
+                    if (d<dist_thresh)
+                    {
+                        clusters[j].updateCluster(x,y,Time::now());
+                        found=true;
+                        break;
+                    }
+                }
+                //if no cluster is found, we create a new one
+                if (!found)
+                {
+                    Cluster c;
+                    c.updateCluster(x,y,Time::now());
+                    clusters.push_back(c);
+                }
+            }
+            else
+            {
+                //we create a new cluster
+                Cluster c;
+                c.updateCluster(x,y,Time::now());
+                clusters.push_back(c);
+            }
+        }
+
+        //we filter out clusters with few points or not updated for more than time_to_live
+        for (int i=0;i<clusters.size();i++)
+        {
+            int n=clusters[i].getNumberPoints();
+            double deltat=Time::now()-clusters[i].getTlast();
+            if (n<min_points || deltat>time_to_live)
+            {
+                yInfo()<<"Removing cluster"<<i<<"with number of points"<<n
+                       <<"and deltat"<<deltat;
+                clusters.erase(clusters.begin()+i);
+            }
+        }
+    }
+
+    /****************************************************************/
+    double getMinDistance()
+    {
+        double dfront=getMinDistance(clusters_front);
+        double dback=getMinDistance(clusters_back);
+        if (isinf(dback))
+        {
+            return dfront;
+        }
+        else if (isinf(dfront))
+        {
+            return dback;
+        }
+        else
+        {
+            return min(dfront,dback);
+        }
+    }
+
+    /****************************************************************/
+    double getMinDistance(const std::vector<Cluster> &clusters)
+    {
+        if (clusters.size()>0)
+        {
+            Vector d(clusters.size(),numeric_limits<double>::infinity());
+            for (int i=0;i<clusters.size();i++)
+            {
+                double xc=clusters[i].getXcenter();
+                double yc=clusters[i].getYcenter();
+                d[i]=sqrt(xc*xc+yc*yc);
+            }
+            double min_d=findMin(d);
+            return min_d;
+        }
+        else
+        {
+            return numeric_limits<double>::infinity();
+        }
+    }
+
+    /****************************************************************/
+    bool getRobotLocation(double &x, double &y)
     {
         Bottle cmd,rep;
         cmd.addString("get_state");
@@ -246,7 +325,6 @@ class ObstDetector : public RFModule
             {
                 x=loc->get(0).asDouble();
                 y=loc->get(1).asDouble();
-                double theta=loc->get(2).asDouble();
                 return true;
             }
         }
@@ -279,9 +357,13 @@ class ObstDetector : public RFModule
     bool close() override
     {
         navPort.close();
-        if (drv)
+        if (drv_front)
         {
-            delete drv;
+            delete drv_front;
+        }
+        if (drv_back)
+        {
+            delete drv_back;
         }
         return true;
     }
