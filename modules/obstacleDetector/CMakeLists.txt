@@ -10,7 +10,7 @@ source_group("DOC Files" FILES ${doc_files})
 add_executable(${PROJECT_NAME} src/main.cpp ${doc_files})
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
-target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} AssistiveRehab)
+target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} ${OpenCV_LIBRARIES} AssistiveRehab)
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
 file(GLOB ini app/conf/*.ini)

@@ -10,6 +10,7 @@
  * @authors: Valentina Vasco <valentina.vasco@iit.it>
  */
 
+#include <iostream>
 #include <cstdlib>
 #include <cmath>
 
@@ -32,58 +33,14 @@
 
 #include <yarp/math/Math.h>
 
+#include <opencv2/core.hpp>
+
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 using namespace yarp::sig;
 using namespace yarp::math;
-
-/****************************************************************/
-class Cluster
-{
-    Vector x,y;
-
-public:
-    double xc{0.0};
-    double yc{0.0};
-    double tlast{0.0};
-    Cluster() {}
-    Cluster(const double xc_, const double yc_, const double tlast_) : xc(xc_), yc(yc_), tlast(tlast_) { }
-
-    /****************************************************************/
-    void updateCluster(const double &xc, const double &yc,const double &tlast)
-    {
-        this->xc=xc;
-        this->yc=yc;
-        this->tlast=tlast;
-        x.push_back(xc);
-        y.push_back(yc);
-    }
-
-    /****************************************************************/
-    double getXcenter() const
-    {
-        return xc;
-    }
-
-    /****************************************************************/
-    double getYcenter() const
-    {
-        return yc;
-    }
-
-    /****************************************************************/
-    double getTlast() const
-    {
-        return tlast;
-    }
-
-    /****************************************************************/
-    int getNumberPoints() const
-    {
-        return x.size();
-    }
-};
+using namespace cv;
 
 /****************************************************************/
 class ObstDetector : public RFModule
@@ -100,13 +57,24 @@ class ObstDetector : public RFModule
     double max_dist_front{0.0},max_dist_back{0.0};
     int hor_res_front{0},hor_res_back{0};
     int ver_res_front{0},ver_res_back{0};
-    double dist_thresh{1.5};
+    double dist_thresh{1.0};
     double dist_obstacle{1.5};
-    double time_to_live{1.0};
-    int min_points{5};
+    int min_points{3};
 
-    std::vector<Cluster> clusters_front,clusters_back;
     RpcClient navPort;
+
+    struct Dist
+    {
+        double threshold;
+        Dist(const double &threshold)
+        {
+            this->threshold=threshold;
+        }
+        bool operator()(const cv::Point2d &a, const cv::Point2d &b)
+        {
+            return sqrt((a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y)) < threshold;
+        }
+    };
 
     /****************************************************************/
     bool configure(ResourceFinder& rf) override
@@ -114,10 +82,9 @@ class ObstDetector : public RFModule
         period=rf.check("period",Value(0.1)).asDouble();
         module_name=rf.check("name",Value("obstacleDetector")).asString();
         robot=rf.check("robot",Value("SIM_CER_ROBOT")).asString();
-        dist_thresh=rf.check("dist-thresh",Value(0.5)).asDouble();
+        dist_thresh=rf.check("dist-thresh",Value(1.0)).asDouble();
         dist_obstacle=rf.check("dist-obstacle",Value(1.5)).asDouble();
-        time_to_live=rf.check("time-to-live",Value(1.0)).asDouble();
-        min_points=rf.check("min-points",Value(5)).asInt();
+        min_points=rf.check("min-points",Value(3)).asInt();
 
         navPort.open("/"+module_name+"/nav:rpc");
         string front_laser_port_name="/"+module_name+"/front_laser:i";
@@ -190,34 +157,159 @@ class ObstDetector : public RFModule
     bool updateModule() override
     {
         std::vector<LaserMeasurementData> data_front,data_back;
+        double dfront=numeric_limits<double>::infinity();
+        double dback=numeric_limits<double>::infinity();
         if(iLas_front->getLaserMeasurement(data_front))
         {
-            clusterData(data_front,clusters_front);
-            yInfo()<<"Number of obstacles found from front laser"<<clusters_front.size();
+            // cluster data based on distance
+            int nclusters;
+            Matrix clusters_front=clusterData(data_front,nclusters);
+            if (clusters_front.data())
+            {
+                // we keep only clusters with number of points > minpoints
+                vector<int> ids;
+                nclusters=removeOutliers(clusters_front,ids);
+                yInfo()<<"Number of obstacles from front laser"<<nclusters;
+
+                // we consider the closest cluster
+                dfront=getClosestCluster(clusters_front,ids);
+            }
         }
 
         if(iLas_back->getLaserMeasurement(data_back))
         {
-            clusterData(data_back,clusters_back);
-            yInfo()<<"Number of obstacles found from back laser"<<clusters_back.size();
+            // cluster data based on distance
+            int nclusters;
+            Matrix clusters_back=clusterData(data_back,nclusters);
+            if (clusters_back.data())
+            {
+                // we keep only clusters with number of points > minpoints
+                vector<int> ids;
+                removeOutliers(clusters_back,ids);
+                yInfo()<<"Number of obstacles from back laser"<<nclusters;
+
+                // we consider the closest cluster
+                dback=getClosestCluster(clusters_back,ids);
+            }
         }
 
-        if (clusters_front.size()>0 || clusters_back.size()>0)
+        if (!isinf(dfront) || !isinf(dback))
         {
-            double d=getMinDistance();
+            double d=getMinDistance(dfront,dback);
             yInfo()<<"Found obstacle at"<<d;
             if (d<dist_obstacle)
             {
-                yInfo()<<"Stopping";
-                stopNav();
+                if (getRobotState()!="idle")
+                {
+                    yInfo()<<"Stopping";
+                    stopNav();
+                }
             }
+        }
+        else
+        {
+            yInfo()<<"No obstacle found";
         }
         return true;
     }
 
     /****************************************************************/
-    void clusterData(std::vector<LaserMeasurementData> &data, std::vector<Cluster> &clusters)
+    double getClosestCluster(const Matrix &c, const vector<int> ids)
     {
+        int closestid=-1;
+        int n=ids.size();
+        Vector dist(n);
+        for (int i=0; i<n; i++)
+        {
+            int id=ids[i];
+            dist[i]=getClusterDist(c,id);
+        }
+        closestid=(std::min_element(dist.begin(),dist.end())-dist.begin());
+        return yarp::math::findMin(dist);
+    }
+
+    /****************************************************************/
+    double getClusterDist(const Matrix &c, const int &id)
+    {
+        cv::Point2d center{0.0,0.0};
+        int n=0;
+        for (int i=0;i<c.rows();i++)
+        {
+            if ((int)c[i][2]==id)
+            {
+                center.x+=c[i][0];
+                center.y+=c[i][1];
+                n++;
+            }
+        }
+        center.x/=n;
+        center.y/=n;
+        return sqrt((center.x*center.x)+(center.y*center.y));
+    }
+
+    /****************************************************************/
+    Matrix clusterData(std::vector<LaserMeasurementData> &d, int &nclusters)
+    {
+        vector<cv::Point2d> input=toCvFeatures(d);
+        vector<int> id(input.size());
+        nclusters=cv::partition(input,id,Dist(dist_thresh));
+        Matrix output(input.size(),3);
+        for (int i=0;i<input.size();i++)
+        {
+            output[i][0]=input[i].x;
+            output[i][1]=input[i].y;
+            output[i][2]=id[i];
+        }
+        return output;
+    }
+
+    /***************************************************************/
+    int removeOutliers(Matrix &c, vector<int> &ids)
+    {
+        Vector id=c.getCol(2);
+        int maxid=yarp::math::findMax(id);
+        int nclusters=0;
+        for (int i=0; i<=maxid; i++)
+        {
+            int npoints=std::count(id.begin(),id.end(),i);
+            if (npoints<min_points)
+            {
+                update(c,i);
+            }
+            else
+            {
+                ids.push_back(i);
+                nclusters++;
+            }
+        }
+        return nclusters;
+    }
+
+    /****************************************************************/
+    void update(Matrix &c, const int &id)
+    {
+        int j=0;
+        while (true)
+        {
+            if ((int)c[j][2]==id)
+            {
+                c.removeRows(j,1);
+            }
+            else
+            {
+                j++;
+            }
+            if (j>=c.rows())
+            {
+                break;
+            }
+        }
+    }
+
+    /****************************************************************/
+    vector<cv::Point2d> toCvFeatures(std::vector<LaserMeasurementData> &data)
+    {
+        vector<cv::Point2d> cvpnts;
         for (int i=0;i<data.size();i++)
         {
             double x,y;
@@ -226,109 +318,40 @@ class ObstDetector : public RFModule
             {
                 continue;
             }
-            if (clusters.size()>0)
-            {
-                bool found=false;
-                for (int j=0;j<clusters.size();j++)
-                {
-                    double xc=clusters[j].getXcenter();
-                    double yc=clusters[j].getYcenter();
-                    double d=sqrt((x-xc)*(x-xc)+(y-yc)*(y-yc));
-                    //we associate the point to the closest cluster
-                    if (d<dist_thresh)
-                    {
-                        clusters[j].updateCluster(x,y,Time::now());
-                        found=true;
-                        break;
-                    }
-                }
-                //if no cluster is found, we create a new one
-                if (!found)
-                {
-                    Cluster c;
-                    c.updateCluster(x,y,Time::now());
-                    clusters.push_back(c);
-                }
-            }
-            else
-            {
-                //we create a new cluster
-                Cluster c;
-                c.updateCluster(x,y,Time::now());
-                clusters.push_back(c);
-            }
+            cvpnts.push_back(cv::Point2d(x,y));
         }
-
-        //we filter out clusters with few points or not updated for more than time_to_live
-        for (int i=0;i<clusters.size();i++)
-        {
-            int n=clusters[i].getNumberPoints();
-            double deltat=Time::now()-clusters[i].getTlast();
-            if (n<min_points || deltat>time_to_live)
-            {
-                yInfo()<<"Removing cluster"<<i<<"with number of points"<<n
-                       <<"and deltat"<<deltat;
-                clusters.erase(clusters.begin()+i);
-            }
-        }
+        return cvpnts;
     }
 
     /****************************************************************/
-    double getMinDistance()
+    double getMinDistance(const double &d1, const double &d2)
     {
-        double dfront=getMinDistance(clusters_front);
-        double dback=getMinDistance(clusters_back);
-        if (isinf(dback))
+        if (isinf(d1))
         {
-            return dfront;
+            return d2;
         }
-        else if (isinf(dfront))
+        else if (isinf(d1))
         {
-            return dback;
+            return d2;
         }
         else
         {
-            return min(dfront,dback);
+            return min(d1,d2);
         }
     }
 
     /****************************************************************/
-    double getMinDistance(const std::vector<Cluster> &clusters)
+    string getRobotState()
     {
-        if (clusters.size()>0)
-        {
-            Vector d(clusters.size(),numeric_limits<double>::infinity());
-            for (int i=0;i<clusters.size();i++)
-            {
-                double xc=clusters[i].getXcenter();
-                double yc=clusters[i].getYcenter();
-                d[i]=sqrt(xc*xc+yc*yc);
-            }
-            double min_d=findMin(d);
-            return min_d;
-        }
-        else
-        {
-            return numeric_limits<double>::infinity();
-        }
-    }
-
-    /****************************************************************/
-    bool getRobotLocation(double &x, double &y)
-    {
+        string state="";
         Bottle cmd,rep;
         cmd.addString("get_state");
         if (navPort.write(cmd,rep))
         {
             Property robotState(rep.get(0).toString().c_str());
-            if (Bottle *loc=robotState.find("robot-location").asList())
-            {
-                x=loc->get(0).asDouble();
-                y=loc->get(1).asDouble();
-                return true;
-            }
+            state=robotState.find("robot-state").asString();
         }
-        return false;
+        return state;
     }
 
     /****************************************************************/
