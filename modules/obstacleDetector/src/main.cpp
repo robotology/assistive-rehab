@@ -185,7 +185,7 @@ class ObstDetector : public RFModule
             {
                 // we keep only clusters with number of points > minpoints
                 vector<int> ids;
-                removeOutliers(clusters_back,ids);
+                nclusters=removeOutliers(clusters_back,ids);
                 yInfo()<<"Number of obstacles from back laser"<<nclusters;
 
                 // we consider the closest cluster
@@ -214,18 +214,25 @@ class ObstDetector : public RFModule
     }
 
     /****************************************************************/
-    double getClosestCluster(const Matrix &c, const vector<int> ids)
+    double getClosestCluster(const Matrix &c, const vector<int> &ids)
     {
-        int closestid=-1;
         int n=ids.size();
-        Vector dist(n);
-        for (int i=0; i<n; i++)
+        if (n>0)
         {
-            int id=ids[i];
-            dist[i]=getClusterDist(c,id);
+            int closestid=-1;
+            Vector dist(n);
+            for (int i=0; i<n; i++)
+            {
+                int id=ids[i];
+                dist[i]=getClusterDist(c,id);
+            }
+            closestid=(std::min_element(dist.begin(),dist.end())-dist.begin());
+            return yarp::math::findMin(dist);
         }
-        closestid=(std::min_element(dist.begin(),dist.end())-dist.begin());
-        return yarp::math::findMin(dist);
+        else
+        {
+            return numeric_limits<double>::infinity();
+        }
     }
 
     /****************************************************************/
@@ -310,10 +317,10 @@ class ObstDetector : public RFModule
     vector<cv::Point2d> toCvFeatures(std::vector<LaserMeasurementData> &data)
     {
         vector<cv::Point2d> cvpnts;
-        for (int i=0;i<data.size();i++)
+        for (auto &d:data)
         {
             double x,y;
-            data[i].get_cartesian(x,y);
+            d.get_cartesian(x,y);
             if (std::isinf(x) || std::isinf(y))
             {
                 continue;
