@@ -22,12 +22,50 @@
     </model>
 
     <!-- Human model -->
-    <model name='human'>
-      <include>
-        <uri>model://Luca</uri>
-      </include>
-      <pose>0.0 0.0 0.0 0.0 0.0 0.0</pose>
-    </model>
+    <actor name="human">
+      <plugin name="actor_collisions_plugin" filename="libActorCollisionsPlugin.so">
+        <scaling collision="LHipJoint_LeftUpLeg_collision" scale="0.01 0.001 0.001"/>
+        <scaling collision="LeftUpLeg_LeftLeg_collision" scale="8.0 8.0 1.0"/>
+        <scaling collision="LeftLeg_LeftFoot_collision" scale="8.0 8.0 1.0"/>
+        <scaling collision="LeftFoot_LeftToeBase_collision" scale="4.0 4.0 1.5"/>
+        <scaling collision="RHipJoint_RightUpLeg_collision" scale="0.01 0.001 0.001"/>
+        <scaling collision="RightUpLeg_RightLeg_collision" scale="8.0 8.0 1.0"/>
+        <scaling collision="RightLeg_RightFoot_collision" scale="8.0 8.0 1.0"/>
+        <scaling collision="RightFoot_RightToeBase_collision" scale="4.0 4.0 1.5"/>
+      </plugin>
+      <skin>
+        <filename>stand.dae</filename>
+      </skin>
+      <animation name="stand">
+        <filename>stand.dae</filename>
+      </animation>
+      <animation name="stand_up">
+        <filename>stand_up.dae</filename>
+      </animation>
+      <animation name="sitting">
+        <filename>sitting.dae</filename>
+      </animation>
+      <animation name="walk">
+        <filename>walk.dae</filename>
+        <interpolate_x>true</interpolate_x>
+      </animation>
+      <animation name="sit_down">
+        <filename>sit_down.dae</filename>
+      </animation>
+      <script>
+        <loop>true</loop>
+        <auto_start>false</auto_start>
+        <trajectory id="0" type="stand"/>
+        <trajectory id="1" type="sit_down"/>
+        <trajectory id="2" type="sitting"/>
+        <trajectory id="3" type="stand_up"/>
+        <trajectory id="4" type="walk"/>
+        <trajectory id="5" type="sit_down"/>
+      </script>
+      <plugin name='tug_interface' filename='libgazebo_assistiverehab_tuginterface.so'>
+        <yarpConfigurationFile>model://tugInterface.ini</yarpConfigurationFile>
+      </plugin>
+    </actor>
 
     <!-- Camera -->
     <gui fullscreen='0'>
