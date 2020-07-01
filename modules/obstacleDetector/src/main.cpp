@@ -62,6 +62,7 @@ class ObstDetector : public RFModule
     int min_points{3};
 
     RpcClient navPort;
+    BufferedPort<Bottle> outPort;
 
     struct Dist
     {
@@ -87,6 +88,7 @@ class ObstDetector : public RFModule
         min_points=rf.check("min-points",Value(3)).asInt();
 
         navPort.open("/"+module_name+"/nav:rpc");
+        outPort.open("/"+module_name+"/obstacle:o");
         string front_laser_port_name="/"+module_name+"/front_laser:i";
         string back_laser_port_name="/"+module_name+"/back_laser:i";
 
@@ -195,12 +197,18 @@ class ObstDetector : public RFModule
 
         if (!isinf(dfront) || !isinf(dback))
         {
-            double d=getMinDistance(dfront,dback);
-            yInfo()<<"Found obstacle at"<<d;
+            string laser;
+            double d=getMinDistance(dfront,dback,laser);
+            yInfo()<<"Found obstacle at"<<d<<"from"<<laser;
             if (d<dist_obstacle)
             {
                 if (getRobotState()!="idle")
                 {
+                    Bottle &obstacle=outPort.prepare();
+                    obstacle.clear();
+                    obstacle.addDouble(d);
+                    obstacle.addString(laser);
+                    outPort.write();
                     yInfo()<<"Stopping";
                     stopNav();
                 }
@@ -331,19 +339,17 @@ class ObstDetector : public RFModule
     }
 
     /****************************************************************/
-    double getMinDistance(const double &d1, const double &d2)
+    double getMinDistance(const double &d1, const double &d2, string &s)
     {
-        if (isinf(d1))
+        if (d1<d2)
         {
-            return d2;
-        }
-        else if (isinf(d1))
-        {
-            return d2;
+            s="front-laser";
+            return d1;
         }
         else
         {
-            return min(d1,d2);
+            s="back-laser";
+            return d2;
         }
     }
 
@@ -380,6 +386,7 @@ class ObstDetector : public RFModule
     bool interruptModule() override
     {
         navPort.interrupt();
+        outPort.interrupt();
         return true;
     }
 
@@ -387,6 +394,7 @@ class ObstDetector : public RFModule
     bool close() override
     {
         navPort.close();
+        outPort.interrupt();
         if (drv_front)
         {
             delete drv_front;
