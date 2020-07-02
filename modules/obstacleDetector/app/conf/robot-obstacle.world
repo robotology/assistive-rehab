@@ -53,7 +53,7 @@
         <filename>sit_down.dae</filename>
       </animation>
       <script>
-        <loop>true</loop>
+        <loop>false</loop>
         <auto_start>false</auto_start>
         <trajectory id="0" type="stand"/>
         <trajectory id="1" type="sit_down"/>
