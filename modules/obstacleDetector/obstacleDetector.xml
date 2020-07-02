@@ -26,13 +26,20 @@
   </authors>
 
   <data>
-      <output>
-          <type>Rpc</type>
-          <port>/obstacleDetector/nav:rpc</port>
-          <description>
-            Sends commands to navController.
-          </description>
-      </output>
+    <output>
+      <type>Bottle</type>
+      <port>/obstacleDetector/obstacle:o</port>
+      <description>
+        Provides info about the obstacle found, including its distance from the robot and from which laser was detected.
+      </description>
+    </output>
+    <output>
+      <type>Rpc</type>
+      <port>/obstacleDetector/nav:rpc</port>
+      <description>
+        Sends commands to navController.
+      </description>
+    </output>
   </data>
 
 </module>
