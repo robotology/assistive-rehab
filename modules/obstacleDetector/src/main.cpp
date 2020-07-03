@@ -329,7 +329,8 @@ class ObstDetector : public RFModule
         {
             double x,y;
             d.get_cartesian(x,y);
-            if (std::isinf(x) || std::isinf(y))
+            if (std::isinf(x) || std::isinf(y)
+                    || std::isnan(x) || std::isnan(y))
             {
                 continue;
             }
