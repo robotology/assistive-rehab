@@ -39,10 +39,30 @@
        <node>localhost</node>
     </module>
 
+    <module>
+       <name>yarpview</name>
+       <parameters>--name /clusters</parameters>
+       <node>localhost</node>
+    </module>
+
+    <module>
+       <name>yarplaserscannergui</name>
+       <parameters>--sens_port "/SIM_CER_ROBOT/laser:o"</parameters>
+       <dependencies>
+         <port timeout="15">/SIM_CER_ROBOT/laser:o</port>
+       </dependencies>
+       <node>localhost</node>
+    </module>
+
     <connection>
         <from>/obstacleDetector/nav:rpc</from>
         <to>/navController/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
+    <connection>
+        <from>/obstacleDetector/viewer:o</from>
+        <to>/clusters</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
 </application>

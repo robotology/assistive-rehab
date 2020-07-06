@@ -30,8 +30,11 @@
 
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
+#include <yarp/sig/Image.h>
 
 #include <yarp/math/Math.h>
+
+#include <yarp/cv/Cv.h>
 
 #include <opencv2/core.hpp>
 
@@ -56,13 +59,17 @@ class ObstDetector : public RFModule
     double min_dist_front{0.0},min_dist_back{0.0};
     double max_dist_front{0.0},max_dist_back{0.0};
     int hor_res_front{0},hor_res_back{0};
-    int ver_res_front{0},ver_res_back{0};
-    double dist_thresh{1.0};
+    double ver_step{1.0};
+    double dist_thresh{0.5};
     double dist_obstacle{1.5};
-    int min_points{3};
+    int min_points{4};
+
+    map<int,cv::Scalar> color_map;
 
     RpcClient navPort;
     BufferedPort<Bottle> outPort;
+    BufferedPort<ImageOf<PixelRgb> > viewerPort;
+    cv::Mat imgCv;
 
     struct Dist
     {
@@ -83,12 +90,14 @@ class ObstDetector : public RFModule
         period=rf.check("period",Value(0.1)).asDouble();
         module_name=rf.check("name",Value("obstacleDetector")).asString();
         robot=rf.check("robot",Value("SIM_CER_ROBOT")).asString();
-        dist_thresh=rf.check("dist-thresh",Value(1.0)).asDouble();
+        dist_thresh=rf.check("dist-thresh",Value(0.5)).asDouble();
         dist_obstacle=rf.check("dist-obstacle",Value(1.5)).asDouble();
-        min_points=rf.check("min-points",Value(3)).asInt();
+        min_points=rf.check("min-points",Value(4)).asInt();
+        ver_step=rf.check("ver-step",Value(1.0)).asDouble();
 
         navPort.open("/"+module_name+"/nav:rpc");
         outPort.open("/"+module_name+"/obstacle:o");
+        viewerPort.open("/"+module_name+"/viewer:o");
         string front_laser_port_name="/"+module_name+"/front_laser:i";
         string back_laser_port_name="/"+module_name+"/back_laser:i";
 
@@ -115,7 +124,6 @@ class ObstDetector : public RFModule
         iLas_front->getHorizontalResolution(angle_step_front);
         iLas_front->getDistanceRange(min_dist_front,max_dist_front);
         hor_res_front=(int)((max_angle_front-min_angle_front)/angle_step_front);
-        ver_res_front=(int)((max_dist_front-min_dist_front)/0.5);
         yInfo()<<"Reading front laser with angle range ("<<min_angle_front<<max_angle_front
               <<") and distance range ("<<min_dist_front<<max_dist_front<<")";
 
@@ -142,7 +150,6 @@ class ObstDetector : public RFModule
         iLas_back->getHorizontalResolution(angle_step_back);
         iLas_back->getDistanceRange(min_dist_back,max_dist_back);
         hor_res_back=(int)((max_angle_back-min_angle_back)/angle_step_back);
-        ver_res_back=(int)((max_dist_back-min_dist_back)/0.5);
         yInfo()<<"Reading front laser with angle range ("<<min_angle_back<<max_angle_back
               <<") and distance range ("<<min_dist_back<<max_dist_back<<")";
 
@@ -161,11 +168,12 @@ class ObstDetector : public RFModule
         std::vector<LaserMeasurementData> data_front,data_back;
         double dfront=numeric_limits<double>::infinity();
         double dback=numeric_limits<double>::infinity();
+        Matrix clusters_front,clusters_back;
         if(iLas_front->getLaserMeasurement(data_front))
         {
             // cluster data based on distance
             int nclusters;
-            Matrix clusters_front=clusterData(data_front,nclusters);
+            clusters_front=clusterData(data_front,nclusters);
             if (clusters_front.data())
             {
                 // we keep only clusters with number of points > minpoints
@@ -182,7 +190,7 @@ class ObstDetector : public RFModule
         {
             // cluster data based on distance
             int nclusters;
-            Matrix clusters_back=clusterData(data_back,nclusters);
+            clusters_back=clusterData(data_back,nclusters);
             if (clusters_back.data())
             {
                 // we keep only clusters with number of points > minpoints
@@ -199,7 +207,7 @@ class ObstDetector : public RFModule
         {
             string laser;
             double d=getMinDistance(dfront,dback,laser);
-            yInfo()<<"Found obstacle at"<<d<<"from"<<laser;
+            yInfo()<<"Closest obstacle at"<<d<<"from"<<laser;
             if (d<dist_obstacle)
             {
                 if (getRobotState()!="idle")
@@ -218,7 +226,80 @@ class ObstDetector : public RFModule
         {
             yInfo()<<"No obstacle found";
         }
+
+        if (viewerPort.getOutputCount()>0)
+        {
+            int img_size=500;
+            ImageOf<PixelRgb> &imgOut=viewerPort.prepare();
+            imgOut.resize(img_size,img_size);
+            imgOut.zero();
+            imgCv=cv::Mat::ones(img_size,img_size,CV_8UC3);
+            imgCv.setTo(Scalar(200,200,200));
+            drawClusters(clusters_front,imgCv,"front");
+            drawClusters(clusters_back,imgCv,"back");
+            imgOut=yarp::cv::fromCvMat<PixelRgb>(imgCv);
+            viewerPort.write();
+        }
         return true;
+    }
+
+    /****************************************************************/
+    void drawClusters(const Matrix &c, cv::Mat &imgCv, const string &laser)
+    {
+        int radius=5;
+        cv::Point robot(imgCv.size().width/2,imgCv.size().height/2);
+        cv::circle(imgCv,robot,radius,cv::Scalar(0,0,0),-1);
+        double min_x=-max_dist_front;
+        double max_x=max_dist_front;
+        double min_y=0.0;
+        double max_y=max_dist_front;
+        int min_xpx=0;
+        int max_xpx=imgCv.size().width;
+        int min_ypx=0;
+        int max_ypx=imgCv.size().height/2;
+        if (laser=="back")
+        {
+            min_x=-max_dist_back;
+            max_x=max_dist_back;
+            max_y=max_dist_back;
+            min_ypx=imgCv.size().height/2;
+            max_ypx=imgCv.size().height;
+        }
+        for (int i=0; i<c.rows(); i++)
+        {
+            double x=c[i][0];
+            double y=c[i][1];
+            int xpx=(int)((y-min_x)*(max_xpx-min_xpx)/(max_x-min_x)+min_xpx);
+            int ypx=(int)((x-min_y)*(max_ypx-min_ypx)/(max_y-min_y)+min_ypx);
+            if (laser=="front")
+            {
+                xpx=imgCv.size().width-xpx;
+                ypx=imgCv.size().height/2-ypx;
+            }
+            cv::Point pt(xpx,ypx);
+            int id=c[i][2];
+            cv::circle(imgCv,pt,radius,color_map[id],-1);
+        }
+        drawCircles(imgCv);
+    }
+
+    /****************************************************************/
+    void drawCircles(cv::Mat &imgCv)
+    {
+        cv::Scalar black(0,0,0);
+        cv::line(imgCv,cv::Point(0,0),cv::Point(imgCv.size().width,imgCv.size().height),black);
+        cv::line(imgCv,cv::Point(imgCv.size().width,0),cv::Point(0,imgCv.size().height),black);
+        cv::line(imgCv,cv::Point(imgCv.size().width/2,0),cv::Point(imgCv.size().width/2,imgCv.size().height),black);
+        cv::line(imgCv,cv::Point(0,imgCv.size().height/2),cv::Point(imgCv.size().width,imgCv.size().height/2),black);
+        char buff [10];
+        for (float i=0; i<max_dist_front; i+=ver_step)
+        {
+            int y=imgCv.size().height/2-(int)(i*(imgCv.size().height/2)/max_dist_front);
+            sprintf(buff,"%3.1fm",i);
+            cv::putText(imgCv,buff,cv::Point(imgCv.size().width/2,y),
+                    cv::HersheyFonts::FONT_HERSHEY_PLAIN,1.5,black);
+            cv::circle(imgCv,cv::Point(imgCv.size().width/2,imgCv.size().height/2),y,black);
+        }
     }
 
     /****************************************************************/
@@ -265,6 +346,7 @@ class ObstDetector : public RFModule
     /****************************************************************/
     Matrix clusterData(std::vector<LaserMeasurementData> &d, int &nclusters)
     {
+        cv::RNG rng;
         vector<cv::Point2d> input=toCvFeatures(d);
         vector<int> id(input.size());
         nclusters=cv::partition(input,id,Dist(dist_thresh));
@@ -274,6 +356,11 @@ class ObstDetector : public RFModule
             output[i][0]=input[i].x;
             output[i][1]=input[i].y;
             output[i][2]=id[i];
+            if (color_map.find(id[i])==end(color_map))
+            {
+                cv::Scalar color(rng.uniform(0,255),rng.uniform(0,255),rng.uniform(0,255));
+                color_map[id[i]]=color;
+            }
         }
         return output;
     }
@@ -287,7 +374,7 @@ class ObstDetector : public RFModule
         for (int i=0; i<=maxid; i++)
         {
             int npoints=std::count(id.begin(),id.end(),i);
-            if (npoints<min_points)
+            if (npoints<=min_points)
             {
                 update(c,i);
             }
@@ -329,8 +416,7 @@ class ObstDetector : public RFModule
         {
             double x,y;
             d.get_cartesian(x,y);
-            if (std::isinf(x) || std::isinf(y)
-                    || std::isnan(x) || std::isnan(y))
+            if (std::isinf(x) || std::isinf(y) || std::isnan(x) || std::isnan(y))
             {
                 continue;
             }
@@ -388,6 +474,7 @@ class ObstDetector : public RFModule
     {
         navPort.interrupt();
         outPort.interrupt();
+        viewerPort.interrupt();
         return true;
     }
 
@@ -396,6 +483,7 @@ class ObstDetector : public RFModule
     {
         navPort.close();
         outPort.interrupt();
+        viewerPort.interrupt();
         if (drv_front)
         {
             delete drv_front;
