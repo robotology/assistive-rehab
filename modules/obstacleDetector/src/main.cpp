@@ -64,7 +64,23 @@ class ObstDetector : public RFModule
     double dist_obstacle{1.5};
     int min_points{4};
 
+    struct Laser2Img
+    {
+        cv::Point2d min_p;
+        cv::Point2d max_p;
+        cv::Point min_px;
+        cv::Point max_px;
+        bool mirror;
+        Laser2Img(const cv::Point2d &min_p_,const cv::Point2d &max_p_,
+                  const cv::Point2d &min_px_,const cv::Point2d &max_px_,
+                  const bool &mirror_) : min_p(min_p_), max_p(max_p_),
+            min_px(min_px_), max_px(max_px_), mirror(mirror_) { }
+    };
+
+    Laser2Img *l2img_front;
+    Laser2Img *l2img_back;
     map<int,cv::Scalar> color_map;
+    int img_size;
 
     RpcClient navPort;
     BufferedPort<Bottle> outPort;
@@ -126,6 +142,12 @@ class ObstDetector : public RFModule
         hor_res_front=(int)((max_angle_front-min_angle_front)/angle_step_front);
         yInfo()<<"Reading front laser with angle range ("<<min_angle_front<<max_angle_front
               <<") and distance range ("<<min_dist_front<<max_dist_front<<")";
+        img_size=500;
+        cv::Point2d min_p(-max_dist_front,0.0);
+        cv::Point2d max_p(max_dist_front,max_dist_front);
+        cv::Point min_px(0,0);
+        cv::Point max_px(img_size,img_size/2);
+        l2img_front=new Laser2Img(min_p,max_p,min_px,max_px,true);
 
         drv_back=new yarp::dev::PolyDriver;
         options.clear();
@@ -152,6 +174,12 @@ class ObstDetector : public RFModule
         hor_res_back=(int)((max_angle_back-min_angle_back)/angle_step_back);
         yInfo()<<"Reading front laser with angle range ("<<min_angle_back<<max_angle_back
               <<") and distance range ("<<min_dist_back<<max_dist_back<<")";
+        min_p.x=-max_dist_back;
+        max_p.x=max_dist_back;
+        max_p.y=max_dist_back;
+        min_px.y=img_size/2;
+        max_px.y=img_size;
+        l2img_back=new Laser2Img(min_p,max_p,min_px,max_px,false);
 
         return true;
     }
@@ -229,14 +257,16 @@ class ObstDetector : public RFModule
 
         if (viewerPort.getOutputCount()>0)
         {
-            int img_size=500;
             ImageOf<PixelRgb> &imgOut=viewerPort.prepare();
             imgOut.resize(img_size,img_size);
             imgOut.zero();
             imgCv=cv::Mat::ones(img_size,img_size,CV_8UC3);
             imgCv.setTo(Scalar(200,200,200));
-            drawClusters(clusters_front,imgCv,"front");
-            drawClusters(clusters_back,imgCv,"back");
+            cv::Point robot(imgCv.size().width/2,imgCv.size().height/2);
+            cv::circle(imgCv,robot,3,cv::Scalar(0,0,0),-1);
+            drawClusters(clusters_front,imgCv,*l2img_front);
+            drawClusters(clusters_back,imgCv,*l2img_back);
+            drawCircles(imgCv);
             imgOut=yarp::cv::fromCvMat<PixelRgb>(imgCv);
             viewerPort.write();
         }
@@ -244,34 +274,16 @@ class ObstDetector : public RFModule
     }
 
     /****************************************************************/
-    void drawClusters(const Matrix &c, cv::Mat &imgCv, const string &laser)
+    void drawClusters(const Matrix &c, cv::Mat &imgCv, const Laser2Img &l2img)
     {
-        int radius=5;
-        cv::Point robot(imgCv.size().width/2,imgCv.size().height/2);
-        cv::circle(imgCv,robot,radius,cv::Scalar(0,0,0),-1);
-        double min_x=-max_dist_front;
-        double max_x=max_dist_front;
-        double min_y=0.0;
-        double max_y=max_dist_front;
-        int min_xpx=0;
-        int max_xpx=imgCv.size().width;
-        int min_ypx=0;
-        int max_ypx=imgCv.size().height/2;
-        if (laser=="back")
-        {
-            min_x=-max_dist_back;
-            max_x=max_dist_back;
-            max_y=max_dist_back;
-            min_ypx=imgCv.size().height/2;
-            max_ypx=imgCv.size().height;
-        }
+        int radius=3;
         for (int i=0; i<c.rows(); i++)
         {
             double x=c[i][0];
             double y=c[i][1];
-            int xpx=(int)((y-min_x)*(max_xpx-min_xpx)/(max_x-min_x)+min_xpx);
-            int ypx=(int)((x-min_y)*(max_ypx-min_ypx)/(max_y-min_y)+min_ypx);
-            if (laser=="front")
+            int xpx=(int)((y-l2img.min_p.x)*(l2img.max_px.x-l2img.min_px.x)/(l2img.max_p.x-l2img.min_p.x)+l2img.min_px.x);
+            int ypx=(int)((x-l2img.min_p.y)*(l2img.max_px.y-l2img.min_px.y)/(l2img.max_p.y-l2img.min_p.y)+l2img.min_px.y);
+            if (l2img.mirror)
             {
                 xpx=imgCv.size().width-xpx;
                 ypx=imgCv.size().height/2-ypx;
@@ -280,7 +292,6 @@ class ObstDetector : public RFModule
             int id=c[i][2];
             cv::circle(imgCv,pt,radius,color_map[id],-1);
         }
-        drawCircles(imgCv);
     }
 
     /****************************************************************/
@@ -296,8 +307,7 @@ class ObstDetector : public RFModule
         {
             int y=imgCv.size().height/2-(int)(i*(imgCv.size().height/2)/max_dist_front);
             sprintf(buff,"%3.1fm",i);
-            cv::putText(imgCv,buff,cv::Point(imgCv.size().width/2,y),
-                    cv::HersheyFonts::FONT_HERSHEY_PLAIN,1.5,black);
+            cv::putText(imgCv,buff,cv::Point(imgCv.size().width/2,y),cv::HersheyFonts::FONT_HERSHEY_PLAIN,1.5,black);
             cv::circle(imgCv,cv::Point(imgCv.size().width/2,imgCv.size().height/2),y,black);
         }
     }
@@ -484,6 +494,8 @@ class ObstDetector : public RFModule
         navPort.close();
         outPort.interrupt();
         viewerPort.interrupt();
+        delete l2img_front;
+        delete l2img_back;
         if (drv_front)
         {
             delete drv_front;

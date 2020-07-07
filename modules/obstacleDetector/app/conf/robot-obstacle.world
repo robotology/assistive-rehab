@@ -18,11 +18,11 @@
       <include>
         <uri>model://cer_320x240</uri>
       </include>
-      <pose>3.0 0.0 0.0 0.0 0.0 3.14</pose>
+      <pose>3.0 0.0 0.0 0.0 0.0 0.0</pose>
     </model>
 
     <!-- Human model -->
-    <actor name="human">
+    <actor name="human_front">
       <plugin name="actor_collisions_plugin" filename="libActorCollisionsPlugin.so">
         <scaling collision="LHipJoint_LeftUpLeg_collision" scale="0.01 0.001 0.001"/>
         <scaling collision="LeftUpLeg_LeftLeg_collision" scale="8.0 8.0 1.0"/>
@@ -39,32 +39,53 @@
       <animation name="stand">
         <filename>stand.dae</filename>
       </animation>
-      <animation name="stand_up">
-        <filename>stand_up.dae</filename>
-      </animation>
-      <animation name="sitting">
-        <filename>sitting.dae</filename>
-      </animation>
-      <animation name="walk">
-        <filename>walk.dae</filename>
-        <interpolate_x>true</interpolate_x>
-      </animation>
-      <animation name="sit_down">
-        <filename>sit_down.dae</filename>
+      <script>
+        <loop>false</loop>
+        <auto_start>true</auto_start>
+        <trajectory id="0" type="stand">
+          <waypoint>
+            <time>0.0</time>
+            <pose>0 0 0 0 0 0</pose>
+          </waypoint>
+          <waypoint>
+            <time>5.0</time>
+            <pose>0 0 0 0 0 0</pose>
+          </waypoint>
+        </trajectory>
+      </script>
+    </actor>
+
+    <actor name="human_back">
+      <plugin name="actor_collisions_plugin" filename="libActorCollisionsPlugin.so">
+        <scaling collision="LHipJoint_LeftUpLeg_collision" scale="0.01 0.001 0.001"/>
+        <scaling collision="LeftUpLeg_LeftLeg_collision" scale="8.0 8.0 1.0"/>
+        <scaling collision="LeftLeg_LeftFoot_collision" scale="8.0 8.0 1.0"/>
+        <scaling collision="LeftFoot_LeftToeBase_collision" scale="4.0 4.0 1.5"/>
+        <scaling collision="RHipJoint_RightUpLeg_collision" scale="0.01 0.001 0.001"/>
+        <scaling collision="RightUpLeg_RightLeg_collision" scale="8.0 8.0 1.0"/>
+        <scaling collision="RightLeg_RightFoot_collision" scale="8.0 8.0 1.0"/>
+        <scaling collision="RightFoot_RightToeBase_collision" scale="4.0 4.0 1.5"/>
+      </plugin>
+      <skin>
+        <filename>stand.dae</filename>
+      </skin>
+      <animation name="stand">
+        <filename>stand.dae</filename>
       </animation>
       <script>
         <loop>false</loop>
-        <auto_start>false</auto_start>
-        <trajectory id="0" type="stand"/>
-        <trajectory id="1" type="sit_down"/>
-        <trajectory id="2" type="sitting"/>
-        <trajectory id="3" type="stand_up"/>
-        <trajectory id="4" type="walk"/>
-        <trajectory id="5" type="sit_down"/>
+        <auto_start>true</auto_start>
+        <trajectory id="0" type="stand">
+          <waypoint>
+            <time>0.0</time>
+            <pose>6 0 0 0 0 3.14</pose>
+          </waypoint>
+          <waypoint>
+            <time>5.0</time>
+            <pose>6 0 0 0 0 3.14</pose>
+          </waypoint>
+        </trajectory>
       </script>
-      <plugin name='tug_interface' filename='libgazebo_assistiverehab_tuginterface.so'>
-        <yarpConfigurationFile>model://tugInterface.ini</yarpConfigurationFile>
-      </plugin>
     </actor>
 
     <!-- Camera -->
