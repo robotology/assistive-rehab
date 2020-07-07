@@ -50,15 +50,15 @@ class ObstDetector : public RFModule
 {
     double period{0.0};
     string module_name{"obstacleDetector"};
-    string robot{"SIM_CER_ROBOT"};
-    PolyDriver *drv_front{nullptr},*drv_back{nullptr};
-    IRangefinder2D *iLas_front{nullptr},*iLas_back{nullptr};
-    double min_angle_front{0.0},min_angle_back{0.0};
-    double max_angle_front{0.0},max_angle_back{0.0};
-    double angle_step_front{0.0},angle_step_back{0.0};
-    double min_dist_front{0.0},min_dist_back{0.0};
-    double max_dist_front{0.0},max_dist_back{0.0};
-    int hor_res_front{0},hor_res_back{0};
+    string robot{"cer"};
+    PolyDriver *drv_front{nullptr},*drv_rear{nullptr};
+    IRangefinder2D *iLas_front{nullptr},*iLas_rear{nullptr};
+    double min_angle_front{0.0},min_angle_rear{0.0};
+    double max_angle_front{0.0},max_angle_rear{0.0};
+    double angle_step_front{0.0},angle_step_rear{0.0};
+    double min_dist_front{0.0},min_dist_rear{0.0};
+    double max_dist_front{0.0},max_dist_rear{0.0};
+    int hor_res_front{0},hor_res_rear{0};
     double ver_step{1.0};
     double dist_thresh{0.5};
     double dist_obstacle{1.5};
@@ -66,19 +66,19 @@ class ObstDetector : public RFModule
 
     struct Laser2Img
     {
-        cv::Point2d min_p;
-        cv::Point2d max_p;
-        cv::Point min_px;
-        cv::Point max_px;
-        bool mirror;
-        Laser2Img(const cv::Point2d &min_p_,const cv::Point2d &max_p_,
-                  const cv::Point2d &min_px_,const cv::Point2d &max_px_,
-                  const bool &mirror_) : min_p(min_p_), max_p(max_p_),
-            min_px(min_px_), max_px(max_px_), mirror(mirror_) { }
+        cv::Rect2d range_p;
+        cv::Rect range_px;
+        bool mirror{false};
+        Laser2Img(const cv::Rect2d &range_p_,const cv::Rect &range_px_) :
+            range_p(range_p_), range_px(range_px_) { }
+        void mirrorImg()
+        {
+            this->mirror=true;
+        }
     };
 
     Laser2Img *l2img_front;
-    Laser2Img *l2img_back;
+    Laser2Img *l2img_rear;
     map<int,cv::Scalar> color_map;
     int img_size;
 
@@ -90,7 +90,7 @@ class ObstDetector : public RFModule
     struct Dist
     {
         double threshold;
-        Dist(const double &threshold)
+        explicit Dist(const double &threshold)
         {
             this->threshold=threshold;
         }
@@ -105,7 +105,7 @@ class ObstDetector : public RFModule
     {
         period=rf.check("period",Value(0.1)).asDouble();
         module_name=rf.check("name",Value("obstacleDetector")).asString();
-        robot=rf.check("robot",Value("SIM_CER_ROBOT")).asString();
+        robot=rf.check("robot",Value("cer")).asString();
         dist_thresh=rf.check("dist-thresh",Value(0.5)).asDouble();
         dist_obstacle=rf.check("dist-obstacle",Value(1.5)).asDouble();
         min_points=rf.check("min-points",Value(4)).asInt();
@@ -115,7 +115,7 @@ class ObstDetector : public RFModule
         outPort.open("/"+module_name+"/obstacle:o");
         viewerPort.open("/"+module_name+"/viewer:o");
         string front_laser_port_name="/"+module_name+"/front_laser:i";
-        string back_laser_port_name="/"+module_name+"/back_laser:i";
+        string rear_laser_port_name="/"+module_name+"/rear_laser:i";
 
         drv_front=new yarp::dev::PolyDriver;
         Property options;
@@ -143,43 +143,39 @@ class ObstDetector : public RFModule
         yInfo()<<"Reading front laser with angle range ("<<min_angle_front<<max_angle_front
               <<") and distance range ("<<min_dist_front<<max_dist_front<<")";
         img_size=500;
-        cv::Point2d min_p(-max_dist_front,0.0);
-        cv::Point2d max_p(max_dist_front,max_dist_front);
-        cv::Point min_px(0,0);
-        cv::Point max_px(img_size,img_size/2);
-        l2img_front=new Laser2Img(min_p,max_p,min_px,max_px,true);
+        cv::Rect2d range_p_front(-max_dist_front,0.0,max_dist_front,max_dist_front);
+        cv::Rect range_px_front(0,0,img_size,img_size/2);
+        l2img_front=new Laser2Img(range_p_front,range_px_front);
+        l2img_front->mirrorImg();
 
-        drv_back=new yarp::dev::PolyDriver;
+        drv_rear=new yarp::dev::PolyDriver;
         options.clear();
         options.put("device","Rangefinder2DClient");
-        options.put("local",back_laser_port_name);
+        options.put("local",rear_laser_port_name);
         options.put("remote","/"+robot+"/laser/back:o");
-        b=drv_back->open(options);
+        b=drv_rear->open(options);
         if (!b)
         {
-            yError()<<"Unable to open polydriver for back laser";
-            delete drv_back;
+            yError()<<"Unable to open polydriver for rear laser";
+            delete drv_rear;
             return false;
         }
-        drv_back->view(iLas_back);
-        if (!iLas_back)
+        drv_rear->view(iLas_rear);
+        if (!iLas_rear)
         {
-            yError()<<"Unable to get IRangefinder2D interface for back laser";
-            delete drv_back;
+            yError()<<"Unable to get IRangefinder2D interface for rear laser";
+            delete drv_rear;
             return false;
         }
-        iLas_back->getScanLimits(min_angle_back,max_angle_back);
-        iLas_back->getHorizontalResolution(angle_step_back);
-        iLas_back->getDistanceRange(min_dist_back,max_dist_back);
-        hor_res_back=(int)((max_angle_back-min_angle_back)/angle_step_back);
-        yInfo()<<"Reading front laser with angle range ("<<min_angle_back<<max_angle_back
-              <<") and distance range ("<<min_dist_back<<max_dist_back<<")";
-        min_p.x=-max_dist_back;
-        max_p.x=max_dist_back;
-        max_p.y=max_dist_back;
-        min_px.y=img_size/2;
-        max_px.y=img_size;
-        l2img_back=new Laser2Img(min_p,max_p,min_px,max_px,false);
+        iLas_rear->getScanLimits(min_angle_rear,max_angle_rear);
+        iLas_rear->getHorizontalResolution(angle_step_rear);
+        iLas_rear->getDistanceRange(min_dist_rear,max_dist_rear);
+        hor_res_rear=(int)((max_angle_rear-min_angle_rear)/angle_step_rear);
+        yInfo()<<"Reading rear laser with angle range ("<<min_angle_rear<<max_angle_rear
+              <<") and distance range ("<<min_dist_rear<<max_dist_rear<<")";
+        cv::Rect2d range_p_rear(-max_dist_rear,0.0,max_dist_rear,max_dist_rear);
+        cv::Rect range_px_rear(0,img_size/2,img_size,img_size);
+        l2img_rear=new Laser2Img(range_p_rear,range_px_rear);
 
         return true;
     }
@@ -193,10 +189,10 @@ class ObstDetector : public RFModule
     /****************************************************************/
     bool updateModule() override
     {
-        std::vector<LaserMeasurementData> data_front,data_back;
+        std::vector<LaserMeasurementData> data_front,data_rear;
         double dfront=numeric_limits<double>::infinity();
-        double dback=numeric_limits<double>::infinity();
-        Matrix clusters_front,clusters_back;
+        double drear=numeric_limits<double>::infinity();
+        Matrix clusters_front,clusters_rear;
         if(iLas_front->getLaserMeasurement(data_front))
         {
             // cluster data based on distance
@@ -214,27 +210,27 @@ class ObstDetector : public RFModule
             }
         }
 
-        if(iLas_back->getLaserMeasurement(data_back))
+        if(iLas_rear->getLaserMeasurement(data_rear))
         {
             // cluster data based on distance
             int nclusters;
-            clusters_back=clusterData(data_back,nclusters);
-            if (clusters_back.data())
+            clusters_rear=clusterData(data_rear,nclusters);
+            if (clusters_rear.data())
             {
                 // we keep only clusters with number of points > minpoints
                 vector<int> ids;
-                nclusters=removeOutliers(clusters_back,ids);
-                yInfo()<<"Number of obstacles from back laser"<<nclusters;
+                nclusters=removeOutliers(clusters_rear,ids);
+                yInfo()<<"Number of obstacles from rear laser"<<nclusters;
 
                 // we consider the closest cluster
-                dback=getClosestCluster(clusters_back,ids);
+                drear=getClosestCluster(clusters_rear,ids);
             }
         }
 
-        if (!isinf(dfront) || !isinf(dback))
+        if (!isinf(dfront) || !isinf(drear))
         {
             string laser;
-            double d=getMinDistance(dfront,dback,laser);
+            double d=getMinDistance(dfront,drear,laser);
             yInfo()<<"Closest obstacle at"<<d<<"from"<<laser;
             if (d<dist_obstacle)
             {
@@ -265,7 +261,7 @@ class ObstDetector : public RFModule
             cv::Point robot(imgCv.size().width/2,imgCv.size().height/2);
             cv::circle(imgCv,robot,3,cv::Scalar(0,0,0),-1);
             drawClusters(clusters_front,imgCv,*l2img_front);
-            drawClusters(clusters_back,imgCv,*l2img_back);
+            drawClusters(clusters_rear,imgCv,*l2img_rear);
             drawCircles(imgCv);
             imgOut=yarp::cv::fromCvMat<PixelRgb>(imgCv);
             viewerPort.write();
@@ -281,8 +277,8 @@ class ObstDetector : public RFModule
         {
             double x=c[i][0];
             double y=c[i][1];
-            int xpx=(int)((y-l2img.min_p.x)*(l2img.max_px.x-l2img.min_px.x)/(l2img.max_p.x-l2img.min_p.x)+l2img.min_px.x);
-            int ypx=(int)((x-l2img.min_p.y)*(l2img.max_px.y-l2img.min_px.y)/(l2img.max_p.y-l2img.min_p.y)+l2img.min_px.y);
+            int xpx=(int)((y-l2img.range_p.x)*(l2img.range_px.width-l2img.range_px.x)/(l2img.range_p.width-l2img.range_p.x)+l2img.range_px.x);
+            int ypx=(int)((x-l2img.range_p.y)*(l2img.range_px.height-l2img.range_px.y)/(l2img.range_p.height-l2img.range_p.y)+l2img.range_px.y);
             if (l2img.mirror)
             {
                 xpx=imgCv.size().width-xpx;
@@ -318,14 +314,12 @@ class ObstDetector : public RFModule
         int n=ids.size();
         if (n>0)
         {
-            int closestid=-1;
             Vector dist(n);
             for (int i=0; i<n; i++)
             {
                 int id=ids[i];
                 dist[i]=getClusterDist(c,id);
             }
-            closestid=(std::min_element(dist.begin(),dist.end())-dist.begin());
             return yarp::math::findMin(dist);
         }
         else
@@ -445,7 +439,7 @@ class ObstDetector : public RFModule
         }
         else
         {
-            s="back-laser";
+            s="rear-laser";
             return d2;
         }
     }
@@ -495,14 +489,14 @@ class ObstDetector : public RFModule
         outPort.interrupt();
         viewerPort.interrupt();
         delete l2img_front;
-        delete l2img_back;
+        delete l2img_rear;
         if (drv_front)
         {
             delete drv_front;
         }
-        if (drv_back)
+        if (drv_rear)
         {
-            delete drv_back;
+            delete drv_rear;
         }
         return true;
     }

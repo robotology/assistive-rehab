@@ -32,7 +32,7 @@
 
     <module>
        <name>obstacleDetector</name>
-       <parameters></parameters>
+       <parameters>--robot SIM_CER_ROBOT</parameters>
        <dependencies>
          <port timeout="15">/navController/rpc</port>
        </dependencies>
