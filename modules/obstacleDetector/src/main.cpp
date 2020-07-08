@@ -77,10 +77,10 @@ class ObstDetector : public RFModule
         }
     };
 
-    Laser2Img *l2img_front;
-    Laser2Img *l2img_rear;
+    Laser2Img *l2img_front{nullptr};
+    Laser2Img *l2img_rear{nullptr};
     map<int,cv::Scalar> color_map;
-    int img_size;
+    int img_size{500};
 
     RpcClient navPort;
     BufferedPort<Bottle> outPort;
@@ -99,6 +99,11 @@ class ObstDetector : public RFModule
             return sqrt((a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y)) < threshold;
         }
     };
+
+public:
+
+    /****************************************************************/
+    ObstDetector() {}
 
     /****************************************************************/
     bool configure(ResourceFinder& rf) override
