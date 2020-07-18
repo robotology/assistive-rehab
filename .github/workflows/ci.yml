@@ -120,7 +120,7 @@ jobs:
         cmake --build . --config ${{ matrix.build_type }} --target install 
         # vtk
         cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/Kitware/VTK.git --depth 1 --branch v8.1.0
+        git clone https://github.com/Kitware/VTK.git --depth 1 --branch v9.0.0
         cd VTK && mkdir -p build && cd build
         cmake -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
         cmake --build . --config ${{ matrix.build_type }} --target install 
