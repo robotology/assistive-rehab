@@ -11,6 +11,7 @@ if(VTK_FOUND)
   source_group("IDL Files" FILES src/idl.thrift)
   source_group("DOC Files" FILES ${doc_files})
 
+  include(${VTK_USE_FILE})
   add_executable(${PROJECT_NAME} src/main.cpp src/idl.thrift ${IDL_GEN_FILES} ${doc_files})
   target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src)
   target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
