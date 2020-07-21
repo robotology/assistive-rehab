@@ -44,6 +44,11 @@ class Scaler : public RFModule
     string sel_tag;
     string prev_tag;
 
+public:
+
+    /****************************************************************/
+    Scaler() : hasStarted(false), sel_tag(""), prev_tag("") {}
+
     /****************************************************************/
     bool configure(ResourceFinder &rf)
     {
@@ -55,11 +60,6 @@ class Scaler : public RFModule
 
         nsessions=rf.check("nsessions",Value(0)).asInt();
         tbegin=rf.check("tbegin",Value(0.0)).asDouble();
-
-        hasStarted=false;
-        sel_tag="";
-        prev_tag="";
-
         return true;
     }
 
@@ -197,7 +197,6 @@ class Scaler : public RFModule
         Bottle &content = cmd.addList().addList();
         content.addString("skeleton");
         opcPort.write(cmd, reply);
-
         if(reply.size() > 1)
         {
             if(reply.get(0).asVocab() == Vocab::encode("ack"))
@@ -206,7 +205,6 @@ class Scaler : public RFModule
                 {
                     if(Bottle *idValues = idField->get(1).asList())
                     {
-                        bool hasUpdated=false;
                         for(int i=0; i<idValues->size(); i++)
                         {
                             int id = idValues->get(i).asInt();
@@ -219,41 +217,48 @@ class Scaler : public RFModule
                             content.addInt(id);
                             Bottle replyProp;
                             opcPort.write(cmd, replyProp);
-
-                            if(replyProp.get(0).asVocab() == Vocab::encode("ack"))
-                            {
-                                if(Bottle *propField = replyProp.get(1).asList())
-                                {
-                                    Property prop(propField->toString().c_str());
-                                    string tag=prop.find("tag").asString();
-                                    if(!tag.empty())
-                                    {
-                                        if(prop.check("tag"))
-                                        {
-                                            if(file.find(tag)==string::npos)
-                                            {
-                                                if(!sel_tag.empty() && tag==sel_tag)
-                                                {
-                                                    Skeleton* skel1 = skeleton_factory(prop);
-                                                    skeleton.update(skel1->toProperty());
-                                                    delete skel1;
-                                                }
-                                            }
-                                            else
-                                            {
-                                                Skeleton* skel2 = skeleton_factory(prop);
-                                                playedSkel.update(skel2->toProperty());
-                                                delete skel2;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                            fillSkeletons(replyProp, skeleton, playedSkel);
                         }
                     }
                 }
             }
         }
+    }
+
+    /****************************************************************/
+    void fillSkeletons(const Bottle &replyProp,
+                       SkeletonStd& skeleton, SkeletonStd& playedSkel)
+    {
+        if(replyProp.get(0).asVocab() == Vocab::encode("ack"))
+        {
+            if(Bottle *propField = replyProp.get(1).asList())
+            {
+                Property prop(propField->toString().c_str());
+                string tag=prop.find("tag").asString();
+                if(!tag.empty())
+                {
+                    if(prop.check("tag"))
+                    {
+                        if(file.find(tag)==string::npos)
+                        {
+                            if(!sel_tag.empty() && tag==sel_tag)
+                            {
+                                Skeleton* skel1 = skeleton_factory(prop);
+                                skeleton.update(skel1->toProperty());
+                                delete skel1;
+                            }
+                        }
+                        else
+                        {
+                            Skeleton* skel2 = skeleton_factory(prop);
+                            playedSkel.update(skel2->toProperty());
+                            delete skel2;
+                        }
+                    }
+                }
+            }
+        }
+
     }
 
     /****************************************************************/

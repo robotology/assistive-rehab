@@ -44,7 +44,6 @@ class Tracker : public RFModule {
 
   bool configure(ResourceFinder& rf)override {
     use_pixel = rf.check("use-pixel", Value(true)).asBool();
-    keypoint = KeyPointTag::shoulder_center;
     opc.open("/test-tracker/skeletons:i");
     if (!Network::connect("/opc/broadcast:o", opc.getName())) {
       yError() << "Unable to connect to OPC!";
@@ -147,6 +146,10 @@ class Tracker : public RFModule {
     gaze_tx.close();
     return true;
   }
+
+public:
+
+  Tracker() : keypoint(KeyPointTag::shoulder_center) { }
 };
 
 int main(int argc, char* argv[]) {

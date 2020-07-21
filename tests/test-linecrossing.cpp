@@ -39,6 +39,9 @@ public:
     double threshold;
 
     /********************************************************/
+    CrossingChecker() { }
+
+    /********************************************************/
     bool configure(ResourceFinder &rf) override
     {
         threshold=rf.check("threshold",Value(0.25)).asDouble();

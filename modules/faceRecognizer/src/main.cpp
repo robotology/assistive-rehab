@@ -90,6 +90,11 @@ class Module : public yarp::os::RFModule, public recognition_IDL
 public:
 
     /********************************************************/
+    Module() : frame_counter(0), closing(false), interrupting(false),
+        allowedTrain(false), isLiftArm(true), gotTime(false), sentTrain(false),
+        recognition_started(false) { }
+
+    /********************************************************/
     bool attach(yarp::os::RpcServer &source) override
     {
         return this->yarp().attachAsServer(source);
@@ -224,18 +229,6 @@ public:
         targetInPort.open(("/"+getName("/target:i")).c_str());
 
         port_rpc_classifier.open(("/"+getName("/classifier:io")).c_str());
-
-        frame_counter = 0;
-
-        closing = false;
-        interrupting = false;
-
-        allowedTrain = false;
-
-        isLiftArm = true;
-        gotTime = false;
-        sentTrain = false;
-        recognition_started = false;
 
         thr_query = new QueryThread(rf);
         thr_query->start();

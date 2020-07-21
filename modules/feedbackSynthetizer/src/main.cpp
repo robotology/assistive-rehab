@@ -39,8 +39,8 @@ class SpeechParam
     ostringstream ss;
 public:
     SpeechParam();
-    SpeechParam(const SpeechParam &sp) { ss<<sp.get();}
-    SpeechParam(const string &s) { ss<<s; }
+    explicit SpeechParam(const SpeechParam &sp) { ss<<sp.get();}
+    explicit SpeechParam(const string &s) { ss<<s; }
     string get() const { return ss.str(); }
 };
 
@@ -57,21 +57,29 @@ class Synthetizer : public BufferedPort<Bottle>
     map<string,int> priority_map;
     map<string,string> joint2bodypart;
 
+    string context;
+    string speak_file;
     int speak_length;
     string conj;
     int maxpriority;
+    struct BodyParts
+    {
+        string armLeft;
+        string armRight;
+        string legLeft;
+        string legRight;
+        string torso;
+        string head;
+    } body_parts;
 
 public:
 
     /********************************************************/
-    Synthetizer(const string &moduleName_, const string &context, const string &speak_file,
-                const int speak_length_)
+    Synthetizer(const string &moduleName_, const string &context_, const string &speak_file_,
+                const int speak_length_) : moduleName(moduleName_), context(context_),
+        speak_file(speak_file_), speak_length(speak_length_), maxpriority(0)
     {
-        moduleName = moduleName_;
-        speak_length = speak_length_;
-
-        string armLeft,armRight,legLeft,legRight,torso,head;
-        if(!load_speak(context,speak_file,armLeft,armRight,legLeft,legRight,torso,head))
+        if(!load_speak(context,speak_file,body_parts))
         {
             string msg="Unable to locate file";
             msg+="\""+speak_file+"\"";
@@ -106,18 +114,17 @@ public:
         joint2bodypart[KeyPointTag::head]=BodyPartTag::head;
 
         //translate body part to verbal string
-        bodypart2verbal[BodyPartTag::arm_left]=armLeft;
-        bodypart2verbal[BodyPartTag::arm_right]=armRight;
-        bodypart2verbal[BodyPartTag::leg_left]=legLeft;
-        bodypart2verbal[BodyPartTag::leg_right]=legRight;
-        bodypart2verbal[BodyPartTag::torso]=torso;
-        bodypart2verbal[BodyPartTag::head]=head;
+        bodypart2verbal[BodyPartTag::arm_left]=body_parts.armLeft;
+        bodypart2verbal[BodyPartTag::arm_right]=body_parts.armRight;
+        bodypart2verbal[BodyPartTag::leg_left]=body_parts.legLeft;
+        bodypart2verbal[BodyPartTag::leg_right]=body_parts.legRight;
+        bodypart2verbal[BodyPartTag::torso]=body_parts.torso;
+        bodypart2verbal[BodyPartTag::head]=body_parts.head;
 
         priority_map["speed"]=0;
         priority_map["position-rom"]=1;
         priority_map["perfect"]=2;
         priority_map["position-ep"]=-1;
-        maxpriority=0;
     }
 
     /********************************************************/
@@ -138,8 +145,7 @@ public:
     }
 
     /****************************************************************/
-    bool load_speak(const string &context, const string &speak_file,
-                    string &armLeft, string &armRight, string &legLeft, string &legRight, string &torso, string &head)
+    bool load_speak(const string &context, const string &speak_file, BodyParts &body_parts)
     {
         ResourceFinder rf_speak;
         rf_speak.setDefaultContext(context);
@@ -165,12 +171,12 @@ public:
             yError()<<"Unable to find group \"body\"";
             return false;
         }
-        armLeft = bBody.find("armLeft").asString();
-        armRight = bBody.find("armRight").asString();
-        legLeft = bBody.find("legLeft").asString();
-        legRight = bBody.find("legRight").asString();
-        torso = bBody.find("torso").asString();
-        head = bBody.find("head").asString();
+        body_parts.armLeft = bBody.find("armLeft").asString();
+        body_parts.armRight = bBody.find("armRight").asString();
+        body_parts.legLeft = bBody.find("legLeft").asString();
+        body_parts.legRight = bBody.find("legRight").asString();
+        body_parts.torso = bBody.find("torso").asString();
+        body_parts.head = bBody.find("head").asString();
 
         Bottle &bSpeed=rf_speak.findGroup("speed");
         if (bSpeed.isNull() || !bSpeed.check("key")
@@ -376,7 +382,7 @@ public:
                         params.clear();
                         if(key == "speed" || key == "position-rom")
                         {
-                            params.push_back(joint);
+                            params.push_back(SpeechParam(joint));
                         }
 
                         speak_buffer.clear();
@@ -499,6 +505,8 @@ class Module : public RFModule
     double period;
 
 public:
+    /********************************************************/
+    Module() {}
 
     /********************************************************/
     bool configure(ResourceFinder &rf)

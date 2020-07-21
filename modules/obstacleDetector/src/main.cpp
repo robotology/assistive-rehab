@@ -103,7 +103,7 @@ class ObstDetector : public RFModule
 public:
 
     /****************************************************************/
-    ObstDetector() {}
+    ObstDetector() { }
 
     /****************************************************************/
     bool configure(ResourceFinder& rf) override

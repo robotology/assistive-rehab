@@ -163,11 +163,17 @@ public:
 
 class Tug : public Exercise
 {
-    double finishline_thresh,standing_thresh,distance,time_high,time_medium;
 
 public:
-    Tug(const double &finishline_thresh, const double &standing_thresh, const double &distance,
-        const double &time_high,const double &time_low);
+    struct TugParams
+    {
+        double finishline_thresh;
+        double standing_thresh;
+        double distance;
+        double time_high;
+        double time_medium;
+    } tug_params;
+    Tug(const TugParams &params);
 
     void setFeedbackParams(const yarp::os::Property &p) override {;}
     yarp::sig::Matrix getFeedbackThresholds() override {;}

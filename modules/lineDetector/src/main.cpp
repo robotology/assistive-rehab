@@ -159,9 +159,6 @@ class Detector : public RFModule, public lineDetector_IDL
         detector_params = cv::aruco::DetectorParameters::create();
         detector_params->cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
 
-        start_detection=false;
-        updated_cam=updated_nav=updated_odom=false;
-        camera_configured=false;
         cam_intrinsic=cv::Mat::eye(3,3,CV_64F);
         cam_distortion=cv::Mat::zeros(1,5,CV_64F);
         Bottle &gCamera=rf.findGroup("camera");
@@ -196,7 +193,6 @@ class Detector : public RFModule, public lineDetector_IDL
         }
 
         simulation=rf.check("simulation",Value(false)).asBool();
-        updated_line_viewer=false;
         if (simulation)
         {
             gazeboPort.open("/" + getName() + "/gazebo:rpc");
@@ -475,7 +471,7 @@ class Detector : public RFModule, public lineDetector_IDL
             return false;
         }
         this->line=line;
-        if(line2idx.count(line)<=0)
+        if(line2idx.count(line)==0)
         {
             yWarning()<<"This line does not exist";
             return false;
@@ -770,7 +766,7 @@ class Detector : public RFModule, public lineDetector_IDL
     bool update_odometry(const std::string &line_tag, const double theta) override
     {
         std::lock_guard<std::mutex> lg(mtx_update);
-        if (line2idx.count(line_tag)<=0)
+        if (line2idx.count(line_tag)==0)
         {
             return false;
         }
@@ -930,8 +926,13 @@ class Detector : public RFModule, public lineDetector_IDL
         return false;
     }
 
-};
+public:
 
+    /****************************************************************/
+    Detector() : start_detection(false), updated_cam(false), updated_nav(false),
+        updated_odom(false), camera_configured(false), updated_line_viewer(false) { }
+
+};
 
 
 /****************************************************************/

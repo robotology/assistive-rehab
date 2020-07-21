@@ -33,6 +33,16 @@ using namespace yarp::math;
 using namespace iCub::ctrl;
 using namespace assistive_rehab;
 
+struct JointParams
+{
+    int id;
+    vector<int> freqt;
+    vector<int> freqc;
+    vector<double> stats;
+    Vector dtemplate2target;
+    Vector dcandidate2target;
+};
+
 /********************************************************/
 class Feedback : public RFModule, public feedbackProducer_IDL
 {
@@ -64,6 +74,10 @@ private:
     string part;
 
 public:
+
+    /****************************************************************/
+    Feedback() : started(false), first(true), use_robot_template(0),
+        T(eye(4)), T2(eye(4)) { }
 
     /****************************************************************/
     bool attach(RpcServer &source) override
@@ -263,11 +277,6 @@ public:
         rpcPort.open("/feedbackProducer/rpc");
         attach(rpcPort);
 
-        started = false;
-        first = true;
-        use_robot_template = 0;
-        T = T2 = eye(4);
-
         return true;
     }
 
@@ -339,28 +348,27 @@ public:
     }
 
     /********************************************************/
-    void produceFeedback(const int idx_joint, const vector<int> &freqt, const vector<int> &freqc,
-                         const vector<double> &stats, Bottle &feedback)
+    void produceFeedbackRom(const JointParams &joint, Bottle &feedback)
     {
-        double sx_thresh = feedback_thresholds[0][idx_joint];
-        double sy_thresh = feedback_thresholds[1][idx_joint];
-        double sz_thresh = feedback_thresholds[2][idx_joint];
-        double range_freq = feedback_thresholds[3][idx_joint];
+        double sx_thresh = feedback_thresholds[0][joint.id];
+        double sy_thresh = feedback_thresholds[1][joint.id];
+        double sz_thresh = feedback_thresholds[2][joint.id];
+        double range_freq = feedback_thresholds[3][joint.id];
 
-        double devx = stats[0];
-        double skwnx = stats[1];
-        int ftx = freqt[0];
-        int fcx = freqc[0];
+        double devx = joint.stats[0];
+        double skwnx = joint.stats[1];
+        int ftx = joint.freqt[0];
+        int fcx = joint.freqc[0];
 
-        double devy = stats[2];
-        double skwny = stats[3];
-        int fty = freqt[1];
-        int fcy = freqc[1];
+        double devy = joint.stats[2];
+        double skwny = joint.stats[3];
+        int fty = joint.freqt[1];
+        int fcy = joint.freqc[1];
 
-        double devz = stats[4];
-        double skwnz = stats[5];
-        int ftz = freqt[2];
-        int fcz = freqc[2];
+        double devz = joint.stats[4];
+        double skwnz = joint.stats[5];
+        int ftz = joint.freqt[2];
+        int fcz = joint.freqc[2];
 
         bool joint_templ_stale = ftx < 0 && fty < 0 && ftz < 0;
         bool joint_skel_stale = fcx < 0 && fcy < 0 && fcz < 0;
@@ -459,27 +467,26 @@ public:
     }
 
     /********************************************************/
-    void produceFeedback(const int idx_joint, const Vector &dtemplate2target,
-                         const Vector &dcandidate2target, Bottle &feedback)
+    void produceFeedbackEp(const JointParams &joint, Bottle &feedback)
     {
-        int score_thresh = feedback_thresholds[1][idx_joint];
-        double inliers_thresh = feedback_thresholds[2][idx_joint];
+        int score_thresh = feedback_thresholds[1][joint.id];
+        double inliers_thresh = feedback_thresholds[2][joint.id];
 
         //extract statistics from template
-        double mu_template = gsl_stats_mean(dtemplate2target.data(),1,dtemplate2target.size());
-        double std_template = gsl_stats_sd(dtemplate2target.data(),1,dtemplate2target.size());
+        double mu_template = gsl_stats_mean(joint.dtemplate2target.data(),1,joint.dtemplate2target.size());
+        double std_template = gsl_stats_sd(joint.dtemplate2target.data(),1,joint.dtemplate2target.size());
 
         //count how many points are inside the template distribution
         int count=0;
-        for(size_t i=0; i<dcandidate2target.size(); i++)
+        for(size_t i=0; i<joint.dcandidate2target.size(); i++)
         {
-            double zscorei=(dcandidate2target[i]-mu_template)/std_template;
+            double zscorei=(joint.dcandidate2target[i]-mu_template)/std_template;
             if(zscorei < score_thresh)
                 count++;
         }
 
         //if the number of inliers is not enough, the target is not reached
-        double inliers = ((double)count/dcandidate2target.size());
+        double inliers = ((double)count/joint.dcandidate2target.size());
         yInfo()<< "Template statistics" << mu_template << std_template;
         yInfo()<< "Number of inliers:" << count << inliers;
         if(inliers < inliers_thresh)
@@ -502,6 +509,8 @@ public:
         //for each keypoint in the list
         for(int i=0;i<joint_list.size();i++)
         {
+            JointParams joint;
+            joint.id=i;
             Bottle &feedbackjoint=f.addList();
             string tag=joint_list[i];
             vector<int> freqt,freqc;
@@ -579,7 +588,10 @@ public:
 
             //produce feedback for a single joint
             feedbackjoint.addString(tag);
-            produceFeedback(i,freqt,freqc,stats,feedbackjoint);
+            joint.freqt=freqt;
+            joint.freqc=freqc;
+            joint.stats=stats;
+            produceFeedbackRom(joint,feedbackjoint);
         }
 
         delete dtw;
@@ -594,6 +606,8 @@ public:
         Vector xth,yth,zth,xch,ych,zch;
         for(int i=0;i<joint_list.size();i++)
         {
+            JointParams joint;
+            joint.id=i;
             double radius = feedback_thresholds[0][i];
 
             Bottle &feedbackjoint=f.addList();
@@ -655,7 +669,9 @@ public:
 
             //produce feedback for a single joint
             feedbackjoint.addString(tag);
-            produceFeedback(i,dist_template2target,dist_candidate2target,feedbackjoint);
+            joint.dcandidate2target=dist_candidate2target;
+            joint.dtemplate2target=dist_template2target;
+            produceFeedbackEp(joint,feedbackjoint);
         }
     }
 
