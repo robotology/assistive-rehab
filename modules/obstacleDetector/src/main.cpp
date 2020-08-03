@@ -48,7 +48,7 @@ using namespace cv;
 /****************************************************************/
 class ObstDetector : public RFModule
 {
-    double period{0.0};
+    double period{0.1};
     string module_name{"obstacleDetector"};
     string robot{"cer"};
     PolyDriver *drv_front{nullptr},*drv_rear{nullptr};
@@ -239,13 +239,13 @@ public:
             yInfo()<<"Closest obstacle at"<<d<<"from"<<laser;
             if (d<dist_obstacle)
             {
+                Bottle &obstacle=outPort.prepare();
+                obstacle.clear();
+                obstacle.addDouble(d);
+                obstacle.addString(laser);
+                outPort.write();
                 if (getRobotState()!="idle")
                 {
-                    Bottle &obstacle=outPort.prepare();
-                    obstacle.clear();
-                    obstacle.addDouble(d);
-                    obstacle.addString(laser);
-                    outPort.write();
                     yInfo()<<"Stopping";
                     stopNav();
                 }

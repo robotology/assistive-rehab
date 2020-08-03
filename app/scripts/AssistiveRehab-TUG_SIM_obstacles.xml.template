@@ -19,7 +19,7 @@
 
     <module>
         <name>gazebo</name>
-        <parameters>tug-scenario.world</parameters>
+        <parameters>tug-scenario-obstacles.world</parameters>
         <node>localhost</node>
     </module>
 
