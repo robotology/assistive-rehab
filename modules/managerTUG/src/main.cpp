@@ -691,6 +691,38 @@ public:
 };
 
 /****************************************************************/
+class Speech
+{
+    bool wait{true};
+    bool skip{true};
+    string key{""};
+    vector<shared_ptr<SpeechParam>> params;
+public:
+    explicit Speech(const string &key, const bool &wait=true, const bool &skip=true)
+        : key(key), wait(wait), skip(skip) { }
+
+    void dontWait() { wait=false; }
+    void dontSkip() { skip=false; }
+
+    void setKey(const string &k) { key=k; }
+    string getKey() const { return key; }
+
+    void setParams(const vector<shared_ptr<SpeechParam>> &p) { this->params=p; }
+    vector<shared_ptr<SpeechParam>> getParams() { return this->params; }
+
+    bool hasToWait() const { return wait; }
+    bool hasToSkip() const { return skip; }
+    void reset()
+    {
+        key.clear();
+        wait=true;
+        skip=true;
+        params.clear();
+    }
+
+};
+
+/****************************************************************/
 class Manager : public RFModule, public managerTUG_IDL
 {
     //params
@@ -806,8 +838,7 @@ class Manager : public RFModule, public managerTUG_IDL
     }
 
     /****************************************************************/
-    bool speak(const string &key, const bool wait, const bool &skip=true,
-               const vector<SpeechParam> &p=vector<SpeechParam>())
+    bool speak(Speech &s)
     {
         //if a question was received, we wait until an answer is given, before speaking
         bool received_question=trigger_manager->freeze();
@@ -824,18 +855,26 @@ class Manager : public RFModule, public managerTUG_IDL
                 }
             }
         }
-        if (skip && speak_count_map[key]>0)
+        string key=s.getKey();
+        if (s.hasToSkip() && speak_count_map[key]>0)
         {
             yInfo()<<"Skipping"<<key;
             return true;
         }
-//        yInfo()<<"Speaking"<<key;
-
+        vector<shared_ptr<SpeechParam>> p=s.getParams();
         auto it=speak_map.find(key);
         string value=(it!=end(speak_map)?it->second:speak_map["ouch"]);
+        string value_ext=get_sentence(value,p);
+        reply(value_ext,s.hasToWait(),speechStreamPort,speechRpcPort);
+        speak_count_map[key]+=1;
+        return (it!=end(speak_map));
+    }
 
+    /****************************************************************/
+    string get_sentence(string &value, const vector<shared_ptr<SpeechParam>> &p) const
+    {
         string value_ext;
-        if (!p.empty())
+        if (p.size()>0.0)
         {
             for (size_t i=0;;)
             {
@@ -843,7 +882,7 @@ class Manager : public RFModule, public managerTUG_IDL
                 value_ext+=value.substr(0,pos);
                 if (i<p.size())
                 {
-                    value_ext+=p[i++].get();
+                    value_ext+=p[i++]->get();
                 }
                 if (pos==string::npos)
                 {
@@ -855,12 +894,8 @@ class Manager : public RFModule, public managerTUG_IDL
         else
         {
             value_ext=value;
-        }
-
-        reply(value_ext,wait,speechStreamPort,speechRpcPort);
-
-        speak_count_map[key]+=1;
-        return (it!=end(speak_map));
+        }        
+        return value_ext;
     }
 
     /****************************************************************/
@@ -978,19 +1013,7 @@ class Manager : public RFModule, public managerTUG_IDL
         send_stop(analyzerPort);
         if (simulation)
         {
-            string s=get_animation();
-            if (s=="stand_up")
-            {
-                play_from_last();
-            }
-            else if (s=="sitting" || s=="sit_down")
-            {
-                play_animation("sitting");
-            }
-            else if (s=="walk")
-            {
-                play_from_last();
-            }
+            resume_animation();
         }
         if (lock)
         {
@@ -1009,16 +1032,27 @@ class Manager : public RFModule, public managerTUG_IDL
                 ret=set_auto();
             }
         }
-        if (state!=State::obstacle)
-        {
-            state=State::idle;
-        }
-        else
-        {
-            state=State::stopped;
-        }
+        state=(state!=State::obstacle) ? State::idle : State::stopped;
         t0=Time::now();
         return ret;
+    }
+
+    /****************************************************************/
+    void resume_animation()
+    {
+        string s=get_animation();
+        if (s=="stand_up")
+        {
+            play_from_last();
+        }
+        else if (s=="sitting" || s=="sit_down")
+        {
+            play_animation("sitting");
+        }
+        else if (s=="walk")
+        {
+            play_from_last();
+        }
     }
 
     /****************************************************************/
@@ -1330,16 +1364,16 @@ class Manager : public RFModule, public managerTUG_IDL
     bool updateModule() override
     {
         lock_guard<mutex> lg(mtx);
-        if((analyzerPort.getOutputCount()==0) || (speechStreamPort.getOutputCount()==0) ||
-                (speechRpcPort.getOutputCount()==0) || (attentionPort.getOutputCount()==0) ||
-                (navigationPort.getOutputCount()==0) || (leftarmPort.getOutputCount()==0) ||
-                (rightarmPort.getOutputCount())==0 || (opcPort.getInputCount()==0) ||
-                (obstaclePort.getInputCount()==0) || !answer_manager->connected())
-        {
-            yInfo()<<"not connected";
-            connected=false;
-            return true;
-        }
+//        if((analyzerPort.getOutputCount()==0) || (speechStreamPort.getOutputCount()==0) ||
+//                (speechRpcPort.getOutputCount()==0) || (attentionPort.getOutputCount()==0) ||
+//                (navigationPort.getOutputCount()==0) || (leftarmPort.getOutputCount()==0) ||
+//                (rightarmPort.getOutputCount())==0 || (opcPort.getInputCount()==0) ||
+//                (obstaclePort.getInputCount()==0) || !answer_manager->connected())
+//        {
+//            yInfo()<<"not connected";
+//            connected=false;
+//            return true;
+//        }
         if (lock)
         {
             if ((lockerPort.getOutputCount()==0))
@@ -1398,7 +1432,8 @@ class Manager : public RFModule, public managerTUG_IDL
                     gazeboPort.write(cmd,rep);
                     if (rep.get(0).asString()!="sitting" && rep.get(0).asString()!="stand")
                     {
-                        speak("stop",false,false);
+                        Speech s("stop",false,false);
+                        speak(s);
                         cmd.clear();
                         rep.clear();
                         cmd.addString("pause");
@@ -1406,16 +1441,18 @@ class Manager : public RFModule, public managerTUG_IDL
                     }
                 }
                 string laser=obstacle_manager->whichLaser();
-                vector<SpeechParam> p;
+                vector<shared_ptr<SpeechParam>> p;
                 if (laser=="rear-laser")
                 {
-                    p.push_back(laser_adverb[0]);
+                    p.push_back(shared_ptr<SpeechParam>(new SpeechParam(laser_adverb[0])));
                 }
                 else if (laser=="front-laser")
                 {
-                    p.push_back(laser_adverb[1]);
+                    p.push_back(shared_ptr<SpeechParam>(new SpeechParam(laser_adverb[1])));
                 }
-                speak("obstacle",true,false,p);
+                Speech s("obstacle",true,false);
+                s.setParams(p);
+                speak(s);
                 reinforce_obstacle_cnt++;
                 t0=Time::now();
             }
@@ -1423,13 +1460,15 @@ class Manager : public RFModule, public managerTUG_IDL
             {
                 if (reinforce_obstacle_cnt<=1)
                 {
-                    speak("reinforce-obstacle",true,false);
+                    Speech s("reinforce-obstacle",true,false);
+                    speak(s);
                     reinforce_obstacle_cnt++;
                     t0=Time::now();
                 }
                 else
                 {
-                    speak("end",true,false);
+                    Speech s("end",true,false);
+                    speak(s);
                     disengage();
                     reinforce_obstacle_cnt=0;
                 }
@@ -1524,7 +1563,8 @@ class Manager : public RFModule, public managerTUG_IDL
                 Bottle cmd,rep;
                 cmd.addString("stop");
                 analyzerPort.write(cmd,rep);
-                speak("disengaged",true);
+                Speech s("disengaged");
+                speak(s);
                 disengage();
                 return true;
             }
@@ -1554,29 +1594,7 @@ class Manager : public RFModule, public managerTUG_IDL
             prev_state=state;
             if (findLocked(follow_tag) && is_follow_tag_ahead)
             {
-                tag=follow_tag;
-                Bottle cmd,rep;
-                cmd.addString("look");
-                cmd.addString(tag);
-                cmd.addString(KeyPointTag::shoulder_center);
-                if (attentionPort.write(cmd,rep))
-                {
-                    if (rep.get(0).asVocab()==ok)
-                    {
-                        yInfo()<<"Following"<<tag;
-                        if (!simulation)
-                        {
-                            vector<SpeechParam> p;
-                            p.push_back(SpeechParam(tag[0]!='#'?tag:string("")));
-                            speak("invite-start",true,true,p);
-                            speak("engage",true);
-                        }
-                        state=State::follow;
-                        encourage_cnt=0;
-                        reinforce_engage_cnt=0;
-                        t0=Time::now();
-                    }
-                }
+                follow(follow_tag);
             }
         }
 
@@ -1585,29 +1603,7 @@ class Manager : public RFModule, public managerTUG_IDL
             prev_state=state;
             if (!follow_tag.empty() && is_follow_tag_ahead)
             {
-                tag=follow_tag;
-                Bottle cmd,rep;
-                cmd.addString("look");
-                cmd.addString(tag);
-                cmd.addString(KeyPointTag::shoulder_center);
-                if (attentionPort.write(cmd,rep))
-                {
-                    if (rep.get(0).asVocab()==ok)
-                    {
-                        yInfo()<<"Following"<<tag;
-                        if (!simulation)
-                        {
-                            vector<SpeechParam> p;
-                            p.push_back(SpeechParam(tag[0]!='#'?tag:string("")));
-                            speak("invite-start",true,true,p);
-                            speak("engage",true);
-                        }
-                        state=State::follow;
-                        encourage_cnt=0;
-                        reinforce_engage_cnt=0;
-                        t0=Time::now();
-                    }
-                }
+                follow(follow_tag);
             }
         }
 
@@ -1616,10 +1612,14 @@ class Manager : public RFModule, public managerTUG_IDL
             prev_state=state;
             if (simulation)
             {
-                vector<SpeechParam> p;
-                p.push_back(SpeechParam(tag[0]!='#'?tag:string("")));
-                speak("engage-start",true,true,p);
-                speak("questions-sim",true);
+                vector<shared_ptr<SpeechParam>> p;
+                p.push_back((shared_ptr<SpeechParam>(new SpeechParam(tag[0]!='#'?tag:string("")))));
+                Speech s("engage-start");
+                s.setParams(p);
+                speak(s);
+                s.reset();
+                s.setKey("questions-sim");
+                speak(s);
                 if (detect_hand_up)
                 {
                     hand_manager->set_tag(tag);
@@ -1635,8 +1635,11 @@ class Manager : public RFModule, public managerTUG_IDL
                 {
                     if (rep.get(0).asVocab()==ok)
                     {
-                        speak("accepted",true);
-                        speak("questions",true);
+                        Speech s("accepted");
+                        speak(s);
+                        s.reset();
+                        s.setKey("questions");
+                        speak(s);
                         if (detect_hand_up)
                         {
                             hand_manager->set_tag(tag);
@@ -1647,12 +1650,14 @@ class Manager : public RFModule, public managerTUG_IDL
                     {
                         if (++reinforce_engage_cnt<=1)
                         {
-                            speak("reinforce-engage",true);
+                            Speech s("reinforce-engage");
+                            speak(s);
                             t0=Time::now();
                         }
                         else
                         {
-                            speak("disengaged",true);
+                            Speech s("disengaged");
+                            speak(s);
                             disengage();
                         }
                     }
@@ -1756,7 +1761,8 @@ class Manager : public RFModule, public managerTUG_IDL
                 if (rep.get(0).asString()=="stand")
                 {
                     point(pointing_start,part,true);
-                    speak("sit",true);
+                    Speech s("sit");
+                    speak(s);
                     point(pointing_home,part,false);
                     cmd.clear();
                     rep.clear();
@@ -1768,7 +1774,8 @@ class Manager : public RFModule, public managerTUG_IDL
             else
             {
                 point(pointing_start,part,true);
-                speak("sit",true);
+                Speech s("sit");
+                speak(s);
                 point(pointing_home,part,false);
             }
             state=obstacle_manager->hasObstacle()
@@ -1779,8 +1786,11 @@ class Manager : public RFModule, public managerTUG_IDL
         if (state==State::explain)
         {
             prev_state=state;
-            speak("explain-start",true);
-            speak("explain-walk",true);
+            Speech s("explain-start");
+            speak(s);
+            s.reset();
+            s.setKey("explain-walk");
+            speak(s);
             Bottle cmd,rep;
             cmd.addString("is_following");
             if (attentionPort.write(cmd,rep))
@@ -1850,9 +1860,13 @@ class Manager : public RFModule, public managerTUG_IDL
             prev_state=state;
             string part=which_part();
             point(pointing_finish,part,false);
-            speak("explain-line",true);
+            Speech s("explain-line");
+            speak(s);
             point(pointing_home,part,false);
-            speak("explain-end",false);
+            s.reset();
+            s.setKey("explain-end");
+            s.dontWait();
+            speak(s);
             state=obstacle_manager->hasObstacle()
                     ? State::obstacle : State::starting;
             reinforce_obstacle_cnt=0;
@@ -1875,8 +1889,12 @@ class Manager : public RFModule, public managerTUG_IDL
                     cmd.addString(KeyPointTag::hip_center);
                     if (attentionPort.write(cmd,rep))
                     {
-                        speak("ready",true);
-                        speak("go",false);
+                        Speech s("ready");
+                        speak(s);
+                        s.reset();
+                        s.setKey("go");
+                        s.dontWait();
+                        speak(s);
                         if (simulation)
                         {
                             cmd.clear();
@@ -1889,41 +1907,13 @@ class Manager : public RFModule, public managerTUG_IDL
                             {
                                 if (rep.get(0).asVocab()==ok)
                                 {
-                                    cmd.clear();
-                                    rep.clear();
-                                    cmd.addString("start");
-                                    cmd.addInt(0);
-                                    if (analyzerPort.write(cmd,rep))
-                                    {
-                                        if (rep.get(0).asVocab()==ok)
-                                        {
-                                            state=obstacle_manager->hasObstacle()
-                                                    ? State::obstacle : State::assess_standing;
-                                            reinforce_obstacle_cnt=0;
-                                            t0=tstart=Time::now();
-                                            yInfo()<<"Start!";
-                                        }
-                                    }
+                                    start_interaction();
                                 }
                             }
                         }
                         else
                         {
-                            cmd.clear();
-                            rep.clear();
-                            cmd.addString("start");
-                            cmd.addInt(0);
-                            if (analyzerPort.write(cmd,rep))
-                            {
-                                if (rep.get(0).asVocab()==ok)
-                                {
-                                    state=obstacle_manager->hasObstacle()
-                                            ? State::obstacle : State::assess_standing;
-                                    reinforce_obstacle_cnt=0;
-                                    t0=tstart=Time::now();
-                                    yInfo()<<"Start!";
-                                }
-                            }
+                            start_interaction();
                         }
                     }
                 }
@@ -1982,7 +1972,8 @@ class Manager : public RFModule, public managerTUG_IDL
                 {
                     if(++encourage_cnt<=1)
                     {
-                        speak("encourage",false);
+                        Speech s("encourage",false);
+                        speak(s);
                         t0=Time::now();
                     }
                     else
@@ -2004,7 +1995,8 @@ class Manager : public RFModule, public managerTUG_IDL
                 state=obstacle_manager->hasObstacle()
                         ? State::obstacle : State::line_crossed;
                 reinforce_obstacle_cnt=0;
-                speak("line-crossed",true);
+                Speech s("line-crossed");
+                speak(s);
                 encourage_cnt=0;
                 t0=Time::now();
             }
@@ -2013,27 +2005,15 @@ class Manager : public RFModule, public managerTUG_IDL
                 if(human_state=="sitting")
                 {
                     yInfo()<<"Test finished but line not crossed";
-                    speak("not-crossed",false);
+                    Speech s("not-crossed",false);
+                    speak(s);
                     state=obstacle_manager->hasObstacle()
                             ? State::obstacle : State::not_passed;
                     reinforce_obstacle_cnt=0;
                 }
                 else
                 {
-                    if((Time::now()-t0)>20.0)
-                    {
-                        if(++encourage_cnt<=1)
-                        {
-                            speak("encourage",false);
-                            t0=Time::now();
-                        }
-                        else
-                        {
-                            state=obstacle_manager->hasObstacle()
-                                    ? State::obstacle : State::not_passed;
-                            reinforce_obstacle_cnt=0;
-                        }
-                    }
+                    encourage(20.0);
                 }
             }
         }
@@ -2052,22 +2032,7 @@ class Manager : public RFModule, public managerTUG_IDL
             }
             else
             {
-                if((Time::now()-t0)>30.0)
-                {
-                    if(++encourage_cnt<=1)
-                    {
-                        speak("encourage",false);
-                        t0=Time::now();
-                    }
-                    else
-                    {
-                        state=obstacle_manager->hasObstacle()
-                                ? State::obstacle : State::not_passed;
-                        reinforce_obstacle_cnt=0;
-                        t=Time::now()-tstart;
-                        yInfo()<<"Not passed in"<<t<<"seconds";
-                    }
-                }
+                encourage(30.0);
             }
         }
 
@@ -2075,13 +2040,17 @@ class Manager : public RFModule, public managerTUG_IDL
         {
             prev_state=state;
             yInfo()<<"Test finished in"<<t<<"seconds";
-            vector<SpeechParam> p;
-            p.push_back(round(t*10.0)/10.0);
+            vector<shared_ptr<SpeechParam>> p;
+            p.push_back(shared_ptr<SpeechParam>(new SpeechParam(round(t*10.0)/10.0)));
             Bottle cmd,rep;
             cmd.addString("stop");
             analyzerPort.write(cmd,rep);
-            speak("assess-high",true,true,p);
-            speak("greetings",true);
+            Speech s("assess-high");
+            s.setParams(p);
+            speak(s);
+            s.reset();
+            s.setKey("greetings");
+            speak(s);
             disengage();
         }
 
@@ -2091,13 +2060,90 @@ class Manager : public RFModule, public managerTUG_IDL
             Bottle cmd,rep;
             cmd.addString("stop");
             analyzerPort.write(cmd,rep);
-            speak("end",true);
-            speak("assess-low",true);
-            speak("greetings",true);
+            Speech s("end",true,false);
+            speak(s);
+            s.reset();
+            s.setKey("assess-low");
+            speak(s);
+            s.reset();
+            s.setKey("greetings");
+            speak(s);
             disengage();
         }
 
         return true;
+    }
+
+    /****************************************************************/
+    void follow(const string &follow_tag)
+    {
+        tag=follow_tag;
+        Bottle cmd,rep;
+        cmd.addString("look");
+        cmd.addString(tag);
+        cmd.addString(KeyPointTag::shoulder_center);
+        if (attentionPort.write(cmd,rep))
+        {
+            if (rep.get(0).asVocab()==ok)
+            {
+                yInfo()<<"Following"<<tag;
+                if (!simulation)
+                {
+                    vector<shared_ptr<SpeechParam>> p;
+                    p.push_back(shared_ptr<SpeechParam>(new SpeechParam(tag[0]!='#'?tag:string(""))));
+                    Speech s("invite-start");
+                    s.setParams(p);
+                    speak(s);
+                    s.reset();
+                    s.setKey("engage");
+                    speak(s);
+                }
+                state=State::follow;
+                encourage_cnt=0;
+                reinforce_engage_cnt=0;
+                t0=Time::now();
+            }
+        }
+    }
+
+    /****************************************************************/
+    void encourage(const double &timeout)
+    {
+        if((Time::now()-t0)>timeout)
+        {
+            if(++encourage_cnt<=1)
+            {
+                Speech s("encourage",false,true);
+                speak(s);
+                t0=Time::now();
+            }
+            else
+            {
+                state=obstacle_manager->hasObstacle()
+                        ? State::obstacle : State::not_passed;
+                reinforce_obstacle_cnt=0;
+                t=Time::now()-tstart;
+            }
+        }
+    }
+
+    /****************************************************************/
+    void start_interaction()
+    {
+        Bottle cmd,rep;
+        cmd.addString("start");
+        cmd.addInt(0);
+        if (analyzerPort.write(cmd,rep))
+        {
+            if (rep.get(0).asVocab()==ok)
+            {
+                state=obstacle_manager->hasObstacle()
+                        ? State::obstacle : State::assess_standing;
+                reinforce_obstacle_cnt=0;
+                t0=tstart=Time::now();
+                yInfo()<<"Start!";
+            }
+        }
     }
 
     /****************************************************************/
