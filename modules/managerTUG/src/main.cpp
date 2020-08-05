@@ -1205,7 +1205,7 @@ class Manager : public RFModule, public managerTUG_IDL
             }
         }
 
-        starting_pose={1.5,-3.0,110.0};
+        starting_pose={1.1,-2.8,110.0};
         if(rf.check("starting-pose"))
         {
             if (Bottle *sp=rf.find("starting-pose").asList())
@@ -1364,16 +1364,16 @@ class Manager : public RFModule, public managerTUG_IDL
     bool updateModule() override
     {
         lock_guard<mutex> lg(mtx);
-//        if((analyzerPort.getOutputCount()==0) || (speechStreamPort.getOutputCount()==0) ||
-//                (speechRpcPort.getOutputCount()==0) || (attentionPort.getOutputCount()==0) ||
-//                (navigationPort.getOutputCount()==0) || (leftarmPort.getOutputCount()==0) ||
-//                (rightarmPort.getOutputCount())==0 || (opcPort.getInputCount()==0) ||
-//                (obstaclePort.getInputCount()==0) || !answer_manager->connected())
-//        {
-//            yInfo()<<"not connected";
-//            connected=false;
-//            return true;
-//        }
+        if((analyzerPort.getOutputCount()==0) || (speechStreamPort.getOutputCount()==0) ||
+                (speechRpcPort.getOutputCount()==0) || (attentionPort.getOutputCount()==0) ||
+                (navigationPort.getOutputCount()==0) || (leftarmPort.getOutputCount()==0) ||
+                (rightarmPort.getOutputCount())==0 || (opcPort.getInputCount()==0) ||
+                (obstaclePort.getInputCount()==0) || !answer_manager->connected())
+        {
+            yInfo()<<"not connected";
+            connected=false;
+            return true;
+        }
         if (lock)
         {
             if ((lockerPort.getOutputCount()==0))
@@ -1528,9 +1528,8 @@ class Manager : public RFModule, public managerTUG_IDL
                 //frame world
                 double y=rep.get(1).asDouble();
                 double x=rep.get(2).asDouble();
-                double z=rep.get(3).asDouble();
 
-                double r=sqrt(x*x+y*y+z*z);
+                double r=sqrt(x*x+y*y);
                 double azi=(180.0/M_PI)*atan2(y,x);
                 is_follow_tag_ahead=(r>engage_distance[0]) && (r<engage_distance[1]) &&
                                     (azi>engage_azimuth[0]) && (azi<engage_azimuth[1]);
