@@ -15,10 +15,10 @@
   <arguments>
     <param default="0.1" desc="Periodicity of the module (s).">period</param>
     <param default="obstacleDetector" desc="Name of the module.">name</param>
-    <param default="SIM_CER_ROBOT" desc="Name of the robot to read laser data from.">robot</param>
-    <param default="0.5" desc="Minimum distance between laser points to cluster them (m).">dist-thresh</param>
-    <param default="1.5" desc="Distance from the obstacle to stop the navigation (m).">dist-obstacle</param>
-    <param default="5" desc="Minimum number of points the cluster can include to be considered valid.">min-points</param>
+    <param default="cer" desc="Name of the robot to read laser data from.">robot</param>
+    <param default="0.3" desc="Minimum distance between laser points to cluster them (m).">dist-thresh</param>
+    <param default="1.0" desc="Distance from the obstacle to stop the navigation (m).">dist-obstacle</param>
+    <param default="3" desc="Minimum number of points the cluster can include to be considered valid.">min-points</param>
     <param default="1.0" desc="Vertical resolution shown on the image (Every ver-step a circle is shown).">ver-step</param>
   </arguments>
 

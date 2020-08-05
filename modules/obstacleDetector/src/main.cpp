@@ -60,9 +60,9 @@ class ObstDetector : public RFModule
     double max_dist_front{0.0},max_dist_rear{0.0};
     int hor_res_front{0},hor_res_rear{0};
     double ver_step{1.0};
-    double dist_thresh{0.5};
+    double dist_thresh{0.3};
     double dist_obstacle{1.5};
-    int min_points{4};
+    int min_points{3};
 
     struct Laser2Img
     {
@@ -111,9 +111,9 @@ public:
         period=rf.check("period",Value(0.1)).asDouble();
         module_name=rf.check("name",Value("obstacleDetector")).asString();
         robot=rf.check("robot",Value("cer")).asString();
-        dist_thresh=rf.check("dist-thresh",Value(0.5)).asDouble();
-        dist_obstacle=rf.check("dist-obstacle",Value(1.5)).asDouble();
-        min_points=rf.check("min-points",Value(4)).asInt();
+        dist_thresh=rf.check("dist-thresh",Value(0.3)).asDouble();
+        dist_obstacle=rf.check("dist-obstacle",Value(1.0)).asDouble();
+        min_points=rf.check("min-points",Value(3)).asInt();
         ver_step=rf.check("ver-step",Value(1.0)).asDouble();
 
         navPort.open("/"+module_name+"/nav:rpc");
