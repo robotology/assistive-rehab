@@ -420,7 +420,6 @@ public:
         lock_guard<mutex> lg(mtx);
         if(!silent)
         {
-            replied=false;
             yInfo()<<"Trying to answer...";
             string keyword=getAnswer(answer);
             replied=reply(speak_map[keyword],true,*speechPort,*speechRpc);
@@ -529,6 +528,13 @@ public:
     {
         lock_guard<mutex> lg(mtx);
         return replied;
+    }
+
+    /********************************************************/
+    void reset()
+    {
+        lock_guard<mutex> lg(mtx);
+        replied=false;
     }
 };
 
@@ -1415,8 +1421,9 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::frozen)
         {
-            if (trigger_manager->restore())
+            if (answer_manager->hasReplied())
             {
+                answer_manager->reset();
                 state=prev_state;
             }
         }
@@ -1475,18 +1482,6 @@ class Manager : public RFModule, public managerTUG_IDL
             }
         }
 
-        if (state>=State::obstacle)
-        {
-            if (obstacle_manager->hasObstacle())
-            {
-                state=State::obstacle;
-            }
-            else
-            {
-                state=prev_state;
-            }
-        }
-
         if (state>State::frozen)
         {
             if (trigger_manager->freeze())
@@ -1516,6 +1511,22 @@ class Manager : public RFModule, public managerTUG_IDL
                 state=State::frozen;
             }
         }
+
+        if (state>=State::obstacle)
+        {
+            if (obstacle_manager->hasObstacle())
+            {
+                state=State::obstacle;
+            }
+            else
+            {
+                if (state!=State::frozen)
+                {
+                    state=prev_state;
+                }
+            }
+        }
+
 
         string follow_tag("");
         bool is_follow_tag_ahead=false;
@@ -1556,7 +1567,6 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state>=State::follow)
         {
-            prev_state=state;
             if (follow_tag!=tag)
             {
                 Bottle cmd,rep;
@@ -2221,6 +2231,7 @@ class Manager : public RFModule, public managerTUG_IDL
                 can_point=answer_manager->hasReplied();
                 if (can_point)
                 {
+                    answer_manager->reset();
                     break;
                 }
             }
