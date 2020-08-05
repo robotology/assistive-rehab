@@ -73,6 +73,7 @@ class ObstacleManager : public PeriodicThread
     double tlast;
     bool silent;
     bool found;
+    bool first;
     string laser;
 
 public:
@@ -85,6 +86,7 @@ public:
         this->obstaclePort=obstaclePort;
         silent=true;
         found=false;
+        first=true;
         tlast=Time::now();
     }
 
@@ -101,12 +103,24 @@ public:
             lock_guard<mutex> lg(mtx);
             if (Bottle *input=obstaclePort->read(false))
             {
-                found=true;
-                laser=input->get(1).asString();
-                tlast=Time::now();
+                // we check the frequency of occurrence is small
+                // otherwise it might be a false positive
+                if ((Time::now()-tlast)<0.2)
+                {
+                    found=true;
+                    laser=input->get(1).asString();
+                    tlast=Time::now();
+                }
+
+                if (first)
+                {
+                    tlast=Time::now();
+                    first=false;
+                }
             }
             else
             {
+                // if we don't detect obstacle for at least 0.5 seconds
                 if ((Time::now()-tlast)>0.5)
                 {
                     found=false;
@@ -138,6 +152,7 @@ public:
     {
         silent=true;
         found=false;
+        first=true;
     }    
 };
 
