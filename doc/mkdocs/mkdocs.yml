@@ -65,8 +65,8 @@ nav:
         - How to temporally align two signals: 'align_signals.md'
         - How to run the rehabilitation demos: 'main_apps.md'
         - How to run the virtual demo: 'virtual_demo.md'
-        - How to detect Aruco boards in gazebo: 'aruco_gazebo.md'
-        - How to run the TUG demo in gazebo: 'tug_sim_demo.md'
+        - How to detect the TUG lines: 'tug_lines.md'
+        - How to run the TUG demo: 'tug_demo.md'
         - How to use the gazebo plugin: 'gazebo_plugin.md'
         - How to configure the wifi button: 'wifi_button.md'
     - Milestones:

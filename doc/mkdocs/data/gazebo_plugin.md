@@ -110,7 +110,7 @@ Additionally, you can play the single animations associated to the actor or play
 !!! example
     Playing a single animation of the script is useful when you need a condition to be accomplished before the specific animation is played.
     For example, in the TUG scenario, we want the actor to sit or to start walking only when the robot gives the related command.
-    You can check it out [here](tug_sim_demo.md).
+    You can check it out [here](tug_demo.md).
 
 ### Changing walking parameters
 

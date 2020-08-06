@@ -8,7 +8,7 @@ What's new?
 
 [![questions](https://user-images.githubusercontent.com/9716288/82469863-e5ecf280-9ac4-11ea-900e-53e96ee3267d.png)](https://youtu.be/b7_848Rt98E)
 
-Follow the [tutorial](tug_sim_demo.md) to run the demo in `gazebo`!
+Follow the [tutorial](tug_demo.md) to run the demo in `gazebo`!
 
 !!! tip
     Click on the image to open the video!
@@ -32,7 +32,7 @@ Follow the [tutorial](tug_sim_demo.md) to run the demo in `gazebo`!
     The robot can answer a *selected set* of questions related to the TUG. The interaction is still flexible as questions can be posed by the user in natural language, thanks to the capability of the system to interpret the question, rather than simply recognize it.
 
 
-__March 19, 2020__ : Added new [tutorial](aruco_gazebo.md) to detect Aruco boards in `gazebo`. Check it out!
+__March 19, 2020__ : Added new [tutorial](tug_lines.md) to detect Aruco boards in `gazebo`. Check it out!
 
 __July 10, 2019__ : Checkout our latest [release v0.4.0](https://github.com/robotology/assistive-rehab/releases/tag/v0.4.0)!
 

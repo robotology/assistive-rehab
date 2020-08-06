@@ -3,7 +3,7 @@
 This tutorial will show you how to configure the [Mystrom wifi button](https://mystrom.ch/wifi-button/).
 
 !!! important
-    This is required if you want to run the [TUG demo](tug_sim_demo.md) with the speech interaction.
+    This is required if you want to run the [TUG demo](tug_demo.md) with the speech interaction.
 
 ## Using the app
 
@@ -62,7 +62,7 @@ The output will be a `json` object with the mac address (without delimiters) and
 Now we want to set the button such that it sends a `POST` request to our IP if pressed once, which corresponds to the `single` action.
 
 !!! Note "Additional actions"
-    For the [TUG demo](tug_sim_demo,md), we only use the `single` action. As explained [here](https://api.mystrom.ch/?version=latest#d973b006-3400-43a6-a653-138dfda2afb9), this button also allows you to set `double` (http request executed when pressing the button twice) and `long` (http request executed when pressing the button long).
+    For the [TUG demo](tug_demo,md), we only use the `single` action. As explained [here](https://api.mystrom.ch/?version=latest#d973b006-3400-43a6-a653-138dfda2afb9), this button also allows you to set `double` (http request executed when pressing the button twice) and `long` (http request executed when pressing the button long).
 
 !!! Question "Not familiar with http requests?"
     Check [this](https://www.tutorialspoint.com/http/http_requests.htm) out!
@@ -95,7 +95,7 @@ where:
 In this way, we set the `single` action, which corresponds to the http request executed when pressing the button once.
 
 !!! important
-    If you want to use the wifi button to run the [TUG demo](tug_sim_demo.md), configure the `single` action to send a `POST` request to the machine where you run `node-button.js`.
+    If you want to use the wifi button to run the [TUG demo](tug_demo.md), configure the `single` action to send a `POST` request to the machine where you run `node-button.js`.
 
 !!! tip
     To set `double` or `long` action, you can follow the same procedure and replace in the `curl` command `single` with the action you want to configure.
