@@ -48,7 +48,7 @@ jobs:
       if: matrix.os == 'windows-latest'
       shell: bash
       run: |
-        ${VCPKG_INSTALLATION_ROOT}/vcpkg.exe install --overlay-ports=C:/robotology/robotology-vcpkg-ports --recurse --triplet x64-windows opencv[contrib] vtk hdf5 fftw3
+        ${VCPKG_INSTALLATION_ROOT}/vcpkg.exe install --overlay-ports=C:/robotology/robotology-vcpkg-binary-ports --recurse --triplet x64-windows opencv[contrib] vtk hdf5 fftw3
 
     - name: Install Dependencies [Ubuntu]
       if: matrix.os == 'ubuntu-latest'
