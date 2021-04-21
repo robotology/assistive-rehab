@@ -97,7 +97,7 @@
     <connection>
         <from>/yarpOpenPose/float:o</from>
         <to>/viewer/depth</to>
-        <protocol>fast_tcp+recv.portmonitor+type.dll+file.depthimage</protocol>
+        <protocol>fast_tcp+recv.portmonitor+type.dll+file.depthimage_to_mono</protocol>
     </connection>
 
     <connection>

@@ -259,7 +259,7 @@
     <connection>
         <from>/SIM_CER_ROBOT/depthCamera/depthImage:o</from>
         <to>/yarpOpenPose/float:i</to>
-        <protocol>fast_tcp+send.portmonitor+file.zfp+recv.portmonitor+file.zfp+type.dll</protocol>
+        <protocol>fast_tcp+send.portmonitor+file.depthimage_compression_zfp+recv.portmonitor+file.depthimage_compression_zfp+type.dll</protocol>
     </connection>
 
 
