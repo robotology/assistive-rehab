@@ -1,6 +1,22 @@
 # Latest news
 
-__May 22, 2020__ : Checkout our latest release [v0.5.0](https://github.com/robotology/assistive-rehab/releases/tag/v0.5.0)!
+__May 4, 2021__ : Checkout our latest release [v0.6.0](https://github.com/robotology/assistive-rehab/releases/tag/v0.6.0)!
+
+What's new?
+
+- We developed the `obstacleDetector` module which clusters data received from front and back lasers, by means of Euclidean distance and stops the navigation when the robot reaches a threshold distance (`1.5 m`) from the closest obstacle: 
+
+![clusters-front-opt](https://user-images.githubusercontent.com/9716288/86763488-a879ff80-c047-11ea-85e1-2e0c4084c637.gif)
+
+
+- The obstacle detection has been included into the clinical test Timed Up and Go ([TUG](TUG.md))! If an obstacle is found within a radius of `1.5 m` around the robot (within the rear and front laser FOVs), the interaction is frozen and the robot asks to remove the obstacle. The interaction does not start until the obstacle is removed (within a timeout).
+
+Checkout the video:
+
+[![TUG_obstacle](https://user-images.githubusercontent.com/9716288/117007084-7f6adf80-ace9-11eb-9cf0-cd4f31a8797d.png)](https://www.youtube.com/watch?v=LHYnf3COj30)
+
+
+__May 22, 2020__ : Checkout our latest release [v0.5.0](https://github.com/robotology/assistive-rehab/releases/tag/v0.5.0)! 
 
 What's new?
 
