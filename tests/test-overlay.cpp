@@ -167,6 +167,9 @@ class Overlayer : public RFModule
         ovlPort.close();
         return true;
     }
+
+public:
+    Overlayer() { }
 };
 
 int main(int argc, char *argv[])

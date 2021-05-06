@@ -826,6 +826,9 @@ class Module : public yarp::os::RFModule, public humanStructure_IDLServer
 public:
 
     /********************************************************/
+    Module() : closing(false) { }
+
+    /********************************************************/
     bool configure(yarp::os::ResourceFinder &rf)
     {
         this->rf=&rf;
@@ -835,8 +838,6 @@ public:
         setName(moduleName.c_str());
 
         rpcPort.open(("/"+getName("/rpc")).c_str());
-
-        closing = false;
 
         processing = new Processing( moduleName );
         /* now start the thread to do the work */

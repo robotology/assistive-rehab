@@ -65,8 +65,24 @@ class Recognizer : public RFModule, public actionRecognizer_IDL
     string action_to_perform;
     ResourceFinder rf;
     
-
 public:
+
+    /********************************************************/
+    Recognizer() : skel_tag(""), starting(false), idx_step(0)
+    {
+        keypoint2int[KeyPointTag::head] = 0;
+        keypoint2int[KeyPointTag::hand_left] = 2;
+        keypoint2int[KeyPointTag::elbow_left] = 4;
+        keypoint2int[KeyPointTag::shoulder_left] = 6;
+        keypoint2int[KeyPointTag::hand_right] = 8;
+        keypoint2int[KeyPointTag::elbow_right] = 10;
+        keypoint2int[KeyPointTag::shoulder_right] = 12;
+        keypoint2int[KeyPointTag::hip_left] = 14;
+        keypoint2int[KeyPointTag::hip_right] = 16;
+        keypoint2int[KeyPointTag::hip_center] = 18;
+        keypoint2int[KeyPointTag::shoulder_center] = 20;
+    }
+
     /********************************************************/
     bool configure(ResourceFinder &rf_)
     {
@@ -111,75 +127,61 @@ public:
             string label=bClass.find("label").asString();
             class_map[value]=label;
         }
-
-        keypoint2int[KeyPointTag::head] = 0;
-        keypoint2int[KeyPointTag::hand_left] = 2;
-        keypoint2int[KeyPointTag::elbow_left] = 4;
-        keypoint2int[KeyPointTag::shoulder_left] = 6;
-        keypoint2int[KeyPointTag::hand_right] = 8;
-        keypoint2int[KeyPointTag::elbow_right] = 10;
-        keypoint2int[KeyPointTag::shoulder_right] = 12;
-        keypoint2int[KeyPointTag::hip_left] = 14;
-        keypoint2int[KeyPointTag::hip_right] = 16;
-        keypoint2int[KeyPointTag::hip_center] = 18;
-        keypoint2int[KeyPointTag::shoulder_center] = 20;
-        
-        skel_tag = " ";
-        starting = false;
-        idx_step=0;
-
-        // Set up input paths
-        pathToGraph = rf.findFileByName(model_name+"_"+part+".meta");
-        checkpointPath = pathToGraph.substr(0, pathToGraph.find_last_of("/\\")) + "/" + model_name + "_" + part;
-        if(predict)
-        {
-            yInfo() << "Loading model from:" << pathToGraph;
-
-            sess_opts.config.mutable_gpu_options()->set_allow_growth(true); //to limit GPU usage
-            session = NewSession(sess_opts);
-            if (session == nullptr)
-            {
-                throw runtime_error("Could not create Tensorflow session");
-                return false;
-            }
-
-            // Read in the protobuf graph we exported
-            MetaGraphDef graph_def;
-            status = ReadBinaryProto(Env::Default(), pathToGraph, &graph_def);
-            if (!status.ok())
-            {
-                throw runtime_error("Error reading graph definition from " + pathToGraph + ": " + status.ToString());
-                return false;
-            }
-
-            // Add the graph to the session
-            status = session->Create(graph_def.graph_def());
-            if (!status.ok())
-            {
-                throw runtime_error("Error creating graph: " + status.ToString());
-                return false;
-            }
-
-            // Read weights from the saved checkpoint
-            Tensor checkpointPathTensor(DT_STRING, TensorShape());
-            checkpointPathTensor.scalar<std::string>()() = checkpointPath;
-            status = session->Run(
-                    {{ graph_def.saver_def().filename_tensor_name(), checkpointPathTensor },},
-                    {},
-                    {graph_def.saver_def().restore_op_name()},
-                    nullptr);
-            if (!status.ok())
-            {
-                throw runtime_error("Error loading checkpoint from " + checkpointPath + ": " + status.ToString());
-                return false;
-            }
-        }
-
         analyzerPort.open("/" + moduleName + "/rpc");
         opcPort.open("/" + moduleName + "/opc");
         outPort.open("/" + moduleName + "/target:o");
         attach(analyzerPort);
-        return true;
+        
+        // Set up input paths
+        pathToGraph = rf.findFileByName(model_name+"_"+part+".meta");
+        checkpointPath = pathToGraph.substr(0, pathToGraph.find_last_of("/\\")) + "/" + model_name + "_" + part;
+        return (predict ? loadSession(pathToGraph, checkpointPath) : true);
+    }
+
+    /**********************************************************/
+    bool loadSession(const string &pathToGraph, const string &checkpointPath)
+    {
+        yInfo() << "Loading model from:" << pathToGraph;
+
+        sess_opts.config.mutable_gpu_options()->set_allow_growth(true); //to limit GPU usage
+        session = NewSession(sess_opts);
+        if (session == nullptr)
+        {
+            throw runtime_error("Could not create Tensorflow session");
+            return false;
+        }
+
+        // Read in the protobuf graph we exported
+        MetaGraphDef graph_def;
+        status = ReadBinaryProto(Env::Default(), pathToGraph, &graph_def);
+        if (!status.ok())
+        {
+            throw runtime_error("Error reading graph definition from " + pathToGraph + ": " + status.ToString());
+            return false;
+        }
+
+        // Add the graph to the session
+        status = session->Create(graph_def.graph_def());
+        if (!status.ok())
+        {
+            throw runtime_error("Error creating graph: " + status.ToString());
+            return false;
+        }
+
+        // Read weights from the saved checkpoint
+        Tensor checkpointPathTensor(DT_STRING, TensorShape());
+        checkpointPathTensor.scalar<std::string>()() = checkpointPath;
+        status = session->Run(
+                {{ graph_def.saver_def().filename_tensor_name(), checkpointPathTensor },},
+                {},
+                {graph_def.saver_def().restore_op_name()},
+                nullptr);
+        if (!status.ok())
+        {
+            throw runtime_error("Error loading checkpoint from " + checkpointPath + ": " + status.ToString());
+            return false;
+        }
+
     }
 
     /**********************************************************/

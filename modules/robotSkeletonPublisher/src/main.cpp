@@ -318,10 +318,8 @@ class Publisher : public RFModule, public robotSkeletonPublisher_IDL
 
         navPort.open("/robotSkeletonPublisher/nav:i");
         navFrame=eye(4,4);
-        navFrameUpdated=false;
 
         opcPort.open("/robotSkeletonPublisher/opc:rpc");
-        opc_id=-1;
 
         cmdPort.open("/robotSkeletonPublisher/cmd:rpc");
         attach(cmdPort);
@@ -464,6 +462,13 @@ class Publisher : public RFModule, public robotSkeletonPublisher_IDL
         }
         return true;
     }
+
+/**************************************************************************/
+public:
+
+    /**************************************************************************/
+    Publisher() : navFrameUpdated(false), opc_id(-1) { }
+
 };
 
 

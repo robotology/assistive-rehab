@@ -159,6 +159,7 @@ public:
 /****************************************************************/
 class TriggerManager: public Thread
 {
+    ResourceFinder rf;
     string module_name;
     double min_timeout;
     double max_timeout;
@@ -174,28 +175,26 @@ class TriggerManager: public Thread
 public:
 
     /********************************************************/
-    TriggerManager(const string &module_name, const double &min_timeout, const double &max_timeout,
-                   const string &sentence, const bool & simulation, RpcClient *triggerPort,
-                   BufferedPort<Bottle> *speechPort, RpcClient *gazeboPort)
+    TriggerManager(ResourceFinder &rf_, const bool &simulation_, const string &sentence_) :
+        rf(rf_), simulation(simulation_), sentence(sentence_), first_trigger(true),
+        last_start_trigger(true), got_trigger(false), freezing(false), t0(Time::now()),
+        t(Time::now())
     {
-        this->module_name=module_name;
-        this->min_timeout=min_timeout;
-        this->max_timeout=max_timeout;
-        this->simulation=simulation;
-        this->sentence=sentence;
-        this->triggerPort=triggerPort;
-        this->speechPort=speechPort;
-        this->gazeboPort=gazeboPort;
-        first_trigger=true;
-        last_start_trigger=false;
-        got_trigger=false;
-        freezing=false;
-        t0=t=Time::now();
+        min_timeout=rf.check("min-timeout",Value(1.0)).asDouble();
+        max_timeout=rf.check("max-timeout",Value(10.0)).asDouble();
     }
 
     /********************************************************/
     ~TriggerManager()
     {
+    }
+
+    /********************************************************/
+    void setPorts(RpcClient *triggerPort, BufferedPort<Bottle> *speechPort, RpcClient *gazeboPort)
+    {
+        this->triggerPort=triggerPort;
+        this->speechPort=speechPort;
+        this->gazeboPort=gazeboPort;
     }
 
     /********************************************************/
@@ -369,24 +368,22 @@ class AnswerManager: public BufferedPort<Bottle>
 public:
 
     /********************************************************/
-    AnswerManager(const string &module_name, const unordered_map<string,string> &speak_map,
-                  const bool &simulation, BufferedPort<Bottle> *speechPort, RpcClient *speechRpc,
-                  RpcClient *gazeboPort)
-    {
-        this->module_name=module_name;
-        this->speak_map=speak_map;
-        this->simulation=simulation;
-        this->speechPort=speechPort;
-        this->speechRpc=speechRpc;
-        this->gazeboPort=gazeboPort;
-        replied=false;
-        silent=true;
-        time=0.0;
-    }
+    AnswerManager(const string &module_name_, const unordered_map<string,string> &speak_map_,
+                  const bool &simulation_) : module_name(module_name_), speak_map(speak_map_),
+        simulation(simulation_), time(0.0), silent(true), replied(false) { }
 
     /********************************************************/
     ~AnswerManager()
     {
+    }
+
+    /********************************************************/
+    void setPorts(BufferedPort<Bottle> *speechPort, RpcClient *speechRpc,
+                  RpcClient *gazeboPort)
+    {
+        this->speechPort=speechPort;
+        this->speechRpc=speechRpc;
+        this->gazeboPort=gazeboPort;
     }
 
     /********************************************************/
@@ -567,21 +564,21 @@ class HandManager : public Thread
 public:
 
     /********************************************************/
-    HandManager(const string &module_name, const double &arm_thresh, BufferedPort<Bottle> *opcPort, RpcClient *triggerPort)
-        : tag(""), part(""), skeleton(NULL)
-
-    {
-        this->module_name=module_name;
-        this->arm_thresh=arm_thresh;
-        this->opcPort=opcPort;
-        this->triggerPort=triggerPort;
-        isArmLifted=false;
-    }
+    HandManager(const string &module_name_, const double &arm_thresh_)
+        : module_name(module_name_), arm_thresh(arm_thresh_), tag(""),
+          part(""), skeleton(NULL), isArmLifted(false) { }
 
     /********************************************************/
     void set_tag(const string &tag)
     {
         this->tag=tag;
+    }
+
+    /********************************************************/
+    void setPorts(BufferedPort<Bottle> *opcPort, RpcClient *triggerPort)
+    {
+        this->opcPort=opcPort;
+        this->triggerPort=triggerPort;
     }
 
     /********************************************************/
@@ -705,9 +702,9 @@ class SpeechParam
 {
     ostringstream ss;
 public:
-    SpeechParam(const int d) { ss<<d; }
-    SpeechParam(const double g) { ss<<g; }
-    SpeechParam(const string &s) { ss<<s; }
+    explicit SpeechParam(const int d) { ss<<d; }
+    explicit SpeechParam(const double g) { ss<<g; }
+    explicit SpeechParam(const string &s) { ss<<s; }
     string get() const { return ss.str(); }
 };
 
@@ -753,7 +750,6 @@ class Manager : public RFModule, public managerTUG_IDL
     double pointing_time,arm_thresh;
     bool detect_hand_up;
     Vector starting_pose,pointing_home,pointing_start,pointing_finish;
-    double min_timeout,max_timeout;
     bool simulation,lock;
     Vector target_sim;
     string human_state;
@@ -1209,8 +1205,6 @@ class Manager : public RFModule, public managerTUG_IDL
         speak_file=rf.check("speak-file",Value("speak-it")).asString();
         arm_thresh=rf.check("arm-thresh",Value(0.6)).asDouble();
         detect_hand_up=rf.check("detect-hand-up",Value(false)).asBool();
-        min_timeout=rf.check("min-timeout",Value(1.0)).asDouble();
-        max_timeout=rf.check("max-timeout",Value(10.0)).asDouble();
         simulation=rf.check("simulation",Value(false)).asBool();
         lock=rf.check("lock",Value(true)).asBool();
         target_sim={4.5,0.0,0,0};
@@ -1305,7 +1299,6 @@ class Manager : public RFModule, public managerTUG_IDL
             yError()<<msg;
             return false;
         }
-        start_ex=false;
 
         analyzerPort.open("/"+module_name+"/analyzer:rpc");
         speechRpcPort.open("/"+module_name+"/speech:rpc");
@@ -1328,32 +1321,33 @@ class Manager : public RFModule, public managerTUG_IDL
         obstaclePort.open("/"+module_name+"/obstacle:i");
         attach(cmdPort);
 
-        answer_manager=new AnswerManager(module_name,speak_map,simulation,
-                                         &speechStreamPort,&speechRpcPort,&gazeboPort);
+        answer_manager=new AnswerManager(module_name,speak_map,simulation);
         if (!answer_manager->open())
         {
             yError()<<"Could not open question manager";
             return false;
         }
+        answer_manager->setPorts(&speechStreamPort,&speechRpcPort,&gazeboPort);
 
         if(detect_hand_up)
         {
-            hand_manager=new HandManager(module_name,arm_thresh,&opcPort,&triggerPort);
+            hand_manager=new HandManager(module_name,arm_thresh);
             if (!hand_manager->start())
             {
                 yError()<<"Could not start hand manager";
                 return false;
             }
+            hand_manager->setPorts(&opcPort,&triggerPort);
         }
         else
         {
-            trigger_manager=new TriggerManager(module_name,min_timeout,max_timeout,speak_map["asking"],
-                    simulation,&triggerPort,&speechStreamPort,&gazeboPort);
+            trigger_manager=new TriggerManager(rf,simulation,speak_map["asking"]);
             if (!trigger_manager->start())
             {
                 yError()<<"Could not open trigger manager";
                 return false;
             }
+            trigger_manager->setPorts(&triggerPort,&speechStreamPort,&gazeboPort);
         }
 
         obstacle_manager=new ObstacleManager(module_name,&obstaclePort);
@@ -1831,7 +1825,7 @@ class Manager : public RFModule, public managerTUG_IDL
         if (state==State::reach_line)
         {
             prev_state=state;
-            bool navigating;
+            bool navigating=true;
             Bottle cmd,rep;
             cmd.addString("is_navigating");
             if (navigationPort.write(cmd,rep))
@@ -1839,10 +1833,6 @@ class Manager : public RFModule, public managerTUG_IDL
                 if (rep.get(0).asVocab()!=ok)
                 {
                     navigating=false;
-                }
-                else
-                {
-                    navigating=true;
                 }
             }
 
@@ -2252,11 +2242,7 @@ class Manager : public RFModule, public managerTUG_IDL
             }
         }
 
-        RpcClient *tmpPort;
-        if (part=="left")
-        {
-            tmpPort=&leftarmPort;
-        }
+        RpcClient *tmpPort=&leftarmPort;
         if (part=="right")
         {
             tmpPort=&rightarmPort;
@@ -2441,8 +2427,13 @@ class Manager : public RFModule, public managerTUG_IDL
         obstaclePort.close();
         return true;
     }
-};
 
+public:
+    /****************************************************************/
+    Manager() : start_ex(false), state(State::idle), interrupting(false),
+        world_configured(false), ok_go(false), connected(false), params_set(false) { }
+
+};
 
 /****************************************************************/
 int main(int argc, char *argv[])
@@ -2462,5 +2453,3 @@ int main(int argc, char *argv[])
     Manager manager;
     return manager.runModule(rf);
 }
-
-

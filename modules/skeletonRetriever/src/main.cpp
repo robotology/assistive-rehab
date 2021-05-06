@@ -796,7 +796,6 @@ class Retriever : public RFModule
         keysRemap["LSmallToe"]=KeyPointTag::foot_left;
 
         // default values
-        camera_configured=false;
         period=0.01;
         keys_recognition_confidence=0.3;
         keys_recognition_percentage=0.3;
@@ -877,7 +876,6 @@ class Retriever : public RFModule
         camPort.open("/skeletonRetriever/cam:rpc");
 
         navFrame=gazeFrame=eye(4,4);
-        navFrameUpdated=gazeFrameUpdated=false;
 
         t0=Time::now();
         return true;
@@ -1000,6 +998,14 @@ class Retriever : public RFModule
 
         return true;
     }
+
+/****************************************************************/
+public:
+
+    /****************************************************************/
+    Retriever() : camera_configured(false), navFrameUpdated(false),
+        gazeFrameUpdated(false) { }
+
 };
 
 

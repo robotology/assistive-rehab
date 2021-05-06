@@ -1,7 +1,6 @@
 #!/bin/bash
 
 TIME=2.5
-SLEEP=2.5
 
 wait_motion_done() {
    
@@ -10,9 +9,9 @@ wait_motion_done() {
    port_sim="/SIM_CER_ROBOT$port"
    port_robot="/cer$port"
    
-   if yarp ping $port_robot > /dev/null; then
+   if yarp ping "$port_robot" > /dev/null; then
      port=$port_robot
-   elif yarp ping $port_sim > /dev/null; then
+   elif yarp ping "$port_sim" > /dev/null; then
      port=$port_sim
    else
      echo "unable to find any port to talk to"
@@ -23,13 +22,13 @@ wait_motion_done() {
   timeout=10
   t0=$(date +%s)
   while true; do
-    check=$(echo "get don $joint" | yarp rpc $port | awk '{print $4}')
-    if [ $check -eq "1" ]; then
+    check=$(echo "get don $joint" | yarp rpc "$port" | awk '{print $4}')
+    if [ "$check" -eq "1" ]; then
       echo "motion done!"
       break
     fi
     t1=$(date +%s)
-    if [ $(($t1-$t0)) -gt "$timeout" ]; then
+    if [ $((t1-t0)) -gt "$timeout" ]; then
       echo "timeout has just expired!"
       break
     fi

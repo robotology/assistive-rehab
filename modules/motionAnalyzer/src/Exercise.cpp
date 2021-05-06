@@ -377,15 +377,15 @@ void ReachingLeft::setFeedbackParams(const Property &p)
 /************************/
 /*         TUG          */
 /************************/
-Tug::Tug(const double &finishline_thresh, const double &standing_thresh, const double &distance, const double &time_high, const double &time_medium)
+Tug::Tug(const TugParams &params)
 {
-    name=ExerciseTag::tug;
-    type=ExerciseType::test;
-    this->finishline_thresh=finishline_thresh;
-    this->standing_thresh=standing_thresh;
-    this->distance=distance;
-    this->time_high=time_high;
-    this->time_medium=time_medium;
+    this->name=ExerciseTag::tug;
+    this->type=ExerciseType::test;
+    this->tug_params.finishline_thresh=params.finishline_thresh;
+    this->tug_params.standing_thresh=params.standing_thresh;
+    this->tug_params.distance=params.distance;
+    this->tug_params.time_high=params.time_high;
+    this->tug_params.time_medium=params.time_medium;
 }
 
 yarp::os::Property Tug::publish()
@@ -393,11 +393,11 @@ yarp::os::Property Tug::publish()
     Property p;
 //    Property &p_group=p.addGroup("exercise");
     p.put("name",name);
-    p.put("distance",distance);
-    p.put("finish-line-thresh",finishline_thresh);
-    p.put("standing-thresh",standing_thresh);
-    p.put("time-high",time_high);
-    p.put("time-medium",time_medium);
+    p.put("distance",tug_params.distance);
+    p.put("finish-line-thresh",tug_params.finishline_thresh);
+    p.put("standing-thresh",tug_params.standing_thresh);
+    p.put("time-high",tug_params.time_high);
+    p.put("time-medium",tug_params.time_medium);
     return p;
 }
 

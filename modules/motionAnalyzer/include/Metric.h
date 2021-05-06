@@ -46,26 +46,25 @@ public:
 
 class Rom : public Metric
 {
-private:
-    std::string name;
-    std::string tag_joint;
-    std::string tag_plane;
-    yarp::sig::Vector ref_dir;
-    std::string ref_joint;
-    double minv,maxv;
-
 public:
+    std::string name;
+    struct RomParams
+    {
+        std::string tag_joint;
+        std::string tag_plane;
+        yarp::sig::Vector ref_dir;
+        std::string ref_joint;
+        double minv,maxv;
+    } rom_params;
     Rom() {;}
-    Rom(const std::string &type_,const std::string &name_, const std::string &tag_joint_,
-        const std::string &tag_plane_, const yarp::sig::Vector &ref_dir_,
-        const std::string &ref_joint_, const double &minv_, const double &maxv_);
+    Rom(const std::string &type,const std::string &name, const RomParams &params);
     Rom(const Rom &r);
     Rom& operator = (const Rom &r);
 
-    std::string getTagJoint() const { return tag_joint; }
-    std::string getTagPlane() const { return tag_plane; }
-    std::string getRefJoint() const { return ref_joint; }
-    yarp::sig::Vector getRefDir() const { return ref_dir; }
+    std::string getTagJoint() const { return rom_params.tag_joint; }
+    std::string getTagPlane() const { return rom_params.tag_plane; }
+    std::string getRefJoint() const { return rom_params.ref_joint; }
+    yarp::sig::Vector getRefDir() const { return rom_params.ref_dir; }
 
     yarp::os::Property getParams() const override;
     void print(std::ostream &os=std::cout) const override;
@@ -74,25 +73,25 @@ public:
 
 class Step : public Metric
 {
-private:
-    std::string name;
-    yarp::sig::Vector num;
-    yarp::sig::Vector den;
-    double minv,maxv,thresh,step_window,time_window;
-
 public:
+    std::string name;
+    struct StepParams
+    {
+        yarp::sig::Vector num;
+        yarp::sig::Vector den;
+        double minv,maxv,thresh,step_window,time_window;
+    } step_params;
+
     Step() {;}
-    Step(const std::string &type_, const std::string &name_, const yarp::sig::Vector &num_,
-         const yarp::sig::Vector &den_, const double &thresh_, const double &step_window_,
-         const double &time_window_, const double &minv_, const double &maxv_);
+    Step(const std::string &type, const std::string &name, const StepParams &params);
     Step(const Step &r);
     Step& operator = (const Step &r);
 
-    yarp::sig::Vector getNum() const { return num; }
-    yarp::sig::Vector getDen() const { return den; }
-    double getThresh() const { return thresh; }
-    double getStepWindow() const { return step_window; }
-    double getTimeWindow() const { return time_window; }
+    yarp::sig::Vector getNum() const { return step_params.num; }
+    yarp::sig::Vector getDen() const { return step_params.den; }
+    double getThresh() const { return step_params.thresh; }
+    double getStepWindow() const { return step_params.step_window; }
+    double getTimeWindow() const { return step_params.time_window; }
 
     yarp::os::Property getParams() const override;
     void print(std::ostream &os=std::cout) const override;
@@ -101,27 +100,25 @@ public:
 
 class EndPoint : public Metric
 {
-
-private:
-    std::string name;
-    std::string tag_joint;
-    std::string tag_plane;
-    yarp::sig::Vector ref_dir;
-    double minv,maxv;
-    yarp::sig::Vector target;
-
 public:
+    std::string name;
+    struct EndPointParams
+    {
+        std::string tag_joint;
+        std::string tag_plane;
+        yarp::sig::Vector ref_dir;
+        double minv,maxv;
+        yarp::sig::Vector target;
+    } ep_params;
     EndPoint() {;}
-    EndPoint(const std::string &type_,const std::string &name_,const std::string &tag_joint_,
-             const std::string &tag_plane_,const yarp::sig::Vector &ref_dir_,const double &minv_,const double &maxv_,
-             const yarp::sig::Vector &target_);
+    EndPoint(const std::string &type_,const std::string &name_,const EndPointParams &params);
     EndPoint(const EndPoint &ep);
     EndPoint& operator = (const EndPoint &ep);
 
-    std::string getTagJoint() const { return tag_joint; }
-    std::string getTagPlane() const { return tag_plane; }
-    yarp::sig::Vector getRefDir() const { return ref_dir; }
-    yarp::sig::Vector getTarget() const { return target; }
+    std::string getTagJoint() const { return ep_params.tag_joint; }
+    std::string getTagPlane() const { return ep_params.tag_plane; }
+    yarp::sig::Vector getRefDir() const { return ep_params.ref_dir; }
+    yarp::sig::Vector getTarget() const { return ep_params.target; }
 
     yarp::os::Property getParams() const override;
     void print(std::ostream &os=std::cout) const override;

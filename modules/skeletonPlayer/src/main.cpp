@@ -495,10 +495,6 @@ class Player : public RFModule, public skeletonPlayer_IDL
         cmdPort.open("/skeletonPlayer/cmd:rpc");
         attach(cmdPort);
 
-        state=State::idle;
-        opc_id=opc_id_invalid;
-
-        opacity=0.2;
         color.addList().read(Vector(3,0.7));
         return true;
     }
@@ -557,6 +553,13 @@ class Player : public RFModule, public skeletonPlayer_IDL
         cmdPort.close();
         return true;
     }
+
+/****************************************************************/
+public:
+
+    /****************************************************************/
+    Player() : state(State::idle), opc_id(opc_id_invalid), opacity(0.2) { }
+
 };
 
 

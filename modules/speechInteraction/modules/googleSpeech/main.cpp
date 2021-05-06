@@ -327,6 +327,8 @@ class Module : public yarp::os::RFModule, public googleSpeech_IDL
     }
 
 public:
+    /********************************************************/
+    Module() : closing(false) { }
 
     /********************************************************/
     bool configure(yarp::os::ResourceFinder &rf)
@@ -339,8 +341,6 @@ public:
         setName(moduleName.c_str());
 
         rpcPort.open(("/"+getName("/rpc")).c_str());
-
-        closing = false;
 
         processing = new Processing( moduleName, language, sample_rate );
 

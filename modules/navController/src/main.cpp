@@ -145,8 +145,6 @@ class Navigator : public RFModule, public navController_IDL {
     cmdPort.open("/navController/rpc");
     attach(cmdPort);
 
-    state = State::idle;
-
     double Kp = 1.0;
     double Ki = 1.0;
     double Kd = 0.5;
@@ -399,7 +397,7 @@ class Navigator : public RFModule, public navController_IDL {
         robot_velocity.x = sign(dot(dir, e)) * velocity_linear_magnitude;
       } else {
         if (target_location + 1 != target_locations.end()) {
-          target_location++;
+          ++target_location;
           target_theta = compute_target_theta();
         } else {
           target_theta = target_location->theta;
@@ -536,6 +534,12 @@ class Navigator : public RFModule, public navController_IDL {
   Property get_state()override {
     return publish_state();
   }
+
+/****************************************************************/
+public:
+
+  /****************************************************************/
+  Navigator() : state(State::idle) { }
 };
 
 /****************************************************************/

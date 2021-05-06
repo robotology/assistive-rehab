@@ -140,7 +140,8 @@ Metric* Manager::loadMetricsList(const Bottle &bMetricEx, const string &metric_t
             string tag_plane=bMetricEx.find("tag_plane").asString();
             double minv=bMetricEx.find("min").asDouble();
             double maxv=bMetricEx.find("max").asDouble();
-            return new Rom(metric_type,metric_tag,tag_joint,tag_plane,ref_dir,ref_joint,minv,maxv);
+            Rom::RomParams rp={tag_joint,tag_plane,ref_dir,ref_joint,minv,maxv};
+            return new Rom(metric_type,metric_tag,rp);
         }
         if(metric_type==MetricType::step)
         {
@@ -151,7 +152,8 @@ Metric* Manager::loadMetricsList(const Bottle &bMetricEx, const string &metric_t
             double time_window=bMetricEx.find("time_window").asDouble();
             double minv=bMetricEx.find("min").asDouble();
             double maxv=bMetricEx.find("max").asDouble();
-            return new Step(metric_type,metric_tag,num,den,step_thresh,step_window,time_window,minv,maxv);
+            Step::StepParams sp={num,den,step_thresh,step_window,time_window,minv,maxv};
+            return new Step(metric_type,metric_tag,sp);
         }
         if(metric_type==MetricType::end_point)
         {
@@ -161,7 +163,8 @@ Metric* Manager::loadMetricsList(const Bottle &bMetricEx, const string &metric_t
             double minv=bMetricEx.find("min").asDouble();
             double maxv=bMetricEx.find("max").asDouble();
             Vector target=toVector(bMetricEx,"target");
-            return new EndPoint(metric_type,metric_tag,tag_joint,tag_plane,ref_dir,minv,maxv,target);
+            EndPoint::EndPointParams ep_params={tag_joint,tag_plane,ref_dir,minv,maxv,target};
+            return new EndPoint(metric_type,metric_tag,ep_params);
         }
     }
     return NULL;
@@ -189,7 +192,8 @@ Exercise* Manager::loadExerciseList(const Bottle &bGeneral, const string &ex_tag
         double time_high=bGeneral.check("time-high",Value(10.0)).asDouble();
         double time_medium=bGeneral.check("time-medium",Value(20.0)).asDouble();
         lin_est_shoulder=new AWLinEstimator(N,D); //(16,0.01);
-        return new Tug(finishline_thresh,standing_thresh,distance,time_high,time_medium);
+        Tug::TugParams tugp={finishline_thresh,standing_thresh,distance,time_high,time_medium};
+        return new Tug(tugp);
     }
     return NULL;
 }
@@ -1029,8 +1033,6 @@ bool Manager::configure(ResourceFinder &rf)
     string moduleName = rf.check("name", Value("motionAnalyzer")).asString();
     setName(moduleName.c_str());
 
-    string robot = rf.check("robot", Value("icub")).asString();
-
     opcPort.open(("/" + getName() + "/opc").c_str());
     scopePort.open(("/" + getName() + "/scope").c_str());
     scalerPort.open(("/" + getName() + "/scaler:cmd").c_str());
@@ -1147,8 +1149,6 @@ bool Manager::writeStructToMat(const string& name, const vector< vector< pair<st
         fields[i]=keypoints_skel[0][i].first.c_str();
     }
 
-    matvar_t *field;
-
     size_t dim_struct[2] = {1,1};
 
     size_t nSamples = keypoints_skel.size()-1;
@@ -1172,7 +1172,7 @@ bool Manager::writeStructToMat(const string& name, const vector< vector< pair<st
                 field_vector[j+2*nSamples] = keypoints_skel[j][i].second[2];
             }
 
-            field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field,field_vector.data(),MAT_F_GLOBAL);
+            matvar_t *field = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims_field,field_vector.data(),MAT_F_GLOBAL);
             Mat_VarSetStructFieldByName(matvar, fields[i], 0, field);
         }
 
@@ -1225,10 +1225,9 @@ bool Manager::writeStructToMat(const string& name, const Exercise* ex, mat_t *ma
         return false;
     }
 
-    matvar_t *submatvar;
     for(size_t i=0; i<numMetrics; i++)
     {
-        submatvar=writeStructToMat(metrics[i]);
+        matvar_t *submatvar=writeStructToMat(metrics[i]);
         Mat_VarSetStructFieldByName(met_matvar,fields_metrics[i],0,submatvar);
     }
 

@@ -37,9 +37,9 @@ class SpeechParam
 {
     ostringstream ss;
 public:
-    SpeechParam(const int d) { ss<<d; }
-    SpeechParam(const double g) { ss<<g; }
-    SpeechParam(const string &s) { ss<<s; }
+    explicit SpeechParam(const int d) { ss<<d; }
+    explicit SpeechParam(const double g) { ss<<g; }
+    explicit SpeechParam(const string &s) { ss<<s; }
     string get() const { return ss.str(); }
 };
 
@@ -51,7 +51,7 @@ class MoveThread : public Thread
     bool startmoving,motiondone;
 
 public:
-    MoveThread() : startmoving(false) { }
+    MoveThread() : startmoving(false), motiondone(false) { }
 
     void run() override
     {
@@ -368,7 +368,6 @@ class Interaction : public RFModule, public interactionManager_IDL
         {
             Time::yield();
         }
-        ret=true;
         movethr->setHomePosition(script_home);
 
         state=State::stopped;
@@ -727,13 +726,6 @@ class Interaction : public RFModule, public interactionManager_IDL
         attach(cmdPort);
 
         Rand::init();
-        state=State::idle;
-        interrupting=false;
-        occluded=false;
-        imitate=false;
-        observe=false;
-        t0=Time::now();
-        first_run=true;
 
         movethr=new MoveThread();
         if(!movethr->start())
@@ -743,6 +735,7 @@ class Interaction : public RFModule, public interactionManager_IDL
             return false;
         }
 
+        t0=Time::now();
         return true;
     }
 
@@ -1249,6 +1242,13 @@ class Interaction : public RFModule, public interactionManager_IDL
         cmdPort.close();
         return true;
     }
+
+public:
+
+    /****************************************************************/
+    Interaction() : state(State::idle), interrupting(false), occluded(false),
+        imitate(false), observe(false), first_run(true) { }
+
 };
 
 

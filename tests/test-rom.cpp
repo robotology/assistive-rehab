@@ -435,6 +435,9 @@ class TestRom : public RFModule
 
     }
 
+public:
+    TestRom() { }
+
 };
 
 int main()
