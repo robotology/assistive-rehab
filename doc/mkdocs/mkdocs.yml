@@ -26,8 +26,7 @@ copyright: 'Copyright &copy; 2019 Istituto Italiano di Tecnologia - iCub Tech'
 
 # Extensions
 markdown_extensions:
-    - markdown.extensions.admonition
-    # - markdown.extensions.codehilite
+    - admonition
     - pymdownx.arithmatex
     - pymdownx.betterem:
         smart_enable: all
