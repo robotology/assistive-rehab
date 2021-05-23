@@ -22,7 +22,7 @@ jobs:
         os: [windows-latest, ubuntu-latest]
 
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@main
 
     - name: Display environment variables
       shell: bash
