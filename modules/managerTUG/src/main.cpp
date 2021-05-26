@@ -1083,7 +1083,6 @@ class Manager : public RFModule, public managerTUG_IDL
         cmd.addDouble(target[0]);
         cmd.addDouble(target[1]);
         cmd.addDouble(target[2]);
-        yDebug()<<cmd.toString();
         if (navigationPort.write(cmd,rep))
         {
             if (rep.get(0).asVocab()==ok)
@@ -1126,8 +1125,7 @@ class Manager : public RFModule, public managerTUG_IDL
             cmd.addString("SIM_CER_ROBOT");
             if (gazeboPort.write(cmd,rep))
             {
-                Property prop(rep.get(0).toString().c_str());
-                Bottle *model=prop.find("SIM_CER_ROBOT").asList();
+                Bottle *model=rep.get(0).asList();
                 if (Bottle *pose=model->find("pose_world").asList())
                 {
                     if(pose->size()>=7)
@@ -1963,7 +1961,7 @@ class Manager : public RFModule, public managerTUG_IDL
                     set_walking_speed(rep);
                 }
             }
-            human_state=rep.get(0).find("human-state").asString();
+            human_state=rep.find("human-state").asString();
             yInfo()<<"Human state"<<human_state;
         }
 
@@ -2198,8 +2196,8 @@ class Manager : public RFModule, public managerTUG_IDL
         cmd.addString("get_state");
         if (navigationPort.write(cmd,rep))
         {
-            Property robotState(rep.get(0).toString().c_str());
-            if (Bottle *loc=robotState.find("robot-location").asList())
+            Bottle *robotState=rep.get(0).asList();
+            if (Bottle *loc=robotState->find("robot-location").asList())
             {
                 double x=loc->get(0).asDouble();
                 double line_center=(p0[0]+p1[0])/2;
@@ -2256,7 +2254,6 @@ class Manager : public RFModule, public managerTUG_IDL
         cmd.addInt(0);
         cmd.addString("pos");
         cmd.addList().read(target);
-        yDebug()<<cmd.toString();
         if (tmpPort->write(cmd,rep))
         {
             if (rep.get(0).asBool()==true)

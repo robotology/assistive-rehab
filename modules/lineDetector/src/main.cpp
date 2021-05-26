@@ -298,8 +298,9 @@ class Detector : public RFModule, public lineDetector_IDL
         cmd.addString(model_name);
         if (gazeboPort.write(cmd,rep))
         {
-            Property prop(rep.get(0).toString().c_str());
-            Bottle *model=prop.find(model_name).asList();
+            // Property prop(rep.get(0).toString().c_str());
+            // Bottle *model=prop.find(model_name).asList();
+            Bottle *model=rep.get(0).asList();
             if (Bottle *mod_bottle=model->find("pose_world").asList())
             {
                 if(mod_bottle->size()>=7)
@@ -416,7 +417,6 @@ class Detector : public RFModule, public lineDetector_IDL
             Bottle line;
             line.addList().read(poseProp);
             prop.put(line_tag,line.get(0));
-
             if(opc_id<0)
             {
                 cmd.addList().read(prop);
@@ -747,8 +747,8 @@ class Detector : public RFModule, public lineDetector_IDL
         cmd.addString("get_state");
         if (navPort.write(cmd,rep))
         {
-            Property robotState(rep.get(0).toString().c_str());
-            if (Bottle *loc=robotState.find("robot-location").asList())
+            Bottle *robotState=rep.get(0).asList();
+            if (Bottle *loc=robotState->find("robot-location").asList())
             {
                 yarp::sig::Vector robot_location(7,0.0);
                 robot_location[0]=loc->get(0).asDouble();
@@ -756,7 +756,7 @@ class Detector : public RFModule, public lineDetector_IDL
                 robot_location[5]=1.0;
                 robot_location[6]=(M_PI/180)*loc->get(2).asDouble();
                 navFrame=yarp::math::axis2dcm(robot_location.subVector(3,6));
-                navFrame.setSubcol(robot_location.subVector(0,2),0,3);
+                navFrame.setSubcol(robot_location.subVector(0,2),0,3);              
                 updated_nav=true;
                 return true;
             }
@@ -772,7 +772,6 @@ class Detector : public RFModule, public lineDetector_IDL
         cmd.addDouble(x);
         cmd.addDouble(y);
         cmd.addDouble(theta);
-        yDebug()<<cmd.toString();
         if (navPort.write(cmd,rep))
         {
             if (rep.get(0).asVocab()==Vocab::encode("ok"))
@@ -823,7 +822,6 @@ class Detector : public RFModule, public lineDetector_IDL
                     cmd.addDouble(pose[0]);
                     cmd.addDouble(pose[1]);
                     cmd.addDouble(theta);
-                    yDebug()<<cmd.toString();
                     if (navPort.write(cmd,rep))
                     {
                         if (rep.get(0).asVocab()==Vocab::encode("ok"))
