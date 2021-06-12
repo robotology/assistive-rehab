@@ -35,6 +35,7 @@
     <param default="40" desc="Order of the filter for optimizing limbs' lengths.">filtering::filter-limblength-order</param>
     <param default="true" desc="Enable optimization of limbs' lengths.">filtering::optimize-limblength</param>
     <param default="(54 42)" desc="Camera's field of view.">camera::fov</param>
+    <param default="/depthCamera" desc="Camera's remote to connect to">camera::remote</param>
   </arguments>
 
   <authors>
