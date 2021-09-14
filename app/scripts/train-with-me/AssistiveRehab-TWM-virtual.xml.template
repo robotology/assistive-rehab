@@ -45,7 +45,7 @@
 
     <module>
        <name>skeletonRetriever</name>
-       <parameters>--context AssistiveRehab/train-with-me --from skeletonRetriever.ini --camera::remote /depthCameraExt</parameters>
+       <parameters>--context AssistiveRehab/train-with-me --from skeletonRetriever.ini --camera::remote /SIM_CER_ROBOT/depthCamera</parameters>
        <dependencies>
           <port timeout="5">/opc/rpc</port>
        </dependencies>

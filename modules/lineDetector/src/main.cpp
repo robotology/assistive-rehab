@@ -200,8 +200,17 @@ class Detector : public RFModule, public lineDetector_IDL
 
         yarp::os::Property rgbdOpts;
         rgbdOpts.put("device", "RGBDSensorClient");
-        rgbdOpts.put("remote", camera_remote);
-        rgbdOpts.put("local", "/" + getName() + "/cam");
+        rgbdOpts.put("remoteImagePort", camera_remote + "/rgbImage:o");
+        rgbdOpts.put("remoteDepthPort", camera_remote + "/depthImage:o");
+        rgbdOpts.put("remoteRpcPort", camera_remote + "/rpc:i");
+
+        rgbdOpts.put("localImagePort", "/" + getName() + "/rgbd/rgb");
+        rgbdOpts.put("localDepthPort", "/" + getName() + "/rgbd/depth");
+        rgbdOpts.put("localRpcPort", "/" + getName() + "/rgbd/rpc");
+
+        rgbdOpts.put("ImageCarrier", "mjpeg");
+        rgbdOpts.put("DepthCarrier", "fast_tcp");
+        
         if (!rgbdDrv.open(rgbdOpts)) {
             yError() << "Unable to talk to depthCamera!";
             return false;
