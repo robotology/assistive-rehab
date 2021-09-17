@@ -42,11 +42,11 @@ Rom::Rom(const string &type, const string &name, const RomParams &params)
     this->type=type;
     this->name=name;
     this->rom_params.tag_joint=params.tag_joint;
-    this->rom_params.tag_plane=rom_params.tag_plane;
-    this->rom_params.ref_dir=rom_params.ref_dir;
-    this->rom_params.ref_joint=rom_params.ref_joint;
-    this->rom_params.minv=rom_params.minv;
-    this->rom_params.maxv=rom_params.maxv;
+    this->rom_params.tag_plane=params.tag_plane;
+    this->rom_params.ref_dir=params.ref_dir;
+    this->rom_params.ref_joint=params.ref_joint;
+    this->rom_params.minv=params.minv;
+    this->rom_params.maxv=params.maxv;
     properties.push_back("range");
 }
 
