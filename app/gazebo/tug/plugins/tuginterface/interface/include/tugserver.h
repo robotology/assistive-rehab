@@ -15,6 +15,10 @@
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/World.hh>
 #include <gazebo/physics/Actor.hh>
+#include <gazebo/physics/Model.hh>
+#include <gazebo/physics/Link.hh>
+#include <gazebo/physics/Collision.hh>
+#include <gazebo/physics/BoxShape.hh>
 
 #include <include/utils.h>
 
@@ -28,6 +32,8 @@ private:
     gazebo::physics::WorldPtr world;
     gazebo::physics::ActorPtr actor;
     Velocity vel;
+    double walktime,standuptime,sitdowntime;
+    int nsteps;
     yarp::sig::Matrix targets;
     yarp::sig::Matrix line_frame;
 
@@ -53,6 +59,32 @@ public:
      * @return returns walking speed.
      */
     virtual double getSpeed();
+
+    /**
+     * Get time taken to complete the specified animation.
+     * @param animation_name name of the animation defined in the sdf.
+     * @param nsamples total number of samples for computing the average time.
+     * @return returns animation time.
+     */
+    virtual double getTime(const std::string &animation_name, const int nsamples);
+
+    /**
+     * Get walking time taken to complete the trajectory.
+     * @return returns walking time.
+     */
+    virtual double getWalkingTime();
+
+    /**
+     * Get time taken to stand up and sit down.
+     * @return returns stand up plus sit down time.
+     */
+    virtual double getStandSitTime();
+
+    /**
+     * Get number of steps.
+     * @return returns number of steps.
+     */
+    virtual int getNumSteps();
 
     /**
      * Get the list of animations associated with the actor.
@@ -98,6 +130,12 @@ public:
     virtual bool playFromLast(const bool complete);
 
     /**
+     * Get the torso front surface x coordinate.
+     * @return returns double defining the torso front surface x coordinate.
+     */
+    virtual double getTorsoFront();
+
+    /**
      * Get current animation being played.
      * @return returns string defining the current animation being played.
      */
@@ -134,7 +172,7 @@ public:
 
     void updateMap(const yarp::sig::Matrix &t);
 
-    void init(const Velocity &vel, const yarp::sig::Matrix &waypoints);
+    void init(const Velocity &vel, const yarp::sig::Matrix &waypoints, const double &walktime, const int &nsteps);
 
     void attachWorldPointer(gazebo::physics::WorldPtr p);
 

@@ -3,15 +3,38 @@
 
 <world name="default">
 
-    <!-- Global light source -->
-    <include>
-      <uri>model://sun</uri>
-    </include>
-
     <!-- Ground plane -->
     <include>
       <uri>model://ground_plane</uri>
     </include>
+          
+    <light name='sun' type='directional'>
+      <cast_shadows>1</cast_shadows>
+      <pose>0 0 10 0 -0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>       
+          
+    <light name='user_directional_light_0' type='directional'>
+      <pose>2.0 0.0 2.0 0 -0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <direction>0.1 0.1 -0.9</direction>
+      <attenuation>
+        <range>20</range>
+        <constant>0.5</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <cast_shadows>1</cast_shadows>
+    </light>
    
     <!-- R1 -->
     <model name='SIM_CER_ROBOT'>
@@ -37,6 +60,9 @@
 
     <!-- Human model -->
     <actor name="human">
+      <plugin name="actor_collisions_plugin" filename="libActorCollisionsPlugin.so">
+        <scaling collision="LowerBack_Spine_collision" scale="12.0 20.0 5.0" pose="0.05 0 0 0 -0.2 0"/>
+      </plugin>
       <skin>
         <filename>stand.dae</filename>
       </skin>
@@ -65,16 +91,19 @@
         <trajectory id="3" type="stand_up"/>
         <trajectory id="4" type="walk"/>
         <trajectory id="5" type="sit_down"/>
+        <trajectory id="6" type="sitting"/>
       </script>
       <plugin name='tug_interface' filename='libgazebo_assistiverehab_tuginterface.so'>
         <yarpConfigurationFile>model://tugInterface.ini</yarpConfigurationFile>
       </plugin>
     </actor>
 
+
     <!-- Chair -->
     <model name='chair'>
       <include>
         <uri>model://VisitorChair</uri>
+        <!--<uri>https://fuel.ignitionrobotics.org/1.0/openrobotics/models/VisitorChair</uri>-->
       </include>
       <pose>-0.50 0.0 0.0 0.0 0.0 1.57</pose>
     </model>

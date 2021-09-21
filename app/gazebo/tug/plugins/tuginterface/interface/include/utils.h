@@ -23,7 +23,7 @@ struct Velocity
 
 void updateScript(sdf::ElementPtr &actor_sdf, const std::map<double, ignition::math::Pose3d> &m);
 
-std::map<double, ignition::math::Pose3d> createMap(const yarp::sig::Matrix &t, const Velocity &vel);
+std::map<double, ignition::math::Pose3d> createMap(const yarp::sig::Matrix &t, const Velocity &vel, double &walktime, int &nsteps);
 
 std::map<double, ignition::math::Pose3d> generateWaypoints(const Velocity &vel,
                                                            const std::map<double, ignition::math::Pose3d> &m);

@@ -44,6 +44,32 @@ service TugInterfaceServer
     double getSpeed();
 
     /**
+     * Get time taken to complete the specified animation.
+     * @param animation_name name of the animation defined in the sdf.
+     * @param nsamples total number of samples for computing the average time.
+     * @return returns animation time.
+     */
+    double getTime(1:string animation_name, 2:i32 nsamples);
+
+    /**
+     * Get walking time.
+     * @return returns walking time
+     */
+    double getWalkingTime();
+
+    /**
+     * Get stand up plus sit down time.
+     * @return returns stand up plus sit down time
+     */
+    double getStandSitTime();
+    
+    /**
+     * Get number of steps.
+     * @return returns number of steps
+     */
+    i32 getNumSteps();
+
+    /**
      * Get the list of animations associated with the actor.
      * @return returns list of animations associated with the actor.
      */
@@ -84,6 +110,12 @@ service TugInterfaceServer
      * @return returns true / false on success / failure.
      */
     bool playFromLast(1: bool complete=false);
+
+    /**
+     * Get the torso front surface x coordinate.
+     * @return returns double defining the torso front surface x coordinate.
+     */
+    double getTorsoFront();
 
     /**
      * Get current animation being played.

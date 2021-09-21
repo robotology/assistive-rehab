@@ -771,6 +771,8 @@ class Manager : public RFModule, public managerTUG_IDL
     bool interrupting;
     mutex mtx;
     bool start_ex,ok_go,connected,params_set;
+    string success_status;
+    bool test_finished;
 
     Vector finishline_pose;
     double line_length;
@@ -1043,13 +1045,15 @@ class Manager : public RFModule, public managerTUG_IDL
         }
         if (ok_nav)
         {
+            yInfo()<<"Asking to go to"<<starting_pose.toString();
             if (go_to(starting_pose,true))
             {
-                yInfo()<<"Back to initial position";
+                yInfo()<<"Back to initial position"<<starting_pose.toString();
                 ret=set_auto();
             }
         }
         state=(state!=State::obstacle) ? State::idle : State::stopped;
+        test_finished=true;
         t0=Time::now();
         return ret;
     }
@@ -1118,36 +1122,39 @@ class Manager : public RFModule, public managerTUG_IDL
             yError()<<"Not connected";
             return false;
         }
-        if (simulation)
-        {
-            Bottle cmd,rep;
-            cmd.addString("getModelPos");
-            cmd.addString("SIM_CER_ROBOT");
-            if (gazeboPort.write(cmd,rep))
-            {
-                Bottle *model=rep.get(0).asList();
-                if (Bottle *pose=model->find("pose_world").asList())
-                {
-                    if(pose->size()>=7)
-                    {
-                        starting_pose[0]=pose->get(0).asDouble();
-                        starting_pose[1]=pose->get(1).asDouble();
-                        starting_pose[2]=pose->get(6).asDouble()*(180.0/M_PI);
-                    }
-                }
-            }
-        }
+        // if (simulation)
+        // {
+        //     Bottle cmd,rep;
+        //     cmd.addString("getModelPos");
+        //     cmd.addString("SIM_CER_ROBOT");
+        //     if (gazeboPort.write(cmd,rep))
+        //     {
+        //         Bottle *model=rep.get(0).asList();
+        //         if (Bottle *pose=model->find("pose_world").asList())
+        //         {
+        //             if(pose->size()>=7)
+        //             {
+        //                 starting_pose[0]=pose->get(0).asDouble();
+        //                 starting_pose[1]=pose->get(1).asDouble();
+        //                 starting_pose[2]=pose->get(6).asDouble()*(180.0/M_PI);
+        //             }
+        //         }
+        //     }
+        // }
         state=State::idle;
         bool ret=false;
+        yInfo()<<"Asking to go to"<<starting_pose.toString();
         if (go_to(starting_pose,true))
         {
-            yInfo()<<"Going to initial position";
+            yInfo()<<"Going to initial position"<<starting_pose.toString();
             if (send_stop(attentionPort))
             {
                 ret=set_auto();
             }
         }
         start_ex=ret;
+        success_status="not_passed";
+        test_finished=false;
         obstacle_manager->wakeUp();
         return start_ex;
     }
@@ -1183,6 +1190,27 @@ class Manager : public RFModule, public managerTUG_IDL
             }
         }
         return false;
+    }
+
+    /****************************************************************/
+    double get_measured_time() override
+    {
+        lock_guard<mutex> lg(mtx);
+        return t;
+    }
+
+    /****************************************************************/
+    string get_success_status() override
+    {
+        lock_guard<mutex> lg(mtx);
+        return success_status;
+    }
+
+    /****************************************************************/
+    bool has_finished() override
+    {
+        lock_guard<mutex> lg(mtx);
+        return test_finished;
     }
 
     /****************************************************************/
@@ -1842,7 +1870,7 @@ class Manager : public RFModule, public managerTUG_IDL
                 {
                     x+=line_length;
                 }
-                double y=finishline_pose[1]-0.5;
+                double y=finishline_pose[1]-1.0;
                 double theta=starting_pose[2];
                 ok_go=go_to(Vector({x,y,theta}),false);
             }
@@ -2050,6 +2078,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::finished)
         {
+            t=Time::now()-tstart;
             prev_state=state;
             yInfo()<<"Test finished in"<<t<<"seconds";
             vector<shared_ptr<SpeechParam>> p;
@@ -2063,11 +2092,13 @@ class Manager : public RFModule, public managerTUG_IDL
             s.reset();
             s.setKey("greetings");
             speak(s);
+            success_status="passed";
             disengage();
         }
 
         if (state==State::not_passed)
         {
+            t=Time::now()-tstart;
             prev_state=state;
             Bottle cmd,rep;
             cmd.addString("stop");

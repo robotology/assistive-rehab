@@ -44,15 +44,19 @@ void updateScript(sdf::ElementPtr &actor_sdf, const std::map<double, ignition::m
 }
 
 /****************************************************************/
-std::map<double, ignition::math::Pose3d> createMap(const yarp::sig::Matrix &t, const Velocity &vel)
+std::map<double, ignition::math::Pose3d> createMap(const yarp::sig::Matrix &t, const Velocity &vel, double &walktime, int &nsteps)
 {
     std::map<double, ignition::math::Pose3d> m;
     yarp::sig::Vector t0=t.getRow(0);
+    walktime=0.0;
     double duration=0.0;
+    double step_length=0.643;
+    nsteps=0;
     for (int i=0; i<t.rows(); i++)
     {
         yarp::sig::Vector t1=t.getRow(i);
         double dist=yarp::math::norm(t1.subVector(0,1)-t0.subVector(0,1));
+        nsteps+=ceil(dist/step_length);
         if (dist>0.0)
         {
             duration+=dist/vel.lin_vel;
@@ -67,6 +71,9 @@ std::map<double, ignition::math::Pose3d> createMap(const yarp::sig::Matrix &t, c
         m.insert(std::pair<double, ignition::math::Pose3d>(duration,p));
         t0=t1;
     }
+    yDebug()<<"updating map.. with duration"<<duration;
+    yDebug()<<"number of steps"<<nsteps;
+    walktime=duration;
 
     return m;
 }

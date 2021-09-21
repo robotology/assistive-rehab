@@ -246,15 +246,18 @@ void Step_Processor::estimate()
     {
         Vector k1=toCurrFrame(KeyPointTag::ankle_left);
         Vector k2=toCurrFrame(KeyPointTag::ankle_right);
-        Vector sag_plane=curr_skeleton.getSagittal();
-        Vector v=k1-k2;        
-        Vector v_steplen=projectOnPlane(v,sag_plane);
-        double d1=norm(v_steplen);
+        //Vector sag_plane=curr_skeleton.getSagittal();
+        //Vector v=k1-k2;        
+        //Vector v_steplen=projectOnPlane(v,sag_plane);
+        //double d1=norm(v_steplen);
+        double d1=abs(k1[1]-k2[1]);        
+        //double d1=norm(v_steplen);
 
-        Vector cor_plane=curr_skeleton.getCoronal();
-        Vector v_stepwidth=projectOnPlane(v,cor_plane);
-        double d2=norm(v_stepwidth);
-
+        //Vector cor_plane=curr_skeleton.getCoronal();
+        //Vector v_stepwidth=projectOnPlane(v,cor_plane);
+        //double d2=norm(v_stepwidth);
+        double d2=abs(k1[0]-k2[0]);
+        
         estimateSpatialParams(d1,d2);
         cadence=estimateCadence();
         speed=estimateSpeed();
@@ -307,6 +310,7 @@ void Step_Processor::estimateSpatialParams(const double &dist,const double &widt
         tlast=tdist[strikes.back()];
     }
 
+    
     steplen=0.0;
     stepwidth=0.0;
     if ( (Time::now()-tlast)<=time_window )

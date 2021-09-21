@@ -38,6 +38,8 @@ private:
     physics::WorldPtr world;
     physics::ActorPtr actor;
     Velocity vel;
+    double walktime;
+    int nsteps;
     std::string starting_animation;
     yarp::sig::Matrix targets;
     std::map<double, ignition::math::Pose3d> waypoints_map;

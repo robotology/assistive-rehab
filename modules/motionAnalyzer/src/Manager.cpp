@@ -668,7 +668,7 @@ bool Manager::runDtw(const Matrix &T)
 /********************************************************/
 bool Manager::start(const bool use_robot_template)
 {
-    lock_guard<mutex> lg(mtx);                
+    lock_guard<mutex> lg(mtx);
     this->use_robot_template = use_robot_template;
     yInfo() << "Start!";
     starting=true;
@@ -711,6 +711,11 @@ bool Manager::start(const bool use_robot_template)
             return false;
         }
     }
+    for(int i=0; i<processors.size(); i++)
+    {
+        processors[i]->reset();
+    }
+    bResult.clear();
     for(int i=0; i<processors.size(); i++)
     {
         processors[i]->setStartingTime(Time::now());
@@ -776,14 +781,9 @@ bool Manager::stop()
 /****************************************************************/
 void Manager::reset()
 {
-    for(int i=0; i<processors.size(); i++)
-    {
-        processors[i]->reset();
-    }
     nsession++;
     starting=false;
     skel_tag="";
-    bResult.clear();
     curr_exercise=NULL;
     curr_metric=NULL;
     standing=false;
@@ -873,8 +873,9 @@ bool Manager::isSitting()
 /********************************************************/
 bool Manager::hasCrossedFinishLine()
 {
-    Vector foot_right=skeletonIn[KeyPointTag::ankle_right]->getPoint();
-    Vector foot_left=skeletonIn[KeyPointTag::ankle_left]->getPoint();
+    Vector hip=skeletonIn[KeyPointTag::hip_center]->getPoint();
+    // Vector foot_right=skeletonIn[KeyPointTag::ankle_right]->getPoint();
+    // Vector foot_left=skeletonIn[KeyPointTag::ankle_left]->getPoint();
 
     Vector lp_world(3);
     lp_world[0]=line_pose[0];
@@ -890,16 +891,24 @@ bool Manager::hasCrossedFinishLine()
     Vector line_x=lOri.getCol(0);
     line_x.pop_back();
 
-    Vector fr_lp=lp_world-foot_right;
-    Vector fl_lp=lp_world-foot_left;
-    Vector pline=lp_world+line_x;
-    Vector v1=lp_world-pline;
-    double dist_fr_line=norm(cross(v1,fr_lp))/norm(v1);
-    double dist_fl_line=norm(cross(v1,fl_lp))/norm(v1);
-    yInfo()<<"dist foot right line"<<dist_fr_line;
-    yInfo()<<"dist foot left line"<<dist_fl_line;
+    // Vector hip_lp=lp_world-hip;
+    // Vector pline=lp_world+line_x;
+    // Vector v1=lp_world-pline;
+    // double dist_hip_line=norm(cross(v1,hip_lp))/norm(v1);
+    double dist_hip_line=hip[1]-lp_world[1];
+    yInfo()<<"dist hip line"<<dist_hip_line;
 
-    return (dist_fr_line<finishline_thresh && dist_fl_line<finishline_thresh);
+    // Vector fr_lp=lp_world-foot_right;
+    // Vector fl_lp=lp_world-foot_left;
+    // Vector pline=lp_world+line_x;
+    // Vector v1=lp_world-pline;
+    // double dist_fr_line=norm(cross(v1,fr_lp))/norm(v1);
+    // double dist_fl_line=norm(cross(v1,fl_lp))/norm(v1);
+    // yInfo()<<"dist foot right line"<<dist_fr_line;
+    // yInfo()<<"dist foot left line"<<dist_fl_line;
+
+    // return (dist_fr_line<finishline_thresh && dist_fl_line<finishline_thresh);
+    return (dist_hip_line<finishline_thresh);
 }
 
 /********************************************************/
@@ -956,7 +965,23 @@ void Manager::getSkeleton()
                                             if(skeleton->update_planes() && starting)
                                             {
                                                 vector<pair<string,Vector>> keyps=skeletonIn.get_unordered();
-                                                all_keypoints.push_back(keyps);
+                                                Bottle repNav;
+                                                repNav.clear();
+                                                cmd.clear();
+                                                cmd.addString("get_state");
+                                                navPort.write(cmd, repNav);
+                                                if(Bottle *rob_state=repNav.get(0).asList())
+                                                {
+                                                    if(rob_state->check("robot-location"))
+                                                    {
+                                                        Bottle *rob_locB=rob_state->find("robot-location").asList();
+                                                        double robx=rob_locB->get(0).asDouble();
+                                                        double roby=rob_locB->get(1).asDouble();
+                                                        double robtheta=rob_locB->get(2).asDouble();
+                                                        keyps.push_back(make_pair("robotLocation",Vector{robx,roby,robtheta}));
+                                                        all_keypoints.push_back(keyps);
+                                                    }
+                                                }
                                             }
                                             if(skeletonIn[KeyPointTag::shoulder_center]->isUpdated() && curr_exercise->getName()==ExerciseTag::tug)
                                             {
@@ -1038,6 +1063,7 @@ bool Manager::configure(ResourceFinder &rf)
     scalerPort.open(("/" + getName() + "/scaler:cmd").c_str());
     dtwPort.open(("/" + getName() + "/dtw:cmd").c_str());
     actionPort.open(("/" + getName() + "/action:cmd").c_str());
+    navPort.open(("/" + getName() + "/nav:cmd").c_str());
     rpcPort.open(("/" + getName() + "/cmd").c_str());
     attach(rpcPort);
 
@@ -1069,6 +1095,7 @@ bool Manager::interruptModule()
     scalerPort.interrupt();
     dtwPort.interrupt();
     actionPort.interrupt();
+    navPort.interrupt();
     rpcPort.interrupt();
     yInfo() << "Interrupted module";
     return true;
@@ -1096,6 +1123,7 @@ bool Manager::close()
     scalerPort.close();
     dtwPort.close();
     actionPort.close();
+    navPort.close();
     rpcPort.close();
     yInfo() << "Closed ports";
     return true;
@@ -1142,7 +1170,7 @@ bool Manager::updateModule()
 /********************************************************/
 bool Manager::writeStructToMat(const string& name, const vector< vector< pair<string,Vector> > >& keypoints_skel, mat_t *matfp)
 {
-    int numKeypoints = skeletonIn.getNumKeyPoints();
+    int numKeypoints = skeletonIn.getNumKeyPoints()+1;
     const char *fields[numKeypoints];
     for(int i=0; i<numKeypoints; i++)
     {
@@ -1152,7 +1180,6 @@ bool Manager::writeStructToMat(const string& name, const vector< vector< pair<st
     size_t dim_struct[2] = {1,1};
 
     size_t nSamples = keypoints_skel.size()-1;
-
     matvar_t *matvar = Mat_VarCreateStruct(name.c_str(),2,dim_struct,fields,numKeypoints);
     if(matvar != NULL)
     {
@@ -1162,7 +1189,6 @@ bool Manager::writeStructToMat(const string& name, const vector< vector< pair<st
         size_t dims_field[2] = {nSamples,3};
 
     //    print(keypoints_skel);
-
         for(int i=0; i<numKeypoints; i++)
         {
             for(int j=0; j<nSamples; j++)
