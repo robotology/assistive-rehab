@@ -17,6 +17,7 @@
 #include <string>
 #include <cmath>
 #include <algorithm>
+#include <random>
 
 #include <yarp/os/all.h>
 #include <yarp/sig/all.h>
@@ -319,7 +320,9 @@ class Attention : public RFModule, public attentionManager_IDL
     {
         if (auto_mode)
         {
-            random_shuffle(begin(skeletons),end(skeletons));
+            random_device rng;
+            mt19937 urng(rng());
+            shuffle(begin(skeletons), end(skeletons), urng);
             if (auto s=find_skeleton_raised_hand())
             {
                 tag=s->getTag();

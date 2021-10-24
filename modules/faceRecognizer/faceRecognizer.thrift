@@ -21,7 +21,7 @@ service recognition_IDL
 
     /**
      * Forget a face.
-     * @param label: object name to forget. Use "all" to forget all faces.
+     * @param label: object name to forget. Use `all` to forget all faces.
      * @return true/false on success/failure.
      */
     bool forget(1:string label);
