@@ -62,12 +62,6 @@
     </connection>
 
     <connection>
-        <from>/skeletonRetriever/cam:rpc</from>
-        <to>/depthCamera/rpc:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
         <from>/yarpOpenPose/target:o</from>
         <to>/skeletonRetriever/skeletons:i</to>
         <protocol>fast_tcp</protocol>
