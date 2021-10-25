@@ -22,8 +22,8 @@
 #include <iostream>
 #include <string>
 #include <yarp/os/all.h>
-#include <yarp/dev/IVisualParams.h>
-#include <yarp/dev/GenericVocabs.h>
+#include <yarp/dev/PolyDriver.h>
+#include <yarp/dev/IRGBDSensor.h>
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
 #include <iCub/ctrl/filters.h>
@@ -34,6 +34,7 @@
 
 using namespace std;
 using namespace yarp::os;
+using namespace yarp::dev;
 using namespace yarp::sig;
 using namespace yarp::math;
 using namespace iCub::ctrl;
@@ -232,7 +233,8 @@ class Retriever : public RFModule
     BufferedPort<Property> navPort;
     BufferedPort<Property> gazePort;
     RpcClient opcPort;
-    RpcClient camPort;
+
+    PolyDriver rgbdDrv;
 
     Matrix navFrame, gazeFrame, rootFrame;
     bool navFrameUpdated, gazeFrameUpdated;
@@ -267,22 +269,14 @@ class Retriever : public RFModule
     /****************************************************************/
     bool getCameraOptions()
     {
-        if (camPort.getOutputCount()>0)
-        {
-            Bottle cmd,rep;
-            cmd.addVocab(VOCAB_RGB_VISUAL_PARAMS);
-            cmd.addVocab(VOCAB_GET);
-            cmd.addVocab(VOCAB_FOV);
-            if (camPort.write(cmd,rep))
-            {
-                if (rep.size()>=5)
-                {
-                    fov_h=rep.get(3).asDouble();
-                    fov_v=rep.get(4).asDouble();
-                    yInfo()<<"camera fov_h (from sensor) ="<<fov_h;
-                    yInfo()<<"camera fov_v (from sensor) ="<<fov_v;
-                    return true;
-                }
+        IRGBDSensor* irgbd;
+        rgbdDrv.view(irgbd);
+
+        if (irgbd != nullptr) {
+            if (irgbd->getRgbFOV(fov_h, fov_v)) {
+                yInfo() << "camera fov_h (from sensor) =" << fov_h;
+                yInfo() << "camera fov_v (from sensor) =" << fov_v;
+                return true;
             }
         }
 
@@ -848,6 +842,7 @@ class Retriever : public RFModule
             optimize_limblength=gFiltering.check("optimize-limblength",Value(optimize_limblength)).asBool();
         }
 
+        string camera_remote = "/depthCamera";
         Bottle &gCamera=rf.findGroup("camera");
         if (!gCamera.isNull())
         {
@@ -865,6 +860,29 @@ class Retriever : public RFModule
                     }
                 }
             }
+            if (gCamera.check("remote"))
+            {
+                camera_remote = gCamera.find("remote").asString();
+            }
+        }
+
+        Property rgbdOpts;
+        rgbdOpts.put("device", "RGBDSensorClient");
+
+        rgbdOpts.put("remoteImagePort", camera_remote + "/rgbImage:o");
+        rgbdOpts.put("remoteDepthPort", camera_remote + "/depthImage:o");
+        rgbdOpts.put("remoteRpcPort", camera_remote + "/rpc:i");
+
+        rgbdOpts.put("localImagePort", "/" + getName() + "/cam/rgb");
+        rgbdOpts.put("localDepthPort", "/" + getName() + "/cam/depth");
+        rgbdOpts.put("localRpcPort", "/" + getName() + "/cam/rpc");
+
+        rgbdOpts.put("ImageCarrier", "mjpeg");
+        rgbdOpts.put("DepthCarrier", "fast_tcp");
+
+        if (!rgbdDrv.open(rgbdOpts)) {
+            yError() << "Unable to talk to depthCamera!";
+            return false;
         }
 
         skeletonsPort.open("/skeletonRetriever/skeletons:i");
@@ -873,7 +891,6 @@ class Retriever : public RFModule
         navPort.open("/skeletonRetriever/nav:i");
         gazePort.open("/skeletonRetriever/gaze:i");
         opcPort.open("/skeletonRetriever/opc:rpc");
-        camPort.open("/skeletonRetriever/cam:rpc");
 
         navFrame=gazeFrame=eye(4,4);
 
@@ -988,13 +1005,13 @@ class Retriever : public RFModule
         // remove all skeletons from OPC
         gc(numeric_limits<double>::infinity());
 
+        rgbdDrv.close();
         skeletonsPort.close();
         depthPort.close();
         viewerPort.close();
         navPort.close();
         gazePort.close();
         opcPort.close();
-        camPort.close();
 
         return true;
     }

@@ -32,6 +32,7 @@
     <param default="(0.005 0.005)" desc="Vector containing the distance between markers, for the start and the finish line respectively [m].">marker-dist</param>
     <param default="false" desc="If true, lines poses are obtained directly from the gazebo world scenario.">simulation</param>
     <param default="(54.0 42.0 160.0 120.0)" desc="Camera's intrinsics if specified from file.">camera::intrinsics</param>
+    <param default="/depthCamera" desc="Camera's remote to connect to">camera::remote</param>
   </arguments>
 
   <authors>

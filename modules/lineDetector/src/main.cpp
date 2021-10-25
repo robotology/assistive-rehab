@@ -11,8 +11,8 @@
 #include <yarp/sig/Image.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/cv/Cv.h>
-#include <yarp/dev/IVisualParams.h>
-#include <yarp/dev/GenericVocabs.h>
+#include <yarp/dev/PolyDriver.h>
+#include <yarp/dev/IRGBDSensor.h>
 #include <yarp/math/Math.h>
 
 #include <iCub/ctrl/filters.h>
@@ -52,9 +52,10 @@ class Detector : public RFModule, public lineDetector_IDL
     bool start_detection;
     bool updated_cam,updated_nav,updated_odom;
 
+    yarp::dev::PolyDriver rgbdDrv;
+
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > imgInPort;
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > imgOutPort;
-    yarp::os::RpcClient camPort;
     yarp::os::RpcClient opcPort;
     yarp::os::RpcServer cmdPort;
     yarp::os::BufferedPort<yarp::os::Property> gazeStatePort;
@@ -159,6 +160,7 @@ class Detector : public RFModule, public lineDetector_IDL
         detector_params = cv::aruco::DetectorParameters::create();
         detector_params->cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
 
+        std::string camera_remote = "/depthCamera";
         cam_intrinsic=cv::Mat::eye(3,3,CV_64F);
         cam_distortion=cv::Mat::zeros(1,5,CV_64F);
         Bottle &gCamera=rf.findGroup("camera");
@@ -190,6 +192,28 @@ class Detector : public RFModule, public lineDetector_IDL
                     cam_distortion.at<double>(0,4)=0.0; //k3;
                 }
             }
+            if (gCamera.check("remote"))
+            {
+                camera_remote = gCamera.find("remote").asString();
+            }
+        }
+
+        yarp::os::Property rgbdOpts;
+        rgbdOpts.put("device", "RGBDSensorClient");
+        rgbdOpts.put("remoteImagePort", camera_remote + "/rgbImage:o");
+        rgbdOpts.put("remoteDepthPort", camera_remote + "/depthImage:o");
+        rgbdOpts.put("remoteRpcPort", camera_remote + "/rpc:i");
+
+        rgbdOpts.put("localImagePort", "/" + getName() + "/rgbd/rgb");
+        rgbdOpts.put("localDepthPort", "/" + getName() + "/rgbd/depth");
+        rgbdOpts.put("localRpcPort", "/" + getName() + "/rgbd/rpc");
+
+        rgbdOpts.put("ImageCarrier", "mjpeg");
+        rgbdOpts.put("DepthCarrier", "fast_tcp");
+        
+        if (!rgbdDrv.open(rgbdOpts)) {
+            yError() << "Unable to talk to depthCamera!";
+            return false;
         }
 
         simulation=rf.check("simulation",Value(false)).asBool();
@@ -199,7 +223,6 @@ class Detector : public RFModule, public lineDetector_IDL
         }
         imgInPort.open("/" + getName() + "/img:i");
         imgOutPort.open("/" + getName() + "/img:o");
-        camPort.open("/" + getName() + "/cam:rpc");
         opcPort.open("/" + getName() + "/opc:rpc");
         gazeStatePort.open("/" + getName() + "/gaze/state:i");
         navPort.open("/" + getName() + "/nav:rpc");
@@ -852,7 +875,6 @@ class Detector : public RFModule, public lineDetector_IDL
         }
         imgInPort.interrupt();
         imgOutPort.interrupt();
-        camPort.interrupt();
         opcPort.interrupt();
         gazeStatePort.interrupt();
         navPort.interrupt();
@@ -869,6 +891,8 @@ class Detector : public RFModule, public lineDetector_IDL
             delete lines_filter[i];
         }
 
+        rgbdDrv.close();
+
         if (simulation)
         {
             gazeboPort.close();
@@ -876,7 +900,6 @@ class Detector : public RFModule, public lineDetector_IDL
 
         imgInPort.close();
         imgOutPort.close();
-        camPort.close();
         opcPort.close();
         gazeStatePort.close();
         navPort.close();
@@ -886,43 +909,38 @@ class Detector : public RFModule, public lineDetector_IDL
     }
 
     /****************************************************************/
-    bool getCameraOptions(cv::Mat &cam_intrinsic, cv::Mat &cam_distortion)
+    bool getCameraOptions(cv::Mat &cam_intrinsics, cv::Mat &cam_distortion)
     {
-        if (camPort.getOutputCount()>0)
-        {
-            yInfo()<<"Reading intrinsics from camera";
-            Bottle cmd,rep;
-            cmd.addVocab(VOCAB_RGB_VISUAL_PARAMS);
-            cmd.addVocab(VOCAB_GET);
-            cmd.addVocab(VOCAB_INTRINSIC_PARAM);
-            if (camPort.write(cmd,rep))
-            {
-                if (rep.size()>=4)
-                {
-                    yarp::os::Bottle *intrinsics = rep.get(3).asList();
-                    fx = intrinsics->find("focalLengthX").asDouble();
-                    fy = intrinsics->find("focalLengthY").asDouble();
-                    px = intrinsics->find("principalPointX").asDouble();
-                    py = intrinsics->find("principalPointY").asDouble();
+        yarp::dev::IRGBDSensor* irgbd;
+        rgbdDrv.view(irgbd);
 
-                    yInfo()<<"Camera intrinsics:"<<fx<<fy<<px<<py;
+        if (irgbd != nullptr) {
+            yInfo() << "Reading intrinsics from camera";
+            yarp::os::Property intrinsics;
+            if (irgbd->getRgbIntrinsicParam(intrinsics)) {
+                fx = intrinsics.find("focalLengthX").asDouble();
+                fy = intrinsics.find("focalLengthY").asDouble();
+                px = intrinsics.find("principalPointX").asDouble();
+                py = intrinsics.find("principalPointY").asDouble();
+                
+                yInfo() << "Camera intrinsics:" << fx << fy << px << py;
+                
+                cam_intrinsics.at<double>(0, 0) = fx;
+                cam_intrinsics.at<double>(0, 2) = px;
+                cam_intrinsics.at<double>(1, 1) = fy;
+                cam_intrinsics.at<double>(1, 2) = py;
+                cam_intrinsics.at<double>(2, 2) = 1.0;
 
-                    cam_intrinsic.at<double>(0,0)=fx;
-                    cam_intrinsic.at<double>(0,2)=px;
-                    cam_intrinsic.at<double>(1,1)=fy;
-                    cam_intrinsic.at<double>(1,2)=py;
-                    cam_intrinsic.at<double>(2,2)=1.0;
-
-                    cam_distortion.at<double>(0,0)=0.0; //k1;
-                    cam_distortion.at<double>(0,1)=0.0; //k2;
-                    cam_distortion.at<double>(0,2)=0.0; //t1;
-                    cam_distortion.at<double>(0,3)=0.0; //t2;
-                    cam_distortion.at<double>(0,4)=0.0; //k3;
-
-                    return true;
-                }
+                cam_distortion.at<double>(0, 0) = 0.0; //k1;
+                cam_distortion.at<double>(0, 1) = 0.0; //k2;
+                cam_distortion.at<double>(0, 2) = 0.0; //t1;
+                cam_distortion.at<double>(0, 3) = 0.0; //t2;
+                cam_distortion.at<double>(0, 4) = 0.0; //k3;
+                
+                return true;
             }
         }
+
         return false;
     }
 

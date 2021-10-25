@@ -94,12 +94,6 @@
     </connection>
 
     <connection>
-        <from>/skeletonRetriever/cam:rpc</from>
-        <to>/depthCamera/rpc:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
         <from>/himrepClassifier/img:o</from>
         <to>/caffeCoder/img:i</to>
         <protocol>fast_tcp</protocol>
