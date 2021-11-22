@@ -79,7 +79,7 @@ public:
     {
         yarp::sig::Vector num;
         yarp::sig::Vector den;
-        double minv,maxv,thresh,step_window,time_window;
+        double thresh,step_window,time_window,minv,maxv;
     } step_params;
 
     Step() {;}

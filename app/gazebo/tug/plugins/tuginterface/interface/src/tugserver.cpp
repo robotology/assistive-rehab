@@ -18,7 +18,8 @@ using namespace std;
 using namespace gazebo;
 
 /****************************************************************/
-TugServer::TugServer() : world(0), actor(0), vel(0.0,0.0)
+TugServer::TugServer() : world(0), actor(0), vel(0.0,0.0), walktime(0.0),
+    standuptime(0.0), sitdowntime(0.0), nsteps(0)
 {
     line_frame=yarp::math::eye(4,4);
 }
@@ -70,6 +71,22 @@ bool TugServer::playFromLast(const bool complete)
     yInfo()<<"Playing from last";
     actor->PlayFromLastStop(complete);
     return true;
+}
+
+/****************************************************************/
+double TugServer::getTorsoFront()
+{
+    auto link=actor->GetLink("LowerBack");
+    auto collision=link->GetCollisions()[0];
+    auto boxShape = boost::dynamic_pointer_cast<gazebo::physics::BoxShape>(
+            collision->GetShape());
+    auto size = boxShape->Size();
+
+    auto actor_pose=actor->WorldPose().Pos();
+    auto box_pose=collision->WorldPose().Pos();
+
+    double torso_front=box_pose.X()-actor_pose.X()+size[0]/2;
+    return torso_front;
 }
 
 /****************************************************************/
@@ -148,7 +165,9 @@ bool TugServer::setTarget(const Pose &p)
     ty[1]=t.Pos().Y();
     ty[2]=t.Rot().Yaw();
     targets.setRow(1,ty);
+    targets(2,0)=ty[0];
     updateMap(targets);
+    yDebug()<<"New target matrix"<<targets.toString();
     yInfo()<<"Setting target to"<<ty.toString();
     return true;
 }
@@ -166,6 +185,74 @@ bool TugServer::setSpeed(const double speed)
 double TugServer::getSpeed()
 {
     return this->vel.lin_vel;
+}
+
+/****************************************************************/
+double TugServer::getTime(const string &animation_name, const int nsamples)
+{
+    double time=0.0;
+    for(int i=0; i<nsamples; i++)
+    {
+        double tstart=yarp::os::Time::now();
+        actor->PlayWithAnimationName(animation_name,false);
+        while(actor->IsActive())
+        {
+    //                yInfo()<<"Computing time for"<<animation;
+        }
+        double tend=yarp::os::Time::now()-tstart;
+        time+=tend;
+    }
+    time/=nsamples;
+    return time;
+}
+
+/****************************************************************/
+double TugServer::getStandSitTime()
+{
+    physics::Actor::SkeletonAnimation_M skel_m=actor->SkeletonAnimations();
+    double tottime=0.0;
+    for (auto it=skel_m.begin(); it!=skel_m.end(); it++)
+    {
+        string animation=it->first;
+        if (animation=="stand_up")
+        {
+            double tstart=yarp::os::Time::now();
+            actor->PlayWithAnimationName(animation,false);
+            while(actor->IsActive())
+            {
+//                yInfo()<<"Computing time for"<<animation;
+            }
+            this->standuptime=yarp::os::Time::now()-tstart;
+            yInfo()<<"Standup time"<<this->standuptime;
+        }
+        if (animation=="sit_down")
+        {
+            double tstart=yarp::os::Time::now();
+            actor->PlayWithAnimationName(animation,false);
+            while(actor->IsActive())
+            {
+//                yInfo()<<"Computing time for"<<animation;
+            }
+            this->sitdowntime=yarp::os::Time::now()-tstart;
+            yInfo()<<"Sitdown time"<<this->sitdowntime;
+        }
+        tottime=this->sitdowntime+this->standuptime;
+    }
+
+    return tottime;
+}
+
+
+/****************************************************************/
+double TugServer::getWalkingTime()
+{
+    return this->walktime;
+}
+
+/****************************************************************/
+int TugServer::getNumSteps()
+{
+    return this->nsteps;
 }
 
 /****************************************************************/
@@ -258,7 +345,7 @@ yarp::os::Property TugServer::getModelPos(const string &model_name)
 /****************************************************************/
 void TugServer::updateMap(const yarp::sig::Matrix &t)
 {
-    std::map<double, ignition::math::Pose3d> wp_map=createMap(t,this->vel);
+    std::map<double, ignition::math::Pose3d> wp_map=createMap(t,this->vel,this->walktime,this->nsteps);
     wp_map=generateWaypoints(this->vel,wp_map);
 
     sdf::ElementPtr world_sdf=world->SDF();
@@ -269,10 +356,14 @@ void TugServer::updateMap(const yarp::sig::Matrix &t)
 
 /****************************************************************/
 void TugServer::init(const Velocity &vel,
-                     const yarp::sig::Matrix &targets)
+                     const yarp::sig::Matrix &targets,
+                     const double &walktime,
+                     const int &nsteps)
 {
     this->vel=vel;
     this->targets=targets;
+    this->walktime=walktime;
+    this->nsteps=nsteps;
 }
 
 /****************************************************************/

@@ -120,7 +120,7 @@ void TugInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
         return;
     }
 
-    waypoints_map=createMap(targets,vel);
+    waypoints_map=createMap(targets,vel,walktime,nsteps);
     waypoints_map=generateWaypoints(vel,waypoints_map);
 
     sdf::ElementPtr world_sdf=world->SDF();
@@ -143,7 +143,7 @@ void TugInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
     m_rpcport.open(portname);
     server.yarp().attachAsServer(m_rpcport);
-    server.init(vel,targets);
+    server.init(vel,targets,walktime,nsteps);
 
     // Listen to the update event. This event is broadcast every
     // simulation iteration.

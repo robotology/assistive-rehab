@@ -88,4 +88,11 @@ service navController_IDL
     *         [(skeleton-tag tag) (skeleton-location (x y))].
     */
    Property get_state();
+
+   /**
+    * Set the distance to the target.
+    * @param dist distance to keep from the skeleton (meters).
+    * @return true/false on success/failure.
+    */
+   bool set_distance_target(1:double dist);
 }

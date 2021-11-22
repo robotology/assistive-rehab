@@ -535,6 +535,13 @@ class Navigator : public RFModule, public navController_IDL {
     return publish_state();
   }
 
+  /****************************************************************/
+  bool set_distance_target(const double dist)override {
+    lock_guard<mutex> lck(mtx_update);
+    distance_target=dist;
+    return true;
+  }
+
 /****************************************************************/
 public:
 
