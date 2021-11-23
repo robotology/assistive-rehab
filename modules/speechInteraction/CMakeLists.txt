@@ -20,7 +20,7 @@ find_package(ICUBcontrib REQUIRED)
 find_package(GRPC REQUIRED)
 find_package(GOOGLEAPIS REQUIRED)
 
-find_package(YARP 3.2.1 REQUIRED COMPONENTS OS sig dev math)
+find_package(YARP 3.5.1 REQUIRED COMPONENTS OS sig dev math)
 
 list(APPEND CMAKE_MODULE_PATH ${ICUBCONTRIB_MODULE_PATH})
 

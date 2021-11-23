@@ -76,9 +76,9 @@ class Detector : public RFModule, public lineDetector_IDL
         std::string moduleName=rf.check("name", Value("lineDetector")).asString();
         setName(moduleName.c_str());
 
-        period=rf.check("period",Value(0.1)).asDouble();
-        nlines=rf.check("nlines",Value(2)).asInt();
-        line_filter_order=rf.check("line-filter-order",Value(30)).asInt();
+        period=rf.check("period",Value(0.1)).asFloat64();
+        nlines=rf.check("nlines",Value(2)).asInt32();
+        line_filter_order=rf.check("line-filter-order",Value(30)).asInt32();
 
         nx={6,6};
         if(Bottle *nxB=rf.find("nx").asList())
@@ -89,8 +89,8 @@ class Detector : public RFModule, public lineDetector_IDL
                 yError()<<"nx="<<nxB->toString();
                 return false;
             }
-            nx[0]=nxB->get(0).asInt();
-            nx[1]=nxB->get(1).asInt();
+            nx[0]=nxB->get(0).asInt32();
+            nx[1]=nxB->get(1).asInt32();
         }
 
         ny={1,1};
@@ -102,8 +102,8 @@ class Detector : public RFModule, public lineDetector_IDL
                 yError()<<"ny="<<nyB->toString();
                 return false;
             }
-            ny[0]=nyB->get(0).asInt();
-            ny[1]=nyB->get(1).asInt();
+            ny[0]=nyB->get(0).asInt32();
+            ny[1]=nyB->get(1).asInt32();
         }
 
         marker_size={0.13,0.13};
@@ -115,8 +115,8 @@ class Detector : public RFModule, public lineDetector_IDL
                 yError()<<"marker-size="<<mSzB->toString();
                 return false;
             }
-            marker_size[0]=mSzB->get(0).asDouble();
-            marker_size[1]=mSzB->get(1).asDouble();
+            marker_size[0]=mSzB->get(0).asFloat64();
+            marker_size[1]=mSzB->get(1).asFloat64();
         }
 
         marker_dist={0.005,0.005};
@@ -128,8 +128,8 @@ class Detector : public RFModule, public lineDetector_IDL
                 yError()<<"marker-dist="<<mDistB->toString();
                 return false;
             }
-            marker_dist[0]=mDistB->get(0).asDouble();
-            marker_dist[1]=mDistB->get(1).asDouble();
+            marker_dist[0]=mDistB->get(0).asFloat64();
+            marker_dist[1]=mDistB->get(1).asFloat64();
         }
 
         line2idx["start-line"]=0;
@@ -171,10 +171,10 @@ class Detector : public RFModule, public lineDetector_IDL
                 if (intrinsics->size()>=4)
                 {
                     camera_configured=true;
-                    fx=intrinsics->get(0).asDouble();
-                    fy=intrinsics->get(1).asDouble();
-                    px=intrinsics->get(2).asDouble();
-                    py=intrinsics->get(3).asDouble();
+                    fx=intrinsics->get(0).asFloat64();
+                    fy=intrinsics->get(1).asFloat64();
+                    px=intrinsics->get(2).asFloat64();
+                    py=intrinsics->get(3).asFloat64();
                     yInfo()<<"camera fx (from file) ="<<fx;
                     yInfo()<<"camera fy (from file) ="<<fy;
                     yInfo()<<"camera px (from file) ="<<px;
@@ -306,13 +306,13 @@ class Detector : public RFModule, public lineDetector_IDL
                 if(mod_bottle->size()>=7)
                 {
                     v.resize(7);
-                    v[0]=mod_bottle->get(0).asDouble();
-                    v[1]=mod_bottle->get(1).asDouble();
-                    v[2]=mod_bottle->get(2).asDouble();
-                    v[3]=mod_bottle->get(3).asDouble();
-                    v[4]=mod_bottle->get(4).asDouble();
-                    v[5]=mod_bottle->get(5).asDouble();
-                    v[6]=mod_bottle->get(6).asDouble();
+                    v[0]=mod_bottle->get(0).asFloat64();
+                    v[1]=mod_bottle->get(1).asFloat64();
+                    v[2]=mod_bottle->get(2).asFloat64();
+                    v[3]=mod_bottle->get(3).asFloat64();
+                    v[4]=mod_bottle->get(4).asFloat64();
+                    v[5]=mod_bottle->get(5).asFloat64();
+                    v[6]=mod_bottle->get(6).asFloat64();
                     return true;
                 }
             }
@@ -334,14 +334,14 @@ class Detector : public RFModule, public lineDetector_IDL
         if (opcPort.getOutputCount())
         {
             Bottle cmd,rep;
-            cmd.addVocab(Vocab::encode("ask"));
+            cmd.addVocab32("ask");
 
             Bottle &bLine=cmd.addList();
             Bottle &b1=bLine.addList();
             b1.addString(line_tag);
             if (opcPort.write(cmd,rep))
             {
-                if (rep.get(0).asVocab()==Vocab::encode("ack"))
+                if (rep.get(0).asVocab32()==Vocab32::encode("ack"))
                 {
                     if (Bottle *idB=rep.get(1).asList())
                     {
@@ -349,7 +349,7 @@ class Detector : public RFModule, public lineDetector_IDL
                         {
                             if (idList->size()>0)
                             {
-                                id=idList->get(0).asInt();
+                                id=idList->get(0).asInt32();
                                 get_line_opc(id,line_tag);
                             }
                         }
@@ -367,14 +367,14 @@ class Detector : public RFModule, public lineDetector_IDL
         if (opcPort.getOutputCount())
         {
             Bottle cmd,rep;
-            cmd.addVocab(Vocab::encode("get"));
+            cmd.addVocab32("get");
 
             Bottle &l=cmd.addList();
             l.addString("id");
-            l.addInt(id);
+            l.addInt32(id);
             if (opcPort.write(cmd,rep))
             {
-                if (rep.get(0).asVocab()==Vocab::encode("ack"))
+                if (rep.get(0).asVocab32()==Vocab32::encode("ack"))
                 {
                     Property lineProp(rep.get(1).toString().c_str());
                     if (Bottle *b=lineProp.find(line_tag).asList())
@@ -402,7 +402,7 @@ class Detector : public RFModule, public lineDetector_IDL
         if (opcPort.getOutputCount())
         {
             Bottle cmd,rep;
-            cmd.addVocab(Vocab::encode("add"));
+            cmd.addVocab32("add");
 
             Bottle bPoseWorld;
             Property poseProp;
@@ -422,9 +422,9 @@ class Detector : public RFModule, public lineDetector_IDL
                 cmd.addList().read(prop);
                 if (opcPort.write(cmd,rep))
                 {
-                    if (rep.get(0).asVocab()==Vocab::encode("ack"))
+                    if (rep.get(0).asVocab32()==Vocab32::encode("ack"))
                     {
-                        int id=rep.get(1).asList()->get(1).asInt();
+                        int id=rep.get(1).asList()->get(1).asInt32();
                         return opcSet(prop,id);
                     }
                 }
@@ -444,17 +444,17 @@ class Detector : public RFModule, public lineDetector_IDL
         if (opcPort.getOutputCount())
         {
             Bottle cmd,rep;
-            cmd.addVocab(Vocab::encode("set"));
+            cmd.addVocab32("set");
             Bottle &pl=cmd.addList();
             pl.read(prop);
             Bottle id;
             Bottle &id_pl=id.addList();
             id_pl.addString("id");
-            id_pl.addInt(id_line);
+            id_pl.addInt32(id_line);
             pl.append(id);
             if (opcPort.write(cmd,rep))
             {
-                return (rep.get(0).asVocab()==Vocab::encode("ack"));
+                return (rep.get(0).asVocab32()==Vocab32::encode("ack"));
             }
         }
 
@@ -467,13 +467,13 @@ class Detector : public RFModule, public lineDetector_IDL
         if (opcPort.getOutputCount())
         {
             Bottle cmd,rep;
-            cmd.addVocab(Vocab::encode("del"));
+            cmd.addVocab32("del");
             Bottle &pl=cmd.addList().addList();
             pl.addString("id");
-            pl.addInt(id);
+            pl.addInt32(id);
             if (opcPort.write(cmd,rep))
             {
-                if(rep.get(0).asVocab()==Vocab::encode("ack"))
+                if(rep.get(0).asVocab32()==Vocab32::encode("ack"))
                 {
                     yInfo()<<"Line with id"<<id<<"removed from opc";
                     return true;
@@ -586,15 +586,15 @@ class Detector : public RFModule, public lineDetector_IDL
         Bottle cmd,rep;
         cmd.addString("create_line");
         cmd.addString(line_tag);
-        cmd.addDouble(p0[0]);
-        cmd.addDouble(p0[1]);
-        cmd.addDouble(p0[2]);
-        cmd.addDouble(p1[0]);
-        cmd.addDouble(p1[1]);
-        cmd.addDouble(p1[2]);
-        cmd.addInt(color[0]);
-        cmd.addInt(color[1]);
-        cmd.addInt(color[2]);
+        cmd.addFloat64(p0[0]);
+        cmd.addFloat64(p0[1]);
+        cmd.addFloat64(p0[2]);
+        cmd.addFloat64(p1[0]);
+        cmd.addFloat64(p1[1]);
+        cmd.addFloat64(p1[2]);
+        cmd.addInt32(color[0]);
+        cmd.addInt32(color[1]);
+        cmd.addInt32(color[2]);
         if(viewerPort.write(cmd,rep))
         {
             if(rep.get(0).asBool()==true)
@@ -614,7 +614,7 @@ class Detector : public RFModule, public lineDetector_IDL
         cmd.addString(l);
         if(viewerPort.write(cmd,rep))
         {
-            if(rep.get(0).asVocab()==Vocab::encode("ok"))
+            if(rep.get(0).asVocab32()==Vocab32::encode("ok"))
             {
                 yInfo()<<l<<"deleted";
                 updated_line_viewer=false;
@@ -751,10 +751,10 @@ class Detector : public RFModule, public lineDetector_IDL
             if (Bottle *loc=robotState->find("robot-location").asList())
             {
                 yarp::sig::Vector robot_location(7,0.0);
-                robot_location[0]=loc->get(0).asDouble();
-                robot_location[1]=loc->get(1).asDouble();
+                robot_location[0]=loc->get(0).asFloat64();
+                robot_location[1]=loc->get(1).asFloat64();
                 robot_location[5]=1.0;
-                robot_location[6]=(M_PI/180)*loc->get(2).asDouble();
+                robot_location[6]=(M_PI/180)*loc->get(2).asFloat64();
                 navFrame=yarp::math::axis2dcm(robot_location.subVector(3,6));
                 navFrame.setSubcol(robot_location.subVector(0,2),0,3);              
                 updated_nav=true;
@@ -769,12 +769,12 @@ class Detector : public RFModule, public lineDetector_IDL
     {
         Bottle cmd,rep;
         cmd.addString("reset_odometry");
-        cmd.addDouble(x);
-        cmd.addDouble(y);
-        cmd.addDouble(theta);
+        cmd.addFloat64(x);
+        cmd.addFloat64(y);
+        cmd.addFloat64(theta);
         if (navPort.write(cmd,rep))
         {
-            if (rep.get(0).asVocab()==Vocab::encode("ok"))
+            if (rep.get(0).asVocab32()==Vocab32::encode("ok"))
             {
                 updated_odom=true;
                 yInfo()<<"Reset robot's odometry";
@@ -808,23 +808,23 @@ class Detector : public RFModule, public lineDetector_IDL
             yarp::sig::Vector pose=lines_pose_world[i].subVector(0,2);
             Bottle cmd,rep;
             cmd.addString("go_to_wait");
-            cmd.addDouble(pose[0]);
-            cmd.addDouble(pose[1]);
-            cmd.addDouble(theta);
+            cmd.addFloat64(pose[0]);
+            cmd.addFloat64(pose[1]);
+            cmd.addFloat64(theta);
             if (navPort.write(cmd,rep))
             {
-                if (rep.get(0).asVocab()==Vocab::encode("ok"))
+                if (rep.get(0).asVocab32()==Vocab32::encode("ok"))
                 {
                     yInfo()<<"Reached"<<line_tag;
                     cmd.clear();
                     rep.clear();
                     cmd.addString("reset_odometry");
-                    cmd.addDouble(pose[0]);
-                    cmd.addDouble(pose[1]);
-                    cmd.addDouble(theta);
+                    cmd.addFloat64(pose[0]);
+                    cmd.addFloat64(pose[1]);
+                    cmd.addFloat64(theta);
                     if (navPort.write(cmd,rep))
                     {
-                        if (rep.get(0).asVocab()==Vocab::encode("ok"))
+                        if (rep.get(0).asVocab32()==Vocab32::encode("ok"))
                         {
                             yInfo()<<"Reset robot's odometry";
                             return true;
@@ -916,10 +916,10 @@ class Detector : public RFModule, public lineDetector_IDL
             yInfo() << "Reading intrinsics from camera";
             yarp::os::Property intrinsics;
             if (irgbd->getRgbIntrinsicParam(intrinsics)) {
-                fx = intrinsics.find("focalLengthX").asDouble();
-                fy = intrinsics.find("focalLengthY").asDouble();
-                px = intrinsics.find("principalPointX").asDouble();
-                py = intrinsics.find("principalPointY").asDouble();
+                fx = intrinsics.find("focalLengthX").asFloat64();
+                fy = intrinsics.find("focalLengthY").asFloat64();
+                px = intrinsics.find("principalPointX").asFloat64();
+                py = intrinsics.find("principalPointY").asFloat64();
                 
                 yInfo() << "Camera intrinsics:" << fx << fy << px << py;
                 

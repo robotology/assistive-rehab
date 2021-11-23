@@ -82,14 +82,14 @@ class Player : public RFModule, public skeletonPlayer_IDL
         if (opcPort.getOutputCount())
         {
             Bottle cmd,rep;
-            cmd.addVocab(Vocab::encode("add"));
+            cmd.addVocab32("add");
             Property prop=it->s->toProperty();
             cmd.addList().read(prop);
             if (opcPort.write(cmd,rep))
             {
-                if (rep.get(0).asVocab()==Vocab::encode("ack"))
+                if (rep.get(0).asVocab32()==Vocab32::encode("ack"))
                 {
-                    opc_id=rep.get(1).asList()->get(1).asInt();
+                    opc_id=rep.get(1).asList()->get(1).asInt32();
                     viewerUpdate(prop);
                     return true;
                 }
@@ -105,18 +105,18 @@ class Player : public RFModule, public skeletonPlayer_IDL
         if (opcPort.getOutputCount())
         {
             Bottle cmd,rep;
-            cmd.addVocab(Vocab::encode("set"));
+            cmd.addVocab32("set");
             Bottle &pl=cmd.addList();
             Property prop=it->s->toProperty();
             pl.read(prop);
             Bottle id;
             Bottle &id_pl=id.addList();
             id_pl.addString("id");
-            id_pl.addInt(opc_id);
+            id_pl.addInt32(opc_id);
             pl.append(id);
             if (opcPort.write(cmd,rep))
             {
-                if (rep.get(0).asVocab()==Vocab::encode("ack"))
+                if (rep.get(0).asVocab32()==Vocab32::encode("ack"))
                 {
                     viewerUpdate(prop);
                     return true;
@@ -133,13 +133,13 @@ class Player : public RFModule, public skeletonPlayer_IDL
         if (opcPort.getOutputCount())
         {
             Bottle cmd,rep;
-            cmd.addVocab(Vocab::encode("del"));
+            cmd.addVocab32("del");
             Bottle &pl=cmd.addList().addList();
             pl.addString("id");
-            pl.addInt(opc_id);
+            pl.addInt32(opc_id);
             if (opcPort.write(cmd,rep))
             {
-                if (rep.get(0).asVocab()==Vocab::encode("ack"))
+                if (rep.get(0).asVocab32()==Vocab32::encode("ack"))
                 {
                     opc_id=opc_id_invalid;
                     return true;
@@ -217,7 +217,7 @@ class Player : public RFModule, public skeletonPlayer_IDL
             }
 
             MetaSkeleton sk;
-            sk.t=bottle.get(1).asDouble();
+            sk.t=bottle.get(1).asFloat64();
 
             if (Bottle *b=bottle.get(3).asList())
             {
@@ -475,9 +475,9 @@ class Player : public RFModule, public skeletonPlayer_IDL
         lock_guard<mutex> lg(mtx);
         color.clear();
         Bottle &c=color.addList();
-        c.addDouble(new_r);
-        c.addDouble(new_g);
-        c.addDouble(new_b);
+        c.addFloat64(new_r);
+        c.addFloat64(new_g);
+        c.addFloat64(new_b);
         return true;
     }
 

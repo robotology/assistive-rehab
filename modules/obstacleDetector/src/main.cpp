@@ -108,13 +108,13 @@ public:
     /****************************************************************/
     bool configure(ResourceFinder& rf) override
     {
-        period=rf.check("period",Value(0.1)).asDouble();
+        period=rf.check("period",Value(0.1)).asFloat64();
         module_name=rf.check("name",Value("obstacleDetector")).asString();
         robot=rf.check("robot",Value("cer")).asString();
-        dist_thresh=rf.check("dist-thresh",Value(0.3)).asDouble();
-        dist_obstacle=rf.check("dist-obstacle",Value(1.0)).asDouble();
-        min_points=rf.check("min-points",Value(3)).asInt();
-        ver_step=rf.check("ver-step",Value(1.0)).asDouble();
+        dist_thresh=rf.check("dist-thresh",Value(0.3)).asFloat64();
+        dist_obstacle=rf.check("dist-obstacle",Value(1.0)).asFloat64();
+        min_points=rf.check("min-points",Value(3)).asInt32();
+        ver_step=rf.check("ver-step",Value(1.0)).asFloat64();
 
         navPort.open("/"+module_name+"/nav:rpc");
         outPort.open("/"+module_name+"/obstacle:o");
@@ -241,7 +241,7 @@ public:
             {
                 Bottle &obstacle=outPort.prepare();
                 obstacle.clear();
-                obstacle.addDouble(d);
+                obstacle.addFloat64(d);
                 obstacle.addString(laser);
                 outPort.write();
                 if (getRobotState()!="idle")
@@ -470,7 +470,7 @@ public:
         cmd.addString("stop");
         if (navPort.write(cmd,rep))
         {
-            if (rep.get(0).asVocab()==Vocab::encode("ok"))
+            if (rep.get(0).asVocab32()==Vocab32::encode("ok"))
             {
                 return true;
             }

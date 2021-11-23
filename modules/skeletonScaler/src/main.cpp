@@ -58,8 +58,8 @@ public:
         rpcPort.open("/skeletonScaler/rpc");
         attach(rpcPort);
 
-        nsessions=rf.check("nsessions",Value(0)).asInt();
-        tbegin=rf.check("tbegin",Value(0.0)).asDouble();
+        nsessions=rf.check("nsessions",Value(0)).asInt32();
+        tbegin=rf.check("tbegin",Value(0.0)).asFloat64();
         return true;
     }
 
@@ -78,7 +78,7 @@ public:
             string context = command.get(2).asString();
             if(loadData(file,context))
             {
-                reply.addVocab(Vocab::encode("ok"));
+                reply.addVocab32("ok");
                 reply.addString("Loading file " + file + " from context " + context);
 
                 size_t idx=file.find(".");
@@ -98,30 +98,30 @@ public:
             Vector camerapos(3,0.0),focalpoint(3,0.0);
             Bottle *cp = command.get(1).asList();
             Bottle *fp = command.get(2).asList();
-            camerapos[0] = cp->get(0).asDouble();
-            camerapos[1] = cp->get(1).asDouble();
-            camerapos[2] = cp->get(2).asDouble();
+            camerapos[0] = cp->get(0).asFloat64();
+            camerapos[1] = cp->get(1).asFloat64();
+            camerapos[2] = cp->get(2).asFloat64();
 
-            focalpoint[0] = fp->get(0).asDouble();
-            focalpoint[1] = fp->get(1).asDouble();
-            focalpoint[2] = fp->get(2).asDouble();
+            focalpoint[0] = fp->get(0).asFloat64();
+            focalpoint[1] = fp->get(1).asFloat64();
+            focalpoint[2] = fp->get(2).asFloat64();
 
             if(rotateCam(camerapos,focalpoint))
             {
-                reply.addVocab(Vocab::encode("ok"));
+                reply.addVocab32("ok");
             }
             else
             {
-                reply.addVocab(Vocab::encode("fail"));
+                reply.addVocab32("fail");
                 yWarning() << "Unable to rotate camera";
             }
         }
         if(command.get(0).asString() == "run")
         {
-            double twarp = command.get(1).asDouble();
+            double twarp = command.get(1).asFloat64();
             if(start(nsessions,twarp))
             {
-                reply.addVocab(Vocab::encode("ok"));
+                reply.addVocab32("ok");
                 hasStarted=true;
             }
             else
@@ -133,7 +133,7 @@ public:
         if(command.get(0).asString() == "tags")
         {
             selectByTag(command.get(1).asString());
-            reply.addVocab(Vocab::encode("ok"));
+            reply.addVocab32("ok");
         }
         if(command.get(0).asString() == "stop")
         {
@@ -141,7 +141,7 @@ public:
             {
                 hide();
                 hasStarted=false;
-                reply.addVocab(Vocab::encode("ok"));
+                reply.addVocab32("ok");
             }
             else
             {
@@ -193,13 +193,13 @@ public:
     {
         //ask for the property id
         Bottle cmd, reply;
-        cmd.addVocab(Vocab::encode("ask"));
+        cmd.addVocab32("ask");
         Bottle &content = cmd.addList().addList();
         content.addString("skeleton");
         opcPort.write(cmd, reply);
         if(reply.size() > 1)
         {
-            if(reply.get(0).asVocab() == Vocab::encode("ack"))
+            if(reply.get(0).asVocab32() == Vocab32::encode("ack"))
             {
                 if(Bottle *idField = reply.get(1).asList())
                 {
@@ -207,14 +207,14 @@ public:
                     {
                         for(int i=0; i<idValues->size(); i++)
                         {
-                            int id = idValues->get(i).asInt();
+                            int id = idValues->get(i).asInt32();
 
                             //given the id, get the value of the property
                             cmd.clear();
-                            cmd.addVocab(Vocab::encode("get"));
+                            cmd.addVocab32("get");
                             Bottle &content = cmd.addList().addList();
                             content.addString("id");
-                            content.addInt(id);
+                            content.addInt32(id);
                             Bottle replyProp;
                             opcPort.write(cmd, replyProp);
                             fillSkeletons(replyProp, skeleton, playedSkel);
@@ -229,7 +229,7 @@ public:
     void fillSkeletons(const Bottle &replyProp,
                        SkeletonStd& skeleton, SkeletonStd& playedSkel)
     {
-        if(replyProp.get(0).asVocab() == Vocab::encode("ack"))
+        if(replyProp.get(0).asVocab32() == Vocab32::encode("ack"))
         {
             if(Bottle *propField = replyProp.get(1).asList())
             {
@@ -268,12 +268,12 @@ public:
         {
             Bottle cmd,rep;
             cmd.addString("set_camera_position");
-            cmd.addDouble(camerapos[0]);
-            cmd.addDouble(camerapos[1]);
-            cmd.addDouble(camerapos[2]);
+            cmd.addFloat64(camerapos[0]);
+            cmd.addFloat64(camerapos[1]);
+            cmd.addFloat64(camerapos[2]);
             if(rpcViewerPort.write(cmd,rep))
             {
-                ret_pos=rep.get(0).asVocab()==Vocab::encode("ack");
+                ret_pos=rep.get(0).asVocab32()==Vocab32::encode("ack");
             }
         }
 
@@ -281,12 +281,12 @@ public:
         {
             Bottle cmd,rep;
             cmd.addString("set_camera_focalpoint");
-            cmd.addDouble(focalpoint[0]);
-            cmd.addDouble(focalpoint[1]);
-            cmd.addDouble(focalpoint[2]);
+            cmd.addFloat64(focalpoint[0]);
+            cmd.addFloat64(focalpoint[1]);
+            cmd.addFloat64(focalpoint[2]);
             if(rpcViewerPort.write(cmd,rep))
             {
-                ret_foc=rep.get(0).asVocab()==Vocab::encode("ack");
+                ret_foc=rep.get(0).asVocab32()==Vocab32::encode("ack");
             }
         }
 
@@ -302,7 +302,7 @@ public:
         yInfo() << cmd.toString();
         if(cmdPort.write(cmd,rep))
         {
-            if(rep.get(0).asVocab()==Vocab::encode("ok"))
+            if(rep.get(0).asVocab32()==Vocab32::encode("ok"))
                 return true;
         }
 
@@ -314,10 +314,10 @@ public:
     {
         Bottle cmd,rep;
         cmd.addString("get_maxpath");
-        cmd.addDouble(tbegin_);
+        cmd.addFloat64(tbegin_);
 //        yInfo() << cmd.toString();
         if(cmdPort.write(cmd,rep))
-            maxpath=rep.get(0).asDouble();
+            maxpath=rep.get(0).asFloat64();
     }
 
     /****************************************************************/
@@ -325,11 +325,11 @@ public:
     {
         Bottle cmd,rep;
         cmd.addString("scale");
-        cmd.addDouble(scale);
+        cmd.addFloat64(scale);
         yInfo() << cmd.toString();
         if(cmdPort.write(cmd,rep))
         {
-            if(rep.get(0).asVocab()==Vocab::encode("ok"))
+            if(rep.get(0).asVocab32()==Vocab32::encode("ok"))
                 return true;
         }
 
@@ -341,11 +341,11 @@ public:
     {
         Bottle cmd,rep;
         cmd.addString("set_opacity");
-        cmd.addDouble(opacity_);
+        cmd.addFloat64(opacity_);
         yInfo() << cmd.toString();
         if(cmdPort.write(cmd,rep))
         {
-            if(rep.get(0).asVocab()==Vocab::encode("ok"))
+            if(rep.get(0).asVocab32()==Vocab32::encode("ok"))
                 return true;
         }
 
@@ -362,7 +362,7 @@ public:
         yInfo() << cmd.toString();
         if(cmdPort.write(cmd,rep))
         {
-            if(rep.get(0).asVocab()==Vocab::encode("ok"))
+            if(rep.get(0).asVocab32()==Vocab32::encode("ok"))
             {
                 return true;
             }
@@ -376,11 +376,11 @@ public:
     {
         Bottle cmd1,rep1;
         cmd1.addString("put_in_opc");
-        cmd1.addDouble(0.0);
+        cmd1.addFloat64(0.0);
         yInfo() << cmd1.toString();
         if(cmdPort.write(cmd1,rep1))
         {
-            if(!rep1.get(0).asVocab()==Vocab::encode("ok"))
+            if(!rep1.get(0).asVocab32()==Vocab32::encode("ok"))
                 return false;
         }
 
@@ -428,12 +428,12 @@ public:
 
         Bottle cmd,rep;
         cmd.addString("start");
-        cmd.addInt(nsessions_);
-        cmd.addDouble(twarp_);
+        cmd.addInt32(nsessions_);
+        cmd.addFloat64(twarp_);
         yInfo() << cmd.toString();
         if(cmdPort.write(cmd,rep))
         {
-            if(rep.get(0).asVocab()==Vocab::encode("ok"))
+            if(rep.get(0).asVocab32()==Vocab32::encode("ok"))
                 return true;
         }
 
@@ -447,7 +447,7 @@ public:
         cmd.addString("stop");
         if(cmdPort.write(cmd,rep))
         {
-            if(rep.get(0).asVocab()==Vocab::encode("ok"))
+            if(rep.get(0).asVocab32()==Vocab32::encode("ok"))
             {
                 yInfo() << "Stopping";
                 prev_tag="";
@@ -464,7 +464,7 @@ public:
         Bottle cmd,rep;
         cmd.addString("remove_from_opc");
         cmdPort.write(cmd,rep);
-        if(rep.get(0).asVocab()==Vocab::encode("ok"))
+        if(rep.get(0).asVocab32()==Vocab32::encode("ok"))
             return true;
         return false;
     }

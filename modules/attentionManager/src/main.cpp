@@ -39,7 +39,7 @@ class Attention : public RFModule, public attentionManager_IDL
     enum class State { unconnected, connection_trigger, idle, seek_skeleton, follow } state;
     bool auto_mode,virtual_mode;
 
-    const int ack=Vocab::encode("ack");
+    const int ack=Vocab32::encode("ack");
     const double T=3.0;
     double period;
     double gaze_follow_T;
@@ -359,12 +359,12 @@ class Attention : public RFModule, public attentionManager_IDL
     bool set_gaze_T(const double T) const
     {
         Bottle cmd,rep;
-        cmd.addVocab(Vocab::encode("set"));
+        cmd.addVocab32("set");
         cmd.addString("T");
-        cmd.addDouble(T);
+        cmd.addFloat64(T);
         if (gazeCmdPort.write(cmd,rep))
         {
-            return (rep.get(0).asVocab()==ack);
+            return (rep.get(0).asVocab32()==ack);
         }
         return false;
     }
@@ -385,11 +385,11 @@ class Attention : public RFModule, public attentionManager_IDL
         options.put("target-location",loc.get(0));
 
         Bottle cmd,rep;
-        cmd.addVocab(Vocab::encode("look"));
+        cmd.addVocab32("look");
         cmd.addList().read(options);
         if (gazeCmdPort.write(cmd,rep))
         {
-            return (rep.get(0).asVocab()==ack);
+            return (rep.get(0).asVocab32()==ack);
         }
         return false;
     }
@@ -398,8 +398,8 @@ class Attention : public RFModule, public attentionManager_IDL
     bool wait_motion_done()
     {
         Bottle cmd;
-        cmd.addVocab(Vocab::encode("get"));
-        cmd.addVocab(Vocab::encode("done"));
+        cmd.addVocab32("get");
+        cmd.addVocab32("done");
 
         const double t0=Time::now();
         while (Time::now()-t0<T)
@@ -409,9 +409,9 @@ class Attention : public RFModule, public attentionManager_IDL
             Bottle rep;
             if (gazeCmdPort.write(cmd,rep))
             {
-                if (rep.get(0).asVocab()==ack)
+                if (rep.get(0).asVocab32()==ack)
                 {
-                    if (rep.get(1).asInt()>0)
+                    if (rep.get(1).asInt32()>0)
                     {
                         return true;
                     }
@@ -431,10 +431,10 @@ class Attention : public RFModule, public attentionManager_IDL
     bool configure(ResourceFinder &rf) override
     {
         auto_mode=rf.check("auto-start");
-        period=rf.check("period",Value(0.1)).asDouble();
-        gaze_follow_T=rf.check("gaze-follow-T",Value(1.5)).asDouble();
-        gaze_seek_T=rf.check("gaze-seek-T",Value(2.0)).asDouble();
-        inactivity_thres=rf.check("inactivity-thres",Value(0.05)).asDouble();
+        period=rf.check("period",Value(0.1)).asFloat64();
+        gaze_follow_T=rf.check("gaze-follow-T",Value(1.5)).asFloat64();
+        gaze_seek_T=rf.check("gaze-seek-T",Value(2.0)).asFloat64();
+        inactivity_thres=rf.check("inactivity-thres",Value(0.05)).asFloat64();
         virtual_mode=rf.check("virtual-mode",Value(false)).asBool();
         robot_skeleton_name=rf.check("robot-skeleton-name",Value("robot")).asString();
         frame=rf.check("frame",Value("camera")).asString();

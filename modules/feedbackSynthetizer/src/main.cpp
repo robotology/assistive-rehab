@@ -443,7 +443,7 @@ public:
 
         Bottle &outscore = scorePort.prepare();
         outscore.clear();
-        outscore.addDouble(score);
+        outscore.addFloat64(score);
         scorePort.write();
     }
 
@@ -515,8 +515,8 @@ public:
         setName(moduleName.c_str());
 
         string speak_file=rf.check("speak-file",Value("speak-it")).asString();
-        period = rf.check("period",Value(0.1)).asDouble();
-        int speak_length = rf.check("speak-length",Value(2)).asInt();
+        period = rf.check("period",Value(0.1)).asFloat64();
+        int speak_length = rf.check("speak-length",Value(2)).asInt32();
 
         synthetizer = new Synthetizer(moduleName,rf.getContext(),speak_file,speak_length);
         synthetizer->open();

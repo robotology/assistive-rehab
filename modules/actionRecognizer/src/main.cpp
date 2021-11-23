@@ -102,9 +102,9 @@ public:
             return false;
         }
         part=bGroup.find("part").asString();
-        nclasses=bGroup.find("num-classes").asInt();
-        nfeatures=bGroup.find("num-features").asInt();
-        nsteps=bGroup.find("num-steps").asInt();
+        nclasses=bGroup.find("num-classes").asInt32();
+        nfeatures=bGroup.find("num-features").asInt32();
+        nsteps=bGroup.find("num-steps").asInt32();
         model_name=bGroup.find("model-name").asString();
         for (int i=0; i<nclasses; i++)
         {
@@ -123,7 +123,7 @@ public:
                 yError()<<"Unable to find key \"label\" and/or \"value\"";
                 return false;
             }
-            int value=bClass.find("value").asInt();
+            int value=bClass.find("value").asInt32();
             string label=bClass.find("label").asString();
             class_map[value]=label;
         }
@@ -346,13 +346,13 @@ public:
     {
         //ask for the property id
         Bottle cmd, reply;
-        cmd.addVocab(Vocab::encode("ask"));
+        cmd.addVocab32("ask");
         Bottle &content = cmd.addList().addList();
         content.addString("skeleton");
         opcPort.write(cmd, reply);
         if(reply.size() > 1)
         {
-            if(reply.get(0).asVocab() == Vocab::encode("ack"))
+            if(reply.get(0).asVocab32() == Vocab32::encode("ack"))
             {
                 if(Bottle *idField = reply.get(1).asList())
                 {
@@ -363,17 +363,17 @@ public:
                             updated=false;
                             for(int i=0; i<idValues->size(); i++)
                             {
-                                int id = idValues->get(i).asInt();
+                                int id = idValues->get(i).asInt32();
 
                                 //given the id, get the value of the property
                                 cmd.clear();
-                                cmd.addVocab(Vocab::encode("get"));
+                                cmd.addVocab32("get");
                                 Bottle &content = cmd.addList().addList();
                                 Bottle replyProp;
                                 content.addString("id");
-                                content.addInt(id);
+                                content.addInt32(id);
                                 opcPort.write(cmd, replyProp);
-                                if(replyProp.get(0).asVocab() == Vocab::encode("ack"))
+                                if(replyProp.get(0).asVocab32() == Vocab32::encode("ack"))
                                 {
                                     if(Bottle *propField = replyProp.get(1).asList())
                                     {
@@ -508,7 +508,7 @@ public:
                         outBottle.clear();
                         outBottle.addString(action_to_perform);
                         outBottle.addString(voted_action);
-                        outBottle.addDouble(voted_score);
+                        outBottle.addFloat64(voted_score);
                         outPort.write();
 
                         idx_step=0;

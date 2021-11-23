@@ -131,10 +131,10 @@ public:
     bool configure(ResourceFinder &rf) override
     {
         moduleName=rf.check("name",Value("skeletonLocker")).asString();
-        period=rf.check("period",Value(0.01)).asDouble();
-        radius=rf.check("radius",Value(0.6)).asDouble();
-        alpha=rf.check("alpha",Value(0.3)).asDouble();
-        max_radius=rf.check("max-radius",Value(0.75)).asDouble();
+        period=rf.check("period",Value(0.01)).asFloat64();
+        radius=rf.check("radius",Value(0.6)).asFloat64();
+        alpha=rf.check("alpha",Value(0.3)).asFloat64();
+        max_radius=rf.check("max-radius",Value(0.75)).asFloat64();
 
         opcInPort.open("/"+moduleName+"/opc:i");
         viewerPort.open("/"+moduleName+"/viewer:o");
@@ -172,7 +172,7 @@ public:
                         if ( tag!=skeleton_tag && tag!=tag_locked )
                         {
                             MetaSkeleton s;
-                            int id=prop.find("id").asInt();
+                            int id=prop.find("id").asInt32();
                             s.tag=tag;
                             s.opc_id=id;
                             s.skeleton->update(prop);
@@ -188,7 +188,7 @@ public:
                         }
                         else if ( tag==skeleton_tag )
                         {
-                            int id=prop.find("id").asInt();
+                            int id=prop.find("id").asInt32();
                             l.skeleton->update(prop);
                             l.tag=tag_locked;
                             l.skeleton->setTag(l.tag);
@@ -283,14 +283,14 @@ public:
         if (opcRpcPort.getOutputCount())
         {
             Bottle cmd,rep;
-            cmd.addVocab(Vocab::encode("add"));
+            cmd.addVocab32("add");
             Property prop=(s.skeleton)->toProperty();
             cmd.addList().read(prop);
             if (opcRpcPort.write(cmd,rep))
             {
-                if (rep.get(0).asVocab()==Vocab::encode("ack"))
+                if (rep.get(0).asVocab32()==Vocab32::encode("ack"))
                 {
-                    s.opc_id=rep.get(1).asList()->get(1).asInt();
+                    s.opc_id=rep.get(1).asList()->get(1).asInt32();
                     opc_id_locked=s.opc_id;
                     yInfo()<<"Adding to opc"<<s.opc_id<<s.tag;
                     return opcSet(s);
@@ -307,19 +307,19 @@ public:
         if (opcRpcPort.getOutputCount())
         {
             Bottle cmd,rep;
-            cmd.addVocab(Vocab::encode("set"));
+            cmd.addVocab32("set");
             Bottle &pl=cmd.addList();
             Property prop=(s.skeleton)->toProperty();
             pl.read(prop);
             Bottle id;
             Bottle &id_pl=id.addList();
             id_pl.addString("id");
-            id_pl.addInt(s.opc_id);
+            id_pl.addInt32(s.opc_id);
             pl.append(id);
             if (opcRpcPort.write(cmd,rep))
             {
                 yInfo()<<"Setting to opc"<<s.tag<<s.opc_id;
-                return (rep.get(0).asVocab()==Vocab::encode("ack"));
+                return (rep.get(0).asVocab32()==Vocab32::encode("ack"));
             }
         }
 
@@ -332,13 +332,13 @@ public:
         if (opcRpcPort.getOutputCount())
         {
             Bottle cmd,rep;
-            cmd.addVocab(Vocab::encode("del"));
+            cmd.addVocab32("del");
             Bottle &pl=cmd.addList().addList();
             pl.addString("id");
-            pl.addInt(s.opc_id);
+            pl.addInt32(s.opc_id);
             if (opcRpcPort.write(cmd,rep))
             {
-                return (rep.get(0).asVocab()==Vocab::encode("ack"));
+                return (rep.get(0).asVocab32()==Vocab32::encode("ack"));
             }
         }
 

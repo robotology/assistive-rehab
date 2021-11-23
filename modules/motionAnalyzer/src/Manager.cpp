@@ -53,7 +53,7 @@ Vector toVector(const Bottle &b, const string &key)
     if(Bottle *bOut=b.find(key).asList())
     {
         for(size_t k=0; k<bOut->size(); k++)
-            v.push_back(bOut->get(k).asDouble());
+            v.push_back(bOut->get(k).asFloat64());
     }
     return v;
 }
@@ -61,8 +61,8 @@ Vector toVector(const Bottle &b, const string &key)
 /********************************************************/
 Property toProp(const Bottle &b, const string &ex_tag)
 {
-    int duration=b.find("duration").asInt();
-    double twarp=b.find("twarp").asDouble();
+    int duration=b.find("duration").asInt32();
+    double twarp=b.find("twarp").asFloat64();
     Property pout;
     pout.put("duration",duration);
     pout.put("twarp",twarp);
@@ -138,8 +138,8 @@ Metric* Manager::loadMetricsList(const Bottle &bMetricEx, const string &metric_t
             Vector ref_dir=toVector(bMetricEx,"ref_dir");
             string ref_joint=bMetricEx.check("ref_joint", Value("")).asString();;
             string tag_plane=bMetricEx.find("tag_plane").asString();
-            double minv=bMetricEx.find("min").asDouble();
-            double maxv=bMetricEx.find("max").asDouble();
+            double minv=bMetricEx.find("min").asFloat64();
+            double maxv=bMetricEx.find("max").asFloat64();
             Rom::RomParams rp={tag_joint,tag_plane,ref_dir,ref_joint,minv,maxv};
             return new Rom(metric_type,metric_tag,rp);
         }
@@ -147,11 +147,11 @@ Metric* Manager::loadMetricsList(const Bottle &bMetricEx, const string &metric_t
         {
             num=toVector(bMetricEx,"num");
             den=toVector(bMetricEx,"den");
-            double step_thresh=bMetricEx.find("step_thresh").asDouble();
-            double step_window=bMetricEx.find("step_window").asDouble();
-            double time_window=bMetricEx.find("time_window").asDouble();
-            double minv=bMetricEx.find("min").asDouble();
-            double maxv=bMetricEx.find("max").asDouble();
+            double step_thresh=bMetricEx.find("step_thresh").asFloat64();
+            double step_window=bMetricEx.find("step_window").asFloat64();
+            double time_window=bMetricEx.find("time_window").asFloat64();
+            double minv=bMetricEx.find("min").asFloat64();
+            double maxv=bMetricEx.find("max").asFloat64();
             Step::StepParams sp={num,den,step_thresh,step_window,time_window,minv,maxv};
             return new Step(metric_type,metric_tag,sp);
         }
@@ -160,8 +160,8 @@ Metric* Manager::loadMetricsList(const Bottle &bMetricEx, const string &metric_t
             string tag_joint=bMetricEx.find("tag_joint").asString();
             Vector ref_dir=toVector(bMetricEx,"ref_dir");
             string tag_plane=bMetricEx.find("tag_plane").asString();
-            double minv=bMetricEx.find("min").asDouble();
-            double maxv=bMetricEx.find("max").asDouble();
+            double minv=bMetricEx.find("min").asFloat64();
+            double maxv=bMetricEx.find("max").asFloat64();
             Vector target=toVector(bMetricEx,"target");
             EndPoint::EndPointParams ep_params={tag_joint,tag_plane,ref_dir,minv,maxv,target};
             return new EndPoint(metric_type,metric_tag,ep_params);
@@ -184,13 +184,13 @@ Exercise* Manager::loadExerciseList(const Bottle &bGeneral, const string &ex_tag
     }
     if(ex_tag==ExerciseTag::tug)
     {
-        int N=bGeneral.find("vel_estimator_N").asInt();
-        double D=bGeneral.find("vel_estimator_D").asDouble();
-        finishline_thresh=bGeneral.find("finish-line-thresh").asDouble();
-        standing_thresh=bGeneral.find("standing-thresh").asDouble();
-        double distance=bGeneral.check("distance",Value(6.0)).asDouble();
-        double time_high=bGeneral.check("time-high",Value(10.0)).asDouble();
-        double time_medium=bGeneral.check("time-medium",Value(20.0)).asDouble();
+        int N=bGeneral.find("vel_estimator_N").asInt32();
+        double D=bGeneral.find("vel_estimator_D").asFloat64();
+        finishline_thresh=bGeneral.find("finish-line-thresh").asFloat64();
+        standing_thresh=bGeneral.find("standing-thresh").asFloat64();
+        double distance=bGeneral.check("distance",Value(6.0)).asFloat64();
+        double time_high=bGeneral.check("time-high",Value(10.0)).asFloat64();
+        double time_medium=bGeneral.check("time-medium",Value(20.0)).asFloat64();
         lin_est_shoulder=new AWLinEstimator(N,D); //(16,0.01);
         Tug::TugParams tugp={finishline_thresh,standing_thresh,distance,time_high,time_medium};
         return new Tug(tugp);
@@ -232,7 +232,7 @@ bool Manager::loadMotionList(ResourceFinder &rf)
                             for(int j=0; j<bMetricTags->size(); j++)
                             {
                                 string metric_type = bMetricTags->get(j).asString();
-                                int nmetrics = bMetricNumber->get(j).asInt();
+                                int nmetrics = bMetricNumber->get(j).asInt32();
                                 for(int k=0; k<nmetrics; k++)
                                 {
                                     string metric_tag = metric_type+"_"+to_string(k);
@@ -273,7 +273,7 @@ bool Manager::setTemplateTag(const string &template_tag)
     cmd.addString("setTemplateTag");
     cmd.addString(template_tag);
     dtwPort.write(cmd,reply);
-    if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+    if(reply.get(0).asVocab32()!=Vocab32::encode("ok"))
     {
         yError() << "feedbackProducer could not load the template tag";
         return false;
@@ -298,10 +298,10 @@ bool Manager::loadExercise(const string &exercise_tag)
         if(curr_exercise->getType()==ExerciseType::rehabilitation)
         {
             Bottle cmd,reply;
-            cmd.addVocab(Vocab::encode("load"));
+            cmd.addVocab32("load");
             cmd.addString(exercise_tag);
             actionPort.write(cmd,reply);
-            if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+            if(reply.get(0).asVocab32()!=Vocab32::encode("ok"))
             {
                 yError()<<"actionRecognizer could not load exercise tag" <<exercise_tag;
                 return false;
@@ -312,7 +312,7 @@ bool Manager::loadExercise(const string &exercise_tag)
             cmd.addString("setFeedbackThresh");
             cmd.addList().read(curr_exercise->getFeedbackThresholds());
             dtwPort.write(cmd,reply);
-            if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+            if(reply.get(0).asVocab32()!=Vocab32::encode("ok"))
             {
                 yError() << "feedbackProducer could not load the feedback thresholds";
                 return false;
@@ -337,7 +337,7 @@ bool Manager::loadExercise(const string &exercise_tag)
             cout<<endl;
             yInfo() << cmd.toString();
             dtwPort.write(cmd,reply);
-            if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+            if(reply.get(0).asVocab32()!=Vocab32::encode("ok"))
             {
                 yError() << "feedbackProducer could not load the joint list";
                 return false;
@@ -419,7 +419,7 @@ bool Manager::selectSkel(const string &skel_tag)
     {
         //send tag to skeletonScaler
         Bottle cmd,reply;
-        cmd.addVocab(Vocab::encode("tags"));
+        cmd.addVocab32("tags");
         cmd.addString(this->skel_tag);
         yInfo() << cmd.toString();
         actionPort.write(cmd,reply);
@@ -429,7 +429,7 @@ bool Manager::selectSkel(const string &skel_tag)
         cmd.addString("setSkelTag");
         cmd.addString(this->skel_tag);
         dtwPort.write(cmd,reply);
-        if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+        if(reply.get(0).asVocab32()!=Vocab32::encode("ok"))
         {
             yError() << "feedbackProducer could not load the skeleton tag";
             return false;
@@ -448,7 +448,7 @@ bool Manager::setPart(const string &part)
     cmd.addString("loadModel");
     cmd.addString(part);
     actionPort.write(cmd,reply);
-    if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+    if(reply.get(0).asVocab32()!=Vocab32::encode("ok"))
     {
         yError() << "Could not set part to actionRecognizer";
         return false;
@@ -459,7 +459,7 @@ bool Manager::setPart(const string &part)
     cmd.addString("setPart");
     cmd.addString(part);
     dtwPort.write(cmd,reply);
-    if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+    if(reply.get(0).asVocab32()!=Vocab32::encode("ok"))
     {
         yError() << "Could not set part to feedbackProducer";
         return false;
@@ -534,7 +534,7 @@ bool Manager::selectMetric(const string &metric_tag)
             cmd.addString("setMetric");
             cmd.addString(metric_tag);
             dtwPort.write(cmd,reply);
-            if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+            if(reply.get(0).asVocab32()!=Vocab32::encode("ok"))
             {
                 yError()<<"feedbackProducer could not load the metric tag";
                 return false;
@@ -547,7 +547,7 @@ bool Manager::selectMetric(const string &metric_tag)
             cmd.addList().read(currmet.find("target"));
             dtwPort.write(cmd,reply);
             yInfo() << cmd.toString();
-            if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+            if(reply.get(0).asVocab32()!=Vocab32::encode("ok"))
             {
                 yError() << "feedbackProducer could not load the target";
                 return false;
@@ -568,7 +568,7 @@ bool sendCmd(const RpcClient &port, const Bottle &cmd)
 {
     Bottle reply;
     port.write(cmd,reply);
-    if(reply.get(0).asVocab()!=Vocab::encode("ok"))
+    if(reply.get(0).asVocab32()!=Vocab32::encode("ok"))
     {
         yError() << "failure from" << port.getName();
         return false;
@@ -581,7 +581,7 @@ bool Manager::runScaler()
 {
     Property params=curr_exercise->getFeedbackParams();
     Bottle cmd;
-    cmd.addVocab(Vocab::encode("load"));
+    cmd.addVocab32("load");
     cmd.addString(template_tag + ".log");
     cmd.addString(rf->getContext());
     if(!sendCmd(scalerPort,cmd))
@@ -590,7 +590,7 @@ bool Manager::runScaler()
         return false;
     }
     cmd.clear();
-    cmd.addVocab(Vocab::encode("tags"));
+    cmd.addVocab32("tags");
     cmd.addString(skel_tag);
     if (!sendCmd(scalerPort,cmd))
     {
@@ -598,8 +598,8 @@ bool Manager::runScaler()
         return false;
     }
     cmd.clear();
-    cmd.addVocab(Vocab::encode("run"));
-    cmd.addDouble(params.find("twarp").asDouble());
+    cmd.addVocab32("run");
+    cmd.addFloat64(params.find("twarp").asFloat64());
     if (!sendCmd(scalerPort,cmd))
     {
         yError()<<"Could not run skeletonScaler";
@@ -621,8 +621,8 @@ bool Manager::runActionRecognizer(const Matrix &T)
         return false;
     }
     cmd.clear();
-    cmd.addVocab(Vocab::encode("run"));
-    cmd.addInt(params.find("duration").asInt());
+    cmd.addVocab32("run");
+    cmd.addInt32(params.find("duration").asInt32());
     if (!sendCmd(actionPort,cmd))
     {
         yError()<<"Could not run actionRecognizer";
@@ -639,8 +639,8 @@ bool Manager::runDtw(const Matrix &T)
     {
         yInfo()<<"Using robot template";
         cmd.addString("setRobotTemplate");
-        cmd.addInt(this->use_robot_template);
-        cmd.addInt(this->robot_skeleton_mirror);
+        cmd.addInt32(this->use_robot_template);
+        cmd.addInt32(this->robot_skeleton_mirror);
         if (!sendCmd(dtwPort,cmd))
         {
             yError()<<"feedbackProducer could not load robot template";
@@ -732,10 +732,10 @@ bool Manager::stopFeedback()
     yInfo() << "Stop feedback!";
 
     Bottle cmd,reply;
-    cmd.addVocab(Vocab::encode("stop"));
+    cmd.addVocab32("stop");
     dtwPort.write(cmd,reply);
     actionPort.write(cmd,reply);
-    if(reply.get(0).asVocab()==Vocab::encode("ok"))
+    if(reply.get(0).asVocab32()==Vocab32::encode("ok"))
     {
         return true;
     }
@@ -752,10 +752,10 @@ bool Manager::stop()
         if(curr_exercise->getType()==ExerciseType::rehabilitation)
         {
             Bottle cmd, reply;
-            cmd.addVocab(Vocab::encode("stop"));
+            cmd.addVocab32("stop");
             dtwPort.write(cmd,reply);
             actionPort.write(cmd,reply);
-            if(reply.get(0).asVocab()==Vocab::encode("ok") && starting)
+            if(reply.get(0).asVocab32()==Vocab32::encode("ok") && starting)
             {
                 if(use_robot_template == 0)
                 {
@@ -763,7 +763,7 @@ bool Manager::stop()
                     scalerPort.write(cmd,reply);
                     cmd.clear();
                     reply.clear();
-                    cmd.addVocab(Vocab::encode("rot"));
+                    cmd.addVocab32("rot");
                     cmd.addList().read(cameraposinit);
                     cmd.addList().read(focalpointinit);
                     scalerPort.write(cmd, reply);
@@ -924,13 +924,13 @@ void Manager::getSkeleton()
 {
     //ask for the property id
     Bottle cmd,reply;
-    cmd.addVocab(Vocab::encode("ask"));
+    cmd.addVocab32("ask");
     Bottle &content = cmd.addList().addList();
     content.addString("skeleton");
     opcPort.write(cmd, reply);
     if(reply.size() > 1)
     {
-        if(reply.get(0).asVocab() == Vocab::encode("ack"))
+        if(reply.get(0).asVocab32() == Vocab32::encode("ack"))
         {
             if(Bottle *idField = reply.get(1).asList())
             {
@@ -941,16 +941,16 @@ void Manager::getSkeleton()
                         updated=false;
                         for(int i=0; i<idValues->size(); i++)
                         {
-                            int id = idValues->get(i).asInt();
+                            int id = idValues->get(i).asInt32();
                             //given the id, get the value of the property
                             cmd.clear();
-                            cmd.addVocab(Vocab::encode("get"));
+                            cmd.addVocab32("get");
                             Bottle &content = cmd.addList().addList();
                             Bottle replyProp;
                             content.addString("id");
-                            content.addInt(id);
+                            content.addInt32(id);
                             opcPort.write(cmd, replyProp);
-                            if(replyProp.get(0).asVocab() == Vocab::encode("ack"))
+                            if(replyProp.get(0).asVocab32() == Vocab32::encode("ack"))
                             {
                                 if(Bottle *propField = replyProp.get(1).asList())
                                 {
@@ -975,9 +975,9 @@ void Manager::getSkeleton()
                                                     if(rob_state->check("robot-location"))
                                                     {
                                                         Bottle *rob_locB=rob_state->find("robot-location").asList();
-                                                        double robx=rob_locB->get(0).asDouble();
-                                                        double roby=rob_locB->get(1).asDouble();
-                                                        double robtheta=rob_locB->get(2).asDouble();
+                                                        double robx=rob_locB->get(0).asFloat64();
+                                                        double roby=rob_locB->get(1).asFloat64();
+                                                        double robtheta=rob_locB->get(2).asFloat64();
                                                         keyps.push_back(make_pair("robotLocation",Vector{robx,roby,robtheta}));
                                                         all_keypoints.push_back(keyps);
                                                     }
@@ -1038,8 +1038,8 @@ void Manager::estimate()
         if(result.check(prop_tag) &&
                 processors[i]->getProcessedMetric()==curr_metric->getParams().find("name").asString())
         {
-            double res=result.find(prop_tag).asDouble();
-            scopebottleout.addDouble(res);
+            double res=result.find(prop_tag).asFloat64();
+            scopebottleout.addFloat64(res);
         }
     }
     scopePort.write();
@@ -1301,16 +1301,16 @@ matvar_t* Manager::createRomField(const Property &params)
     size_t dims_field_dir[2]={1,3};
     Bottle *bRef=params.find("ref_dir").asList();
     Vector ref_met(3,0.0);
-    ref_met[0]=bRef->get(0).asDouble();
-    ref_met[1]=bRef->get(1).asDouble();
-    ref_met[2]=bRef->get(2).asDouble();
+    ref_met[0]=bRef->get(0).asFloat64();
+    ref_met[1]=bRef->get(1).asFloat64();
+    ref_met[2]=bRef->get(2).asFloat64();
     createSubfield(submatvar,ref_met.data(),dims_field_dir,subfields[2]);
     string tag_plane=params.find("tag_plane").asString();
     size_t dims_field_tagplane[2]={1,tag_plane.size()};
     createSubfield(submatvar,tag_plane,dims_field_tagplane,subfields[3]);
     size_t dims[2]={1,1};
-    double max_val=params.find("max").asDouble();
-    double min_val=params.find("min").asDouble();
+    double max_val=params.find("max").asFloat64();
+    double min_val=params.find("min").asFloat64();
     createSubfield(submatvar,&max_val,dims,subfields[4]);
     createSubfield(submatvar,&min_val,dims,subfields[5]);
     createSubfield(submatvar,&tstart_session,dims,subfields[6]);
@@ -1332,9 +1332,9 @@ matvar_t* Manager::createStepField(const Property &params)
     createSubfield(submatvar,num.data(),dims_field_num,subfields[0]);
     createSubfield(submatvar,den.data(),dims_field_den,subfields[1]);
     size_t dims[2]={1,1};
-    double max_val=params.find("max").asDouble();
-    double min_val=params.find("min").asDouble();
-    double step_thresh=params.find("step_thresh").asDouble();
+    double max_val=params.find("max").asFloat64();
+    double min_val=params.find("min").asFloat64();
+    double step_thresh=params.find("step_thresh").asFloat64();
     createSubfield(submatvar,&max_val,dims,subfields[2]);
     createSubfield(submatvar,&min_val,dims,subfields[3]);
     createSubfield(submatvar,&tstart_session,dims,subfields[4]);
@@ -1358,24 +1358,24 @@ matvar_t* Manager::createEpField(const Property &params)
     size_t dims_field_dir[2]={1,3};
     Bottle *bRef=params.find("ref_dir").asList();
     Vector ref_met(3,0.0);
-    ref_met[0]=bRef->get(0).asDouble();
-    ref_met[1]=bRef->get(1).asDouble();
-    ref_met[2]=bRef->get(2).asDouble();
+    ref_met[0]=bRef->get(0).asFloat64();
+    ref_met[1]=bRef->get(1).asFloat64();
+    ref_met[2]=bRef->get(2).asFloat64();
     createSubfield(submatvar,ref_met.data(),dims_field_dir,subfields[1]);
     string tag_plane=params.find("tag_plane").asString();
     size_t dims_field_tagplane[2]={1,tag_plane.size()};
     createSubfield(submatvar,tag_plane,dims_field_tagplane,subfields[2]);
     size_t dims[2]={1,1};
-    double max_val=params.find("max").asDouble();
-    double min_val=params.find("min").asDouble();
+    double max_val=params.find("max").asFloat64();
+    double min_val=params.find("min").asFloat64();
     createSubfield(submatvar,&max_val,dims,subfields[3]);
     createSubfield(submatvar,&min_val,dims,subfields[4]);
     size_t dims_field_target[2]={1,3};
     Bottle *bTarget=params.find("target").asList();
     Vector target(3,0.0);
-    target[0]=bTarget->get(0).asDouble();
-    target[1]=bTarget->get(1).asDouble();
-    target[2]=bTarget->get(2).asDouble();
+    target[0]=bTarget->get(0).asFloat64();
+    target[1]=bTarget->get(1).asFloat64();
+    target[2]=bTarget->get(2).asFloat64();
     createSubfield(submatvar,target.data(),dims_field_target,subfields[5]);
     createSubfield(submatvar,&tstart_session,dims,subfields[6]);
     createSubfield(submatvar,&tend_session,dims,subfields[7]);

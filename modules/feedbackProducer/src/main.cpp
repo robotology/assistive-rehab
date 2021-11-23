@@ -203,7 +203,7 @@ public:
     {
         //ask for the property id
         Bottle cmd, reply;
-        cmd.addVocab(Vocab::encode("ask"));
+        cmd.addVocab32("ask");
         Bottle &content = cmd.addList().addList();
         content.addString("skeleton");
 
@@ -211,7 +211,7 @@ public:
 
         if(reply.size() > 1)
         {
-            if(reply.get(0).asVocab() == Vocab::encode("ack"))
+            if(reply.get(0).asVocab32() == Vocab32::encode("ack"))
             {
                 if(Bottle *idField = reply.get(1).asList())
                 {
@@ -222,18 +222,18 @@ public:
                             updated=false;
                             for(int i=0; i<idValues->size(); i++)
                             {
-                                int id = idValues->get(i).asInt();
+                                int id = idValues->get(i).asInt32();
 
                                 //given the id, get the value of the property
                                 cmd.clear();
-                                cmd.addVocab(Vocab::encode("get"));
+                                cmd.addVocab32("get");
                                 Bottle &content = cmd.addList().addList();
                                 Bottle replyProp;
                                 content.addString("id");
-                                content.addInt(id);
+                                content.addInt32(id);
 
                                 opcPort.write(cmd, replyProp);
-                                if(replyProp.get(0).asVocab() == Vocab::encode("ack"))
+                                if(replyProp.get(0).asVocab32() == Vocab32::encode("ack"))
                                 {
                                     if(Bottle *propField = replyProp.get(1).asList())
                                     {
@@ -265,10 +265,10 @@ public:
     /********************************************************/
     bool configure(ResourceFinder &rf) override
     {
-        win = rf.check("win",Value(-1)).asDouble();
-        period = rf.check("period",Value(0.01)).asDouble();
-        filter_order = rf.check("filter_order",Value(3)).asInt();
-        action_threshold = rf.check("action-threshold",Value(0.3)).asDouble();
+        win = rf.check("win",Value(-1)).asFloat64();
+        period = rf.check("period",Value(0.01)).asFloat64();
+        filter_order = rf.check("filter_order",Value(3)).asInt32();
+        action_threshold = rf.check("action-threshold",Value(0.3)).asFloat64();
 
         opcPort.open("/feedbackProducer/opc");
         outPort.open("/feedbackProducer:o");
@@ -748,7 +748,7 @@ public:
 
                     string exercise = target->get(0).asString();
                     string action = target->get(1).asString();
-                    double confidence = target->get(2).asDouble();
+                    double confidence = target->get(2).asFloat64();
                     yInfo() << exercise << action << confidence;
                     if(action == exercise && confidence > action_threshold)
                     {

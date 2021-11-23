@@ -92,9 +92,9 @@ protected:
         {
             if (b->size()>=3)
             {
-                color=vector<double>{b->get(0).asDouble(),
-                                     b->get(1).asDouble(),
-                                     b->get(2).asDouble()};
+                color=vector<double>{b->get(0).asFloat64(),
+                                     b->get(1).asFloat64(),
+                                     b->get(2).asFloat64()};
                 return true;
             }
         }
@@ -269,7 +269,7 @@ public:
 
             // override color
             update_color(prop);
-            opacity=prop.check("opacity",Value(1.0)).asDouble();
+            opacity=prop.check("opacity",Value(1.0)).asFloat64();
             
             if (skeleton->getNumKeyPoints()>0)
             {
@@ -317,7 +317,7 @@ public:
             skeleton->update(prop);
 
             update_color(prop);
-            opacity=prop.check("opacity",Value(1.0)).asDouble();
+            opacity=prop.check("opacity",Value(1.0)).asFloat64();
             
             if (skeleton->getNumKeyPoints()>0)
             {
@@ -600,11 +600,11 @@ class Viewer : public RFModule, public skeletonViewer_IDL
     {
         rpc_camera_rx=false;
 
-        int x=rf.check("x",Value(0)).asInt();
-        int y=rf.check("y",Value(0)).asInt();
-        int w=rf.check("w",Value(600)).asInt();
-        int h=rf.check("h",Value(600)).asInt();
-        double gc_period=rf.check("gc-period",Value(1.0)).asDouble();
+        int x=rf.check("x",Value(0)).asInt32();
+        int y=rf.check("y",Value(0)).asInt32();
+        int w=rf.check("w",Value(600)).asInt32();
+        int h=rf.check("h",Value(600)).asInt32();
+        double gc_period=rf.check("gc-period",Value(1.0)).asFloat64();
 
         vector<double> bg_color={0.7,0.7,0.7};
         if (rf.check("bg-color"))
@@ -613,7 +613,7 @@ class Viewer : public RFModule, public skeletonViewer_IDL
             {
                 size_t len=std::min(bg_color.size(),ptr->size());
                 for (size_t i=0; i<len; i++)
-                    bg_color[i]=ptr->get(i).asDouble();
+                    bg_color[i]=ptr->get(i).asFloat64();
             }
         }
 
@@ -651,7 +651,7 @@ class Viewer : public RFModule, public skeletonViewer_IDL
             {
                 size_t len=std::min(camera_position.size(),ptr->size());
                 for (size_t i=0; i<len; i++)
-                    camera_position[i]=ptr->get(i).asDouble();
+                    camera_position[i]=ptr->get(i).asFloat64();
             }
         }
 
@@ -662,7 +662,7 @@ class Viewer : public RFModule, public skeletonViewer_IDL
             {
                 size_t len=std::min(camera_focalpoint.size(),ptr->size());
                 for (size_t i=0; i<len; i++)
-                    camera_focalpoint[i]=ptr->get(i).asDouble();
+                    camera_focalpoint[i]=ptr->get(i).asFloat64();
             }
         }
 
@@ -673,7 +673,7 @@ class Viewer : public RFModule, public skeletonViewer_IDL
             {
                 size_t len=std::min(camera_viewup.size(),ptr->size());
                 for (size_t i=0; i<len; i++)
-                    camera_viewup[i]=ptr->get(i).asDouble();
+                    camera_viewup[i]=ptr->get(i).asFloat64();
             }
         }
 
@@ -692,7 +692,7 @@ class Viewer : public RFModule, public skeletonViewer_IDL
                 {
                     size_t len=std::min(floor_center.size(),ptr->size());
                     for (size_t i=0; i<len; i++)
-                        floor_center[i]=ptr->get(i).asDouble();
+                        floor_center[i]=ptr->get(i).asFloat64();
                 }
             }
 
@@ -703,7 +703,7 @@ class Viewer : public RFModule, public skeletonViewer_IDL
                 {
                     size_t len=std::min(floor_normal.size(),ptr->size());
                     for (size_t i=0; i<len; i++)
-                        floor_normal[i]=ptr->get(i).asDouble();
+                        floor_normal[i]=ptr->get(i).asFloat64();
                 }
             }
 

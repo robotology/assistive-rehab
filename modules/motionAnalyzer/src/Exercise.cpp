@@ -107,8 +107,8 @@ RangeOfMotion::RangeOfMotion(const string &name_)
 void RangeOfMotion::setFeedbackParams(const Property &p)
 {
     feedparams=p;
-    duration=feedparams.find("duration").asInt();
-    twarp=feedparams.find("twarp").asDouble();
+    duration=feedparams.find("duration").asInt32();
+    twarp=feedparams.find("twarp").asFloat64();
     Bottle t=feedparams.findGroup("thresh");
     Bottle jnt=t.findGroup("joint");
     Bottle sx=t.findGroup("sx");
@@ -123,19 +123,19 @@ void RangeOfMotion::setFeedbackParams(const Property &p)
         joint_list.push_back(t1->get(1).asString());
 
         Bottle *t2=sx.get(i+1).asList();
-        sx_thresh.push_back(t2->get(1).asDouble());
+        sx_thresh.push_back(t2->get(1).asFloat64());
 
         Bottle *t3=sy.get(i+1).asList();
-        sy_thresh.push_back(t3->get(1).asDouble());
+        sy_thresh.push_back(t3->get(1).asFloat64());
 
         Bottle *t4=sz.get(i+1).asList();
-        sz_thresh.push_back(t4->get(1).asDouble());
+        sz_thresh.push_back(t4->get(1).asFloat64());
 
         Bottle *t6=freq.get(i+1).asList();
-        range_freq.push_back(t6->get(1).asDouble());
+        range_freq.push_back(t6->get(1).asFloat64());
 
         Bottle *t7=psd.get(i+1).asList();
-        psd_thresh.push_back(t7->get(1).asDouble());
+        psd_thresh.push_back(t7->get(1).asFloat64());
     }
 }
 
@@ -165,8 +165,8 @@ Matrix RangeOfMotion::getFeedbackThresholds()
 //void AbductionLeft::setFeedbackParams(const Property &p)
 //{
 //    feedparams=p;
-//    duration=feedparams.find("duration").asInt();
-//    twarp=feedparams.find("twarp").asDouble();
+//    duration=feedparams.find("duration").asInt32();
+//    twarp=feedparams.find("twarp").asFloat64();
 //    Bottle t=feedparams.findGroup("thresh");
 //    Bottle jnt=t.findGroup("joint");
 //    Bottle sx=t.findGroup("sx");
@@ -181,19 +181,19 @@ Matrix RangeOfMotion::getFeedbackThresholds()
 //        joint_list.push_back(t1->get(1).asString());
 
 //        Bottle *t2=sx.get(i+1).asList();
-//        sx_thresh.push_back(t2->get(1).asDouble());
+//        sx_thresh.push_back(t2->get(1).asFloat64());
 
 //        Bottle *t3=sy.get(i+1).asList();
-//        sy_thresh.push_back(t3->get(1).asDouble());
+//        sy_thresh.push_back(t3->get(1).asFloat64());
 
 //        Bottle *t4=sz.get(i+1).asList();
-//        sz_thresh.push_back(t4->get(1).asDouble());
+//        sz_thresh.push_back(t4->get(1).asFloat64());
 
 //        Bottle *t6=freq.get(i+1).asList();
-//        range_freq.push_back(t6->get(1).asDouble());
+//        range_freq.push_back(t6->get(1).asFloat64());
 
 //        Bottle *t7=psd.get(i+1).asList();
-//        psd_thresh.push_back(t7->get(1).asDouble());
+//        psd_thresh.push_back(t7->get(1).asFloat64());
 //    }
 //}
 
@@ -223,8 +223,8 @@ Matrix RangeOfMotion::getFeedbackThresholds()
 //void InternalRotationLeft::setFeedbackParams(const Property &p)
 //{
 //    feedparams=p;
-//    duration=feedparams.find("duration").asInt();
-//    twarp=feedparams.find("twarp").asDouble();
+//    duration=feedparams.find("duration").asInt32();
+//    twarp=feedparams.find("twarp").asFloat64();
 //    Bottle t=feedparams.findGroup("thresh");
 //    Bottle jnt=t.findGroup("joint");
 //    Bottle sx=t.findGroup("sx");
@@ -239,19 +239,19 @@ Matrix RangeOfMotion::getFeedbackThresholds()
 //        joint_list.push_back(t1->get(1).asString());
 
 //        Bottle *t2=sx.get(i+1).asList();
-//        sx_thresh.push_back(t2->get(1).asDouble());
+//        sx_thresh.push_back(t2->get(1).asFloat64());
 
 //        Bottle *t3=sy.get(i+1).asList();
-//        sy_thresh.push_back(t3->get(1).asDouble());
+//        sy_thresh.push_back(t3->get(1).asFloat64());
 
 //        Bottle *t4=sz.get(i+1).asList();
-//        sz_thresh.push_back(t4->get(1).asDouble());
+//        sz_thresh.push_back(t4->get(1).asFloat64());
 
 //        Bottle *t6=freq.get(i+1).asList();
-//        range_freq.push_back(t6->get(1).asDouble());
+//        range_freq.push_back(t6->get(1).asFloat64());
 
 //        Bottle *t7=psd.get(i+1).asList();
-//        psd_thresh.push_back(t7->get(1).asDouble());
+//        psd_thresh.push_back(t7->get(1).asFloat64());
 //    }
 //}
 
@@ -281,8 +281,8 @@ Matrix RangeOfMotion::getFeedbackThresholds()
 //void ExternalRotationLeft::setFeedbackParams(const Property &p)
 //{
 //    feedparams=p;
-//    duration=feedparams.find("duration").asInt();
-//    twarp=feedparams.find("twarp").asDouble();
+//    duration=feedparams.find("duration").asInt32();
+//    twarp=feedparams.find("twarp").asFloat64();
 //    Bottle t=feedparams.findGroup("thresh");
 //    Bottle jnt=t.findGroup("joint");
 //    Bottle sx=t.findGroup("sx");
@@ -297,19 +297,19 @@ Matrix RangeOfMotion::getFeedbackThresholds()
 //        joint_list.push_back(t1->get(1).asString());
 
 //        Bottle *t2=sx.get(i+1).asList();
-//        sx_thresh.push_back(t2->get(1).asDouble());
+//        sx_thresh.push_back(t2->get(1).asFloat64());
 
 //        Bottle *t3=sy.get(i+1).asList();
-//        sy_thresh.push_back(t3->get(1).asDouble());
+//        sy_thresh.push_back(t3->get(1).asFloat64());
 
 //        Bottle *t4=sz.get(i+1).asList();
-//        sz_thresh.push_back(t4->get(1).asDouble());
+//        sz_thresh.push_back(t4->get(1).asFloat64());
 
 //        Bottle *t6=freq.get(i+1).asList();
-//        range_freq.push_back(t6->get(1).asDouble());
+//        range_freq.push_back(t6->get(1).asFloat64());
 
 //        Bottle *t7=psd.get(i+1).asList();
-//        psd_thresh.push_back(t7->get(1).asDouble());
+//        psd_thresh.push_back(t7->get(1).asFloat64());
 //    }
 //}
 
@@ -351,8 +351,8 @@ Matrix ReachingLeft::getFeedbackThresholds()
 void ReachingLeft::setFeedbackParams(const Property &p)
 {
     feedparams=p;
-    duration=feedparams.find("duration").asInt();
-    twarp=feedparams.find("twarp").asDouble();
+    duration=feedparams.find("duration").asInt32();
+    twarp=feedparams.find("twarp").asFloat64();
     Bottle t=feedparams.findGroup("thresh");
     Bottle jnt=t.findGroup("joint");
     Bottle rad=t.findGroup("radius");
@@ -364,13 +364,13 @@ void ReachingLeft::setFeedbackParams(const Property &p)
         joint_list.push_back(t1->get(1).asString());
 
         Bottle *t2=rad.get(i+1).asList();
-        radius.push_back(t2->get(1).asDouble());
+        radius.push_back(t2->get(1).asFloat64());
 
         Bottle *t3=score.get(i+1).asList();
-        zscore_thresh.push_back(t3->get(1).asDouble());
+        zscore_thresh.push_back(t3->get(1).asFloat64());
 
         Bottle *t4=inl.get(i+1).asList();
-        inliers_thresh.push_back(t4->get(1).asDouble());
+        inliers_thresh.push_back(t4->get(1).asFloat64());
     }
 }
 

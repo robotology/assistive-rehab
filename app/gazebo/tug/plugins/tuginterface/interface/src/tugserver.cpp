@@ -331,13 +331,13 @@ yarp::os::Property TugServer::getModelPos(const string &model_name)
     yarp::os::Property &subprop=prop.addGroup(model_name);
     yarp::os::Bottle b_pose;
     yarp::os::Bottle &tmp=b_pose.addList();
-    tmp.addDouble(tr[0]);
-    tmp.addDouble(tr[1]);
-    tmp.addDouble(tr[2]);
-    tmp.addDouble(rot[0]);
-    tmp.addDouble(rot[1]);
-    tmp.addDouble(rot[2]);
-    tmp.addDouble(rot[3]);
+    tmp.addFloat64(tr[0]);
+    tmp.addFloat64(tr[1]);
+    tmp.addFloat64(tr[2]);
+    tmp.addFloat64(rot[0]);
+    tmp.addFloat64(rot[1]);
+    tmp.addFloat64(rot[2]);
+    tmp.addFloat64(rot[3]);
     subprop.put("pose_world",b_pose.get(0));
     return prop;
 }

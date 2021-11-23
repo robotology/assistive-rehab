@@ -179,8 +179,8 @@ public:
 /****************************************************************/
 class Interaction : public RFModule, public interactionManager_IDL
 {
-    const int ok=Vocab::encode("ok");
-    const int fail=Vocab::encode("fail");
+    const int ok=Vocab32::encode("ok");
+    const int fail=Vocab32::encode("fail");
 
     enum class State { stopped, idle, seek, follow, engaged, move, show, imitated } state;
     double period;
@@ -262,30 +262,30 @@ class Interaction : public RFModule, public interactionManager_IDL
             occluded=false;
             Bottle cmd,rep;
             cmd.addString("makeBox");
-            cmd.addDouble(panel_size[0]); //width
-            cmd.addDouble(panel_size[1]); //height
-            cmd.addDouble(panel_size[2]); //thickness
+            cmd.addFloat64(panel_size[0]); //width
+            cmd.addFloat64(panel_size[1]); //height
+            cmd.addFloat64(panel_size[2]); //thickness
             if(partrob=="left")
             {
-                cmd.addDouble(panel_pose_left[0]); //pose.x
-                cmd.addDouble(panel_pose_left[1]); //pose.y
-                cmd.addDouble(panel_pose_left[2]); //pose.z
-                cmd.addDouble(panel_pose_left[3]); //pose.roll
-                cmd.addDouble(panel_pose_left[4]); //pose.pitch
-                cmd.addDouble(panel_pose_left[5]); //pose.yaw
+                cmd.addFloat64(panel_pose_left[0]); //pose.x
+                cmd.addFloat64(panel_pose_left[1]); //pose.y
+                cmd.addFloat64(panel_pose_left[2]); //pose.z
+                cmd.addFloat64(panel_pose_left[3]); //pose.roll
+                cmd.addFloat64(panel_pose_left[4]); //pose.pitch
+                cmd.addFloat64(panel_pose_left[5]); //pose.yaw
             }
             else
             {
-                cmd.addDouble(panel_pose_right[0]); //pose.x
-                cmd.addDouble(panel_pose_right[1]); //pose.y
-                cmd.addDouble(panel_pose_right[2]); //pose.z
-                cmd.addDouble(panel_pose_right[3]); //pose.roll
-                cmd.addDouble(panel_pose_right[4]); //pose.pitch
-                cmd.addDouble(panel_pose_right[5]); //pose.yaw
+                cmd.addFloat64(panel_pose_right[0]); //pose.x
+                cmd.addFloat64(panel_pose_right[1]); //pose.y
+                cmd.addFloat64(panel_pose_right[2]); //pose.z
+                cmd.addFloat64(panel_pose_right[3]); //pose.roll
+                cmd.addFloat64(panel_pose_right[4]); //pose.pitch
+                cmd.addFloat64(panel_pose_right[5]); //pose.yaw
             }
-            cmd.addInt(panel_color[0]); //color.r
-            cmd.addInt(panel_color[1]); //color.g
-            cmd.addInt(panel_color[2]); //color.b
+            cmd.addInt32(panel_color[0]); //color.r
+            cmd.addInt32(panel_color[1]); //color.g
+            cmd.addInt32(panel_color[2]); //color.b
             if(worldGazeboPort.write(cmd,rep))
             {
                 if (!rep.get(0).asString().empty())
@@ -297,9 +297,9 @@ class Interaction : public RFModule, public interactionManager_IDL
                     rep.clear();
                     cmd.addString("enableGravity");
                     cmd.addString(panelid);
-                    cmd.addInt(1);
+                    cmd.addInt32(1);
                     worldGazeboPort.write(cmd,rep);
-                    if(rep.get(0).asVocab()==ok)
+                    if(rep.get(0).asVocab32()==ok)
                     {
                         occluded=true;
                     }
@@ -320,7 +320,7 @@ class Interaction : public RFModule, public interactionManager_IDL
         cmd.addString("stop");
         if (attentionPort.write(cmd,rep))
         {
-            if (rep.get(0).asVocab()==ok)
+            if (rep.get(0).asVocab32()==ok)
             {
                 if (state==State::move)
                 {
@@ -347,7 +347,7 @@ class Interaction : public RFModule, public interactionManager_IDL
                 cmd.addString("deleteObject");
                 cmd.addString(panelid);
                 worldGazeboPort.write(cmd,rep);
-                if(rep.get(0).asVocab()==ok)
+                if(rep.get(0).asVocab32()==ok)
                 {
                     occluded=false;
                     ret=true;
@@ -413,7 +413,7 @@ class Interaction : public RFModule, public interactionManager_IDL
         {
             Time::delay(getPeriod());
             Bottle cmd,rep;
-            cmd.addVocab(Vocab::encode("stat"));
+            cmd.addVocab32("stat");
             if (speechRpcPort.write(cmd,rep))
             {
                 if (rep.get(0).asString()=="quiet")
@@ -450,7 +450,7 @@ class Interaction : public RFModule, public interactionManager_IDL
             yError()<<"Unable to find key \"num-sections\" or \"part\"";
             return false;
         }
-        int num_sections=bGroup.find("num-sections").asInt();
+        int num_sections=bGroup.find("num-sections").asInt32();
         parttomove.resize(2);
         if(Bottle *bPart=bGroup.find("part").asList())
         {
@@ -499,13 +499,13 @@ class Interaction : public RFModule, public interactionManager_IDL
         cmd.addString("stop");
         if (attentionPort.write(cmd,rep))
         {
-            if (rep.get(0).asVocab()==ok)
+            if (rep.get(0).asVocab32()==ok)
             {
                 cmd.clear();
                 cmd.addString("set_auto");
                 if (attentionPort.write(cmd,rep))
                 {
-                    if (rep.get(0).asVocab()==ok)
+                    if (rep.get(0).asVocab32()==ok)
                     {
                         if(virtual_mode)
                         {
@@ -513,7 +513,7 @@ class Interaction : public RFModule, public interactionManager_IDL
                             cmd.addString("set_virtual");
                             if (attentionPort.write(cmd,rep))
                             {
-                                if (rep.get(0).asVocab()==ok)
+                                if (rep.get(0).asVocab32()==ok)
                                 {
                                     ret=true;
                                 }
@@ -535,7 +535,7 @@ class Interaction : public RFModule, public interactionManager_IDL
             cmd.addString("deleteObject");
             cmd.addString(panelid);
             worldGazeboPort.write(cmd,rep);
-            if(rep.get(0).asVocab()==ok)
+            if(rep.get(0).asVocab32()==ok)
             {
                 ret=true;
                 occluded=false;
@@ -631,7 +631,7 @@ class Interaction : public RFModule, public interactionManager_IDL
     /****************************************************************/
     bool configure(ResourceFinder &rf) override
     {
-        period=rf.check("period",Value(0.1)).asDouble();
+        period=rf.check("period",Value(0.1)).asFloat64();
         string speak_file=rf.check("speak-file",Value("speak-it")).asString();
         move_file=rf.check("move-file",Value("run-movements.sh")).asString();
 
@@ -640,8 +640,8 @@ class Interaction : public RFModule, public interactionManager_IDL
         {
             if (p->size()>=2)
             {
-                engage_distance[0]=p->get(0).asDouble();
-                engage_distance[1]=p->get(1).asDouble();
+                engage_distance[0]=p->get(0).asFloat64();
+                engage_distance[1]=p->get(1).asFloat64();
             }
         }
 
@@ -650,8 +650,8 @@ class Interaction : public RFModule, public interactionManager_IDL
         {
             if (p->size()>=2)
             {
-                engage_azimuth[0]=p->get(0).asDouble();
-                engage_azimuth[1]=p->get(1).asDouble();
+                engage_azimuth[0]=p->get(0).asFloat64();
+                engage_azimuth[1]=p->get(1).asFloat64();
             }
         }
 
@@ -660,43 +660,43 @@ class Interaction : public RFModule, public interactionManager_IDL
         panel_size.resize(3,0.0);
         if (Bottle *p=rf.find("panel-size").asList())
         {
-            panel_size[0]=p->get(0).asDouble();
-            panel_size[1]=p->get(1).asDouble();
-            panel_size[2]=p->get(2).asDouble();
+            panel_size[0]=p->get(0).asFloat64();
+            panel_size[1]=p->get(1).asFloat64();
+            panel_size[2]=p->get(2).asFloat64();
         }
 
         panel_pose_right.resize(6,0.0);
         if (Bottle *p=rf.find("panel-pose-right").asList())
         {
-            panel_pose_right[0]=p->get(0).asDouble();
-            panel_pose_right[1]=p->get(1).asDouble();
-            panel_pose_right[2]=p->get(2).asDouble();
-            panel_pose_right[3]=p->get(3).asDouble();
-            panel_pose_right[4]=p->get(4).asDouble();
-            panel_pose_right[5]=p->get(5).asDouble();
+            panel_pose_right[0]=p->get(0).asFloat64();
+            panel_pose_right[1]=p->get(1).asFloat64();
+            panel_pose_right[2]=p->get(2).asFloat64();
+            panel_pose_right[3]=p->get(3).asFloat64();
+            panel_pose_right[4]=p->get(4).asFloat64();
+            panel_pose_right[5]=p->get(5).asFloat64();
         }
 
         panel_pose_left.resize(6,0.0);
         if (Bottle *p=rf.find("panel-pose-left").asList())
         {
-            panel_pose_left[0]=p->get(0).asDouble();
-            panel_pose_left[1]=p->get(1).asDouble();
-            panel_pose_left[2]=p->get(2).asDouble();
-            panel_pose_left[3]=p->get(3).asDouble();
-            panel_pose_left[4]=p->get(4).asDouble();
-            panel_pose_left[5]=p->get(5).asDouble();
+            panel_pose_left[0]=p->get(0).asFloat64();
+            panel_pose_left[1]=p->get(1).asFloat64();
+            panel_pose_left[2]=p->get(2).asFloat64();
+            panel_pose_left[3]=p->get(3).asFloat64();
+            panel_pose_left[4]=p->get(4).asFloat64();
+            panel_pose_left[5]=p->get(5).asFloat64();
         }
 
         panel_color.resize(3,255);
         if (Bottle *p=rf.find("panel-color").asList())
         {
-            panel_color[0]=p->get(0).asInt();
-            panel_color[1]=p->get(1).asInt();
-            panel_color[2]=p->get(2).asInt();
+            panel_color[0]=p->get(0).asInt32();
+            panel_color[1]=p->get(1).asInt32();
+            panel_color[2]=p->get(2).asInt32();
         }
 
-        nrep_show=rf.check("nrep-show",Value(2)).asInt();
-        nrep_perform=rf.check("nrep-perform",Value(7)).asInt();
+        nrep_show=rf.check("nrep-show",Value(2)).asInt32();
+        nrep_perform=rf.check("nrep-perform",Value(7)).asInt32();
         virtual_mode=rf.check("virtual-mode",Value(false)).asBool();
         engage_with_hand=rf.check("engage-with-hand",Value(true)).asBool();
         wait_for_imitation=rf.check("wait-for-imitation",Value(false)).asBool();
@@ -776,7 +776,7 @@ class Interaction : public RFModule, public interactionManager_IDL
                     cmd.clear();
                     rep.clear();
                     cmd.addString("mirrorTemplate");
-                    cmd.addInt(mirror_exercise);
+                    cmd.addInt32(mirror_exercise);
                     if (analyzerPort.write(cmd,rep))
                     {
                         if(mirror_exercise)
@@ -794,7 +794,7 @@ class Interaction : public RFModule, public interactionManager_IDL
                     cmd.clear();
                     rep.clear();
                     cmd.addString("set_visibility");
-                    cmd.addInt(0);
+                    cmd.addInt32(0);
                     if(robotSkeletonPort.write(cmd,rep))
                     {
                         yInfo()<<"Turn off robot template visibility";
@@ -812,9 +812,9 @@ class Interaction : public RFModule, public interactionManager_IDL
             if (attentionPort.write(cmd,rep))
             {
                 follow_tag=rep.get(0).asString();
-                double x=rep.get(1).asDouble();
-                double y=rep.get(2).asDouble();
-                double z=rep.get(3).asDouble();
+                double x=rep.get(1).asFloat64();
+                double y=rep.get(2).asFloat64();
+                double z=rep.get(3).asFloat64();
 
                 double r=sqrt(x*x+y*y+z*z);
                 double azi=(180.0/M_PI)*atan2(y,x);
@@ -880,7 +880,7 @@ class Interaction : public RFModule, public interactionManager_IDL
 
                 if (attentionPort.write(cmd,rep))
                 {
-                    if (rep.get(0).asVocab()==ok)
+                    if (rep.get(0).asVocab32()==ok)
                     {
                         speak("accepted",true);
                         state=State::engaged;
@@ -1035,7 +1035,7 @@ class Interaction : public RFModule, public interactionManager_IDL
                                                                         yInfo()<<"Selecting skeleton"<<tag;
                                                                         if (analyzerPort.write(cmd,rep))
                                                                         {
-                                                                            if (rep.get(0).asVocab()==ok)
+                                                                            if (rep.get(0).asVocab32()==ok)
                                                                             {
                                                                                 //imitation and observation phases are not separated
                                                                                 //the robot shows the exercise and then the user imitates
@@ -1090,10 +1090,10 @@ class Interaction : public RFModule, public interactionManager_IDL
 
                                                                                     cmd.clear();
                                                                                     cmd.addString("start");
-                                                                                    cmd.addInt(use_robot_template);
+                                                                                    cmd.addInt32(use_robot_template);
                                                                                     if (analyzerPort.write(cmd,rep))
                                                                                     {
-                                                                                        if (rep.get(0).asVocab()==ok)
+                                                                                        if (rep.get(0).asVocab32()==ok)
                                                                                         {
                                                                                             state=State::move;
 
@@ -1156,10 +1156,10 @@ class Interaction : public RFModule, public interactionManager_IDL
 
                 Bottle cmd,rep;
                 cmd.addString("start");
-                cmd.addInt(use_robot_template);
+                cmd.addInt32(use_robot_template);
                 if (analyzerPort.write(cmd,rep))
                 {
-                    if (rep.get(0).asVocab()==ok)
+                    if (rep.get(0).asVocab32()==ok)
                     {
                         state=State::move;
 
@@ -1180,7 +1180,7 @@ class Interaction : public RFModule, public interactionManager_IDL
                     cmd.addString("stopFeedback");
                     if (analyzerPort.write(cmd,rep))
                     {
-                        if (rep.get(0).asVocab()==ok)
+                        if (rep.get(0).asVocab32()==ok)
                         {
                             yInfo()<<"Stopping feedback";
                         }
@@ -1189,7 +1189,7 @@ class Interaction : public RFModule, public interactionManager_IDL
                 else
                 {
                     if(Bottle *score = synthetizerPort.read(false))
-                        assess_values.push_back(score->get(0).asDouble());
+                        assess_values.push_back(score->get(0).asFloat64());
                 }
             }
             else

@@ -49,7 +49,7 @@ bool reply(const string &s, const bool &wait,
     {
         Time::delay(0.01);
         Bottle cmd,rep;
-        cmd.addVocab(Vocab::encode("stat"));
+        cmd.addVocab32("stat");
         if (speechRpcPort.write(cmd,rep))
         {
             if (rep.get(0).asString()=="quiet")
@@ -180,8 +180,8 @@ public:
         last_start_trigger(true), got_trigger(false), freezing(false), t0(Time::now()),
         t(Time::now())
     {
-        min_timeout=rf.check("min-timeout",Value(1.0)).asDouble();
-        max_timeout=rf.check("max-timeout",Value(10.0)).asDouble();
+        min_timeout=rf.check("min-timeout",Value(1.0)).asFloat64();
+        max_timeout=rf.check("max-timeout",Value(10.0)).asFloat64();
     }
 
     /********************************************************/
@@ -306,7 +306,7 @@ public:
         cmd.addString("pause");
         if (gazeboPort->write(cmd,rep))
         {
-            if (rep.get(0).asVocab()==Vocab::encode("ok"))
+            if (rep.get(0).asVocab32()==Vocab32::encode("ok"))
             {
                 yInfo()<<"Actor paused";
                 return true;
@@ -322,7 +322,7 @@ public:
         cmd.addString(s);
         if (triggerPort->write(cmd,rep))
         {
-            if (rep.get(0).asVocab()==Vocab::encode("ok"))
+            if (rep.get(0).asVocab32()==Vocab32::encode("ok"))
             {
                 yInfo()<<"Sending"<<s<<"to speech";
                 if (s=="start")
@@ -464,10 +464,10 @@ public:
     {
         Bottle cmd,rep;
         cmd.addString("playFromLast");
-        cmd.addInt(1);
+        cmd.addInt32(1);
         if (gazeboPort->write(cmd,rep))
         {
-            if (rep.get(0).asVocab()==Vocab::encode("ok"))
+            if (rep.get(0).asVocab32()==Vocab32::encode("ok"))
             {
                 yInfo()<<"Actor unpaused";
                 return true;
@@ -599,7 +599,7 @@ public:
                             cmd.addString("start");
                             isArmLifted=true;
                             triggerPort->write(cmd,rep);
-                            if (rep.get(0).asVocab()==Vocab::encode("ok"))
+                            if (rep.get(0).asVocab32()==Vocab32::encode("ok"))
                             {
                                 yInfo()<<"Starting speech";
                             }
@@ -613,7 +613,7 @@ public:
                             cmd.addString("stop");
                             isArmLifted=false;
                             triggerPort->write(cmd,rep);
-                            if (rep.get(0).asVocab()==Vocab::encode("ok"))
+                            if (rep.get(0).asVocab32()==Vocab32::encode("ok"))
                             {
                                 yInfo()<<"Stopping speech";
                             }
@@ -756,8 +756,8 @@ class Manager : public RFModule, public managerTUG_IDL
     vector<string> laser_adverb;
     vector<double> engage_distance,engage_azimuth;
 
-    const int ok=Vocab::encode("ok");
-    const int fail=Vocab::encode("fail");
+    const int ok=Vocab32::encode("ok");
+    const int fail=Vocab32::encode("fail");
     enum class State { stopped, idle, obstacle, lock, seek_locked, seek_skeleton, follow, frozen, assess_standing,
                        assess_crossing, line_crossed, engaged, point_start, explain, point_line, reach_line,
                        starting, not_passed, finished } state;
@@ -823,7 +823,7 @@ class Manager : public RFModule, public managerTUG_IDL
             yError()<<"Unable to find key \"num-sections\" || \"laser-adverb\"";
             return false;
         }
-        int num_sections=bGroup.find("num-sections").asInt();
+        int num_sections=bGroup.find("num-sections").asInt32();
         laser_adverb.resize(2);
         if (Bottle *laser_adv=bGroup.find("laser-adverb").asList())
         {
@@ -937,9 +937,9 @@ class Manager : public RFModule, public managerTUG_IDL
         if (name=="go_back")
         {
             cmd.addString("goToWait");
-            cmd.addDouble(0.0);
-            cmd.addDouble(0.0);
-            cmd.addDouble(0.0);
+            cmd.addFloat64(0.0);
+            cmd.addFloat64(0.0);
+            cmd.addFloat64(0.0);
         }
         else
         {
@@ -948,7 +948,7 @@ class Manager : public RFModule, public managerTUG_IDL
         }
         if (gazeboPort.write(cmd,rep))
         {
-            if (rep.get(0).asVocab()==ok)
+            if (rep.get(0).asVocab32()==ok)
             {
                 return true;
             }
@@ -963,7 +963,7 @@ class Manager : public RFModule, public managerTUG_IDL
         cmd.addString("playFromLast");
         if (gazeboPort.write(cmd,rep))
         {
-            if (rep.get(0).asVocab()==ok)
+            if (rep.get(0).asVocab32()==ok)
             {
                 return true;
             }
@@ -979,7 +979,7 @@ class Manager : public RFModule, public managerTUG_IDL
         cmd.addString("set_auto");
         if (attentionPort.write(cmd,rep))
         {
-            if (rep.get(0).asVocab()==ok)
+            if (rep.get(0).asVocab32()==ok)
             {
                 return true;
             }
@@ -994,7 +994,7 @@ class Manager : public RFModule, public managerTUG_IDL
         cmd.addString("stop");
         if (port.write(cmd,rep))
         {
-            if (rep.get(0).asVocab()==ok)
+            if (rep.get(0).asVocab32()==ok)
             {
                 return true;
             }
@@ -1009,7 +1009,7 @@ class Manager : public RFModule, public managerTUG_IDL
         cmd.addString("is_navigating");
         if (navigationPort.write(cmd,rep))
         {
-            if (rep.get(0).asVocab()==ok)
+            if (rep.get(0).asVocab32()==ok)
             {
                 return true;
             }
@@ -1084,12 +1084,12 @@ class Manager : public RFModule, public managerTUG_IDL
             cmd.addString("go_to_wait");
         else
             cmd.addString("go_to");
-        cmd.addDouble(target[0]);
-        cmd.addDouble(target[1]);
-        cmd.addDouble(target[2]);
+        cmd.addFloat64(target[0]);
+        cmd.addFloat64(target[1]);
+        cmd.addFloat64(target[2]);
         if (navigationPort.write(cmd,rep))
         {
-            if (rep.get(0).asVocab()==ok)
+            if (rep.get(0).asVocab32()==ok)
             {
                 return true;
             }
@@ -1104,7 +1104,7 @@ class Manager : public RFModule, public managerTUG_IDL
         cmd.addString("remove_locked");
         if (lockerPort.write(cmd,rep))
         {
-            if (rep.get(0).asVocab()==ok)
+            if (rep.get(0).asVocab32()==ok)
             {
                 yInfo()<<"Removed locked skeleton";
                 return true;
@@ -1134,9 +1134,9 @@ class Manager : public RFModule, public managerTUG_IDL
         //         {
         //             if(pose->size()>=7)
         //             {
-        //                 starting_pose[0]=pose->get(0).asDouble();
-        //                 starting_pose[1]=pose->get(1).asDouble();
-        //                 starting_pose[2]=pose->get(6).asDouble()*(180.0/M_PI);
+        //                 starting_pose[0]=pose->get(0).asFloat64();
+        //                 starting_pose[1]=pose->get(1).asFloat64();
+        //                 starting_pose[2]=pose->get(6).asFloat64()*(180.0/M_PI);
         //             }
         //         }
         //     }
@@ -1178,12 +1178,12 @@ class Manager : public RFModule, public managerTUG_IDL
         }
         Bottle cmd,rep;
         cmd.addString("setTarget");
-        cmd.addDouble(x);
-        cmd.addDouble(y);
-        cmd.addDouble(theta);
+        cmd.addFloat64(x);
+        cmd.addFloat64(y);
+        cmd.addFloat64(theta);
         if (gazeboPort.write(cmd,rep))
         {
-            if (rep.get(0).asVocab()==ok)
+            if (rep.get(0).asVocab32()==ok)
             {
                 yInfo()<<"Set actor target to"<<x<<y<<theta;
                 return true;
@@ -1227,9 +1227,9 @@ class Manager : public RFModule, public managerTUG_IDL
     bool configure(ResourceFinder &rf) override
     {
         module_name=rf.check("name",Value("managerTUG")).asString();
-        period=rf.check("period",Value(0.1)).asDouble();
+        period=rf.check("period",Value(0.1)).asFloat64();
         speak_file=rf.check("speak-file",Value("speak-it")).asString();
-        arm_thresh=rf.check("arm-thresh",Value(0.6)).asDouble();
+        arm_thresh=rf.check("arm-thresh",Value(0.6)).asFloat64();
         detect_hand_up=rf.check("detect-hand-up",Value(false)).asBool();
         simulation=rf.check("simulation",Value(false)).asBool();
         lock=rf.check("lock",Value(true)).asBool();
@@ -1241,7 +1241,7 @@ class Manager : public RFModule, public managerTUG_IDL
                 size_t len=ts->size();
                 for (size_t i=0; i<len; i++)
                 {
-                    target_sim[i]=ts->get(i).asDouble();
+                    target_sim[i]=ts->get(i).asFloat64();
                 }
             }
         }
@@ -1254,12 +1254,12 @@ class Manager : public RFModule, public managerTUG_IDL
                 size_t len=sp->size();
                 for (size_t i=0; i<len; i++)
                 {
-                    starting_pose[i]=sp->get(i).asDouble();
+                    starting_pose[i]=sp->get(i).asFloat64();
                 }
             }
         }
 
-        pointing_time=rf.check("pointing-time",Value(3.0)).asDouble();
+        pointing_time=rf.check("pointing-time",Value(3.0)).asFloat64();
         pointing_home={-10.0,20.0,-10.0,35.0,0.0,0.030,0.0,0.0};
         if(rf.check("pointing-home"))
         {
@@ -1268,7 +1268,7 @@ class Manager : public RFModule, public managerTUG_IDL
                 size_t len=ph->size();
                 for (size_t i=0; i<len; i++)
                 {
-                    pointing_home[i]=ph->get(i).asDouble();
+                    pointing_home[i]=ph->get(i).asFloat64();
                 }
             }
         }
@@ -1281,7 +1281,7 @@ class Manager : public RFModule, public managerTUG_IDL
                 size_t len=ps->size();
                 for (size_t i=0; i<len; i++)
                 {
-                    pointing_start[i]=ps->get(i).asDouble();
+                    pointing_start[i]=ps->get(i).asFloat64();
                 }
             }
         }
@@ -1294,7 +1294,7 @@ class Manager : public RFModule, public managerTUG_IDL
                 size_t len=pf->size();
                 for (size_t i=0; i<len; i++)
                 {
-                    pointing_finish[i]=pf->get(i).asDouble();
+                    pointing_finish[i]=pf->get(i).asFloat64();
                 }
             }
         }
@@ -1303,8 +1303,8 @@ class Manager : public RFModule, public managerTUG_IDL
         {
             if (p->size()>=2)
             {
-                engage_distance[0]=p->get(0).asDouble();
-                engage_distance[1]=p->get(1).asDouble();
+                engage_distance[0]=p->get(0).asFloat64();
+                engage_distance[1]=p->get(1).asFloat64();
             }
         }
 
@@ -1313,8 +1313,8 @@ class Manager : public RFModule, public managerTUG_IDL
         {
             if (p->size()>=2)
             {
-                engage_azimuth[0]=p->get(0).asDouble();
-                engage_azimuth[1]=p->get(1).asDouble();
+                engage_azimuth[0]=p->get(0).asFloat64();
+                engage_azimuth[1]=p->get(1).asFloat64();
             }
         }
 
@@ -1528,14 +1528,14 @@ class Manager : public RFModule, public managerTUG_IDL
                     cmd.addString("is_navigating");
                     if (navigationPort.write(cmd,rep))
                     {
-                        if (rep.get(0).asVocab()==ok)
+                        if (rep.get(0).asVocab32()==ok)
                         {
                             cmd.clear();
                             rep.clear();
                             cmd.addString("stop");
                             if (navigationPort.write(cmd,rep))
                             {
-                                if (rep.get(0).asVocab()==ok)
+                                if (rep.get(0).asVocab32()==ok)
                                 {
                                     yInfo()<<"Frozen navigation";
                                 }
@@ -1572,8 +1572,8 @@ class Manager : public RFModule, public managerTUG_IDL
             {
                 follow_tag=rep.get(0).asString();
                 //frame world
-                double y=rep.get(1).asDouble();
-                double x=rep.get(2).asDouble();
+                double y=rep.get(1).asFloat64();
+                double x=rep.get(2).asFloat64();
 
                 double r=sqrt(x*x+y*y);
                 double azi=(180.0/M_PI)*atan2(y,x);
@@ -1624,7 +1624,7 @@ class Manager : public RFModule, public managerTUG_IDL
                 cmd.addString(follow_tag);
                 if (lockerPort.write(cmd,rep))
                 {
-                    if (rep.get(0).asVocab()==ok)
+                    if (rep.get(0).asVocab32()==ok)
                     {
                         yInfo()<<"skeleton"<<follow_tag<<"-locked";
                         state=State::seek_locked;
@@ -1677,7 +1677,7 @@ class Manager : public RFModule, public managerTUG_IDL
                 cmd.addString(tag);
                 if (attentionPort.write(cmd,rep))
                 {
-                    if (rep.get(0).asVocab()==ok)
+                    if (rep.get(0).asVocab32()==ok)
                     {
                         Speech s("accepted");
                         speak(s);
@@ -1773,7 +1773,7 @@ class Manager : public RFModule, public managerTUG_IDL
                                                         yInfo()<<"Selecting skeleton"<<tag;
                                                         if (analyzerPort.write(cmd,rep))
                                                         {
-                                                            if (rep.get(0).asVocab()==ok)
+                                                            if (rep.get(0).asVocab32()==ok)
                                                             {
                                                                 state=obstacle_manager->hasObstacle()
                                                                         ? State::obstacle : State::point_start;
@@ -1856,7 +1856,7 @@ class Manager : public RFModule, public managerTUG_IDL
             cmd.addString("is_navigating");
             if (navigationPort.write(cmd,rep))
             {
-                if (rep.get(0).asVocab()!=ok)
+                if (rep.get(0).asVocab32()!=ok)
                 {
                     navigating=false;
                 }
@@ -1883,7 +1883,7 @@ class Manager : public RFModule, public managerTUG_IDL
                 cmd.addString("is_navigating");
                 if (navigationPort.write(cmd,rep))
                 {
-                    if (rep.get(0).asVocab()!=ok)
+                    if (rep.get(0).asVocab32()!=ok)
                     {
                         yInfo()<<"Reached finish line";
                         ok_go=false;
@@ -1920,7 +1920,7 @@ class Manager : public RFModule, public managerTUG_IDL
             cmd.addString(tag);
             if (navigationPort.write(cmd,rep))
             {
-                if (rep.get(0).asVocab()==ok)
+                if (rep.get(0).asVocab32()==ok)
                 {
                     cmd.clear();
                     rep.clear();
@@ -1941,11 +1941,11 @@ class Manager : public RFModule, public managerTUG_IDL
                             rep.clear();
                             cmd.addString("play");
                             cmd.addString("stand_up");
-                            cmd.addInt(-1);
-                            cmd.addInt(1);
+                            cmd.addInt32(-1);
+                            cmd.addInt32(1);
                             if (gazeboPort.write(cmd,rep))
                             {
-                                if (rep.get(0).asVocab()==ok)
+                                if (rep.get(0).asVocab32()==ok)
                                 {
                                     start_interaction();
                                 }
@@ -1968,9 +1968,9 @@ class Manager : public RFModule, public managerTUG_IDL
             {
                 if (Bottle *exerciseParams=rep.get(0).find("exercise").asList())
                 {
-                    double distance=exerciseParams->find("distance").asDouble();
-                    double time_high=exerciseParams->find("time-high").asDouble();
-                    double time_medium=exerciseParams->find("time-medium").asDouble();
+                    double distance=exerciseParams->find("distance").asFloat64();
+                    double time_high=exerciseParams->find("time-high").asFloat64();
+                    double time_medium=exerciseParams->find("time-medium").asFloat64();
                     answer_manager->setExerciseParams(distance,time_high,time_medium);
                     params_set=true;
                 }
@@ -2127,7 +2127,7 @@ class Manager : public RFModule, public managerTUG_IDL
         cmd.addString(KeyPointTag::shoulder_center);
         if (attentionPort.write(cmd,rep))
         {
-            if (rep.get(0).asVocab()==ok)
+            if (rep.get(0).asVocab32()==ok)
             {
                 yInfo()<<"Following"<<tag;
                 if (!simulation)
@@ -2175,10 +2175,10 @@ class Manager : public RFModule, public managerTUG_IDL
     {
         Bottle cmd,rep;
         cmd.addString("start");
-        cmd.addInt(0);
+        cmd.addInt32(0);
         if (analyzerPort.write(cmd,rep))
         {
-            if (rep.get(0).asVocab()==ok)
+            if (rep.get(0).asVocab32()==ok)
             {
                 state=obstacle_manager->hasObstacle()
                         ? State::obstacle : State::assess_standing;
@@ -2194,7 +2194,7 @@ class Manager : public RFModule, public managerTUG_IDL
     {
         if (Bottle *b=r.get(0).find("step_0").asList())
         {
-            double speed=b->find("speed").asDouble();
+            double speed=b->find("speed").asFloat64();
             answer_manager->setSpeed(speed);
 //            yInfo()<<"Human moving at"<<speed<<"m/s";
         }
@@ -2207,7 +2207,7 @@ class Manager : public RFModule, public managerTUG_IDL
         cmd.addString("isActive");
         if (gazeboPort.write(cmd,rep))
         {
-            if (rep.get(0).asVocab()==Vocab::encode("ok"))
+            if (rep.get(0).asVocab32()==Vocab32::encode("ok"))
             {
                 return true;
             }
@@ -2230,7 +2230,7 @@ class Manager : public RFModule, public managerTUG_IDL
             Bottle *robotState=rep.get(0).asList();
             if (Bottle *loc=robotState->find("robot-location").asList())
             {
-                double x=loc->get(0).asDouble();
+                double x=loc->get(0).asFloat64();
                 double line_center=(p0[0]+p1[0])/2;
                 if ( (x-line_center)>0.0 )
                 {
@@ -2280,9 +2280,9 @@ class Manager : public RFModule, public managerTUG_IDL
         Bottle cmd,rep;
         cmd.addString("ctpq");
         cmd.addString("time");
-        cmd.addDouble(pointing_time);
+        cmd.addFloat64(pointing_time);
         cmd.addString("off");
-        cmd.addInt(0);
+        cmd.addInt32(0);
         cmd.addString("pos");
         cmd.addList().read(target);
         if (tmpPort->write(cmd,rep))
@@ -2353,19 +2353,19 @@ class Manager : public RFModule, public managerTUG_IDL
                 if(lp_bottle->size()>=7)
                 {
                     finishline_pose.resize(7);
-                    finishline_pose[0]=lp_bottle->get(0).asDouble();
-                    finishline_pose[1]=lp_bottle->get(1).asDouble();
-                    finishline_pose[2]=lp_bottle->get(2).asDouble();
-                    finishline_pose[3]=lp_bottle->get(3).asDouble();
-                    finishline_pose[4]=lp_bottle->get(4).asDouble();
-                    finishline_pose[5]=lp_bottle->get(5).asDouble();
-                    finishline_pose[6]=lp_bottle->get(6).asDouble();
+                    finishline_pose[0]=lp_bottle->get(0).asFloat64();
+                    finishline_pose[1]=lp_bottle->get(1).asFloat64();
+                    finishline_pose[2]=lp_bottle->get(2).asFloat64();
+                    finishline_pose[3]=lp_bottle->get(3).asFloat64();
+                    finishline_pose[4]=lp_bottle->get(4).asFloat64();
+                    finishline_pose[5]=lp_bottle->get(5).asFloat64();
+                    finishline_pose[6]=lp_bottle->get(6).asFloat64();
                     yInfo()<<"Finish line wrt world frame"<<finishline_pose.toString();
                     if (Bottle *lp_length=line->find("size").asList())
                     {
                         if (lp_length->size()>=2)
                         {
-                            line_length=lp_length->get(0).asDouble();
+                            line_length=lp_length->get(0).asFloat64();
                             yInfo()<<"with length"<<line_length;
                             yInfo()<<"World configured";
                             world_configured=true;

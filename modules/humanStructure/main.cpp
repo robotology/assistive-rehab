@@ -184,38 +184,38 @@ public:
                         {
                             if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"RElbow") == 0)
                             {
-                                point.x = (int)propFieldPos->get(1).asDouble();
-                                point.y = (int)propFieldPos->get(2).asDouble();
+                                point.x = (int)propFieldPos->get(1).asFloat64();
+                                point.y = (int)propFieldPos->get(2).asFloat64();
                                 relbow.push_back(point);
                             }
                             if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"RWrist") == 0)
                             {
-                                point.x = (int)propFieldPos->get(1).asDouble();
-                                point.y = (int)propFieldPos->get(2).asDouble();
+                                point.x = (int)propFieldPos->get(1).asFloat64();
+                                point.y = (int)propFieldPos->get(2).asFloat64();
                                 rwrist.push_back(point);
                             }
                             if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"LElbow") == 0)
                             {
-                                point.x = (int)propFieldPos->get(1).asDouble();
-                                point.y = (int)propFieldPos->get(2).asDouble();
+                                point.x = (int)propFieldPos->get(1).asFloat64();
+                                point.y = (int)propFieldPos->get(2).asFloat64();
                                 lelbow.push_back(point);
                             }
                             if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"LWrist") == 0)
                             {
-                                point.x = (int)propFieldPos->get(1).asDouble();
-                                point.y = (int)propFieldPos->get(2).asDouble();
+                                point.x = (int)propFieldPos->get(1).asFloat64();
+                                point.y = (int)propFieldPos->get(2).asFloat64();
                                 lwrist.push_back(point);
                             }
                             if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"Neck") == 0)
                             {
-                                point.x = (int)propFieldPos->get(1).asDouble();
-                                point.y = (int)propFieldPos->get(2).asDouble();
+                                point.x = (int)propFieldPos->get(1).asFloat64();
+                                point.y = (int)propFieldPos->get(2).asFloat64();
                                 neck.push_back(point);
                             }
                             if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"MidHip") == 0)
                             {
-                                point.x = (int)propFieldPos->get(1).asDouble();
-                                point.y = (int)propFieldPos->get(2).asDouble();
+                                point.x = (int)propFieldPos->get(1).asFloat64();
+                                point.y = (int)propFieldPos->get(2).asFloat64();
                                 midHip.push_back(point);
                             }
                         }
@@ -245,7 +245,7 @@ public:
                     {
                         yarp::os::Bottle *item=blobs.get(i).asList();
 
-                        int cog = item->get(0).asInt();//item->get(2).asInt() - ( (item->get(2).asInt() -item->get(0).asInt()) / 2);
+                        int cog = item->get(0).asInt32();//item->get(2).asInt32() - ( (item->get(2).asInt32() -item->get(0).asInt32()) / 2);
 
                         if ( abs(cog - neck[getIndex].x) < armthresh)
                             index = i;
@@ -263,15 +263,15 @@ public:
         /*if (camPort.getOutputCount()>0)
         {
             yarp::os::Bottle cmd,rep;
-            cmd.addVocab(yarp::os::Vocab::encode("visr"));
-            cmd.addVocab(yarp::os::Vocab::encode("get"));
-            cmd.addVocab(yarp::os::Vocab::encode("fov"));
+            cmd.addVocab32("visr");
+            cmd.addVocab32("get");
+            cmd.addVocab32("fov");
             if (camPort.write(cmd,rep))
             {
                 if (rep.size()>=5)
                 {
-                    fov_h=rep.get(3).asDouble();
-                    fov_v=rep.get(4).asDouble();
+                    fov_h=rep.get(3).asFloat64();
+                    fov_v=rep.get(4).asFloat64();
                     yInfo()<<"camera fov_h (from sensor) ="<<fov_h;
                     yInfo()<<"camera fov_v (from sensor) ="<<fov_v;
                     return true;
@@ -390,94 +390,94 @@ public:
                     {
                         if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"REye") == 0)
                         {
-                            point.x = (int)propFieldPos->get(1).asDouble();
-                            point.y = (int)propFieldPos->get(2).asDouble();
+                            point.x = (int)propFieldPos->get(1).asFloat64();
+                            point.y = (int)propFieldPos->get(2).asFloat64();
                             rightEye2D.push_back(point);
                         }
                         if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"LEye") == 0)
                         {
-                            point.x = (int)propFieldPos->get(1).asDouble();
-                            point.y = (int)propFieldPos->get(2).asDouble();
+                            point.x = (int)propFieldPos->get(1).asFloat64();
+                            point.y = (int)propFieldPos->get(2).asFloat64();
                             leftEye2D.push_back(point);
                         }
                         if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"REar") == 0)
                         {
-                            point.x = (int)propFieldPos->get(1).asDouble();
-                            point.y = (int)propFieldPos->get(2).asDouble();
+                            point.x = (int)propFieldPos->get(1).asFloat64();
+                            point.y = (int)propFieldPos->get(2).asFloat64();
                             rightEar2D.push_back(point);
                         }
                         if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"LEar") == 0)
                         {
-                            point.x = (int)propFieldPos->get(1).asDouble();
-                            point.y = (int)propFieldPos->get(2).asDouble();
+                            point.x = (int)propFieldPos->get(1).asFloat64();
+                            point.y = (int)propFieldPos->get(2).asFloat64();
                             leftEar2D.push_back(point);
                         }
                         if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"Neck") == 0)
                         {
-                            point.x = (int)propFieldPos->get(1).asDouble();
-                            point.y = (int)propFieldPos->get(2).asDouble();
+                            point.x = (int)propFieldPos->get(1).asFloat64();
+                            point.y = (int)propFieldPos->get(2).asFloat64();
                             neck2D.push_back(point);
 
                         }
                         if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"Nose") == 0)
                         {
-                            point.x = (int)propFieldPos->get(1).asDouble();
-                            point.y = (int)propFieldPos->get(2).asDouble();
+                            point.x = (int)propFieldPos->get(1).asFloat64();
+                            point.y = (int)propFieldPos->get(2).asFloat64();
                             nose2D.push_back(point);
                         }
                         if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"LShoulder") == 0)
                         {
-                            point.x = (int)propFieldPos->get(1).asDouble();
-                            point.y = (int)propFieldPos->get(2).asDouble();
+                            point.x = (int)propFieldPos->get(1).asFloat64();
+                            point.y = (int)propFieldPos->get(2).asFloat64();
                             leftShoulder2D.push_back(point);
                         }
                         if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"RShoulder") == 0)
                         {
-                            point.x = (int)propFieldPos->get(1).asDouble();
-                            point.y = (int)propFieldPos->get(2).asDouble();
+                            point.x = (int)propFieldPos->get(1).asFloat64();
+                            point.y = (int)propFieldPos->get(2).asFloat64();
                             rightShoulder2D.push_back(point);
                         }
                         if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"RWrist") == 0)
                         {
-                            point.x = (int)propFieldPos->get(1).asDouble();
-                            point.y = (int)propFieldPos->get(2).asDouble();
+                            point.x = (int)propFieldPos->get(1).asFloat64();
+                            point.y = (int)propFieldPos->get(2).asFloat64();
                             rightWrist2D.push_back(point);
                         }
                         if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"LWrist") == 0)
                         {
-                            point.x = (int)propFieldPos->get(1).asDouble();
-                            point.y = (int)propFieldPos->get(2).asDouble();
+                            point.x = (int)propFieldPos->get(1).asFloat64();
+                            point.y = (int)propFieldPos->get(2).asFloat64();
                             leftWrist2D.push_back(point);
                         }
 
                         if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"RElbow") == 0)
                         {
-                            point.x = (int)propFieldPos->get(1).asDouble();
-                            point.y = (int)propFieldPos->get(2).asDouble();
+                            point.x = (int)propFieldPos->get(1).asFloat64();
+                            point.y = (int)propFieldPos->get(2).asFloat64();
                             rightElbow2D.push_back(point);
                         }
                         if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"LElbow") == 0)
                         {
-                            point.x = (int)propFieldPos->get(1).asDouble();
-                            point.y = (int)propFieldPos->get(2).asDouble();
+                            point.x = (int)propFieldPos->get(1).asFloat64();
+                            point.y = (int)propFieldPos->get(2).asFloat64();
                             leftElbow2D.push_back(point);
                         }
                         if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"MidHip") == 0)
                         {
-                            point.x = (int)propFieldPos->get(1).asDouble();
-                            point.y = (int)propFieldPos->get(2).asDouble();
+                            point.x = (int)propFieldPos->get(1).asFloat64();
+                            point.y = (int)propFieldPos->get(2).asFloat64();
                             MidHip2D.push_back(point);
                         }
                         if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"LHip") == 0)
                         {
-                            point.x = (int)propFieldPos->get(1).asDouble();
-                            point.y = (int)propFieldPos->get(2).asDouble();
+                            point.x = (int)propFieldPos->get(1).asFloat64();
+                            point.y = (int)propFieldPos->get(2).asFloat64();
                             LHip2D.push_back(point);
                         }
                         if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"RHip") == 0)
                         {
-                            point.x = (int)propFieldPos->get(1).asDouble();
-                            point.y = (int)propFieldPos->get(2).asDouble();
+                            point.x = (int)propFieldPos->get(1).asFloat64();
+                            point.y = (int)propFieldPos->get(2).asFloat64();
                             RHip2D.push_back(point);
                         }
                     }
@@ -503,8 +503,8 @@ public:
             if (MidHip2D[i].x > 0)
             {
                 yInfo() << "in midHip";
-                tmp.addInt(MidHip2D[i].x);
-                tmp.addInt(MidHip2D[i].y);
+                tmp.addInt32(MidHip2D[i].x);
+                tmp.addInt32(MidHip2D[i].y);
 
                 elements.push_back(std::make_pair(MidHip2D[i].x,increment));
                 shapes.push_back(tmp);
@@ -513,8 +513,8 @@ public:
             else if (neck2D[i].x > 0)
             {
                 yInfo() << "in neck";
-                tmp.addInt(neck2D[i].x);
-                tmp.addInt(neck2D[i].y);
+                tmp.addInt32(neck2D[i].x);
+                tmp.addInt32(neck2D[i].y);
                 elements.push_back(std::make_pair(neck2D[i].x,increment));
                 shapes.push_back(tmp);
                 increment++;
@@ -546,8 +546,8 @@ public:
                 {
                     yInfo() << "**************** shapes elements" << shapes[elements[i].second].toString();
                     yarp::os::Bottle &tmp = blobs.addList();
-                    tmp.addInt(shapes[elements[i].second].get(0).asInt());
-                    tmp.addInt(shapes[elements[i].second].get(1).asInt());
+                    tmp.addInt32(shapes[elements[i].second].get(0).asInt32());
+                    tmp.addInt32(shapes[elements[i].second].get(1).asInt32());
                 }
 
                 list = blobs;
@@ -572,7 +572,7 @@ public:
             {
                 yarp::os::Bottle *item=list.get(i).asList();
 
-                int cog = item->get(0).asInt(); //item->get(2).asInt() - ( (item->get(2).asInt() -item->get(0).asInt()) / 2);
+                int cog = item->get(0).asInt32(); //item->get(2).asInt32() - ( (item->get(2).asInt32() -item->get(0).asInt32()) / 2);
 
                 if ( abs(cog - neck2D[followSkeletonIndex].x) < 30)
                     finalIndex = i;
@@ -749,10 +749,10 @@ public:
                     rectangle( out_cv, boundRect[minValueIndex].tl(), boundRect[minValueIndex].br(), cv::Scalar(216, 102 , 44), 2, 8, 0 );
 
                     yarp::os::Bottle &tmp = blobs.addList();
-                    tmp.addInt( boundRect[minValueIndex].tl().x );
-                    tmp.addInt( boundRect[minValueIndex].tl().y );
-                    tmp.addInt( boundRect[minValueIndex].br().x );
-                    tmp.addInt( boundRect[minValueIndex].br().y );
+                    tmp.addInt32( boundRect[minValueIndex].tl().x );
+                    tmp.addInt32( boundRect[minValueIndex].tl().y );
+                    tmp.addInt32( boundRect[minValueIndex].br().x );
+                    tmp.addInt32( boundRect[minValueIndex].br().y );
 
                     blobPort.setEnvelope(stamp);
                     blobPort.write();
@@ -833,8 +833,8 @@ public:
     {
         this->rf=&rf;
         std::string moduleName = rf.check("name", yarp::os::Value("humanStructure"), "module name (string)").asString();
-        minVal = rf.check("minVal", yarp::os::Value(0.5), "minimum value for depth (double)").asDouble();
-        maxVal = rf.check("maxVal", yarp::os::Value(3.5), "maximum value for depth (double)").asDouble();
+        minVal = rf.check("minVal", yarp::os::Value(0.5), "minimum value for depth (double)").asFloat64();
+        maxVal = rf.check("maxVal", yarp::os::Value(3.5), "maximum value for depth (double)").asFloat64();
         setName(moduleName.c_str());
 
         rpcPort.open(("/"+getName("/rpc")).c_str());
