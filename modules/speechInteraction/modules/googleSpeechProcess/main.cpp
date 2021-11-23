@@ -242,7 +242,7 @@ public:
             //yInfo() << "root" << tokens->Get( i ).dependency_edge().head_token_index();
             yarp::os::Bottle &root = words.addList();
             root.addString("root");
-            root.addInt(tokens->Get( i ).dependency_edge().head_token_index());
+            root.addInt32(tokens->Get( i ).dependency_edge().head_token_index());
             
             //yInfo() << PartOfSpeech_Tag_Name(tokens->Get( i ).part_of_speech().tag());
             yarp::os::Bottle &tag = words.addList();
@@ -386,7 +386,7 @@ public:
             for (int i=0; i<nouninc.size(); i++)
             {
                 int ninc = nouninc[i];
-                int nounInt = wordList.get(ninc).asList()->find("root").asInt();
+                int nounInt = wordList.get(ninc).asList()->find("root").asInt32();
                 std::string nounLabel = wordList.get(nounInt).asList()->find("label").asString();
                 yInfo() << "have noun " << noun.get(i).asString().c_str() << wordList.get(ninc).asList()->toString().c_str();
                 yInfo() << "have nounLabel " << nounLabel.c_str() << wordList.get(nounInt).asList()->toString().c_str();
@@ -418,7 +418,7 @@ public:
             
             if (strcmp(nounLabel.c_str(), "PREP") == 0)
             {
-                int prepInt = wordList.get(nounInt).asList()->find("root").asInt();
+                int prepInt = wordList.get(nounInt).asList()->find("root").asInt32();
                 std::string prepLabel = wordList.get(prepInt).asList()->find("label").asString();
                 yInfo() << "have prepLabel " << prepLabel.c_str() << wordList.get(prepInt).asList()->toString().c_str();;;
                 
@@ -586,7 +586,7 @@ public:
             return false;
         }
         std::string moduleName = general.check("name", yarp::os::Value("yarp-google-speech-process"), "module name (string)").asString();
-        int numKey = general.find("num-keywords").asInt();
+        int numKey = general.find("num-keywords").asInt32();
         for (int i=0; i<numKey; i++)
         {
             std::string keywi = "keyword-"+std::to_string(i);

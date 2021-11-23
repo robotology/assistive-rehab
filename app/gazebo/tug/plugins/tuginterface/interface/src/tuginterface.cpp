@@ -86,7 +86,7 @@ bool TugInterface::configure(const sdf::ElementPtr &_sdf)
             {
                 for (int j=0; j<ncols; j++)
                 {
-                    targets[i][j]=tBottle->get(j+i*ncols).asDouble();
+                    targets[i][j]=tBottle->get(j+i*ncols).asFloat64();
                 }
             }
         }
@@ -96,8 +96,8 @@ bool TugInterface::configure(const sdf::ElementPtr &_sdf)
             return false;
         }
     }
-    vel.lin_vel=m_parameters.find("linear-velocity").asDouble();
-    vel.ang_vel=m_parameters.find("angular-velocity").asDouble();
+    vel.lin_vel=m_parameters.find("linear-velocity").asFloat64();
+    vel.ang_vel=m_parameters.find("angular-velocity").asFloat64();
     starting_animation=m_parameters.find("starting_animation").asString();
     return true;
 }

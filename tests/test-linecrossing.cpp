@@ -44,7 +44,7 @@ public:
     /********************************************************/
     bool configure(ResourceFinder &rf) override
     {
-        threshold=rf.check("threshold",Value(0.25)).asDouble();
+        threshold=rf.check("threshold",Value(0.25)).asFloat64();
         scopePort.open("/test-linecrossing/scope:o");
         opcPort.open("/test-linecrossing/cmd:opc");
 
@@ -62,14 +62,14 @@ public:
     {
         //ask for the property id
         Bottle cmd,reply;
-        cmd.addVocab(Vocab::encode("ask"));
+        cmd.addVocab32("ask");
         Bottle &content = cmd.addList().addList();
         content.addString("skeleton");
 
         opcPort.write(cmd,reply);
         if(reply.size()>1)
         {
-            if(reply.get(0).asVocab() == Vocab::encode("ack"))
+            if(reply.get(0).asVocab32() == Vocab32::encode("ack"))
             {
                 if(Bottle *idField=reply.get(1).asList())
                 {
@@ -77,17 +77,17 @@ public:
                     {
                         for(int i=0; i<idValues->size(); i++)
                         {
-                            int id=idValues->get(i).asInt();
+                            int id=idValues->get(i).asInt32();
 
                             //given the id, get the value of the property
                             cmd.clear();
-                            cmd.addVocab(Vocab::encode("get"));
+                            cmd.addVocab32("get");
                             Bottle &content = cmd.addList().addList();
                             Bottle replyProp;
                             content.addString("id");
-                            content.addInt(id);
+                            content.addInt32(id);
                             opcPort.write(cmd,replyProp);
-                            if(replyProp.get(0).asVocab() == Vocab::encode("ack"))
+                            if(replyProp.get(0).asVocab32() == Vocab32::encode("ack"))
                             {
                                 if(Bottle *propField = replyProp.get(1).asList())
                                 {
@@ -118,30 +118,30 @@ public:
     {
         //ask for the property id
         Bottle cmd,reply;
-        cmd.addVocab(Vocab::encode("ask"));
+        cmd.addVocab32("ask");
         Bottle &content = cmd.addList().addList();
         content.addString("finish-line");
 
         opcPort.write(cmd,reply);
         if(reply.size()>1)
         {
-            if(reply.get(0).asVocab() == Vocab::encode("ack"))
+            if(reply.get(0).asVocab32() == Vocab32::encode("ack"))
             {
                 if(Bottle *idField=reply.get(1).asList())
                 {
                     if(Bottle *idVal=idField->get(1).asList())
                     {
-                        int id=idVal->get(0).asInt();
+                        int id=idVal->get(0).asInt32();
 
                         //given the id, get the value of the property
                         cmd.clear();
-                        cmd.addVocab(Vocab::encode("get"));
+                        cmd.addVocab32("get");
                         Bottle &content = cmd.addList().addList();
                         Bottle replyProp;
                         content.addString("id");
-                        content.addInt(id);
+                        content.addInt32(id);
                         opcPort.write(cmd,replyProp);
-                        if(replyProp.get(0).asVocab() == Vocab::encode("ack"))
+                        if(replyProp.get(0).asVocab32() == Vocab32::encode("ack"))
                         {
                             if(Bottle *propField = replyProp.get(1).asList())
                             {
@@ -151,9 +151,9 @@ public:
                                     {
                                         if(Bottle *bPose=subPropField->find("pose_camera").asList())
                                         {
-                                            est_pose[0]=bPose->get(0).asDouble();
-                                            est_pose[1]=bPose->get(1).asDouble();
-                                            est_pose[2]=bPose->get(2).asDouble();
+                                            est_pose[0]=bPose->get(0).asFloat64();
+                                            est_pose[1]=bPose->get(1).asFloat64();
+                                            est_pose[2]=bPose->get(2).asFloat64();
                                             return true;
                                         }
                                     }
@@ -191,8 +191,8 @@ public:
 
             Bottle &distscope=scopePort.prepare();
             distscope.clear();
-            distscope.addDouble(dist_fr_line);
-            distscope.addDouble(dist_fl_line);
+            distscope.addFloat64(dist_fr_line);
+            distscope.addFloat64(dist_fl_line);
             scopePort.write();
         }
 

@@ -167,10 +167,10 @@ class Publisher : public RFModule, public robotSkeletonPublisher_IDL
                 if (b->size()>=3)
                 {
                     Vector rot(4,0.0);
-                    rot[2]=1.0; rot[3]=(M_PI/180.0)*b->get(2).asDouble();
+                    rot[2]=1.0; rot[3]=(M_PI/180.0)*b->get(2).asFloat64();
                     navFrame=axis2dcm(rot);
-                    navFrame(0,3)=b->get(0).asDouble();
-                    navFrame(1,3)=b->get(1).asDouble();
+                    navFrame(0,3)=b->get(0).asFloat64();
+                    navFrame(1,3)=b->get(1).asFloat64();
                     navFrameUpdated=true;
                     return true;
                 }
@@ -203,22 +203,22 @@ class Publisher : public RFModule, public robotSkeletonPublisher_IDL
             Bottle cmd,rep;
             if (opc_id<0)
             {
-                cmd.addVocab(Vocab::encode("add"));
+                cmd.addVocab32("add");
                 Property prop=skeleton->toProperty();
                 prop.put("stamp",stamp);
                 cmd.addList().read(prop);
                 if (opcPort.write(cmd,rep))
                 {
-                    if (rep.get(0).asVocab()==Vocab::encode("ack"))
+                    if (rep.get(0).asVocab32()==Vocab32::encode("ack"))
                     {
-                        opc_id=rep.get(1).asList()->get(1).asInt();
+                        opc_id=rep.get(1).asList()->get(1).asInt32();
                         return true;
                     }
                 }
             }
             else
             {
-                cmd.addVocab(Vocab::encode("set"));
+                cmd.addVocab32("set");
                 Bottle &pl=cmd.addList();
                 Property prop=skeleton->toProperty();
                 prop.put("stamp",stamp);
@@ -226,11 +226,11 @@ class Publisher : public RFModule, public robotSkeletonPublisher_IDL
                 Bottle id;
                 Bottle &id_pl=id.addList();
                 id_pl.addString("id");
-                id_pl.addInt(opc_id);
+                id_pl.addInt32(opc_id);
                 pl.append(id);
                 if (opcPort.write(cmd,rep))
                 {
-                    return (rep.get(0).asVocab()==Vocab::encode("ack"));
+                    return (rep.get(0).asVocab32()==Vocab32::encode("ack"));
                 }
             }
         }
@@ -243,13 +243,13 @@ class Publisher : public RFModule, public robotSkeletonPublisher_IDL
         if (opcPort.getOutputCount())
         {
             Bottle cmd,rep;
-            cmd.addVocab(Vocab::encode("del"));
+            cmd.addVocab32("del");
             Bottle &pl=cmd.addList().addList();
             pl.addString("id");
-            pl.addInt(opc_id);
+            pl.addInt32(opc_id);
             if (opcPort.write(cmd,rep))
             {
-                return (rep.get(0).asVocab()==Vocab::encode("ack"));
+                return (rep.get(0).asVocab32()==Vocab32::encode("ack"));
             }
         }
         return false;
@@ -266,7 +266,7 @@ class Publisher : public RFModule, public robotSkeletonPublisher_IDL
     {
         string robot=rf.check("robot",Value("cer")).asString();
         skeleton_name=rf.check("skeleton-name",Value("robot")).asString();
-        period=rf.check("period",Value(0.05)).asDouble();
+        period=rf.check("period",Value(0.05)).asFloat64();
         visibility=rf.check("visibility",Value(true)).asBool();
 
         skeleton_color={0.23,0.7,0.44};
@@ -277,7 +277,7 @@ class Publisher : public RFModule, public robotSkeletonPublisher_IDL
                 size_t len=std::min(skeleton_color.size(),ptr->size());
                 for (size_t i=0; i<len; i++)
                 {
-                    skeleton_color[i]=ptr->get(i).asDouble();
+                    skeleton_color[i]=ptr->get(i).asFloat64();
                 }
             }
         }
@@ -286,7 +286,7 @@ class Publisher : public RFModule, public robotSkeletonPublisher_IDL
         Bottle &b2=b1.addList();
         for (auto &c:skeleton_color)
         {
-            b2.addDouble(c);
+            b2.addFloat64(c);
         }
 
         if (!openPort(robot,"torso_tripod",phdl_encs)      ||

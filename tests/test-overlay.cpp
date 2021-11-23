@@ -83,8 +83,8 @@ class Overlayer : public RFModule
                         {
                             if (k->size()==4)
                             {
-                                int u=(int)k->get(1).asDouble();
-                                int v=(int)k->get(2).asDouble();
+                                int u=(int)k->get(1).asFloat64();
+                                int v=(int)k->get(2).asFloat64();
                                 cv::circle(img,cv::Point(u,v),2,cv::Scalar(0,0,255));
                             }
                         }
@@ -96,13 +96,13 @@ class Overlayer : public RFModule
 
     bool configure(ResourceFinder &rf) override
     {
-        filter_depth_kernel_size=rf.check("filter-depth-kernel-size",Value(6)).asInt();
-        filter_depth_iterations=rf.check("filter-depth-iterations",Value(4)).asInt();
-        filter_depth_min_dist=(float)rf.check("filter-depth-min-dist",Value(1.0)).asDouble();
-        filter_depth_max_dist=(float)rf.check("filter-depth-max-dist",Value(4.0)).asDouble();
+        filter_depth_kernel_size=rf.check("filter-depth-kernel-size",Value(6)).asInt32();
+        filter_depth_iterations=rf.check("filter-depth-iterations",Value(4)).asInt32();
+        filter_depth_min_dist=(float)rf.check("filter-depth-min-dist",Value(1.0)).asFloat64();
+        filter_depth_max_dist=(float)rf.check("filter-depth-max-dist",Value(4.0)).asFloat64();
 
-        alpha=rf.check("alpha",Value(0.5)).asDouble();
-        beta=rf.check("beta",Value(0.5)).asDouble();
+        alpha=rf.check("alpha",Value(0.5)).asFloat64();
+        beta=rf.check("beta",Value(0.5)).asFloat64();
 
         depthPortIn.open("/test-overlay/depth:i");
         depthPortOut.open("/test-overlay/depth:o");

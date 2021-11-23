@@ -40,8 +40,8 @@
 #include <queryThread.h>
 #include "recognition_IDL.h"
 
-#define                 ACK                 yarp::os::createVocab('a','c','k')
-#define                 NACK                yarp::os::createVocab('n','a','c','k')
+#define                 ACK                 yarp::os::createVocab32('a','c','k')
+#define                 NACK                yarp::os::createVocab32('n','a','c','k')
 
 /********************************************************/
 class Module : public yarp::os::RFModule, public recognition_IDL
@@ -129,7 +129,7 @@ public:
 
             yDebug() << reply_classifier.toString().c_str();
 
-            if (reply_classifier.size()>0 && reply_classifier.get(0).asVocab()==ACK)
+            if (reply_classifier.size()>0 && reply_classifier.get(0).asVocab32()==ACK)
             {
                 done = true;
                 yarp::os::Bottle *class_list = reply_classifier.get(1).asList();
@@ -211,13 +211,13 @@ public:
         std::string moduleName = rf.check("name", yarp::os::Value("faceRecognizer"), "module name (string)").asString();
         setName(moduleName.c_str());
 
-        blobs_detection_timeout  = rf.check("blobs_detection_timeout",yarp::os::Value(0.2)).asDouble();
+        blobs_detection_timeout  = rf.check("blobs_detection_timeout",yarp::os::Value(0.2)).asFloat64();
 
-        trainingTime = rf.check("training_time",yarp::os::Value(10.0)).asDouble();
+        trainingTime = rf.check("training_time",yarp::os::Value(10.0)).asFloat64();
 
-        skip_frames = rf.check("skip_frames",yarp::os::Value(5)).asInt();
+        skip_frames = rf.check("skip_frames",yarp::os::Value(5)).asInt32();
 
-        confidenceThreshold = rf.check("confidence_threhold",yarp::os::Value(0.85)).asDouble();
+        confidenceThreshold = rf.check("confidence_threhold",yarp::os::Value(0.85)).asFloat64();
 
         rpcPort.open(("/"+getName("/rpc")).c_str());
 
@@ -268,7 +268,7 @@ public:
             receivedBlobs=*pBlobs;
             if (receivedBlobs.size()==1)
             {
-                if (receivedBlobs.get(0).asVocab()==yarp::os::Vocab::encode("empty"))
+                if (receivedBlobs.get(0).asVocab32()==yarp::os::Vocab32::encode("empty"))
                     receivedBlobs.clear();
             }
         }
@@ -300,8 +300,8 @@ public:
             int width = 0;
             int height = 0;
             yarp::os::Bottle *item=blobs.get(i).asList();
-            width = item->get(2).asInt() - item->get(0).asInt();
-            height = item->get(3).asInt() - item->get(1).asInt();
+            width = item->get(2).asInt32() - item->get(0).asInt32();
+            height = item->get(3).asInt32() - item->get(1).asInt32();
             double tmparea = width * height;
             if (tmparea > area)
             {
@@ -344,32 +344,32 @@ public:
                         {
                             if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"RElbow") == 0)
                             {
-                                point.x = (int)propFieldPos->get(1).asDouble();
-                                point.y = (int)propFieldPos->get(2).asDouble();
+                                point.x = (int)propFieldPos->get(1).asFloat64();
+                                point.y = (int)propFieldPos->get(2).asFloat64();
                                 relbow.push_back(point);
                             }
                             if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"RWrist") == 0)
                             {
-                                point.x = (int)propFieldPos->get(1).asDouble();
-                                point.y = (int)propFieldPos->get(2).asDouble();
+                                point.x = (int)propFieldPos->get(1).asFloat64();
+                                point.y = (int)propFieldPos->get(2).asFloat64();
                                 rwrist.push_back(point);
                             }
                             if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"LElbow") == 0)
                             {
-                                point.x = (int)propFieldPos->get(1).asDouble();
-                                point.y = (int)propFieldPos->get(2).asDouble();
+                                point.x = (int)propFieldPos->get(1).asFloat64();
+                                point.y = (int)propFieldPos->get(2).asFloat64();
                                 lelbow.push_back(point);
                             }
                             if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"LWrist") == 0)
                             {
-                                point.x = (int)propFieldPos->get(1).asDouble();
-                                point.y = (int)propFieldPos->get(2).asDouble();
+                                point.x = (int)propFieldPos->get(1).asFloat64();
+                                point.y = (int)propFieldPos->get(2).asFloat64();
                                 lwrist.push_back(point);
                             }
                             if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"Neck") == 0)
                             {
-                                point.x = (int)propFieldPos->get(1).asDouble();
-                                point.y = (int)propFieldPos->get(2).asDouble();
+                                point.x = (int)propFieldPos->get(1).asFloat64();
+                                point.y = (int)propFieldPos->get(2).asFloat64();
                                 neck.push_back(point);
                             }
                         }
@@ -403,7 +403,7 @@ public:
                     {
                         yarp::os::Bottle *item=blobs.get(i).asList();
 
-                        int cog = item->get(2).asInt() - ( (item->get(2).asInt() -item->get(0).asInt()) / 2);
+                        int cog = item->get(2).asInt32() - ( (item->get(2).asInt32() -item->get(0).asInt32()) / 2);
 
                         if ( abs(cog - neck[getIndex].x) < 20)
                             index = i;
@@ -439,10 +439,10 @@ public:
         {
             cv::Point tl,br,txtLoc;
             yarp::os::Bottle *item=blobs.get(j).asList();
-            tl.x=(int)item->get(0).asDouble();
-            tl.y=(int)item->get(1).asDouble();
-            br.x=(int)item->get(2).asDouble();
-            br.y=(int)item->get(3).asDouble();
+            tl.x=(int)item->get(0).asFloat64();
+            tl.y=(int)item->get(1).asFloat64();
+            br.x=(int)item->get(2).asFloat64();
+            br.y=(int)item->get(3).asFloat64();
             txtLoc.x=tl.x;
             txtLoc.y=tl.y-5;
             std::ostringstream tag;
@@ -462,25 +462,25 @@ public:
 
             for (int y=0; y<classSize; y++)
             {
-                if (labels.get(j).asList()->get(y).asList()->get(1).asDouble() > confidence)
+                if (labels.get(j).asList()->get(y).asList()->get(1).asFloat64() > confidence)
                 {
-                    confidence = labels.get(j).asList()->get(y).asList()->get(1).asDouble();
+                    confidence = labels.get(j).asList()->get(y).asList()->get(1).asFloat64();
                     largest = y;
                 }
             }
             if (classSize>0)
             {
                 yarp::os::Bottle &tmp = winners.addList();
-                if (labels.get(j).asList()->get(largest).asList()->get(1).asDouble() > confidenceThreshold)
+                if (labels.get(j).asList()->get(largest).asList()->get(1).asFloat64() > confidenceThreshold)
                 {
                     tmp.addString(labels.get(j).asList()->get(largest).asList()->get(0).asString());
-                    tmp.addDouble(labels.get(j).asList()->get(largest).asList()->get(1).asDouble());
+                    tmp.addFloat64(labels.get(j).asList()->get(largest).asList()->get(1).asFloat64());
                     tag<<labels.get(j).asList()->get(largest).asList()->get(0).asString();
                 }
                 else
                 {
                     tmp.addString("?");
-                    tmp.addDouble(0.0);
+                    tmp.addFloat64(0.0);
                     tag<<"-";
                 }
                 cv::putText(imgMat,tag.str(),txtLoc,cv::FONT_HERSHEY_SIMPLEX,0.5,(j==i)?highlight:lowlight,2);
@@ -536,20 +536,20 @@ public:
                         {
                             if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"Neck") == 0)
                             {
-                                point.x = (int)propFieldPos->get(1).asDouble();
-                                point.y = (int)propFieldPos->get(2).asDouble();
+                                point.x = (int)propFieldPos->get(1).asFloat64();
+                                point.y = (int)propFieldPos->get(2).asFloat64();
                                 neck.push_back(point);
                             }
                             if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"LEar") == 0)
                             {
-                                point.x = (int)propFieldPos->get(1).asDouble();
-                                point.y = (int)propFieldPos->get(2).asDouble();
+                                point.x = (int)propFieldPos->get(1).asFloat64();
+                                point.y = (int)propFieldPos->get(2).asFloat64();
                                 lear.push_back(point);
                             }
                             if ( std::strcmp (propFieldPos->get(0).asString().c_str(),"REar") == 0)
                             {
-                                point.x = (int)propFieldPos->get(1).asDouble();
-                                point.y = (int)propFieldPos->get(2).asDouble();
+                                point.x = (int)propFieldPos->get(1).asFloat64();
+                                point.y = (int)propFieldPos->get(2).asFloat64();
                                 rear.push_back(point);
                             }
                         }
@@ -569,7 +569,7 @@ public:
                         for (int j=0; j<blobs.size(); j++)
                         {
                             yarp::os::Bottle *item=blobs.get(j).asList();
-                            int cog = item->get(2).asInt() - ( (item->get(2).asInt() -item->get(0).asInt()) / 2);
+                            int cog = item->get(2).asInt32() - ( (item->get(2).asInt32() -item->get(0).asInt32()) / 2);
                             if ( abs(cog - neck[i].x) < 50 || abs(cog - lear[i].x) < 50 || abs(cog - rear[i].x) < 50)
                             {
                                 //yInfo() << "adding " << i << j;
@@ -605,20 +605,20 @@ public:
                     {
                         //yInfo() << "Adding name for skeleton " << i << "with blob " << elements[i].second;
                         options.addString(labels.get(elements[i].second).asList()->get(0).asString());
-                        options.addDouble(labels.get(elements[i].second).asList()->get(1).asDouble());
+                        options.addFloat64(labels.get(elements[i].second).asList()->get(1).asFloat64());
                     }
                     else
                     {
                         //yInfo() << "Adding empty name";
                         options.addString("?");
-                        options.addDouble(0.0);
+                        options.addFloat64(0.0);
                     }
                 }
                 else
                 {
                     //yInfo() << "Adding empty name AS NO BLOB FOUND";
                     options.addString("?");
-                    options.addDouble(0.0);
+                    options.addFloat64(0.0);
                 }
                 addSkeletons=*skeleton;
             }
@@ -681,7 +681,7 @@ public:
             port_rpc_classifier.write(cmd_classifier,reply_classifier);
 
             yDebug() << "reply for send_cmd2rpc_classifier " << reply_classifier.toString().c_str();
-            if (reply_classifier.size()>0 && (reply_classifier.get(0).asVocab()==ACK || reply_classifier.get(0).asString() =="ok"))
+            if (reply_classifier.size()>0 && (reply_classifier.get(0).asVocab32()==ACK || reply_classifier.get(0).asString() =="ok"))
                 done = true;
         }
 
@@ -700,7 +700,7 @@ public:
             port_rpc_classifier.write(cmd_classifier,reply_classifier);
 
             yDebug() << "reply for send_doublecmd2rpc_classifier " << reply_classifier.toString().c_str();
-            if (reply_classifier.size()>0 && (reply_classifier.get(0).asVocab()==ACK || reply_classifier.get(0).asString() =="ok"))
+            if (reply_classifier.size()>0 && (reply_classifier.get(0).asVocab32()==ACK || reply_classifier.get(0).asString() =="ok"))
                 done = true;
         }
 
@@ -817,7 +817,7 @@ public:
                 {
                     recognition_started = true;
 
-                    if (reply_classifier.get(0).asVocab()!=ACK)
+                    if (reply_classifier.get(0).asVocab32()!=ACK)
                     {
                         thr_query->clear_hist();
                     }

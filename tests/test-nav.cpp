@@ -68,7 +68,7 @@ class TestNavigator : public RFModule {
 
   bool updateModule()override {
     if (Bottle* b = statePort.read(false)) {
-      robot_x = b->get(0).asDouble();
+      robot_x = b->get(0).asFloat64();
     }
 
     Vector pos(3, 0.0);
@@ -91,7 +91,7 @@ class TestNavigator : public RFModule {
 
     Bottle& idList = item.addList();
     idList.addString("id");
-    idList.addInt(0);
+    idList.addInt32(0);
 
     opcPort.writeStrict();
     return true;

@@ -113,11 +113,11 @@ class Navigator : public RFModule, public navController_IDL {
     void sendTo(BufferedPort<Bottle>& navCtrlPort) {
       Bottle& b = navCtrlPort.prepare();
       b.clear();
-      b.addInt(3);
-      b.addDouble(x);
-      b.addDouble(0.0);
-      b.addDouble(theta);
-      b.addDouble(100.0);
+      b.addInt32(3);
+      b.addFloat64(x);
+      b.addFloat64(0.0);
+      b.addFloat64(theta);
+      b.addFloat64(100.0);
       navCtrlPort.writeStrict();
     }
   } robot_velocity;
@@ -129,13 +129,13 @@ class Navigator : public RFModule, public navController_IDL {
 
   /****************************************************************/
   bool configure(ResourceFinder& rf)override {
-    period = rf.check("period", Value(0.05)).asDouble();
-    velocity_linear_magnitude = abs(rf.check("velocity-linear-magnitude", Value(0.3)).asDouble());
-    velocity_angular_saturation = abs(rf.check("velocity-angular-saturation", Value(20.0)).asDouble());
-    angular_tolerance = abs(rf.check("angular-tolerance", Value(5.0)).asDouble());
-    distance_target = abs(rf.check("distance-target", Value(2.0)).asDouble());
-    distance_hysteresis_low = abs(rf.check("distance-hysteresis-low", Value(0.2)).asDouble());
-    distance_hysteresis_high = abs(rf.check("distance-hysteresis-high", Value(0.3)).asDouble());
+    period = rf.check("period", Value(0.05)).asFloat64();
+    velocity_linear_magnitude = abs(rf.check("velocity-linear-magnitude", Value(0.3)).asFloat64());
+    velocity_angular_saturation = abs(rf.check("velocity-angular-saturation", Value(20.0)).asFloat64());
+    angular_tolerance = abs(rf.check("angular-tolerance", Value(5.0)).asFloat64());
+    distance_target = abs(rf.check("distance-target", Value(2.0)).asFloat64());
+    distance_hysteresis_low = abs(rf.check("distance-hysteresis-low", Value(0.2)).asFloat64());
+    distance_hysteresis_high = abs(rf.check("distance-hysteresis-high", Value(0.3)).asFloat64());
 
     navCmdPort.open("/navController/base/cmd:rpc");
     navLocPort.open("/navController/base/loc:i");
@@ -247,28 +247,28 @@ class Navigator : public RFModule, public navController_IDL {
     }
 
     Location loc = get_location(robot_location.H0 * get_matrix(robot_location));
-    lb_rloc.addDouble(loc.x);
-    lb_rloc.addDouble(loc.y);
-    lb_rloc.addDouble(loc.theta);
+    lb_rloc.addFloat64(loc.x);
+    lb_rloc.addFloat64(loc.y);
+    lb_rloc.addFloat64(loc.theta);
     p.put("robot-location", b_rloc.get(0));
 
-    lb_rvel.addDouble(robot_velocity.x);
-    lb_rvel.addDouble(robot_velocity.theta);
+    lb_rvel.addFloat64(robot_velocity.x);
+    lb_rvel.addFloat64(robot_velocity.theta);
     p.put("robot-velocity", b_rvel.get(0));
 
     if ((state == State::nav_angular) ||
         (state == State::nav_linear)) {
-      lb_tloc.addDouble(target_location->x);
-      lb_tloc.addDouble(target_location->y);
-      lb_tloc.addDouble(target_location->theta);
-      lb_tloc.addInt(heading);
+      lb_tloc.addFloat64(target_location->x);
+      lb_tloc.addFloat64(target_location->y);
+      lb_tloc.addFloat64(target_location->theta);
+      lb_tloc.addInt32(heading);
       p.put("target-location", b_tloc.get(0));
     }
 
     if (state == State::track) {
       p.put("skeleton-tag", skeleton_tag);
-      lb_sloc.addDouble(skeleton_location[0]);
-      lb_sloc.addDouble(skeleton_location[1]);
+      lb_sloc.addFloat64(skeleton_location[0]);
+      lb_sloc.addFloat64(skeleton_location[1]);
       p.put("skeleton-location", b_sloc.get(0));
     }
 

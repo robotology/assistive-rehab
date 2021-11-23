@@ -278,7 +278,7 @@ public:
     bool start_acquisition()
     {
         yarp::os::Bottle cmd, rep;
-        //cmd.addVocab(yarp::os::Vocab::encode("start"));
+        //cmd.addVocab32("start");
         cmd.addString("start");
         if (audioCommand.write(cmd, rep))
         {
@@ -336,7 +336,7 @@ public:
         this->rf=&rf;
         std::string moduleName = rf.check("name", yarp::os::Value("yarp-google-speech"), "module name (string)").asString();
         std::string language = rf.check("language_code", yarp::os::Value("en-US"), "language (string)").asString();
-        int sample_rate = rf.check("sample_rate_hertz", yarp::os::Value(16000), "sample rate (int)").asInt();
+        int sample_rate = rf.check("sample_rate_hertz", yarp::os::Value(16000), "sample rate (int)").asInt32();
 
         setName(moduleName.c_str());
 

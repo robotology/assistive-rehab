@@ -167,9 +167,9 @@ class TestRom : public RFModule
     {
         vector<pair<string,Vector>> unordered=skeleton.get_unordered();
         Vector p(3,0.0);
-        p[0]=pos->get(0).asDouble();
-        p[1]=pos->get(1).asDouble();
-        p[2]=pos->get(2).asDouble();
+        p[0]=pos->get(0).asFloat64();
+        p[1]=pos->get(1).asFloat64();
+        p[2]=pos->get(2).asFloat64();
 
         for(int i=0; i<unordered.size(); i++)
         {

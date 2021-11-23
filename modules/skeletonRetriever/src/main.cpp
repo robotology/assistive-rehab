@@ -335,9 +335,9 @@ class Retriever : public RFModule
                 if (k->size()==4)
                 {
                     string tag=k->get(0).asString();
-                    int u=(int)k->get(1).asDouble();
-                    int v=(int)k->get(2).asDouble();
-                    double confidence=k->get(3).asDouble();
+                    int u=(int)k->get(1).asFloat64();
+                    int v=(int)k->get(2).asFloat64();
+                    double confidence=k->get(3).asFloat64();
 
                     if ((confidence>=keys_recognition_confidence) && getPoint3D(u,v,p))
                     {
@@ -393,7 +393,7 @@ class Retriever : public RFModule
                 {
                     string tag=k->get(0).asString();
                     string name=k->get(1).asString();
-                    double confidence=k->get(2).asDouble();
+                    double confidence=k->get(2).asFloat64();
 
                     if (tag=="Name")
                     {
@@ -519,7 +519,7 @@ class Retriever : public RFModule
         if (opcPort.getOutputCount())
         {
             Bottle cmd,rep;
-            cmd.addVocab(Vocab::encode("add"));
+            cmd.addVocab32("add");
             Property prop=applyTransform(s->skeleton)->toProperty();
             if (stamp.isValid())
             {
@@ -528,9 +528,9 @@ class Retriever : public RFModule
             cmd.addList().read(prop);
             if (opcPort.write(cmd,rep))
             {
-                if (rep.get(0).asVocab()==Vocab::encode("ack"))
+                if (rep.get(0).asVocab32()==Vocab32::encode("ack"))
                 {
-                    s->opc_id=rep.get(1).asList()->get(1).asInt();
+                    s->opc_id=rep.get(1).asList()->get(1).asInt32();
                     if (is_unknown(s->skeleton->getTag()))
                     {
                         s->skeleton->setTag(getNameFromId(s->opc_id));
@@ -550,7 +550,7 @@ class Retriever : public RFModule
         if (opcPort.getOutputCount())
         {
             Bottle cmd,rep;
-            cmd.addVocab(Vocab::encode("set"));
+            cmd.addVocab32("set");
             Bottle &pl=cmd.addList();
             Property prop=applyTransform(s->skeleton)->toProperty();
             if (stamp.isValid())
@@ -561,11 +561,11 @@ class Retriever : public RFModule
             Bottle id;
             Bottle &id_pl=id.addList();
             id_pl.addString("id");
-            id_pl.addInt(s->opc_id);
+            id_pl.addInt32(s->opc_id);
             pl.append(id);
             if (opcPort.write(cmd,rep))
             {
-                return (rep.get(0).asVocab()==Vocab::encode("ack"));
+                return (rep.get(0).asVocab32()==Vocab32::encode("ack"));
             }
         }
 
@@ -578,13 +578,13 @@ class Retriever : public RFModule
         if (opcPort.getOutputCount())
         {
             Bottle cmd,rep;
-            cmd.addVocab(Vocab::encode("del"));
+            cmd.addVocab32("del");
             Bottle &pl=cmd.addList().addList();
             pl.addString("id");
-            pl.addInt(s->opc_id);
+            pl.addInt32(s->opc_id);
             if (opcPort.write(cmd,rep))
             {
-                return (rep.get(0).asVocab()==Vocab::encode("ack"));
+                return (rep.get(0).asVocab32()==Vocab32::encode("ack"));
             }
         }
 
@@ -677,10 +677,10 @@ class Retriever : public RFModule
                 if (b->size()>=3)
                 {
                     Vector rot(4,0.0);
-                    rot[2]=1.0; rot[3]=(M_PI/180.0)*b->get(2).asDouble();
+                    rot[2]=1.0; rot[3]=(M_PI/180.0)*b->get(2).asFloat64();
                     navFrame=axis2dcm(rot);
-                    navFrame(0,3)=b->get(0).asDouble();
-                    navFrame(1,3)=b->get(1).asDouble();
+                    navFrame(0,3)=b->get(0).asFloat64();
+                    navFrame(1,3)=b->get(1).asFloat64();
                     navFrameUpdated=true;
                     return true;
                 }
@@ -702,13 +702,13 @@ class Retriever : public RFModule
                     Vector pos(3);
                     for (size_t i=0; i<pos.length(); i++)
                     {
-                        pos[i]=b->get(i).asDouble();
+                        pos[i]=b->get(i).asFloat64();
                     }
 
                     Vector ax(4);
                     for (size_t i=0; i<ax.length(); i++)
                     {
-                        ax[i]=b->get(pos.length()+i).asDouble();
+                        ax[i]=b->get(pos.length()+i).asFloat64();
                     }
 
                     gazeFrame=axis2dcm(ax);
@@ -810,35 +810,35 @@ class Retriever : public RFModule
         Bottle &gGeneral=rf.findGroup("general");
         if (!gGeneral.isNull())
         {
-            period=gGeneral.check("period",Value(period)).asDouble();
+            period=gGeneral.check("period",Value(period)).asFloat64();
         }
 
         Bottle &gSkeleton=rf.findGroup("skeleton");
         if (!gSkeleton.isNull())
         {
-            keys_recognition_confidence=gSkeleton.check("keys-recognition-confidence",Value(keys_recognition_confidence)).asDouble();
-            keys_recognition_percentage=gSkeleton.check("keys-recognition-percentage",Value(keys_recognition_percentage)).asDouble();
-            keys_acceptable_misses=gSkeleton.check("keys-acceptable-misses",Value(keys_acceptable_misses)).asInt();
-            min_acceptable_path=gSkeleton.check("min-acceptable-path",Value(min_acceptable_path)).asDouble();
-            tracking_threshold=gSkeleton.check("tracking-threshold",Value(tracking_threshold)).asInt();
-            time_to_live=gSkeleton.check("time-to-live",Value(time_to_live)).asDouble();
+            keys_recognition_confidence=gSkeleton.check("keys-recognition-confidence",Value(keys_recognition_confidence)).asFloat64();
+            keys_recognition_percentage=gSkeleton.check("keys-recognition-percentage",Value(keys_recognition_percentage)).asFloat64();
+            keys_acceptable_misses=gSkeleton.check("keys-acceptable-misses",Value(keys_acceptable_misses)).asInt32();
+            min_acceptable_path=gSkeleton.check("min-acceptable-path",Value(min_acceptable_path)).asFloat64();
+            tracking_threshold=gSkeleton.check("tracking-threshold",Value(tracking_threshold)).asInt32();
+            time_to_live=gSkeleton.check("time-to-live",Value(time_to_live)).asFloat64();
         }
 
         Bottle &gDepth=rf.findGroup("depth");
         if (!gDepth.isNull())
         {
             depth_enable=gDepth.check("enable",Value(depth_enable)).asBool();
-            depth_kernel_size=gDepth.check("kernel-size",Value(depth_kernel_size)).asInt();
-            depth_iterations=gDepth.check("iterations",Value(depth_iterations)).asInt();
-            depth_min_distance=(float)gDepth.check("min-distance",Value(depth_min_distance)).asDouble();
-            depth_max_distance=(float)gDepth.check("max-distance",Value(depth_max_distance)).asDouble();
+            depth_kernel_size=gDepth.check("kernel-size",Value(depth_kernel_size)).asInt32();
+            depth_iterations=gDepth.check("iterations",Value(depth_iterations)).asInt32();
+            depth_min_distance=(float)gDepth.check("min-distance",Value(depth_min_distance)).asFloat64();
+            depth_max_distance=(float)gDepth.check("max-distance",Value(depth_max_distance)).asFloat64();
         }
 
         Bottle &gFiltering=rf.findGroup("filtering");
         if (!gFiltering.isNull())
         {
-            filter_keypoint_order=gFiltering.check("filter-keypoint-order",Value(filter_keypoint_order)).asInt();
-            filter_limblength_order=gFiltering.check("filter-limblength-order",Value(filter_limblength_order)).asInt();
+            filter_keypoint_order=gFiltering.check("filter-keypoint-order",Value(filter_keypoint_order)).asInt32();
+            filter_limblength_order=gFiltering.check("filter-limblength-order",Value(filter_limblength_order)).asInt32();
             optimize_limblength=gFiltering.check("optimize-limblength",Value(optimize_limblength)).asBool();
         }
 
@@ -853,8 +853,8 @@ class Retriever : public RFModule
                     if (fov->size()>=2)
                     {
                         camera_configured=true;
-                        fov_h=fov->get(0).asDouble();
-                        fov_v=fov->get(1).asDouble();
+                        fov_h=fov->get(0).asFloat64();
+                        fov_v=fov->get(1).asFloat64();
                         yInfo()<<"camera fov_h (from file) ="<<fov_h;
                         yInfo()<<"camera fov_v (from file) ="<<fov_v;
                     }

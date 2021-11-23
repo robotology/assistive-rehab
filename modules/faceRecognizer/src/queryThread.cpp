@@ -24,7 +24,7 @@ bool QueryThread::threadInit()
     std::lock_guard<std::mutex> lg(mtx);
     verbose = rf.check("verbose");
     std::string name = rf.find("name").asString().c_str();
-    skip_frames = rf.check("skip_frames",yarp::os::Value(5)).asInt();
+    skip_frames = rf.check("skip_frames",yarp::os::Value(5)).asInt32();
     
     personIndex = -1;
     allowedTrain = false;
@@ -90,10 +90,10 @@ void QueryThread::run()
         {
             yInfo()<<"TRAININ Person blob" << blob_person.toString().c_str() << "with index " << personIndex;
             yarp::os::Bottle *window = blob_person.get(personIndex).asList();
-            tlx = window->get(0).asInt();
-            tly = window->get(1).asInt();
-            brx = window->get(2).asInt();
-            bry = window->get(3).asInt();
+            tlx = window->get(0).asInt32();
+            tly = window->get(1).asInt32();
+            brx = window->get(2).asInt32();
+            bry = window->get(3).asInt32();
             
             if (tlx<5)
                 tlx = 5;
@@ -158,10 +158,10 @@ yarp::os::Bottle QueryThread::classify(yarp::os::Bottle &persons)
         int bry  = -1;
         
         yarp::os::Bottle *window = persons.get(b).asList();
-        tlx = window->get(0).asInt();
-        tly = window->get(1).asInt();
-        brx = window->get(2).asInt();
-        bry = window->get(3).asInt();
+        tlx = window->get(0).asInt32();
+        tly = window->get(1).asInt32();
+        brx = window->get(2).asInt32();
+        bry = window->get(3).asInt32();
         
         if (tlx<5)
             tlx = 5;
@@ -202,9 +202,9 @@ yarp::os::Bottle QueryThread::classify(yarp::os::Bottle &persons)
                
                 yarp::os::Bottle &current_score=Obj_score.addList();
                 current_score.addString(obj->get(0).asString().c_str());
-                double normalizedVal=((obj->get(1).asDouble())+1.0)/2.0;
+                double normalizedVal=((obj->get(1).asFloat64())+1.0)/2.0;
             
-                current_score.addDouble(normalizedVal);
+                current_score.addFloat64(normalizedVal);
             }
         }
     }
