@@ -435,8 +435,8 @@ class Navigator : public RFModule, public navController_IDL {
   }
 
   /****************************************************************/
-  bool go_to(const double x, const double y, const double theta,
-             const bool heading_rear)override {
+  bool go_to_dontwait(const double x, const double y, const double theta,
+                      const bool heading_rear)override {
     lock_guard<mutex> lck(mtx_update);
     if (state == State::idle) {
       go_to_helper(x, y, theta, heading_rear);

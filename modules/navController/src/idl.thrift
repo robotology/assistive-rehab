@@ -31,7 +31,7 @@ service navController_IDL
     * @param heading_rear is true to specify if the robot has to drive backward.
     * @return true/false on success/failure.
     */
-   bool go_to(1:double x, 2:double y, 3:double theta, 4:bool heading_rear = false);
+   bool go_to_dontwait(1:double x, 2:double y, 3:double theta, 4:bool heading_rear = false);
 
    /**
     * Blocking version of reach for a target location. The service returns ack only

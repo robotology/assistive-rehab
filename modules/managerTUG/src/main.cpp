@@ -1083,7 +1083,7 @@ class Manager : public RFModule, public managerTUG_IDL
         if (wait)
             cmd.addString("go_to_wait");
         else
-            cmd.addString("go_to");
+            cmd.addString("go_to_dontwait");
         cmd.addFloat64(target[0]);
         cmd.addFloat64(target[1]);
         cmd.addFloat64(target[2]);
