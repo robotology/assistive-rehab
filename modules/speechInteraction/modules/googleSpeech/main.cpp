@@ -58,6 +58,7 @@ class Processing : public yarp::os::TypedReaderCallback<yarp::sig::Sound>
     yarp::os::BufferedPort<yarp::sig::Sound> port;
     yarp::os::BufferedPort<yarp::os::Bottle> targetPort;
     yarp::os::BufferedPort<yarp::os::Bottle> questionPort;
+    yarp::os::BufferedPort<yarp::os::Bottle> statusPort;
     yarp::os::RpcClient audioCommand;
     yarp::os::Mutex mutex;
 
@@ -109,6 +110,7 @@ public:
         targetPort.open("/"+ moduleName + "/result:o");
         audioCommand.open("/"+ moduleName + "/commands:rpc");
         questionPort.open("/"+ moduleName + "/question:o");
+        statusPort.open("/"+ moduleName + "/status:o");
 
         //yarp::os::Network::connect("/microphone/audio:o", port.getName());
         //yarp::os::Network::connect(audioCommand.getName(), "/microphone/rpc");
@@ -123,6 +125,7 @@ public:
         targetPort.close();
         audioCommand.close();
         questionPort.close();
+        statusPort.close();
     }
 
     /********************************************************/
@@ -243,11 +246,18 @@ public:
         elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds> (end-start).count();
         yInfo() << "Sending to google took " << elapsed_seconds / 1000 << " seconds";
 
+        yarp::os::Bottle &outStatus = statusPort.prepare();
+        outStatus.clear();
         if (!rpc_status.ok()) {
             // Report the RPC failure.
             yInfo() << rpc_status.error_message();
+            outStatus.addString(rpc_status.error_message());
             b.clear();
         }
+        else {
+            outStatus.addString("everything ok");
+        }
+        statusPort.write();
         
         yInfo() << "Size of response " << response.results_size();
         
@@ -263,6 +273,11 @@ public:
                 b.addString(alternative.transcript());
             }
         }
+        
+
+
+
+
         return b;
     }
 
