@@ -53,6 +53,7 @@ class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
     std::unordered_map<std::string,std::vector<std::string>> key_map;
     yarp::os::RpcServer handlerPort;
     yarp::os::BufferedPort<yarp::os::Bottle> targetPort;
+    yarp::os::BufferedPort<yarp::os::Bottle> statusPort;
     
     yarp::os::Bottle wordList;
 
@@ -77,6 +78,7 @@ public:
         this->useCallback();
         yarp::os::BufferedPort<yarp::os::Bottle >::open( "/" + moduleName + "/text:i" );
         targetPort.open("/"+ moduleName + "/result:o");
+        statusPort.open("/"+ moduleName + "/status:o");
         
         //yarp::os::Network::connect("/googleSpeech/result:o", yarp::os::BufferedPort<yarp::os::Bottle >::getName().c_str());
 
@@ -88,6 +90,7 @@ public:
     {
         yarp::os::BufferedPort<yarp::os::Bottle >::close();
         targetPort.close();
+        statusPort.close();
     }
 
     /********************************************************/
@@ -170,6 +173,8 @@ public:
         
         status = stub->AnalyzeSyntax( &context, request, &response );
 
+        yarp::os::Bottle &outStatus = statusPort.prepare();
+        outStatus.clear();
         if ( status.ok() )
         {
             yInfo() << "Status returned OK";
@@ -179,9 +184,21 @@ public:
             read_sentences( &response.sentences() );
             //read_tokens( &response.tokens() );
             b = read_answer( &response.tokens() );
+            if ( b.toString() == "" )
+            {
+                outStatus.addString("topic not recognized");
+            }
+            else
+            {
+                outStatus.addString("everything ok");
+            }
 
         } else if ( !status.ok() )
+        {
             yError() << "Status Returned Canceled";
+            outStatus.addString(status.error_message());
+        }
+        statusPort.write();
 
         return b;
     }
