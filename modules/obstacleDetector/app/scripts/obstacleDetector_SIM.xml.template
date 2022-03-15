@@ -65,4 +65,11 @@
         <to>/clusters</to>
         <protocol>fast_tcp</protocol>
     </connection>
+
+    <connection>
+        <from>/SIM_CER_ROBOT/mobile_base/stateExt:o</from>
+        <to>/navController/base_state:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+   
 </application>

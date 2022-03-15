@@ -95,4 +95,36 @@ service navController_IDL
     * @return true/false on success/failure.
     */
    bool set_distance_target(1:double dist);
+
+   /**
+    * Returns the time the robot takes to completely stop when it receives the stop command
+    * @return the time the robot takes to completely stop when it receives the stop command.
+    */
+   double get_time_to_stop();
+
+   /**
+    * Sets the linear velocity of the robot.
+    * @param lin_vel new linear velocity of the robot.
+    * @return true/false on success/failure.
+    */
+   bool set_linear_velocity(1:double lin_vel);
+
+   /**
+    * Gets the current linear velocity of the robot.
+    * @return the current linear velocity.
+    */
+   double get_linear_velocity();
+
+   /**
+    * Sets the angular velocity saturation of the wheels of the robot.
+    * @param ang_vel new angular velocity saturation of the wheels of the robot.
+    * @return true/false on success/failure.
+    */
+   bool set_angular_velocity(1:double ang_vel);
+
+   /**
+    * Gets the current angular velocity saturation of the wheels of the robot.
+    * @return the current value of the angular velocity saturation of the wheels.
+    */
+   double get_angular_velocity();
 }

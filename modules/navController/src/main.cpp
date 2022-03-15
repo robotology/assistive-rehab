@@ -59,8 +59,10 @@ class Navigator : public RFModule, public navController_IDL {
   double distance_hysteresis_low{0.0};
   double distance_hysteresis_high{0.0};
   bool distance_hysteresis_active{false};
+  double base_stop_threshold{0.1};
   double target_theta{0.0};
   int heading{1};
+  double time_to_stop{0.0};
   shared_ptr<parallelPID> pid_controller;
   shared_ptr<AWLinEstimator> velocity_estimator;
 
@@ -74,6 +76,7 @@ class Navigator : public RFModule, public navController_IDL {
   BufferedPort<Bottle> opcPort;
   BufferedPort<Property> statePort;
   RpcServer cmdPort;
+  BufferedPort<Bottle> stateBasePort;
 
   mutex mtx_update;
   mutex mtx_nav_done;
@@ -136,12 +139,14 @@ class Navigator : public RFModule, public navController_IDL {
     distance_target = abs(rf.check("distance-target", Value(2.0)).asFloat64());
     distance_hysteresis_low = abs(rf.check("distance-hysteresis-low", Value(0.2)).asFloat64());
     distance_hysteresis_high = abs(rf.check("distance-hysteresis-high", Value(0.3)).asFloat64());
+    base_stop_threshold = rf.check("base-stop-threshold", Value(0.1)).asFloat64();
 
     navCmdPort.open("/navController/base/cmd:rpc");
     navLocPort.open("/navController/base/loc:i");
     navCtrlPort.open("/navController/base/ctrl:o");
     opcPort.open("/navController/opc:i");
     statePort.open("/navController/state:o");
+    stateBasePort.open("/navController/base_state:i");
     cmdPort.open("/navController/rpc");
     attach(cmdPort);
 
@@ -201,6 +206,8 @@ class Navigator : public RFModule, public navController_IDL {
       opcPort.close();
     if (!statePort.isClosed())
       statePort.close();
+    if (!stateBasePort.isClosed())
+      stateBasePort.close();
     if (cmdPort.asPort().isOpen())
       cmdPort.close();
     return true;
@@ -334,6 +341,23 @@ class Navigator : public RFModule, public navController_IDL {
       }
     }
     return theta;
+  }
+
+  /****************************************************************/
+  bool are_wheels_moving() {
+    Bottle *base_state = stateBasePort.read();
+    Bottle *base_speed = base_state->get(2).asList();
+    double vleft = base_speed->get(0).asFloat64();
+    double vright = base_speed->get(1).asFloat64();
+    if (fabs(vleft) < base_stop_threshold && fabs(vright) < base_stop_threshold)
+    {
+      yInfo() << "The robot has stopped";
+      return false;
+    }
+    else
+    {
+      return true;
+    }
   }
 
   /****************************************************************/
@@ -499,8 +523,22 @@ class Navigator : public RFModule, public navController_IDL {
     skeleton.reset();
     state = State::idle;
     cv_nav_done.notify_all();
+    double tstop = Time::now();
     yInfo() << "Navigation stopped";
+    if (stateBasePort.getInputCount() > 0) {
+      while (are_wheels_moving()) {
+        // yInfo() << "The robot has not stopped yet";
+      }
+      double tbase_stop = Time::now();
+      time_to_stop = tbase_stop - tstop;
+    }
     return true;
+  }
+
+  /****************************************************************/
+  double get_time_to_stop()override {
+    lock_guard<mutex> lck(mtx_update);
+    return time_to_stop;
   }
 
   /****************************************************************/
@@ -540,6 +578,30 @@ class Navigator : public RFModule, public navController_IDL {
     lock_guard<mutex> lck(mtx_update);
     distance_target=dist;
     return true;
+  }
+
+  /****************************************************************/
+  bool set_linear_velocity(const double lin_vel)override {
+    lock_guard<mutex> lck(mtx_update);
+    velocity_linear_magnitude = lin_vel;
+    return true;
+  }
+
+  /****************************************************************/
+  double get_linear_velocity()override {
+    return velocity_linear_magnitude;
+  }
+
+  /****************************************************************/
+  bool set_angular_velocity(const double ang_vel)override {
+    lock_guard<mutex> lck(mtx_update);
+    velocity_angular_saturation = ang_vel;
+    return true;
+  }
+
+  /****************************************************************/
+  double get_angular_velocity()override {
+    return velocity_angular_saturation;
   }
 
 /****************************************************************/
