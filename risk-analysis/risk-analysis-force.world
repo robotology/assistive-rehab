@@ -1,0 +1,203 @@
+<?xml version="1.0" ?>
+<sdf version='1.6'>
+
+<world name="default">
+
+    <!-- Global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- Ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+   
+    <!-- R1 -->
+    <!--<model name='SIM_CER_ROBOT'>
+      <include>
+        <uri>model://cer_320x240_contacts</uri>
+      </include>
+      <pose>-1.0 0.0 3.5 0.0 0.0 -3.14</pose>
+    </model>-->
+
+    <!-- big box -->
+    <model name="my_box">
+      <pose>-1.1 0 1 0 0 0</pose>
+      <static>true</static>
+      <link name="fixed_box">
+        <inertial>
+          <mass>1000.0</mass>
+          <inertia> <!-- inertias are tricky to compute -->
+            <!-- http://gazebosim.org/tutorials?tut=inertia&cat=build_robot -->
+            <ixx>83.0</ixx>       <!-- for a box: ixx = 0.083 * mass * (y*y + z*z) -->
+            <ixy>0.0</ixy>         <!-- for a box: ixy = 0 -->
+            <ixz>0.0</ixz>         <!-- for a box: ixz = 0 -->
+            <iyy>83.0</iyy>       <!-- for a box: iyy = 0.083 * mass * (x*x + z*z) -->
+            <iyz>0.0</iyz>         <!-- for a box: iyz = 0 -->
+            <izz>83.0</izz>       <!-- for a box: izz = 0.083 * mass * (x*x + y*y) -->
+          </inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>2 2 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>2 2 2</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
+      <link name="force_plate">
+        <pose>0 0 2.1 0 0 0</pose>
+        <inertial>
+          <mass>1.0</mass>
+          <inertia> <!-- inertias are tricky to compute -->
+            <!-- http://gazebosim.org/tutorials?tut=inertia&cat=build_robot -->
+            <ixx>0.083</ixx>       <!-- for a box: ixx = 0.083 * mass * (y*y + z*z) -->
+            <ixy>0.0</ixy>         <!-- for a box: ixy = 0 -->
+            <ixz>0.0</ixz>         <!-- for a box: ixz = 0 -->
+            <iyy>0.083</iyy>       <!-- for a box: iyy = 0.083 * mass * (x*x + z*z) -->
+            <iyz>0.0</iyz>         <!-- for a box: iyz = 0 -->
+            <izz>0.083</izz>       <!-- for a box: izz = 0.083 * mass * (x*x + y*y) -->
+          </inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>1.9 1.9 0.1 </size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.9 1.9 0.1 </size>
+            </box>
+          </geometry>
+        </visual>
+        <!--<sensor name='lower_torso_contact' type='contact'>
+          <plugin name="contact_plugin" filename="libcontactPlugin.so"/>
+          <contact>
+            <collision>collision</collision>
+          </contact>
+        </sensor>-->
+      </link>
+      <joint name="joint_01" type="prismatic">
+        <parent>fixed_box</parent>
+        <child>force_plate</child>
+        <pose>0 0 0 0 0 0</pose>
+        <axis>
+          <dynamics>
+            <damping>0.000000</damping>
+            <friction>0.000000</friction>
+          </dynamics>
+          <xyz>0.000000 0.000000 1.000000</xyz>
+          <limit>
+            <lower>0</lower>
+            <upper>0.01</upper>
+            <effort>1200</effort>
+            <velocity>0.5</velocity>
+          </limit>
+        </axis>
+        <sensor name='joint_01_force' type="force_torque">
+          <plugin name="force_plugin" filename="libforcePlugin.so"/>
+        </sensor>
+      </joint>
+      <!--<gazebo reference="joint_01_ft_sensor">
+        <sensor name="joint_01_ft_sensor" type="force_torque">
+          <always_on>1</always_on>
+          <update_rate>100</update_rate>
+          <force_torque>
+            <frame>sensor</frame>
+            <measure_direction>parent_to_child</measure_direction>
+          </force_torque>
+          <pose>0.0 0.0 0.022299999999999986 0.0 -0.0 -2.094395210586932</pose>
+          <plugin name="joint_01_ft_sensor" filename="libgazebo_yarp_forcetorque.so">
+            <yarpConfigurationFile>model://iCub/conf_icub3/FT/gazebo_icub_right_foot_rear_ft.ini</yarpConfigurationFile>
+          </plugin>
+        </sensor>
+      </gazebo>
+      <sensor name="joint_01_ft_sensor" type="force_torque">
+        <parent joint="joint_01"/>
+        <force_torque>
+          <frame>sensor</frame>
+          <measure_direction>parent_to_child</measure_direction>
+        </force_torque>
+        <origin rpy="0.0 -0.0 -2.094395210586932" xyz="0.0 0.0 0.022299999999999986"/>
+      </sensor>-->
+      <!--<sensor name="joint_01" type="force_torque">
+        <always_on>1</always_on>
+        <parent joint="joint_01"/>
+        <update_rate>100</update_rate>
+        <force_torque>
+          <frame>sensor</frame>
+          <measure_direction>child_to_parent</measure_direction>
+        </force_torque>
+        <pose>-0.004350133156978329 3.632573233880443e-07 -0.05430003872406172 3.141592646862139 -3.104683320142575e-08 -1.5707962571980942</pose>
+        <plugin name="joint_01_plugin" filename="libgazebo_yarp_forcetorque.so">
+          <yarpConfigurationString>(yarpDeviceName joint_01_force_sensor) (disableImplicitNetworkWrapper)</yarpConfigurationString>
+        </plugin>
+      </sensor>-->
+      <!--<plugin name="force_sensor" filename="libforcePlugin.so">
+        <alwaysOn> true </alwaysOn>
+        <updateRate>10.0</updateRate>
+        <topicName>ft_sensor</topicName>
+        <jointName>joint_01</jointName>
+      </plugin>-->
+    </model>
+
+    <!-- Camera -->
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose frame=''>3.60989 -8.90123 2.55734 0 0.199643 1.5722</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+
+    <model name="new_box">
+      <link name="weight_plate">
+        <pose>-1.1 0 4.0 0 0 0</pose>
+        <inertial>
+          <mass>1000.0</mass>
+          <inertia> <!-- inertias are tricky to compute -->
+            <!-- http://gazebosim.org/tutorials?tut=inertia&cat=build_robot -->
+            <ixx>83.0</ixx>       <!-- for a box: ixx = 0.083 * mass * (y*y + z*z) -->
+            <ixy>0.0</ixy>         <!-- for a box: ixy = 0 -->
+            <ixz>0.0</ixz>         <!-- for a box: ixz = 0 -->
+            <iyy>83.0</iyy>       <!-- for a box: iyy = 0.083 * mass * (x*x + z*z) -->
+            <iyz>0.0</iyz>         <!-- for a box: iyz = 0 -->
+            <izz>83.0</izz>       <!-- for a box: izz = 0.083 * mass * (x*x + y*y) -->
+          </inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>1.0 1.0 0.1 </size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.0 1.0 0.1 </size>
+            </box>
+          </geometry>
+        </visual>
+        <!--<sensor name='lower_torso_contact' type='contact'>
+          <plugin name="contact_plugin" filename="libcontactPlugin.so"/>
+          <contact>
+            <collision>collision</collision>
+          </contact>
+        </sensor>-->
+      </link>
+    </model>
+
+  </world>
+</sdf>

@@ -16,7 +16,7 @@
     <!-- R1 -->
     <model name='SIM_CER_ROBOT'>
       <include>
-        <uri>model://cer_320x240</uri>
+        <uri>model://cer_320x240_contacts</uri>
       </include>
       <pose>2.5 0.0 0.16 0.0 0.0 -3.14</pose>
     </model>

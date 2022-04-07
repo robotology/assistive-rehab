@@ -43,7 +43,7 @@ class RiskAnalysis():
 
         # connect to tug_input_port RPC server - get the position from gazebo (correct odometry) / change speed / get ground truth
         self.gazeboControl_rpc = yarp.RpcClient()
-        local_name = '/FDG_experiment/tug_input_port:rpc'
+        local_name = '/riskAnalyzer/tug_input_port:rpc'
         remote_name = '/tug_input_port'
         self.gazeboControl_rpc.open(local_name)
         _ = connect(local_name, remote_name)
@@ -61,6 +61,23 @@ class RiskAnalysis():
         remote_name = '/obstacleDetector/rpc'
         self.obstacleDetector_rpc.open(local_name)
         _ = connect(local_name, remote_name)
+
+        # connect to baseControl RPC to set the robot speed
+        self.baseController_rpc = yarp.RpcClient()
+        local_name = '/riskAnalyzer/baseControl:rpc'
+        remote_name = '/baseControl/rpc'
+        self.baseController_rpc.open(local_name)
+        _ = connect(local_name, remote_name)
+
+        # setting the baseControl maximum speed
+        print(f"Setting maximum speed to {maximum_speed}")
+        cmd = yarp.Bottle()
+        cmd.clear()
+        cmd.addString('set_max_lin_vel')
+        cmd.addDouble(application_speed)
+        rep = yarp.Bottle()
+        rep.clear()
+        self.baseController_rpc.write(cmd, rep)
 
     def measure_time_to_stop_obstacle(self, num_trials, speed):
         ###################################################
@@ -386,14 +403,22 @@ if __name__ == '__main__':
 
     yarp.Network.init()
 
+    rf = yarp.ResourceFinder()
+    rf.setVerbose(True)
+    rf.setDefaultConfigFile('conf.ini')
+    rf.configure(sys.argv)
+
+    maximum_speed = rf.find("maximum_speed").asDouble()
+    application_speed = rf.find("application_speed").asDouble()
+
     # the function should be called like "python risk_analysis.py ${num_trials}"
     arg_list=sys.argv
     analysis=RiskAnalysis()
-    analysis.measure_time_to_stop_obstacle(int(arg_list[1]), 0.3) # application speed
-    analysis.measure_time_to_stop_obstacle(int(arg_list[1]), 0.6) # application speed
-    analysis.measure_time_to_stop(int(arg_list[1]), 0.3) # application speed
-    analysis.measure_time_to_stop(int(arg_list[1]), 0.6) # maximum speed
-    #analysis.measure_collisions(int(arg_list[1]), 0.3)
-    #analysis.measure_collisions(int(arg_list[1]), 0.6)
+    analysis.measure_time_to_stop_obstacle(int(arg_list[1]), application_speed) 
+    analysis.measure_time_to_stop_obstacle(int(arg_list[1]), maximum_speed) 
+    analysis.measure_time_to_stop(int(arg_list[1]), application_speed) 
+    analysis.measure_time_to_stop(int(arg_list[1]), maximum_speed) 
+    # analysis.measure_collisions(int(arg_list[1]), application_speed)
+    # analysis.measure_collisions(int(arg_list[1]), maximum_speed)
     
     yarp.Network.fini()
