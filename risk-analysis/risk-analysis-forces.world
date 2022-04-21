@@ -1,0 +1,129 @@
+<?xml version="1.0" ?>
+<sdf version='1.6'>
+
+<world name="default">
+
+    <!-- <physics name="default_physics" default="0" type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>50</iters>
+          <sor>1.0</sor> 
+          <use_dynamic_moi_rescaling>false</use_dynamic_moi_rescaling>
+        </solver>
+      </ode>
+    </physics>  -->
+
+    <!-- Global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- Ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+     <!-- Wall -->
+    <include>
+      <uri>model://wall</uri>
+    </include>
+
+    <!-- R1 -->
+    <model name='SIM_CER_ROBOT'>
+      <include>
+        <uri>model://cer_320x240_contacts</uri>
+      </include>
+      <pose>2.0 0.0 0.16 0.0 0.0 -3.14</pose>
+    </model>
+
+    <!-- Box -->
+    <!-- <model name="box">
+    <pose>0 0.01 0 0 0 0</pose>
+    <link name="link_1">
+      <inertial>
+        <mass>1.0</mass>
+        <inertia> 
+          <ixx>0.083</ixx>      
+          <ixy>0.0</ixy>        
+          <ixz>0.0</ixz>         
+          <iyy>0.083</iyy>      
+          <iyz>0.0</iyz>
+          <izz>0.083</izz> 
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <box>
+            <size>0.1 0.1 0.1</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <box>
+            <size>0.1 0.1 0.1</size>
+          </box>
+        </geometry>
+      </visual>
+    </link>
+    </model> -->
+
+    <!-- Scaler -->
+    <!-- <include>
+      <uri>model://scaler</uri>
+    </include> -->
+
+    <!-- Robot on the top of the scaler -->
+    <!-- <model name='SIM_CER_ROBOT'>
+      <include>
+        <uri>model://cer_320x240_contacts</uri>
+      </include>
+      <pose>0.01 0.0 0.27 0.0 0.0 -3.14</pose>
+    </model> -->
+
+    <!-- Box on top of the scaler -->
+    <!-- <model name="box">
+    <pose>0 0 0.11 0 0 0</pose>
+    <link name="link_1">
+      <inertial>
+        <mass>1.0</mass>
+        <inertia> 
+          <ixx>0.083</ixx>      
+          <ixy>0.0</ixy>        
+          <ixz>0.0</ixz>         
+          <iyy>0.083</iyy>      
+          <iyz>0.0</iyz>
+          <izz>0.083</izz> 
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <box>
+            <size>0.1 0.1 0.1</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <box>
+            <size>0.1 0.1 0.1</size>
+          </box>
+        </geometry>
+      </visual>
+    </link>
+    </model> -->
+    
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose>-0.418572 -0.759396 0.490367 0 0.031643 0.664195</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+
+  </world>
+</sdf>
