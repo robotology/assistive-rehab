@@ -1,6 +1,6 @@
-# Copyright: (C) 2022 iCub Facility - Istituto Italiano di Tecnologia
-# Authors: Alexandre Antunes
+# Copyright: (C) 2022 Istituto Italiano di Tecnologia
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
+# Authors: Alexandre Antunes <alexandre.gomespereira@iit.it>
 
 find_package(Gazebo)
 find_package(GazeboYARPPlugins)

@@ -1,3 +1,24 @@
+/******************************************************************************
+* Copyright (C) 2022 Istituto Italiano di Tecnologia (IIT)
+*
+* This program is free software; you can redistribute it and/or modify it under
+* the terms of the GNU General Public License as published by the Free Software
+* Foundation; either version 2 of the License, or (at your option) any later
+* version.
+*
+* This program is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+* FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public License along with
+* this program; if not, write to the Free Software Foundation, Inc.,
+* 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.                                                                     *
+ ******************************************************************************/
+/**
+ * @authors: Alexandre Antunes <alexandre.gomespereira@iit.it>
+ */
+
 #include "contactPlugin.hh"
 
 
@@ -150,130 +171,3 @@ void contactPlugin::OnUpdate()
     }
     return;
 }
-
-// namespace gazebo
-// {
-
-//     contactPlugin::contactPlugin() : ModelPlugin()
-//     {
-
-//     }
-
-//     contactPlugin::~contactPlugin()
-//     {
-//         closePorts();
-//         yarp::os::Network::fini();
-//     }
-
-//     void contactPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
-//     {
-//         // Get  contact manager
-//         contactManager = _parent->GetWorld()->Physics()->GetContactManager();
-
-//         yInfo() << "name of the model is " << _parent->GetName();
-//         yInfo() << "scoped name is " << _parent->GetScopedName();
-
-
-//         yarp::os::Network::init();
-//         if (!yarp::os::Network::checkNetwork(GazeboYarpPlugins::yarpNetworkInitializationTimeout))
-//         {
-//             yError() << "contactPlugin::Load error: yarp network does not seem to be available, is the yarp server running?";
-//             return;
-//         }
-
-//         if (!_parent)
-//         {
-//             yError() << "contactPlugin plugin requires a parent \n";
-//             return;
-//         }
-
-//         GazeboYarpPlugins::Handler::getHandler()->setRobot(boost::get_pointer(_parent));
-//         robotName = _parent->GetScopedName();
-
-//         yInfo() << "got robot name: " << robotName;
-
-        
-//         // Getting .ini configuration file parameters from sdf
-//         bool configuration_loaded = GazeboYarpPlugins::loadConfigModelPlugin(_parent, _sdf, config);
-
-//         if (!configuration_loaded) {
-//             yError() << "contactPlugin : File .ini not found, load failed." ;
-//             return;
-//         }
-
-//         // Try to open the YARP ports
-//         if (!this->openPorts()) {
-//             yError() << "unable to open the port";
-//             return;
-//         }
-//         yInfo() << "ports opened!";
-
-
-//         yarp::os::Time::delay(4); 
-
-//         // Create callback
-//         updateConnection = gazebo::event::Events::ConnectWorldUpdateBegin(boost::bind(&contactPlugin::onUpdate, this, _1));
-        
-//     }
-
-//     bool contactPlugin::openPorts()
-//     {
-//         yInfo() << "trying to open the port";
-//         output_port = new yarp::os::BufferedPort<yarp::os::Bottle>();
-//         bool ok = output_port->open("/contact:o");
-//         yInfo() << "status was" << ok;
-//         if (ok)
-//         {
-//             yInfo() << "Port /contact:o opened successfully";
-//             return true;
-//         }
-//         yInfo() << "port not opened...";
-//         return false;
-//     }
-
-//     bool contactPlugin::closePorts()
-//     {
-//         output_port->close();
-//         return true;
-//     }
-
-//     void contactPlugin::onUpdate(const gazebo::common::UpdateInfo& info)
-//     {
-//         yarp::os::Bottle msg;
-
-//         // at each update we need to check if there are contacts
-//         contacts = contactManager->GetContacts();
-
-//         int num_contacts = contactManager->GetContactCount();
-
-//         msg.addInt(num_contacts);
-//         /*if(contacts.size() > 0)
-//         {
-//             msg.addInt(1);
-//         }
-//         else
-//         {
-//             msg.addInt(0);
-//         }*/
-//         output_port->prepare() = msg;
-//         output_port->write();
-//         return;
-
-
-
-//         /*ignition::math::Vector3d force = ignition::math::Vector3d::Zero;
-//         ignition::math::Vector3d torque = ignition::math::Vector3d::Zero;
-//         for(auto&& contact : contacts)
-//         {
-//             force = contact->wrench->body1Force;
-//             torque = contact->wrench->body1Torque;
-//             yInfo() << "force: " << force.X();
-//             msg.addDouble(force.X());
-//             yInfo() << "torque" << torque.X();
-//             msg.addDouble(torque.X());
-//         }
-//         output_port->write();
-//         return;*/
-//     }
-
-// }
