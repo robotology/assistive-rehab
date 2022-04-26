@@ -1,11 +1,5 @@
 <application>
-<name>Assistive Rehabilitation obstacleDetector SIM App</name>
-
-    <module>
-        <name>gazebo</name>
-        <parameters>robot-obstacle.world</parameters>
-        <node>localhost</node>
-    </module>
+<name>Assistive Rehabilitation Risk Analysis App</name>
 
     <module>
        <name>baseControl</name>
@@ -42,15 +36,6 @@
     <module>
        <name>yarpview</name>
        <parameters>--name /clusters</parameters>
-       <node>localhost</node>
-    </module>
-
-    <module>
-       <name>yarplaserscannergui</name>
-       <parameters>--sens_port "/SIM_CER_ROBOT/laser:o"</parameters>
-       <dependencies>
-         <port timeout="15">/SIM_CER_ROBOT/laser:o</port>
-       </dependencies>
        <node>localhost</node>
     </module>
 

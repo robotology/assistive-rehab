@@ -20,6 +20,7 @@
     <param default="2.0" desc="The target distance from the skeleton that the controller will attempt to keep (m).">distance-target</param>
     <param default="0.2" desc="The low threshold of the hsyteresis on the distance error (m).">distance-hysteresis-low</param>
     <param default="0.3" desc="The high threshold of the hsyteresis on the distance error (m).">distance-hysteresis-high</param>
+    <param default="0.1" desc="The maximum velocity to consider the robot steady (deg/s).">base-stop-threshold</param>
   </arguments>
 
   <authors>
@@ -32,6 +33,13 @@
           <port>/navController/opc:i</port>
           <description>
             Receives the OPC broadcast.
+          </description>
+      </input>
+      <input>
+          <type>Bottle</type>
+          <port>/navController/base_state:i</port>
+          <description>
+            Receives information about the robot base.
           </description>
       </input>
       <output>

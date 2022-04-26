@@ -1,0 +1,51 @@
+version: "3.7"
+x-yarp-fdg: &yarp-fdg
+  image: icubteamcode/etapas-cer-gazebo:master-unstable_sources
+  environment:
+  - DISPLAY=${DISPLAY}
+  - QT_X11_NO_MITSHM=1
+  - XAUTHORITY=/root/.Xauthority
+  - YARP_FORWARD_LOG_ENABLE=1
+  volumes:
+  - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
+  - "${XAUTHORITY}:/root/.Xauthority:rw"
+  - "${HOME}/.config/yarp:/root/.config/yarp"
+  ports:
+  - "10000:10000"
+  network_mode: "host"
+  privileged: true
+  
+services:
+  yserver:
+    <<: *yarp-fdg
+    command: sh -c "yarp where | grep 'is available at ip' > /dev/null ; if [ ! $$? -eq 0 ]; then yarpserver --write; fi"
+
+  gazebo:
+    <<: *yarp-fdg
+    depends_on:
+      - yserver
+    command: sh -c "gazebo risk-analysis-obstacle.world --verbose"
+
+  baseControl:
+    <<: *yarp-fdg
+    command: sh -c "yarp wait /SIM_CER_ROBOT/mobile_base/command:i; yarp wait /SIM_CER_ROBOT/mobile_base/rpc:i; yarp wait /SIM_CER_ROBOT/mobile_base/state:o; yarp wait /SIM_CER_ROBOT/mobile_base/stateExt:o; baseControl --context baseControl_SIM --from baseCtrl_cer_sim.ini --GENERAL::use_ROS false --skip_robot_interface_check"
+
+  navController:
+    <<: *yarp-fdg
+    command: sh -c "yarp wait /baseControl/rpc; yarp wait /baseControl/odometry:o; yarp wait /baseControl/control:i; navController --velocity-angular-saturation 15.0 --distance-target 5.0 --velocity-linear-magnitude 0.6"
+
+  obstacleDetector:
+    <<: *yarp-fdg
+    command: sh -c "yarp wait /navController/rpc; obstacleDetector --robot SIM_CER_ROBOT"
+
+  yconnect_0:
+    <<: *yarp-fdg
+    command: sh -c "yarp wait /obstacleDetector/nav:rpc; yarp wait /navController/rpc; yarp connect /obstacleDetector/nav:rpc /navController/rpc fast_tcp"
+  
+  yconnect_1:
+    <<: *yarp-fdg
+    command: sh -c "yarp wait /SIM_CER_ROBOT/mobile_base/stateExt:o; yarp wait /navController/base_state:i; yarp connect /SIM_CER_ROBOT/mobile_base/stateExt:o /navController/base_state:i fast_tcp"
+
+  
+
+  

@@ -13,6 +13,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <cmath>
+#include <mutex>
 
 #include <yarp/os/Network.h>
 #include <yarp/os/ResourceFinder.h>
@@ -23,6 +24,7 @@
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/RpcClient.h>
+#include <yarp/os/Time.h>
 
 #include <yarp/dev/IRangefinder2D.h>
 #include <yarp/dev/PolyDriver.h>
@@ -38,6 +40,8 @@
 
 #include <opencv2/core.hpp>
 
+#include "src/obstacleDetector_IDL.h"
+
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
@@ -46,7 +50,7 @@ using namespace yarp::math;
 using namespace cv;
 
 /****************************************************************/
-class ObstDetector : public RFModule
+class ObstDetector : public RFModule, public obstacleDetector_IDL
 {
     double period{0.1};
     string module_name{"obstacleDetector"};
@@ -63,6 +67,9 @@ class ObstDetector : public RFModule
     double dist_thresh{0.3};
     double dist_obstacle{1.5};
     int min_points{3};
+    double time_to_stop{0.0};
+    mutex mtx;
+    bool start_detection{true};
 
     struct Laser2Img
     {
@@ -83,6 +90,7 @@ class ObstDetector : public RFModule
     int img_size{500};
 
     RpcClient navPort;
+    RpcServer cmdPort;
     BufferedPort<Bottle> outPort;
     BufferedPort<ImageOf<PixelRgb> > viewerPort;
     cv::Mat imgCv;
@@ -106,6 +114,12 @@ public:
     ObstDetector() { }
 
     /****************************************************************/
+    bool attach(RpcServer& source)override 
+    {
+        return yarp().attachAsServer(source);
+    }
+
+    /****************************************************************/
     bool configure(ResourceFinder& rf) override
     {
         period=rf.check("period",Value(0.1)).asFloat64();
@@ -116,12 +130,16 @@ public:
         min_points=rf.check("min-points",Value(3)).asInt32();
         ver_step=rf.check("ver-step",Value(1.0)).asFloat64();
 
+        start_detection=true;
+
         navPort.open("/"+module_name+"/nav:rpc");
         outPort.open("/"+module_name+"/obstacle:o");
         viewerPort.open("/"+module_name+"/viewer:o");
         string front_laser_port_name="/"+module_name+"/front_laser:i";
         string rear_laser_port_name="/"+module_name+"/rear_laser:i";
-
+        cmdPort.open("/"+module_name+"/rpc");
+        attach(cmdPort);
+        
         drv_front=new yarp::dev::PolyDriver;
         Property options;
         options.put("device","Rangefinder2DClient");
@@ -192,12 +210,44 @@ public:
     }
 
     /****************************************************************/
+    double get_time_to_stop() override
+    {
+        lock_guard<mutex> lck(mtx);
+        return time_to_stop;
+    }
+
+    /****************************************************************/
+    bool stop() override
+    {
+        lock_guard<mutex> lck(mtx);
+        start_detection=false;
+        return true;
+    }
+
+    /****************************************************************/
+    bool start() override
+    {
+        lock_guard<mutex> lck(mtx);
+        start_detection=true;
+        return true;
+    }
+
+    /****************************************************************/
     bool updateModule() override
     {
+        lock_guard<mutex> lck(mtx);
+
+        if(!start_detection)
+        {
+            yInfo()<<"The obstacle detection is not active";
+            return true;
+        }
+
         std::vector<LaserMeasurementData> data_front,data_rear;
         double dfront=numeric_limits<double>::infinity();
         double drear=numeric_limits<double>::infinity();
         Matrix clusters_front,clusters_rear;
+        double t0;
         if(iLas_front->getLaserMeasurement(data_front))
         {
             // cluster data based on distance
@@ -205,6 +255,8 @@ public:
             clusters_front=clusterData(data_front,nclusters);
             if (clusters_front.data())
             {
+                t0=Time::now();
+                yInfo()<<"Detected an obstacle from front at time"<<t0;
                 // we keep only clusters with number of points > minpoints
                 vector<int> ids;
                 nclusters=removeOutliers(clusters_front,ids);
@@ -222,6 +274,8 @@ public:
             clusters_rear=clusterData(data_rear,nclusters);
             if (clusters_rear.data())
             {
+                t0=Time::now();
+                yInfo()<<"Detected an obstacle from front at time"<<t0;
                 // we keep only clusters with number of points > minpoints
                 vector<int> ids;
                 nclusters=removeOutliers(clusters_rear,ids);
@@ -246,7 +300,10 @@ public:
                 outPort.write();
                 if (getRobotState()!="idle")
                 {
-                    yInfo()<<"Stopping";
+                    double tend = Time::now();
+                    time_to_stop = tend-t0;
+                    yInfo()<<"Stopping at"<<tend;
+                    yInfo()<<"Time difference"<<time_to_stop;
                     stopNav();
                 }
             }
@@ -457,8 +514,8 @@ public:
         cmd.addString("get_state");
         if (navPort.write(cmd,rep))
         {
-            Property robotState(rep.get(0).toString().c_str());
-            state=robotState.find("robot-state").asString();
+            Bottle *robotState=rep.get(1).asList();
+            state=robotState->find("robot-state").asString();
         }
         return state;
     }
@@ -493,6 +550,7 @@ public:
         navPort.close();
         outPort.interrupt();
         viewerPort.interrupt();
+        cmdPort.close();
         delete l2img_front;
         delete l2img_rear;
         if (drv_front)
