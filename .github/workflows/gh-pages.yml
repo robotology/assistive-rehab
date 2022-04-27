@@ -15,7 +15,7 @@ jobs:
       - name: Dependencies
         run: |
           sudo apt update
-          sudo apt install -y xsltproc doxygen doxygen-doc texlive ghostscript graphviz python3-wheel python3-setuptools
+          sudo apt install -y xsltproc doxygen doxygen-doc texlive ghostscript graphviz python3-wheel python3-setuptools python-pygments
           pip3 install --upgrade Jinja2
           pip3 install --user mkdocs mkdocs-material pymdown-extensions
           echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
