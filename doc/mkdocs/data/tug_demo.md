@@ -4,9 +4,7 @@ This tutorial will show you how to run the TUG demo on the [real robot](#running
 
 ## Running the TUG demo on the robot
 
-The related application can be found [here](https://github.com/robotology/assistive-rehab/blob/master/app/scripts/AssistiveRehab-TUG.xml.template).
-
-### Requirements
+### Hardware requirements
 
 The following hardware is required:
 
@@ -21,47 +19,104 @@ The following hardware is required:
 ### Setting up the robot
 
 Turn on the robot, by switching on cpu and motors.
+Start `yarpserver` and `yarprun` on the robot machines:
 
-Open `yarpmanager`, click on the `Cluster` tab on the left. Click on the play icon below the `nameserver node`, then select the systems in the window underneath and click on play.
+- on **r1-base**:
+    - `yarpserver`
+    - `yarprun --server /r1-base`
+- on **r1-console**:
+    - `yarprun --server /r1-console`
+- on **r1-console-2** (iiticublap194):
+    - `yarprun --server /r1-console-2`
+- on **r1-face**:
+    - `yarprun --server /r1-face`
+- on **r1-torso**:
+    - `yarprun --server /r1-torso`
 
-
-!!! tip "R1-mk2"
-    Specifically, R1-mk2 has the following systems available:
-
-    - `r1-base`: where `yarpserver` runs;
-    - `r1-console-linux`: where the main modules and visualizers run;
-    - `r1-console-cuda`: connected to an external Cuda box, where `yarpOpenPose` runs. Here we also deployed the [Virtual Machine](#virtual-machine-for-speech-interaction) for the speech pipeline;
-    - `r1-torso1`: where the camera runs;
-    - `r1-face`: where the speak and the face expression modules run;
-
-Now that all systems are running, open a terminal and type:
+Now that yarp is running, open a terminal and type:
 
 ```
 ssh -X r1-base
-yarprobotinterface
+cd /usr/local/src/robot/robots-configuration/R1SN003 && yarprobotinterface
 ```
 
-!!! caution
-    The robot is going to move around during the demo.
-    Therefore, after running the `yarprobotinterface`, be sure to unplug it from the power supply.
+!!! note "R1SN003"
+    These instructions are tailored to the robot `R1SN003`.     
+    Specifically, this robot has the following systems available:
 
-#### Virtual Machine for speech interaction
+    - `r1-base`: where `yarpserver` and the navigation modules run;
+    - `r1-console`: where the speech modules and `yarpOpenPose` run;
+    - `r1-console-2`: where the main modules and the visualizers run;
+    - `r1-torso`: where the camera runs;
+    - `r1-face`: where the speak and the face expression modules run;  
 
-For running the [`speechInteraction`](https://github.com/robotology/assistive-rehab/tree/master/modules/speechInteraction) modules, you will need access to [**Google Cloud API**](https://cloud.google.com/natural-language/), which is currently deployed on the `Ubuntu 18 Virtual Machine (VM)` installed on `r1-console-cuda`.
-
-On this system, open the `VM` and start `Ubuntu18-VM`.
-
-When the system is on, open `yarpmanager` and run the `Google_Speech_Processing` app. Hit play and then connect.
-
-!!! warning
-    Be sure that the external microphone is connected to the system.
 
 ### Running the demo
 
-Now we are ready to run the demo!
+Now that the system is up and running, we are ready to run the demo!
 
-In `yarpmanager`, click on `Applications` and then `Assistive Rehabilitation TUG App` app, hit run and then connect.
+#### Using docker
+
+We have setup the whole demo through `docker` to avoid installation and dependencies on the state of the system.
+
+!!! tip "Not familiar with docker?"
+    Check [it](https://docs.docker.com/) out.
+
+Run `yarpmanager` on `r1-console`. Here you will find the [`AssistiveRehab-TUG_setup`](https://github.com/robotology/assistive-rehab/blob/master/app/scripts/) xml to run the robot camera and the `iSpeak` module. Hit run all and then connect all.
+
+!!! tip "Connections"
+    You will notice that the application includes all the connections required for the demo, not only those used to setup the camera and the speech modules. Since the demo is setup through `docker-compose`, this is a convenient visual way to verify that all the connections started properly. 
+
+!!! tip "Demo dependencies"
+    All the demo specific dependencies are installed within docker containers, so you don't need any extra installation.
+
+Let's run the navigation modules on **r1-base**:
+
+```
+ssh -X r1-base
+cd $ROBOT_CODE/assistive-rehab/docker/compose 
+docker-compose -f docker-compose-nav.yml up
+```
+
+Let's run the main modules and the visualizers on **r1-console-2**:
+
+```
+cd $ROBOT_CODE/assistive-rehab/docker/compose
+docker-compose -f docker-compose-console.yml up  
+```
+
+Let's run the speech modules and `yarpOpenPose` on **r1-console**:
+   
+```
+cd $ROBOT_CODE/assistive-rehab/docker/compose
+docker-compose -f docker-compose-cuda.yml up
+```
+
+```
+cd $ROBOT_CODE/assistive-rehab/docker/compose
+docker-compose -f docker-compose-speech.yml up
+```
+
+!!! tip "Check the connections"
+    The connections with `docker-compose` take some time. You can check that they are all green in `yarpmanager` by refreshing the application.
+
+!!! tip "Debugging docker containers"
+    Something went wrong? You can fetch the output of a container using the command `docker logs -f <name_of_the_container>`. The `<name_of_the_container>` usually appends the name of the folder where you run `docker-compose`, the name of the service as defined in the `docker-compose.yml` and a random number.  
+
+!!! warning "Invalid address"
+    If you notice that some ports are red in `yarpmanager`, it's probably due to an `invalid address` error on that port. It might due to how docker handles the network, so please make sure that each `docker-compose` is up before running the next.
+
+!!! note "Stopping the demo"
+    For stopping, you can repeat the same procedure and using `docker-compose -f <name-of-the-file> down`.
+
+#### Alternative to docker
+
+Be sure to meet all the dependencies defined [here](install.md).
+
+In `yarpmanager`, click on `Applications` and then [`Assistive Rehabilitation TUG App`](https://github.com/robotology/assistive-rehab/blob/master/app/scripts/AssistiveRehab-TUG.xml.template) app, hit run and then connect. 
 The demo is now running!
+
+#### Instructions to start the demo
 
 Before starting the TUG, we need to define our world made of lines, robots and skeletons!
 For doing so, you can follow [this tutorial](tug_lines.md#detecting-lines-on-the-robot).
@@ -95,27 +150,10 @@ You can stop it by typing in `Terminal 1`:
 stop
 ```
 
+
 ## Running the TUG demo on `gazebo`
 
-The related application can be found [here](https://github.com/robotology/assistive-rehab/blob/master/app/scripts/AssistiveRehab-TUG_SIM.xml.template).
-
-### Dependencies
-
-After [installing](https://robotology.github.io/assistive-rehab/doc/mkdocs/site/install/) `assistive-rehab`, you will need the following dependencies:
-
-- [cer](https://github.com/robotology/cer/tree/devel): for running the gaze-controller and face expressions;
-- [navigation](https://github.com/robotology/navigation): for controlling the robot wheels;
-- [gazebo](https://github.com/vvasco/gazebo): for running the virtual environment;
-
-!!! warning "Work in progress"
-    This is a fork of `gazebo` which contains the required changes to the `Actor` class. We are working to open a pull request on the upstream repository.
-
-- [gazebo-yarp-plugins](https://github.com/robotology/gazebo-yarp-plugins): for exposing YARP interfaces in `gazebo`;
-- [cer-sim](https://github.com/robotology/cer-sim): which includes the model loaded by `gazebo` in `tug-scenario.world`;
-- [speech](https://github.com/robotology/speech): for running the `iSpeak` module;
-- [nodejs](https://nodejs.org/en/download/package-manager/): for handling triggers from the wifi button.
-
-### Requirements
+### Hardware requirements
 
 The following hardware is required:
 
@@ -137,10 +175,44 @@ If you want to simulate the speech interaction, you will need:
 
 ### Running the demo
 
+#### Using docker
+
+You will simply need to run the following commands:
+
+```
+cd $ROBOT_CODE/assistive-rehab/docker/compose
+docker-compose -f docker-compose-gazebo.yml up  
+```
+
+On a cuda machine, run:
+   
+```
+cd $ROBOT_CODE/assistive-rehab/docker/compose
+docker-compose -f docker-compose-cuda.yml up
+```
+
+#### Alternative to docker
+
+After [installing](https://robotology.github.io/assistive-rehab/doc/mkdocs/site/install/) `assistive-rehab`, you will need the following dependencies:
+
+- [cer](https://github.com/robotology/cer/tree/devel): for running the gaze-controller and face expressions;
+- [navigation](https://github.com/robotology/navigation): for controlling the robot wheels;
+- [gazebo](https://github.com/vvasco/gazebo): for running the virtual environment;
+
+!!! warning "Work in progress"
+    This is a fork of `gazebo` which contains the required changes to the `Actor` class. We are working to open a pull request on the upstream repository.
+
+- [gazebo-yarp-plugins](https://github.com/robotology/gazebo-yarp-plugins): for exposing YARP interfaces in `gazebo`;
+- [cer-sim](https://github.com/robotology/cer-sim): which includes the model loaded by `gazebo` in `tug-scenario.world`;
+- [speech](https://github.com/robotology/speech): for running the `iSpeak` module;
+- [nodejs](https://nodejs.org/en/download/package-manager/): for handling triggers from the wifi button.
+
 Now that all dependencies and requirements are met, you are ready to run the demo in `gazebo`!
 
 The first step is to open a terminal and run `yarpserver`.
-Open `yarpmanager`, run the `AssistiveRehab-TUG_SIM App` and hit connect.
+Open `yarpmanager`, run the [`AssistiveRehab-TUG_SIM App`](https://github.com/robotology/assistive-rehab/blob/master/app/scripts/AssistiveRehab-TUG_SIM.xml.template) and hit connect.
+
+#### Instructions to start the demo
 
 !!! important
     If you wish to simulate the speech interaction, be sure to run `node-button.js` on the machine you used to configure the wifi button, as explained [here](wifi_button.md).

@@ -1,0 +1,345 @@
+version: "3.7"
+
+x-fdg-basic: &fdg-basic
+  image: icubteamcode/fdg-basic:v2022.05.2_sources
+  environment:
+    - DISPLAY=${DISPLAY}
+    - QT_X11_NO_MITSHM=1
+    - XAUTHORITY=/root/.Xauthority
+  volumes:
+    - "/tmp/.X11-unix:/tmp/.X11-unix"
+    - "${XAUTHORITY}:/root/.Xauthority"
+    - "${HOME}/.config/yarp:/root/.config/yarp"
+    - "${HOME}/etapas-motion-results:/root/.local/share/yarp/contexts/motionAnalyzer" #for saving the results /projects/assistive-rehab/modules/motionAnalyzer/app/conf/
+  network_mode: "host"
+  privileged: true
+
+services: 
+  objectsPropertiesCollector:
+    <<: *fdg-basic
+    command: sh -c "objectsPropertiesCollector --name opc --no-load-db --no-save-db --sync-bc 0.1"
+
+  skeletonViewer:
+    <<: *fdg-basic
+    command: sh -c "skeletonViewer --x 1120 --y 10 --show-floor on --camera-viewup '(1.0 0.0 0.0)' --camera-position '(-4.0 -2.0 8.0)' --camera-focalpoint '(0.0 -2.0 0.0)'"
+
+  lineDetector:
+    <<: *fdg-basic
+    command: sh -c "yarp wait /depthCamera/rgbImage:o; lineDetector --camera::remote /depthCamera"
+
+  skeletonRetriever:
+    <<: *fdg-basic
+    command: 
+      - /bin/bash
+      - -c
+      - |
+        yarp wait /depthCamera/rgbImage:o
+        yarp wait /depthCamera/depthImage:o
+        yarp wait /opc/rpc
+        skeletonRetriever --depth::kernel-size 4 --depth::iterations 3 --depth::min-distance 0.5 --depth::max-distance 10.0
+
+  skeletonLocker:
+    <<: *fdg-basic
+    command: sh -c "skeletonLocker"
+        
+
+  robotSkeletonPublisher:
+    <<: *fdg-basic
+    command: sh -c "yarp wait /cer/head/command:i; yarp wait /cer/head/rpc:i; yarp wait /cer/head/state:o; yarp wait /cer/head/stateExt:o; yarp wait /cer/torso/command:i; yarp wait /cer/torso/rpc:i; yarp wait /cer/torso/state:o; yarp wait /cer/torso/stateExt:o; yarp wait /cer/torso_tripod/command:i; yarp wait /cer/torso_tripod/rpc:i; yarp wait /cer/torso_tripod/state:o; yarp wait /cer/torso_tripod/stateExt:o; yarp wait /cer/left_arm/command:i; yarp wait /cer/left_arm/rpc:i; yarp wait /cer/left_arm/state:o; yarp wait /cer/left_arm/stateExt:o; yarp wait /cer/right_arm/command:i; yarp wait /cer/right_arm/rpc:i; yarp wait /cer/right_arm/state:o; yarp wait /cer/right_arm/stateExt:o; yarp wait /cer/left_wrist_tripod/command:i; yarp wait /cer/left_wrist_tripod/rpc:i; yarp wait /cer/left_wrist_tripod/state:o; yarp wait /cer/left_wrist_tripod/stateExt:o; yarp wait /cer/right_wrist_tripod/command:i; yarp wait /cer/right_wrist_tripod/rpc:i; yarp wait /cer/right_wrist_tripod/state:o; yarp wait /cer/right_wrist_tripod/stateExt:o; robotSkeletonPublisher --robot cer"
+
+  attentionManager:
+    <<: *fdg-basic
+    command: sh -c "attentionManager --frame world"
+
+  motionAnalyzer:
+    <<: *fdg-basic
+    command: sh -c "motionAnalyzer"
+
+  managerTUG:
+    <<: *fdg-basic
+    restart: on-failure
+    command: 
+      - /bin/bash
+      - -c
+      - |
+        yarp wait /attentionManager/cmd:rpc
+        yarp wait /motionAnalyzer/cmd
+        yarp wait /iSpeak
+        yarp wait /iSpeak/rpc
+        yarp wait /navController/rpc
+        yarp wait /skeletonLocker/rpc
+        yarp wait /googleSpeechProcess/result:o
+        yarp wait /opc/broadcast:o
+        yarp wait /ctpservice/left_arm/rpc
+        yarp wait /ctpservice/right_arm/rpc
+        yarp wait /obstacleDetector/obstacle:o
+        managerTUG --lock false --max-timeout 30.0 --engage-azimuth "(50.0 160.0)" --starting-pose "(1.1 -2.8 120.0)"
+  
+  gazeController:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /cer/head/command:i; yarp wait /cer/head/rpc:i; yarp wait /cer/head/state:o; cer_gaze-controller --cameras::file /projects/cer/build/share/CER/contexts/cameraCalibration/cerEyes_320x240.ini"
+
+  navController:
+    <<: *fdg-basic
+    command: sh -c "yarp wait /baseControl/rpc; yarp wait /baseControl/odometry:o; yarp wait /baseControl/control:i; navController --velocity-angular-saturation 15.0 --distance-target 2.5"
+
+  obstacleDetector:
+    <<: *fdg-basic
+    command: sh -c "yarp wait /navController/rpc; obstacleDetector --robot cer --dist-obstacle 0.1"
+
+  ctpServiceRight:
+    <<: *fdg-basic
+    command: sh -c "yarp wait /cer/right_arm/command:i; yarp wait /cer/right_arm/rpc:i; yarp wait /cer/right_arm/state:o; yarp wait /cer/right_arm/stateExt:o; ctpService --robot cer --part right_arm"
+
+  ctpServiceLeft:
+    <<: *fdg-basic
+    command: sh -c "yarp wait /cer/left_arm/command:i; yarp wait /cer/left_arm/rpc:i; yarp wait /cer/left_arm/state:o; yarp wait /cer/left_arm/stateExt:o; ctpService --robot cer --part left_arm"
+
+  yarpscope:
+    <<: *fdg-basic
+    command: sh -c "yarpscope --x 1100 --y 50 --dx 800 --dy 400 --remote /motionAnalyzer/scope --bgcolor white --min -0.1 --max 0.8 --color blue --graph_size 3 --plot_title 'Step length [m]'" 
+
+  #connections
+  yconnect_0:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /iSpeak/speech-dev/rpc; yarp wait /r1/speech:rpc; yarp connect /iSpeak/speech-dev/rpc /r1/speech:rpc fast_tcp"
+
+  yconnect_1:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /iSpeak/r1:rpc; yarp wait /faceExpressionImage/rpc; yarp connect /iSpeak/r1:rpc /faceExpressionImage/rpc fast_tcp"
+
+  yconnect_2:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /faceExpressionImage/image:o; yarp wait /robot/faceDisplay/image:i; yarp connect /faceExpressionImage/image:o /robot/faceDisplay/image:i fast_tcp"
+
+  yconnect_3:
+    <<: *fdg-basic
+    command: sh -c "yarp wait /depthCamera/rgbImage:o; yarp wait /yarpOpenPose/image:i; yarp connect /depthCamera/rgbImage:o /yarpOpenPose/image:i mjpeg"
+
+  yconnect_4:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /depthCamera/depthImage:o; yarp wait /yarpOpenPose/float:i; yarp connect /depthCamera/depthImage:o /yarpOpenPose/float:i fast_tcp+send.portmonitor+file.depthimage_compression_zlib+recv.portmonitor+file.depthimage_compression_zlib+type.dll"
+  #  command: sh -c "yarp wait /depthCamera/depthImage:o; yarp wait /yarpOpenPose/float:i; yarp connect /depthCamera/depthImage:o /yarpOpenPose/float:i fast_tcp+send.portmonitor+file.depthimage_compression_zfp+recv.portmonitor+file.depthimage_compression_zfp+type.dll"
+
+  yconnect_5:
+    <<: *fdg-basic
+    command: sh -c "yarp wait /yarpOpenPose/float:o; yarp wait /skeletonRetriever/depth:i; yarp connect /yarpOpenPose/float:o /skeletonRetriever/depth:i fast_tcp"
+
+  yconnect_6:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /yarpOpenPose/target:o; yarp wait /skeletonRetriever/skeletons:i; yarp connect /yarpOpenPose/target:o /skeletonRetriever/skeletons:i fast_tcp"
+
+  yconnect_7:
+    <<: *fdg-basic
+    command: sh -c "yarp wait /skeletonRetriever/opc:rpc; yarp wait /opc/rpc; yarp connect /skeletonRetriever/opc:rpc /opc/rpc fast_tcp"
+
+  yconnect_8:
+    <<: *fdg-basic
+    command: sh -c "yarp wait /cer_gaze-controller/state:o; yarp wait /skeletonRetriever/gaze:i; yarp connect /cer_gaze-controller/state:o /skeletonRetriever/gaze:i fast_tcp"
+
+  yconnect_9:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /navController/state:o; yarp wait /skeletonRetriever/nav:i; yarp connect /navController/state:o /skeletonRetriever/nav:i fast_tcp"
+
+  yconnect_10:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /robotSkeletonPublisher/opc:rpc; yarp wait /opc/rpc; yarp connect /robotSkeletonPublisher/opc:rpc /opc/rpc fast_tcp"
+
+  yconnect_11:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /navController/state:o; yarp wait /robotSkeletonPublisher/nav:i; yarp connect /navController/state:o /robotSkeletonPublisher/nav:i fast_tcp"
+
+  yconnect_12:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /robotSkeletonPublisher/viewer:o; yarp wait /skeletonViewer:i; yarp connect /robotSkeletonPublisher/viewer:o /skeletonViewer:i fast_tcp"
+
+  yconnect_13:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /opc/broadcast:o; yarp wait /skeletonLocker/opc:i; yarp connect /opc/broadcast:o /skeletonLocker/opc:i fast_tcp"
+
+  yconnect_14:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /skeletonLocker/opc:rpc; yarp wait /opc/rpc; yarp connect /skeletonLocker/opc:rpc /opc/rpc fast_tcp"
+
+  yconnect_15:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /opc/broadcast:o; yarp wait /attentionManager/opc:i; yarp connect /opc/broadcast:o /attentionManager/opc:i fast_tcp"
+
+  yconnect_16:
+    <<: *fdg-basic
+    restart: on-failure
+    depends_on:
+      - gazeController
+    command: sh -c "yarp wait /attentionManager/gaze/cmd:rpc; yarp wait /cer_gaze-controller/rpc; yarp connect /attentionManager/gaze/cmd:rpc /cer_gaze-controller/rpc fast_tcp"
+
+  yconnect_17:
+    <<: *fdg-basic
+    restart: on-failure
+    depends_on:
+      - gazeController
+    command: sh -c "yarp wait /cer_gaze-controller/state:o; yarp wait /attentionManager/gaze/state:i; yarp connect /cer_gaze-controller/state:o /attentionManager/gaze/state:i fast_tcp"
+
+  yconnect_18:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /depthCamera/rgbImage:o; yarp wait /lineDetector/img:i; yarp connect /depthCamera/rgbImage:o /lineDetector/img:i mjpeg"
+
+  yconnect_19:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /lineDetector/cam:rpc; yarp wait /depthCamera/rpc:i; yarp connect /lineDetector/cam:rpc /depthCamera/rpc:i fast_tcp"
+
+  yconnect_20:
+    <<: *fdg-basic
+    restart: on-failure
+    depends_on:
+      - gazeController
+    command: sh -c "yarp wait /cer_gaze-controller/state:o; yarp wait /lineDetector/gaze/state:i; yarp connect /cer_gaze-controller/state:o /lineDetector/gaze/state:i fast_tcp"
+
+  yconnect_21:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /lineDetector/opc:rpc; yarp wait /opc/rpc; yarp connect /lineDetector/opc:rpc /opc/rpc fast_tcp"
+
+  yconnect_22:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /lineDetector/viewer:rpc; yarp wait /skeletonViewer:rpc; yarp connect /lineDetector/viewer:rpc /skeletonViewer:rpc fast_tcp"
+
+  yconnect_23:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /lineDetector/nav:rpc; yarp wait /navController/rpc; yarp connect /lineDetector/nav:rpc /navController/rpc fast_tcp"
+
+  yconnect_24:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /lineDetector/gazebo:rpc; yarp wait /tug_input_port; yarp connect /lineDetector/gazebo:rpc /tug_input_port fast_tcp"
+
+  yconnect_25:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /motionAnalyzer/opc; yarp wait /opc/rpc; yarp connect /motionAnalyzer/opc /opc/rpc fast_tcp"
+
+  yconnect_26:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /yarpOpenPose/image:o; yarp wait /viewer/skeleton; yarp connect /yarpOpenPose/image:o /viewer/skeleton mjpeg"
+
+  yconnect_27:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /opc/broadcast:o; yarp wait /navController/opc:i; yarp connect /opc/broadcast:o /navController/opc:i fast_tcp"
+
+  yconnect_28:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /skeletonLocker/viewer:o; yarp wait /skeletonViewer:i; yarp connect /skeletonLocker/viewer:o /skeletonViewer:i fast_tcp"
+
+  yconnect_29:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /managerTUG/attention:rpc; yarp wait /attentionManager/cmd:rpc; yarp connect /managerTUG/attention:rpc /attentionManager/cmd:rpc fast_tcp"
+
+  yconnect_30:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /managerTUG/analyzer:rpc; yarp wait /motionAnalyzer/cmd; yarp connect /managerTUG/analyzer:rpc /motionAnalyzer/cmd fast_tcp"
+
+  yconnect_31:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /managerTUG/speech:o; yarp wait /iSpeak; yarp connect /managerTUG/speech:o /iSpeak fast_tcp"
+
+  yconnect_32:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /managerTUG/speech:rpc; yarp wait /iSpeak/rpc; yarp connect /managerTUG/speech:rpc /iSpeak/rpc fast_tcp"
+
+  yconnect_33:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /managerTUG/navigation:rpc; yarp wait /navController/rpc; yarp connect /managerTUG/navigation:rpc /navController/rpc fast_tcp"
+
+  yconnect_34:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /managerTUG/locker:rpc; yarp wait /skeletonLocker/rpc; yarp connect /managerTUG/locker:rpc /skeletonLocker/rpc fast_tcp"
+
+  yconnect_35:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /googleSpeechProcess/result:o; yarp wait /managerTUG/answer:i; yarp connect /googleSpeechProcess/result:o /managerTUG/answer:i fast_tcp"
+
+  yconnect_36:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /opc/broadcast:o; yarp wait /managerTUG/opc:i; yarp connect /opc/broadcast:o /managerTUG/opc:i fast_tcp"
+
+  yconnect_37:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /managerTUG/left_arm:rpc; yarp wait /ctpservice/left_arm/rpc; yarp connect /managerTUG/left_arm:rpc /ctpservice/left_arm/rpc fast_tcp"
+
+  yconnect_38:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /managerTUG/right_arm:rpc; yarp wait /ctpservice/right_arm/rpc; yarp connect /managerTUG/right_arm:rpc /ctpservice/right_arm/rpc fast_tcp"
+
+  yconnect_39:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /obstacleDetector/obstacle:o; yarp wait /managerTUG/obstacle:i; yarp connect /obstacleDetector/obstacle:o /managerTUG/obstacle:i fast_tcp"
+
+  yconnect_40:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /obstacleDetector/nav:rpc; yarp wait /navController/rpc; yarp connect /obstacleDetector/nav:rpc /navController/rpc fast_tcp"
+
+  yconnect_41:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /obstacleDetector/viewer:o; yarp wait /viewer/obstacles; yarp connect /obstacleDetector/viewer:o /viewer/obstacles fast_tcp"
+
+  yconnect_42:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /depthCamera/rgbImage:o; yarp wait /viewer/raw; yarp connect /depthCamera/rgbImage:o /viewer/raw fast_tcp"
+  
+  yconnect_43:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /depthCamera/depthImage:o; yarp wait /viewer/depth; yarp connect /depthCamera/depthImage:o /viewer/depth fast_tcp+recv.portmonitor+type.dll+file.depthimage_to_mono"
+
+  yconnect_44:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /skeletonRetriever/viewer:o; yarp wait /skeletonViewer:i; yarp connect /skeletonRetriever/viewer:o /skeletonViewer:i fast_tcp"
+
+  yconnect_45:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /lineDetector/img:o; yarp wait /viewer/line; yarp connect /lineDetector/img:o /viewer/line mjpeg"
+
+  yconnect_46:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /motionAnalyzer/nav:cmd; yarp wait /navController/rpc; yarp connect /motionAnalyzer/nav:cmd /navController/rpc fast_tcp"
+
+  yconnect_47:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /managerTUG/trigger:rpc; yarp wait /googleSpeech/rpc; yarp connect /managerTUG/trigger:rpc /googleSpeech/rpc fast_tcp"
