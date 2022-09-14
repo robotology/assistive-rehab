@@ -935,6 +935,7 @@ class Detector : public RFModule, public lineDetector_IDL
                 cam_distortion.at<double>(0, 3) = 0.0; //t2;
                 cam_distortion.at<double>(0, 4) = 0.0; //k3;
                 
+                rgbdDrv.close();
                 return true;
             }
         }
