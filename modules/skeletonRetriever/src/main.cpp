@@ -276,6 +276,7 @@ class Retriever : public RFModule
             if (irgbd->getRgbFOV(fov_h, fov_v)) {
                 yInfo() << "camera fov_h (from sensor) =" << fov_h;
                 yInfo() << "camera fov_v (from sensor) =" << fov_v;
+                rgbdDrv.close();
                 return true;
             }
         }
