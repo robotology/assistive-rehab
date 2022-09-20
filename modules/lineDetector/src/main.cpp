@@ -36,10 +36,12 @@ class Detector : public RFModule, public lineDetector_IDL
     bool camera_configured;
     double fx,fy,px,py;
     cv::Vec3d rvec,tvec; // Rodrigues coefficients wrt cam
+    std::vector<cv::Vec3d> rvec_v;
+    std::vector<cv::Vec3d> tvec_v;
     std::map<std::string,int> line2idx;
     std::vector<int> nx,ny;
     std::vector<double> marker_size,marker_dist;
-    bool simulation,updated_line_viewer;
+    bool simulation,updated_line_viewer, use_initial_guess;
 
     std::vector<yarp::sig::Vector>lines_pose_world;
     std::vector<yarp::sig::Vector>lines_size;
@@ -79,6 +81,7 @@ class Detector : public RFModule, public lineDetector_IDL
         period=rf.check("period",Value(0.1)).asFloat64();
         nlines=rf.check("nlines",Value(2)).asInt32();
         line_filter_order=rf.check("line-filter-order",Value(30)).asInt32();
+        use_initial_guess = rf.check("use-initial-guess", Value(false)).asBool();
 
         nx={6,6};
         if(Bottle *nxB=rf.find("nx").asList())
@@ -154,6 +157,18 @@ class Detector : public RFModule, public lineDetector_IDL
             lines_size[i]=yarp::sig::Vector(2,0.0);
             lines_size[i][0]=(marker_dist[i]+marker_size[i])*nx[i];
             lines_size[i][1]=marker_size[i]*ny[i];
+        }
+
+        rvec_v.resize(nlines);
+        for(int i=0; i<nlines;i++)
+        {
+            rvec_v[i] = cv::Vec3d(0.0, 0.0, 0.0);
+        }      
+        tvec_v.resize(nlines);
+
+        for(int i=0; i<nlines;i++)
+        {
+            tvec_v[i] = cv::Vec3d(0.0, 0.0, 0.0);
         }
 
         //configure the detector with corner refinement
@@ -532,6 +547,8 @@ class Detector : public RFModule, public lineDetector_IDL
     bool reset() override
     {
       std::lock_guard<std::mutex> lg(mtx_update);
+    //   tvec.clear();
+    //   rvec.clear();
       for(int i=0;i<nlines;i++)
       {
           lines_pose_world[i]=yarp::sig::Vector(7,0.0);
@@ -692,16 +709,17 @@ class Detector : public RFModule, public lineDetector_IDL
             //estimate pose
             //use cv::Mat and not cv::Vec3d to avoid issues with
             //cv::aruco::estimatePoseBoard() initial guess
-            int valid=cv::aruco::estimatePoseBoard(corners,ids,curr_board,cam_intrinsic,cam_distortion,rvec,tvec,true);
-
+            int valid=cv::aruco::estimatePoseBoard(corners,ids,curr_board,cam_intrinsic,cam_distortion,rvec_v[line_idx],tvec_v[line_idx], use_initial_guess);
+            
             //if at least one board marker detected
             if (valid>0)
             {
-                cv::aruco::drawAxis(inImgMat,cam_intrinsic,cam_distortion,rvec,tvec,0.5);
-                cv::Mat Rmat;
-                cv::Rodrigues(rvec,Rmat);
+                yInfo()<<"n. of valid markers:"<<valid;
+                cv::aruco::drawAxis(inImgMat,cam_intrinsic,cam_distortion,rvec_v[line_idx],tvec_v[line_idx],0.5);
+                 cv::Mat Rmat;
+                cv::Rodrigues(rvec_v[line_idx],Rmat);
                 yarp::sig::Matrix R=toYarpMat(Rmat);
-                yarp::sig::Vector pose({tvec[0],tvec[1],tvec[2],1.0});
+                yarp::sig::Vector pose({tvec_v[line_idx][0],tvec_v[line_idx][1],tvec_v[line_idx][2],1.0});
                 worldFrame=update_world_frame(line,R,pose);
                 estimate_line(worldFrame,pose,line_idx);
                 line_cnt++;
@@ -840,6 +858,19 @@ class Detector : public RFModule, public lineDetector_IDL
 
         return false;
     }
+
+    bool set_initial_guess(bool flag) override {
+        std::lock_guard<std::mutex> lg(mtx_update);
+        use_initial_guess = flag;
+
+        return true;
+    }
+
+    bool get_initial_guess() override {
+        std::lock_guard<std::mutex> lg(mtx_update);
+        return use_initial_guess;
+    }
+
 
     /****************************************************************/
     yarp::os::Property get_line(const std::string &line) override
