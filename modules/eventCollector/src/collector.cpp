@@ -55,6 +55,7 @@ class Collector : public RFModule, public eventCollector_IDL
     RpcServer rpcPort;
     BufferedPort<Bottle> googleSpeechPort;
     BufferedPort<Bottle> googleProcessPort;
+    BufferedPort<Bottle> obstacleDetectorPort;
     //vector<string> speech_events;
     //vector<string> speech_process_events;
 
@@ -89,6 +90,8 @@ public:
 
         googleSpeechPort.open(("/" + getName() + "/speech:i").c_str());
         googleProcessPort.open(("/" + getName() + "/speech-process:i").c_str()); 
+        obstacleDetectorPort.open(("/" + getName() + "/obstacle:i").c_str());
+
         rpcPort.open(("/" + getName() + "/cmd").c_str());
         attach(rpcPort);
 
@@ -107,6 +110,7 @@ public:
     {
         googleSpeechPort.interrupt();
         googleProcessPort.interrupt();
+        obstacleDetectorPort.interrupt();
         rpcPort.interrupt();
         yInfo() << "Interrupted module";
         return true;
@@ -122,6 +126,7 @@ public:
         save_data();
         googleSpeechPort.close();
         googleProcessPort.close();
+        obstacleDetectorPort.close();
         rpcPort.close();
         yInfo() << "Closed ports";
         return true;
@@ -145,6 +150,7 @@ public:
 
         Bottle *speech=googleSpeechPort.read(false);
         Bottle *speech_process=googleProcessPort.read(false);
+        Bottle *obstacle = obstacleDetectorPort.read(false);
 
         if (speech)
         {
@@ -191,6 +197,21 @@ public:
                 jsonTrialInstance["Speech"]["error-messages"].append(jsonErrorMessage);
 
                 got_speech=false;
+            }
+        }
+
+        if(obstacle)
+        {
+            if(obstacle->size()>0)
+            {
+                yDebug()<<"obstacle detector bottle:" << obstacle->toString();
+                string content="found obstacle from " + obstacle->get(1).asString() + 
+                                " at distance " + std::to_string(obstacle->get(0).asFloat64());
+                yDebug()<<"content:"<<content;
+
+                jsonErrorMessage["obstacle-detection-event-time"] = yarp::os::Time::now() - timeFromStart;
+                jsonErrorMessage["obstacle-detection"] = content;
+                jsonTrialInstance["Navigation"]["error-messages"].append(jsonErrorMessage);
             }
         }
 
