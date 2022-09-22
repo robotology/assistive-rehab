@@ -1,0 +1,24 @@
+version: "3.7"
+
+x-fdg-navigation: &fdg-navigation
+  image: icubteamcode/fdg-navigation:v2022.05.2_sources
+  volumes:
+    - "${HOME}/.config/yarp:/root/.config/yarp"
+  network_mode: "host"
+  privileged: true
+
+services:
+
+  baseControl:
+    <<: *fdg-navigation
+    command: sh -c "yarp wait /cer/mobile_base/command:i; yarp wait /cer/mobile_base/rpc:i; yarp wait /cer/mobile_base/state:o; yarp wait /cer/mobile_base/stateExt:o; baseControl --context baseControl --from baseCtrl_cer.ini --skip_robot_interface_check"
+    
+  joystickControl:
+    <<: *fdg-navigation
+    command: sh -c "yarp wait /cer/mobile_base/command:i; yarp wait /cer/mobile_base/rpc:i; yarp wait /cer/mobile_base/state:o; cd /projects/assistive-rehab/docker/conf; joystickCtrl --from joystick_cer_linux_high_speed_stratus.ini --force_configuration --GENERAL::outputPortName /joystickCtrl:o"
+    
+  yconnect_0:
+    <<: *fdg-navigation
+    restart: on-failure
+    command: sh -c "yarp wait /joystickCtrl:o; yarp wait /baseControl/joystick1:i; yarp connect /joystickCtrl:o /baseControl/joystick1:i fast_tcp"
+
