@@ -61,7 +61,8 @@ class Collector : public RFModule, public eventCollector_IDL
 
     Json::Value jsonRoot;
     Json::Value jsonTrialInstance;
-    Json::Value jsonErrorMessage;
+    Json::Value jsonNavErrorMessage;
+    Json::Value jsonSpeechErrorMessage;
     bool starting;
     bool got_speech;
     mutex mtx;
@@ -160,22 +161,22 @@ public:
                 {
                     // in this situation, we save first the previous instance
 
-                    jsonErrorMessage["google-speech-process"]="no google-speech-processing triggered";
-                    jsonTrialInstance["Speech"]["error-messages"].append(jsonErrorMessage);
+                    jsonSpeechErrorMessage["google-speech-process"]="no google-speech-processing triggered";
+                    jsonTrialInstance["Speech"]["error-messages"].append(jsonSpeechErrorMessage);
                 }
                 yDebug()<<"speech bottle:"<<speech->toString();
                 string content=speech->get(0).asString();
                 yDebug()<<"content:"<<content;
 
-                jsonErrorMessage["google-speech-event-time"] = yarp::os::Time::now() - timeFromStart;
+                jsonSpeechErrorMessage["google-speech-event-time"] = yarp::os::Time::now() - timeFromStart;
 
-                jsonErrorMessage["google-speech"]=content;
+                jsonSpeechErrorMessage["google-speech"]=content;
 
                 got_speech=true;
                 
             }
             // we save the time we got a speech bottle, in case we get two in a row
-            jsonErrorMessage["google-speech-process-event-time"] = yarp::os::Time::now() - timeFromStart;
+            jsonSpeechErrorMessage["google-speech-process-event-time"] = yarp::os::Time::now() - timeFromStart;
         }
 
         if (speech_process) // if we got something from speech process AND we already had something from speech
@@ -185,16 +186,16 @@ public:
                 if (!got_speech) // similarly, in this case the speechProcessing was triggered by something else
                 {
                     // in this case we just append an error mesage to google-speech before processing
-                    jsonErrorMessage["google-speech-event-time"] = yarp::os::Time::now() - timeFromStart;
-                    jsonErrorMessage["google-speech"]="no google-speech triggered";
+                    jsonSpeechErrorMessage["google-speech-event-time"] = yarp::os::Time::now() - timeFromStart;
+                    jsonSpeechErrorMessage["google-speech"]="no google-speech triggered";
                 }
                 yDebug()<<"speech process bottle:"<<speech_process->toString();
                 string content=speech_process->get(0).asString();
                 yDebug()<<"content:"<<content;
 
-                jsonErrorMessage["google-speech-process-event-time"] = yarp::os::Time::now() - timeFromStart;
-                jsonErrorMessage["google-speech-process"]=content;
-                jsonTrialInstance["Speech"]["error-messages"].append(jsonErrorMessage);
+                jsonSpeechErrorMessage["google-speech-process-event-time"] = yarp::os::Time::now() - timeFromStart;
+                jsonSpeechErrorMessage["google-speech-process"]=content;
+                jsonTrialInstance["Speech"]["error-messages"].append(jsonSpeechErrorMessage);
 
                 got_speech=false;
             }
@@ -209,13 +210,12 @@ public:
                                 " at distance " + std::to_string(obstacle->get(0).asFloat64());
                 yDebug()<<"content:"<<content;
 
-                jsonErrorMessage["obstacle-detection-event-time"] = yarp::os::Time::now() - timeFromStart;
-                jsonErrorMessage["obstacle-detection"] = content;
-                jsonTrialInstance["Navigation"]["error-messages"].append(jsonErrorMessage);
+                jsonNavErrorMessage["obstacle-detection-event-time"] = yarp::os::Time::now() - timeFromStart;
+                jsonNavErrorMessage["obstacle-detection"] = content;
+                jsonTrialInstance["Navigation"]["error-messages"].append(jsonNavErrorMessage);
             }
         }
-
-        
+ 
         return true;
     }
 
