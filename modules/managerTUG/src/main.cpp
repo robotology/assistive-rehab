@@ -791,6 +791,7 @@ class Manager : public RFModule, public managerTUG_IDL
     RpcClient lockerPort;
     RpcClient triggerPort;
     RpcClient gazeboPort;
+    RpcClient collectorPort;
     BufferedPort<Bottle> obstaclePort;
 
     AnswerManager *answer_manager;
@@ -1218,6 +1219,7 @@ class Manager : public RFModule, public managerTUG_IDL
     {
         lock_guard<mutex> lg(mtx);
         bool ret=disengage() && send_stop(attentionPort);
+        send_stop(collectorPort);
         start_ex=false;
         state=State::stopped;
         return ret;
@@ -1333,6 +1335,7 @@ class Manager : public RFModule, public managerTUG_IDL
         speechStreamPort.open("/"+module_name+"/speech:o");
         leftarmPort.open("/"+module_name+"/left_arm:rpc");
         rightarmPort.open("/"+module_name+"/right_arm:rpc");
+        collectorPort.open("/"+module_name+"/collector:rpc");
         cmdPort.open("/"+module_name+"/cmd:rpc");
         opcPort.open("/"+module_name+"/opc:i");
         if (lock)
@@ -1954,6 +1957,7 @@ class Manager : public RFModule, public managerTUG_IDL
                         else
                         {
                             start_interaction();
+                            start_collection();
                         }
                     }
                 }
@@ -2187,6 +2191,23 @@ class Manager : public RFModule, public managerTUG_IDL
                 yInfo()<<"Start!";
             }
         }
+    }
+
+    /****************************************************************/
+    bool start_collection()
+    {
+        Bottle cmd,rep;
+        cmd.addString("start");
+        cmd.addString(tag);
+        if (collectorPort.write(cmd,rep))
+        {
+            if (rep.get(0).asVocab32()==ok)
+            {
+                yInfo()<<"Start collecting events!";
+                return true;
+            }
+        }
+        return false;
     }
 
     /****************************************************************/
@@ -2441,6 +2462,7 @@ class Manager : public RFModule, public managerTUG_IDL
         leftarmPort.close();
         rightarmPort.close();
         speechStreamPort.close();
+        collectorPort.close();
         opcPort.close();
         cmdPort.close();
         if (lock)

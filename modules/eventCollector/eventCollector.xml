@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="yarpmanifest.xsl"?>
+
+<module>
+  <name>eventCollector</name>
+  <doxygen-group>eventCollector</doxygen-group>
+  <description>This module collects events from speech and navigation during a Timed Up and Go (TUG).</description>
+  <copypolicy>Released under the terms of the BSD 3-Clause License.</copypolicy>
+  <version>0.6.0</version>
+
+  <description-long>
+
+  </description-long>
+
+  <arguments>
+    <param default="eventCollector" desc="Name of the module. All the open ports will be tagged with the prefix /module_name.">module_name</param>
+  </arguments>
+
+  <authors>
+    <author email="alexandre.gomespereira@iit.it"> Alexandre Antunes </author>
+    <author email="valentina.vasco@iit.it"> Valentina Vasco </author>
+    <author email="mattia.fussi@iit.it"> Mattia Fussi </author>
+  </authors>
+
+  <data>
+    <input>
+        <type>Bottle</type>
+        <port>/eventCollector/speech:i</port>
+        <description>
+          Receives skeletons and lines from \ref objectsPropertiesCollector.
+        </description>
+    </input>
+    <input>
+        <type>Bottle</type>
+        <port>/eventCollector/speech-process:i</port>
+        <description>
+          Receives the answer to the question from \ref googleSpeechProcessing.
+        </description>
+    </input>
+    <input>
+        <type>Bottle</type>
+        <port>/eventCollector/obstacle:i</port>
+        <description>
+          Receives info (distance and which laser) about the presence of an obstacle from \ref obstacleDetector.
+        </description>
+    </input>
+  </data>
+
+  <services>
+    <server>
+      <type>eventCollector_IDL</type>
+      <idl>idl.thrift</idl>
+      <port>/eventCollector/cmd</port>
+      <description>service port</description>
+    </server>
+  </services>
+
+</module>
