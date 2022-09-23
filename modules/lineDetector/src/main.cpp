@@ -978,7 +978,8 @@ public:
 
     /****************************************************************/
     Detector() : start_detection(false), updated_cam(false), updated_nav(false),
-        updated_odom(false), camera_configured(false), updated_line_viewer(false) { }
+        updated_odom(false), camera_configured(false), updated_line_viewer(false), 
+        lineFrame(eye(4)), camFrame(eye(4)), navFrame(eye(4)), worldFrame(eye(4))  { }
 
 };
 
