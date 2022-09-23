@@ -124,6 +124,11 @@
     </module>
 
     <module>
+        <name>eventCollector</name>
+        <node>r1-console-linux</node>
+    </module>
+
+    <module>
         <name>ctpService</name>
         <parameters>--robot cer --part right_arm</parameters>
         <node>r1-console-linux</node>
@@ -418,6 +423,12 @@
     </connection>
 
     <connection>
+        <from>/managerTUG/collector:rpc</from>
+        <to>/eventCollector/cmd</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
         <from>/obstacleDetector/obstacle:o</from>
         <to>/managerTUG/obstacle:i</to>
         <protocol>fast_tcp</protocol>
@@ -432,6 +443,24 @@
     <connection>
         <from>/obstacleDetector/viewer:o</from>
         <to>/viewer/obstacles</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/googleSpeech/status:o</from>
+        <to>/eventCollector/speech:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/googleSpeechProcess/status:o</from>
+        <to>/eventCollector/speech-process:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/obstacleDetector/obstacle:o</from>
+        <to>/eventCollector/obstacle:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
 </application>

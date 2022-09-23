@@ -327,6 +327,12 @@
     </connection>
 
     <connection>
+        <from>/managerTUG/collector:rpc</from>
+        <to>/eventCollector/cmd</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
         <from>/obstacleDetector/obstacle:o</from>
         <to>/managerTUG/obstacle:i</to>
         <protocol>fast_tcp</protocol>
@@ -341,6 +347,24 @@
     <connection>
         <from>/obstacleDetector/viewer:o</from>
         <to>/viewer/obstacles</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/googleSpeech/status:o</from>
+        <to>/eventCollector/speech:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/googleSpeechProcess/status:o</from>
+        <to>/eventCollector/speech-process:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/obstacleDetector/obstacle:o</from>
+        <to>/eventCollector/obstacle:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
 </application>

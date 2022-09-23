@@ -301,7 +301,7 @@ public:
     //}
 
     /****************************************************************/
-    bool start() override
+    bool start(const string &skeletonTag) override
     {
         lock_guard<mutex> lg(mtx);
         yInfo()<<"Starting collecting";
@@ -315,6 +315,7 @@ public:
         config_doc >> jsonTrialInstance; 
         // we add the trial number to the instance
         jsonTrialInstance["Number"] = trialNumber;
+        jsonTrialInstance["User-id"] = skeletonTag;
 
         // now we get the current date in order to store it on the instance
         auto time = std::time(nullptr);

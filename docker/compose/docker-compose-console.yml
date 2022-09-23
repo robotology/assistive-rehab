@@ -10,7 +10,8 @@ x-fdg-basic: &fdg-basic
     - "/tmp/.X11-unix:/tmp/.X11-unix"
     - "${XAUTHORITY}:/root/.Xauthority"
     - "${HOME}/.config/yarp:/root/.config/yarp"
-    - "${HOME}/etapas-motion-results:/root/.local/share/yarp/contexts/motionAnalyzer" #for saving the results /projects/assistive-rehab/modules/motionAnalyzer/app/conf/
+    - "${HOME}/etapas-results/motion-analysis:/root/.local/share/yarp/contexts/motionAnalyzer" #for saving the results from motionAnalyzer
+    - "${HOME}/etapas-results/events:/root/.local/share/yarp/contexts/eventCollector" #for saving the results from eventCollector
   network_mode: "host"
   privileged: true
 
@@ -95,6 +96,10 @@ services:
   ctpServiceLeft:
     <<: *fdg-basic
     command: sh -c "yarp wait /cer/left_arm/command:i; yarp wait /cer/left_arm/rpc:i; yarp wait /cer/left_arm/state:o; yarp wait /cer/left_arm/stateExt:o; ctpService --robot cer --part left_arm"
+
+  eventCollector:
+    <<: *fdg-basic
+    command: sh -c "eventCollector"
 
   yarpscope:
     <<: *fdg-basic
@@ -343,3 +348,23 @@ services:
     <<: *fdg-basic
     restart: on-failure
     command: sh -c "yarp wait /managerTUG/trigger:rpc; yarp wait /googleSpeech/rpc; yarp connect /managerTUG/trigger:rpc /googleSpeech/rpc fast_tcp"
+  
+  yconnect_48:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /googleSpeech/status:o; yarp wait /eventCollector/speech:i; yarp connect /googleSpeech/status:o /eventCollector/speech:i"
+
+  yconnect_49:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /googleSpeechProcess/status:o; yarp wait /eventCollector/speech-process:i; yarp connect /googleSpeechProcess/status:o /eventCollector/speech-process:i"
+ 
+  yconnect_50:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /obstacleDetector/obstacle:o; yarp wait /eventCollector/obstacle:i; yarp connect /obstacleDetector/obstacle:o /eventCollector/obstacle:i"
+
+  yconnect_51:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /managerTUG/collector:rpc; yarp wait /eventCollector/cmd; yarp connect /managerTUG/collector:rpc /eventCollector/cmd"

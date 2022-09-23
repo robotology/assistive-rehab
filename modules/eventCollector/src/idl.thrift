@@ -20,9 +20,10 @@ service eventCollector_IDL
 {
    /**
    * Start collecting.
+   * @param skeletonTag tag of the skeleton under evaluation
    * @return true/false on success/failure.
    */
-   bool start();
+   bool start(1:string skeletonTag);
 
    /**
    * Stop collecting.
