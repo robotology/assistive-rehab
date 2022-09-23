@@ -72,6 +72,7 @@ class Collector : public RFModule, public eventCollector_IDL
 
     std::string configFileName;
     std::string outputFileName;
+    std::string outfolder;
 
 public:
 
@@ -102,6 +103,7 @@ public:
         jsonRoot["Trial"] = {}; 
 
         trialNumber = 0;
+        outfolder = rf.getHomeContextPath();
 
         return true;
     }
@@ -222,7 +224,7 @@ public:
     /****************************************************************/
     bool save_data()
     {
-        outputFileName = "output.json";
+        outputFileName = outfolder + "collected_events.json";
         std::ofstream output_doc(outputFileName.c_str(), std::ofstream::binary);
         output_doc << jsonRoot;
 
