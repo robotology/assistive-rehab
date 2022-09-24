@@ -276,7 +276,6 @@ class Retriever : public RFModule
             if (irgbd->getRgbFOV(fov_h, fov_v)) {
                 yInfo() << "camera fov_h (from sensor) =" << fov_h;
                 yInfo() << "camera fov_v (from sensor) =" << fov_v;
-                rgbdDrv.close();
                 return true;
             }
         }
@@ -928,6 +927,13 @@ class Retriever : public RFModule
         if (!camera_configured)
         {
             camera_configured=getCameraOptions();
+            if (camera_configured)
+            {
+                // let's close the driver straight away to avoid
+                // generating unnecessary traffic on the network
+                // by requesting image stream we don't need at run-time
+                rgbdDrv.close();
+            }
         }
 
         // garbage collector
@@ -1005,8 +1011,7 @@ class Retriever : public RFModule
     {
         // remove all skeletons from OPC
         gc(numeric_limits<double>::infinity());
-
-        // rgbdDrv.close();
+        
         skeletonsPort.close();
         depthPort.close();
         viewerPort.close();
