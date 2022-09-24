@@ -62,4 +62,16 @@ service lineDetector_IDL
     */
     bool go_to_line(1:string line_tag, 2:double theta);
 
+   /**
+    * Enables/Disables reuse of previous pose guess for current estimation
+    * @param flag can be true or false
+    * @return true/false on success/failure.
+    */
+    bool set_initial_guess(1:bool flag);
+
+   /**
+    * Checks if reuse of previous pose guess for current estimation is enabled
+    * @return true if usage of initial guess is enables, false otherwise.
+    */
+    bool get_initial_guess();
 }

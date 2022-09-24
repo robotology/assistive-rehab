@@ -276,6 +276,7 @@ class Retriever : public RFModule
             if (irgbd->getRgbFOV(fov_h, fov_v)) {
                 yInfo() << "camera fov_h (from sensor) =" << fov_h;
                 yInfo() << "camera fov_v (from sensor) =" << fov_v;
+                rgbdDrv.close();
                 return true;
             }
         }
@@ -1005,7 +1006,7 @@ class Retriever : public RFModule
         // remove all skeletons from OPC
         gc(numeric_limits<double>::infinity());
 
-        rgbdDrv.close();
+        // rgbdDrv.close();
         skeletonsPort.close();
         depthPort.close();
         viewerPort.close();
