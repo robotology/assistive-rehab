@@ -1012,6 +1012,11 @@ class Retriever : public RFModule
         // remove all skeletons from OPC
         gc(numeric_limits<double>::infinity());
         
+        if (rgbdDrv.isValid())
+        {
+            rgbdDrv.close();
+        }
+        
         skeletonsPort.close();
         depthPort.close();
         viewerPort.close();
