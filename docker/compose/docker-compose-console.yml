@@ -15,7 +15,7 @@ x-fdg-basic: &fdg-basic
   network_mode: "host"
   privileged: true
 
-services: 
+services:
   objectsPropertiesCollector:
     <<: *fdg-basic
     command: sh -c "objectsPropertiesCollector --name opc --no-load-db --no-save-db --sync-bc 0.1"
@@ -30,19 +30,19 @@ services:
 
   skeletonRetriever:
     <<: *fdg-basic
-    command: 
+    command:
       - /bin/bash
       - -c
       - |
         yarp wait /depthCamera/rgbImage:o
         yarp wait /depthCamera/depthImage:o
         yarp wait /opc/rpc
-        skeletonRetriever --depth::kernel-size 4 --depth::iterations 3 --depth::min-distance 0.5 --depth::max-distance 10.0
+        skeletonRetriever --depth::kernel-size 4 --depth::iterations 3 --depth::min-distance 0.5 --depth::max-distance 6.0
 
   skeletonLocker:
     <<: *fdg-basic
     command: sh -c "skeletonLocker"
-        
+
 
   robotSkeletonPublisher:
     <<: *fdg-basic
@@ -59,7 +59,7 @@ services:
   managerTUG:
     <<: *fdg-basic
     restart: on-failure
-    command: 
+    command:
       - /bin/bash
       - -c
       - |
@@ -75,7 +75,7 @@ services:
         yarp wait /ctpservice/right_arm/rpc
         yarp wait /obstacleDetector/obstacle:o
         managerTUG --lock false --max-timeout 30.0 --engage-azimuth "(50.0 160.0)" --starting-pose "(1.1 -2.8 120.0)"
-  
+
   gazeController:
     <<: *fdg-basic
     restart: on-failure
@@ -103,7 +103,7 @@ services:
 
   yarpscope:
     <<: *fdg-basic
-    command: sh -c "yarpscope --x 1100 --y 50 --dx 800 --dy 400 --remote /motionAnalyzer/scope --bgcolor white --min -0.1 --max 0.8 --color blue --graph_size 3 --plot_title 'Step length [m]'" 
+    command: sh -c "yarpscope --x 1100 --y 50 --dx 800 --dy 400 --remote /motionAnalyzer/scope --bgcolor white --min -0.1 --max 0.8 --color blue --graph_size 3 --plot_title 'Step length [m]'"
 
   #connections
   yconnect_0:
@@ -317,17 +317,17 @@ services:
   yconnect_41:
     <<: *fdg-basic
     restart: on-failure
-    command: sh -c "yarp wait /obstacleDetector/viewer:o; yarp wait /viewer/obstacles; yarp connect /obstacleDetector/viewer:o /viewer/obstacles fast_tcp"
+    command: sh -c "yarp wait /obstacleDetector/viewer:o; yarp wait /viewer/obstacles; yarp connect /obstacleDetector/viewer:o /viewer/obstacles mjpeg"
 
   yconnect_42:
     <<: *fdg-basic
     restart: on-failure
     command: sh -c "yarp wait /depthCamera/rgbImage:o; yarp wait /viewer/raw; yarp connect /depthCamera/rgbImage:o /viewer/raw fast_tcp"
-  
-  yconnect_43:
-    <<: *fdg-basic
-    restart: on-failure
-    command: sh -c "yarp wait /depthCamera/depthImage:o; yarp wait /viewer/depth; yarp connect /depthCamera/depthImage:o /viewer/depth fast_tcp+recv.portmonitor+type.dll+file.depthimage_to_mono"
+
+  # yconnect_43:
+  #  <<: *fdg-basic
+  #  restart: on-failure
+  #  command: sh -c "yarp wait /depthCamera/depthImage:o; yarp wait /viewer/depth; yarp connect /depthCamera/depthImage:o /viewer/depth fast_tcp+recv.portmonitor+type.dll+file.depthimage_to_mono"
 
   yconnect_44:
     <<: *fdg-basic
@@ -348,7 +348,7 @@ services:
     <<: *fdg-basic
     restart: on-failure
     command: sh -c "yarp wait /managerTUG/trigger:rpc; yarp wait /googleSpeech/rpc; yarp connect /managerTUG/trigger:rpc /googleSpeech/rpc fast_tcp"
-  
+
   yconnect_48:
     <<: *fdg-basic
     restart: on-failure
@@ -358,7 +358,7 @@ services:
     <<: *fdg-basic
     restart: on-failure
     command: sh -c "yarp wait /googleSpeechProcess/status:o; yarp wait /eventCollector/speech-process:i; yarp connect /googleSpeechProcess/status:o /eventCollector/speech-process:i"
- 
+
   yconnect_50:
     <<: *fdg-basic
     restart: on-failure
