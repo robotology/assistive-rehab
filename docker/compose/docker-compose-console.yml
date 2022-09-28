@@ -368,3 +368,8 @@ services:
     <<: *fdg-basic
     restart: on-failure
     command: sh -c "yarp wait /managerTUG/collector:rpc; yarp wait /eventCollector/cmd; yarp connect /managerTUG/collector:rpc /eventCollector/cmd"
+
+  yconnect_52:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /speech/trigger:o; yarp wait /managerTUG/cmd:rpc; yarp connect /speech/trigger:o /managerTUG/cmd:rpc"
