@@ -106,6 +106,8 @@ RUN cd ${PROJECTS_DIR} && git clone https://github.com/robotology/cer && \
     make ${CMAKE_EXTRA_OPTIONS}
 
 # Install assistive-rehab
+# required here as it is used for building robotSkeletonPublisher
+ENV CER_DIR=/projects/cer/build 
 RUN cd ${PROJECTS_DIR} && git clone https://github.com/robotology/assistive-rehab.git && \
     cd assistive-rehab && \
     mkdir build && cd build && \
