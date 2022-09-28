@@ -7,6 +7,12 @@
     </module>
 
     <module>
+        <name>yarpdev</name>
+        <parameters>--device AudioRecorderWrapper --subdevice portaudioRecorder --name /microphone --min_samples_over_network 4000 --max_samples_over_network 4000 --AUDIO_BASE::channels 1 --AUDIO_BASE::samples 16000 --AUDIO_BASE::rate 16000</parameters>
+        <node>r1-torso</node>
+    </module>
+
+    <module>
         <name>iSpeak</name>
         <parameters>--package speech-dev</parameters>
         <node>r1-face</node>
