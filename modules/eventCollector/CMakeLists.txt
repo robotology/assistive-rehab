@@ -2,8 +2,7 @@
 # All Rights Reserved.
 # Authors: Valentina Vasco <valentina.vasco@iit.it> Alexandre Antunes <alexandre.gomespereira@iit.it>
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(JSONCPP jsoncpp)
+find_package(JSONCPP)
 if(JSONCPP_FOUND)
     project(eventCollector)
 
