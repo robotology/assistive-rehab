@@ -3,38 +3,45 @@
 
    <!--> Camera <!-->
     <module>
-        <name>yarpdatadumper --name /skeletonDumper/skeletons-img --type image_jpg --rxTime --txTime</name>
+        <name>yarpdatadumper</name>
+        <parameters> --name /skeletonDumper/skeletons-img --type image_jpg --rxTime --txTime</parameters>
         <node>localhost</node>
     </module>
 
     <module>
-        <name>yarpdatadumper --name /skeletonDumper/skeletons-data --rxTime --txTime</name>
+        <name>yarpdatadumper</name>
+        <parameters> --name /skeletonDumper/skeletons-data --rxTime --txTime</parameters>
         <node>localhost</node>
     </module>
 
     <module>
-        <name>yarpdatadumper --name /skeletonDumper/depth --type image --rxTime --txTime</name>
+        <name>yarpdatadumper</name>
+        <parameters> --name /skeletonDumper/depth --type depth --rxTime --txTime</parameters>
         <node>localhost</node>
     </module>
 
     <module>
-        <name>yarpdatadumper --name /skeletonDumper/opc-save --rxTime --txTime</name>
+        <name>yarpdatadumper</name>
+        <parameters>--name /skeletonDumper/opc-save --rxTime --txTime</parameters>
         <node>localhost</node>
     </module>
 
    <!--> Robot joints <!-->
     <module>
         <name>yarpdatadumper --name /skeletonDumper/robot-left-arm --rxTime --txTime</name>
+        <parameters></parameters>
         <node>localhost</node>
     </module>
 
     <module>
         <name>yarpdatadumper --name /skeletonDumper/robot-left-wrist-tripod --rxTime --txTime</name>
+        <parameters></parameters>
         <node>localhost</node>
     </module>
 
     <module>
         <name>yarpdatadumper --name /skeletonDumper/robot-right-arm --rxTime --txTime</name>
+        <parameters></parameters>
         <node>localhost</node>
     </module>
 
