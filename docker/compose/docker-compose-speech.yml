@@ -25,9 +25,9 @@ services:
     <<: *fdg-speech
     command: sh -c "yarp wait /managerTUG/cmd:rpc; cd /projects/assistive-rehab/app/scripts; /root/.nvm/versions/node/v14.17.0/bin/node node-button.js --host 0.0.0.0 --listenPort 80"
   
-  microphone:
-    <<: *fdg-speech
-    command: sh -c "yarpdev --device AudioRecorderWrapper --subdevice portaudioRecorder --name /microphone --min_samples_over_network 4000 --max_samples_over_network 4000"
+  # microphone:
+  #   <<: *fdg-speech
+  #   command: sh -c "yarpdev --device AudioRecorderWrapper --subdevice portaudioRecorder --name /microphone --min_samples_over_network 4000 --max_samples_over_network 4000 --AUDIO_BASE::channels 1 --AUDIO_BASE::samples 16000 --AUDIO_BASE::rate 16000"
 
   googleSpeech:
     <<: *fdg-speech
