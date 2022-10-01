@@ -48,7 +48,7 @@ jobs:
       if: matrix.os == 'windows-latest'
       shell: bash
       run: |
-        ${VCPKG_INSTALLATION_ROOT}/vcpkg.exe install --overlay-ports=C:/robotology/robotology-vcpkg-ports --recurse --triplet x64-windows fftw3
+        ${VCPKG_INSTALLATION_ROOT}/vcpkg.exe install --overlay-ports=C:/robotology/robotology-vcpkg-ports --recurse --triplet x64-windows fftw3 vtk
 
     - name: Install Dependencies [Ubuntu]
       if: matrix.os == 'ubuntu-22.04'
