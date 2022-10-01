@@ -49,7 +49,7 @@ jobs:
       shell: bash
       run: |
         git clone https://github.com/robotology/robotology-vcpkg-binary-ports.git C:/robotology/robotology-vcpkg-binary-ports
-        ${VCPKG_INSTALLATION_ROOT}/vcpkg.exe install --overlay-ports=C:/robotology/robotology-vcpkg-binary-ports --recurse --triplet x64-windows opencv[contrib] vtk hdf5 fftw3
+        ${VCPKG_INSTALLATION_ROOT}/vcpkg.exe install --overlay-ports=C:/robotology/robotology-vcpkg-binary-ports --recurse --triplet x64-windows opencv[contrib] hdf5 fftw3
 
     - name: Install Dependencies [Ubuntu]
       if: matrix.os == 'ubuntu-latest'
