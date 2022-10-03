@@ -873,6 +873,14 @@ bool Manager::isSitting()
 /********************************************************/
 bool Manager::hasCrossedFinishLine()
 {
+
+    if(line_pose.size() < 1) 
+    {
+        yWarning() << "Finish line vector empty";
+        return false;
+
+    }
+
     Vector hip=skeletonIn[KeyPointTag::hip_center]->getPoint();
     // Vector foot_right=skeletonIn[KeyPointTag::ankle_right]->getPoint();
     // Vector foot_left=skeletonIn[KeyPointTag::ankle_left]->getPoint();
