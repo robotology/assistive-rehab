@@ -80,7 +80,11 @@ if(BUILD_TESTING)
   add_subdirectory(tests)
 endif()
 
-add_subdirectory(app/gazebo/tug/plugins/tuginterface)
+option(USE_SIMULATION "Builds targets for Gazebo simulation" OFF)
+
+if(USE_SIMULATION)
+  add_subdirectory(app/gazebo/tug/plugins/tuginterface)
+endif()
 
 file(GLOB ini app/conf/*.ini)
 file(GLOB xml app/conf/*.xml)

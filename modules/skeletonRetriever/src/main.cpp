@@ -882,7 +882,7 @@ class Retriever : public RFModule
 
         if (!rgbdDrv.open(rgbdOpts)) {
             yError() << "Unable to talk to depthCamera!";
-            return false;
+            yWarning() << "Retrieving camera intrinsics from command line";
         }
 
         skeletonsPort.open("/skeletonRetriever/skeletons:i");
