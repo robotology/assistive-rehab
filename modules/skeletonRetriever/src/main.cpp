@@ -880,9 +880,9 @@ class Retriever : public RFModule
         rgbdOpts.put("ImageCarrier", "mjpeg");
         rgbdOpts.put("DepthCarrier", "fast_tcp");
 
-        if (!rgbdDrv.open(rgbdOpts)) {
-            yError() << "Unable to talk to depthCamera!";            
-            yWarning() << "Retrieving camera intrinsics from file";
+        if (!rgbdDrv.open(rgbdOpts) && !camera_configured) {
+            yError() << "Unable to talk to depthCamera!";   
+            return false;        
         }
 
         skeletonsPort.open("/skeletonRetriever/skeletons:i");
