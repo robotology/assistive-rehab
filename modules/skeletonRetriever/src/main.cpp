@@ -871,32 +871,26 @@ class Retriever : public RFModule
             }
         }
 
-        Property rgbdOpts;
-        rgbdOpts.put("device", "RGBDSensorClient");
-
-        rgbdOpts.put("remoteImagePort", camera_remote + "/rgbImage:o");
-        rgbdOpts.put("remoteDepthPort", camera_remote + "/depthImage:o");
-        rgbdOpts.put("remoteRpcPort", camera_remote + "/rpc:i");
-
-        rgbdOpts.put("localImagePort", "/" + getName() + "/cam/rgb");
-        rgbdOpts.put("localDepthPort", "/" + getName() + "/cam/depth");
-        rgbdOpts.put("localRpcPort", "/" + getName() + "/cam/rpc");
-
-        rgbdOpts.put("ImageCarrier", "mjpeg");
-        rgbdOpts.put("DepthCarrier", "fast_tcp");
-
-        if (!rgbdDrv.open(rgbdOpts))
+        if (!camera_configured)
         {
-            yError() << "Unable to talk to depthCamera!";
+            Property rgbdOpts;
+            rgbdOpts.put("device", "RGBDSensorClient");
 
-            if (!camera_configured)
+            rgbdOpts.put("remoteImagePort", camera_remote + "/rgbImage:o");
+            rgbdOpts.put("remoteDepthPort", camera_remote + "/depthImage:o");
+            rgbdOpts.put("remoteRpcPort", camera_remote + "/rpc:i");
+
+            rgbdOpts.put("localImagePort", "/" + getName() + "/cam/rgb");
+            rgbdOpts.put("localDepthPort", "/" + getName() + "/cam/depth");
+            rgbdOpts.put("localRpcPort", "/" + getName() + "/cam/rpc");
+
+            rgbdOpts.put("ImageCarrier", "mjpeg");
+            rgbdOpts.put("DepthCarrier", "fast_tcp");
+
+            if (!rgbdDrv.open(rgbdOpts))
             {
-                yError() << "Unable to get depthCamera instrinsics either from device or file";
+                yError() << "Unable to talk to depthCamera!";
                 return false;
-            }
-            else
-            {
-                yInfo() << "Using depthCamera intrinsics from file";
             }
         }
 
