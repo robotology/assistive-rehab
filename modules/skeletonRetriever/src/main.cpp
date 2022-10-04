@@ -881,7 +881,7 @@ class Retriever : public RFModule
         rgbdOpts.put("DepthCarrier", "fast_tcp");
 
         if (!rgbdDrv.open(rgbdOpts) && !camera_configured) {
-            yError() << "Unable to talk to depthCamera!";   
+            yError() << "Unable to talk to depthCamera!";
             return false;
         }
 
