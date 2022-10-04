@@ -859,6 +859,10 @@ class Retriever : public RFModule
                         yInfo()<<"camera fov_v (from file) ="<<fov_v;
                     }
                 }
+                if (!camera_configured)
+                {
+                    yError() << "Unable to read camera parameters from file";
+                }
             }
             if (gCamera.check("remote"))
             {
@@ -880,9 +884,19 @@ class Retriever : public RFModule
         rgbdOpts.put("ImageCarrier", "mjpeg");
         rgbdOpts.put("DepthCarrier", "fast_tcp");
 
-        if (!rgbdDrv.open(rgbdOpts) && !camera_configured) {
+        if (!rgbdDrv.open(rgbdOpts))
+        {
             yError() << "Unable to talk to depthCamera!";
-            return false;
+
+            if (!camera_configured)
+            {
+                yError() << "Unable to get depthCamera instrinsics either from device or file";
+                return false;
+            }
+            else
+            {
+                yInfo() << "Using depthCamera intrinsics from file";
+            }
         }
 
         skeletonsPort.open("/skeletonRetriever/skeletons:i");
