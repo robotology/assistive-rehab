@@ -862,6 +862,7 @@ class Retriever : public RFModule
                 if (!camera_configured)
                 {
                     yError() << "Unable to read camera parameters from file";
+                    return false;
                 }
             }
             if (gCamera.check("remote"))
