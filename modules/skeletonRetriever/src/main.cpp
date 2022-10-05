@@ -488,7 +488,7 @@ class Retriever : public RFModule
                 n++;
             }
         }
-        
+
         double perc=((double)n)/((double)s->skeleton->getNumKeyPoints());
         double max_path=s->skeleton->getMaxPath();
         return ((perc>=keys_recognition_percentage) && (max_path>=min_acceptable_path));
@@ -859,6 +859,11 @@ class Retriever : public RFModule
                         yInfo()<<"camera fov_v (from file) ="<<fov_v;
                     }
                 }
+                if (!camera_configured)
+                {
+                    yError() << "Unable to read camera parameters from file";
+                    return false;
+                }
             }
             if (gCamera.check("remote"))
             {
@@ -866,23 +871,27 @@ class Retriever : public RFModule
             }
         }
 
-        Property rgbdOpts;
-        rgbdOpts.put("device", "RGBDSensorClient");
+        if (!camera_configured)
+        {
+            Property rgbdOpts;
+            rgbdOpts.put("device", "RGBDSensorClient");
 
-        rgbdOpts.put("remoteImagePort", camera_remote + "/rgbImage:o");
-        rgbdOpts.put("remoteDepthPort", camera_remote + "/depthImage:o");
-        rgbdOpts.put("remoteRpcPort", camera_remote + "/rpc:i");
+            rgbdOpts.put("remoteImagePort", camera_remote + "/rgbImage:o");
+            rgbdOpts.put("remoteDepthPort", camera_remote + "/depthImage:o");
+            rgbdOpts.put("remoteRpcPort", camera_remote + "/rpc:i");
 
-        rgbdOpts.put("localImagePort", "/" + getName() + "/cam/rgb");
-        rgbdOpts.put("localDepthPort", "/" + getName() + "/cam/depth");
-        rgbdOpts.put("localRpcPort", "/" + getName() + "/cam/rpc");
+            rgbdOpts.put("localImagePort", "/" + getName() + "/cam/rgb");
+            rgbdOpts.put("localDepthPort", "/" + getName() + "/cam/depth");
+            rgbdOpts.put("localRpcPort", "/" + getName() + "/cam/rpc");
 
-        rgbdOpts.put("ImageCarrier", "mjpeg");
-        rgbdOpts.put("DepthCarrier", "fast_tcp");
+            rgbdOpts.put("ImageCarrier", "mjpeg");
+            rgbdOpts.put("DepthCarrier", "fast_tcp");
 
-        if (!rgbdDrv.open(rgbdOpts)) {
-            yError() << "Unable to talk to depthCamera!";
-            return false;
+            if (!rgbdDrv.open(rgbdOpts))
+            {
+                yError() << "Unable to talk to depthCamera!";
+                return false;
+            }
         }
 
         skeletonsPort.open("/skeletonRetriever/skeletons:i");
@@ -1011,12 +1020,12 @@ class Retriever : public RFModule
     {
         // remove all skeletons from OPC
         gc(numeric_limits<double>::infinity());
-        
+
         if (rgbdDrv.isValid())
         {
             rgbdDrv.close();
         }
-        
+
         skeletonsPort.close();
         depthPort.close();
         viewerPort.close();
