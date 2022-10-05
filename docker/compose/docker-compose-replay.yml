@@ -10,7 +10,7 @@ x-fdg-basic: &fdg-basic
     - "/tmp/.X11-unix:/tmp/.X11-unix"
     - "${XAUTHORITY}:/root/.Xauthority"
     - "${HOME}/.config/yarp:/root/.config/yarp"
-    - "${HOME}/skeletonDumper:/root/skeletonDumper"
+    - "${HOME}/skld:/root/skeletonDumper"
     - "${HOME}/etapas-results/motion-analysis:/root/.local/share/yarp/contexts/motionAnalyzer" #for saving the results from motionAnalyzer
   network_mode: "host"
   privileged: true
@@ -25,13 +25,13 @@ services:
     <<: *fdg-basic
     command: bash -c "yarp run --server /replayer --log"
 
-  objectsPropertiesCollector:
-    <<: *fdg-basic
-    command: sh -c "objectsPropertiesCollector --name opc --no-load-db --no-save-db"
+  #objectsPropertiesCollector:
+  #  <<: *fdg-basic
+  #  command: sh -c "objectsPropertiesCollector --name opc --no-load-db --no-save-db"
 
   dataplayer:
     <<: *fdg-basic
-    command: bash -c "yarpdataplayer --withExtraTimeCol 0"
+    command: bash -c "yarpdataplayer --withExtraTimeCol 2"
 
   # skeletonRetriever:
   #   <<: *fdg-basic
@@ -42,13 +42,13 @@ services:
   #       yarp wait /opc/rpc
   #       skeletonRetriever --camera::fov "(69.0 42.0)" --depth::kernel-size 4 --depth::iterations 3 --depth::min-distance 0.5 --depth::max-distance 6.0 --filter-keypoint-order 5
 
-  motionAnalyzer:
-    <<: *fdg-basic
-    command: sh -c "motionAnalyzer"
+  #motionAnalyzer:
+  #  <<: *fdg-basic
+  #  command: sh -c "motionAnalyzer"
 
-  skeletonViewer:
-    <<: *fdg-basic
-    command: sh -c "skeletonViewer --x 1120 --y 10 --show-floor on --camera-viewup '(1.0 0.0 0.0)' --camera-position '(-4.0 -2.0 8.0)' --camera-focalpoint '(0.0 -2.0 0.0)'"
+  #skeletonViewer:
+  #  <<: *fdg-basic
+  #  command: sh -c "skeletonViewer --x 1120 --y 10 --show-floor on --camera-viewup '(1.0 0.0 0.0)' --camera-position '(-4.0 -2.0 8.0)' --camera-focalpoint '(0.0 -2.0 0.0)'"
 
   ###### Optional components #######
 
@@ -56,36 +56,36 @@ services:
   #   <<: *fdg-basic
   #   command: sh -c "yarp wait /cer/head/command:i; yarp wait /cer/head/rpc:i; yarp wait /cer/head/state:o; yarp wait /cer/head/stateExt:o; yarp wait /cer/torso/command:i; yarp wait /cer/torso/rpc:i; yarp wait /cer/torso/state:o; yarp wait /cer/torso/stateExt:o; yarp wait /cer/torso_tripod/command:i; yarp wait /cer/torso_tripod/rpc:i; yarp wait /cer/torso_tripod/state:o; yarp wait /cer/torso_tripod/stateExt:o; yarp wait /cer/left_arm/command:i; yarp wait /cer/left_arm/rpc:i; yarp wait /cer/left_arm/state:o; yarp wait /cer/left_arm/stateExt:o; yarp wait /cer/right_arm/command:i; yarp wait /cer/right_arm/rpc:i; yarp wait /cer/right_arm/state:o; yarp wait /cer/right_arm/stateExt:o; yarp wait /cer/left_wrist_tripod/command:i; yarp wait /cer/left_wrist_tripod/rpc:i; yarp wait /cer/left_wrist_tripod/state:o; yarp wait /cer/left_wrist_tripod/stateExt:o; yarp wait /cer/right_wrist_tripod/command:i; yarp wait /cer/right_wrist_tripod/rpc:i; yarp wait /cer/right_wrist_tripod/state:o; yarp wait /cer/right_wrist_tripod/stateExt:o; robotSkeletonPublisher --robot cer"
   
-  yarpscope:
-    <<: *fdg-basic
-    command: sh -c "yarpscope --x 1100 --y 50 --dx 800 --dy 400 --remote /motionAnalyzer/scope --bgcolor white --min -0.1 --max 0.8 --color blue --graph_size 3 --plot_title 'Step length [m]'" 
+  #yarpscope:
+  #  <<: *fdg-basic
+  #  command: sh -c "yarpscope --x 1100 --y 50 --dx 800 --dy 400 --remote /motionAnalyzer/scope --bgcolor white --min -0.1 --max 0.8 --color blue --graph_size 3 --plot_title 'Step length [m]'" 
 
   ## Connections
 
-  yconnect_1:
-    <<: *fdg-basic
-    command: sh -c "yarp wait /yarpOpenPose/float:o; yarp wait /skeletonRetriever/depth:i; yarp connect /yarpOpenPose/float:o /skeletonRetriever/depth:i fast_tcp"
+  #yconnect_1:
+  #  <<: *fdg-basic
+  #  command: sh -c "yarp wait /yarpOpenPose/float:o; yarp wait /skeletonRetriever/depth:i; yarp connect /yarpOpenPose/float:o /skeletonRetriever/depth:i fast_tcp"
 
-  yconnect_2:
-    <<: *fdg-basic
-    command: sh -c "yarp wait /yarpOpenPose/target:o; yarp wait /skeletonRetriever/skeletons:i; yarp connect /yarpOpenPose/target:o /skeletonRetriever/skeletons:i fast_tcp"
+  #yconnect_2:
+  #  <<: *fdg-basic
+  #  command: sh -c "yarp wait /yarpOpenPose/target:o; yarp wait /skeletonRetriever/skeletons:i; yarp connect /yarpOpenPose/target:o /skeletonRetriever/skeletons:i fast_tcp"
 
-  yconnect_3:
-    <<: *fdg-basic
-    command: sh -c "yarp wait /skeletonRetriever/opc:rpc; yarp wait /opc/rpc; yarp connect /skeletonRetriever/opc:rpc /opc/rpc fast_tcp"
+  #yconnect_3:
+  #  <<: *fdg-basic
+  #  command: sh -c "yarp wait /skeletonRetriever/opc:rpc; yarp wait /opc/rpc; yarp connect /skeletonRetriever/opc:rpc /opc/rpc fast_tcp"
 
-  yconnect_4:
-    <<: *fdg-basic
-    command: sh -c "yarp wait /yarpOpenPose/image:o; yarp wait /viewer/skeleton; yarp connect /yarpOpenPose/image:o /viewer/skeleton mjpeg"
+  #yconnect_4:
+  #  <<: *fdg-basic
+  #  command: sh -c "yarp wait /yarpOpenPose/image:o; yarp wait /viewer/skeleton; yarp connect /yarpOpenPose/image:o /viewer/skeleton mjpeg"
 
   # yconnect_5:
   #   <<: *fdg-basic
   #   command: sh -c "yarp wait /depthCamera/depthImage:o; yarp wait /viewer/depth; yarp connect /depthCamera/depthImage:o /viewer/depth mjpeg+recv.portmonitor+type.dll+file.depthimage_to_mono"
 
-  yconnect_6:
-    <<: *fdg-basic
-    command: sh -c "yarp wait /skeletonRetriever/viewer:o; yarp wait /skeletonViewer:i; yarp connect /skeletonRetriever/viewer:o /skeletonViewer:i fast_tcp"
+  #yconnect_6:
+  #  <<: *fdg-basic
+  #  command: sh -c "yarp wait /skeletonRetriever/viewer:o; yarp wait /skeletonViewer:i; yarp connect /skeletonRetriever/viewer:o /skeletonViewer:i fast_tcp"
 
-  yconnect_7:
-    <<: *fdg-basic
-    command: sh -c "yarp wait /motionAnalyzer/opc; yarp wait /opc/rpc; yarp connect /motionAnalyzer/opc /opc/rpc fast_tcp"
+  #yconnect_7:
+  #  <<: *fdg-basic
+  #  command: sh -c "yarp wait /motionAnalyzer/opc; yarp wait /opc/rpc; yarp connect /motionAnalyzer/opc /opc/rpc fast_tcp"
