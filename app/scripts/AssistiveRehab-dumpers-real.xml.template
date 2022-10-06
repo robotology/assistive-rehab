@@ -4,19 +4,19 @@
    <!--> Camera <!-->
     <module>
         <name>yarpdatadumper</name>
-        <parameters> --name /skeletonDumper/skeletons-img --type image_jpg --rxTime --txTime</parameters>
+        <parameters>--name /skeletonDumper/skeletons-img --type image_jpg --rxTime --txTime</parameters>
         <node>localhost</node>
     </module>
 
     <module>
         <name>yarpdatadumper</name>
-        <parameters> --name /skeletonDumper/skeletons-data --rxTime --txTime</parameters>
+        <parameters>--name /skld/skeletons-data --rxTime --txTime</parameters>
         <node>localhost</node>
     </module>
 
     <module>
         <name>yarpdatadumper</name>
-        <parameters> --name /skeletonDumper/depth --type depth --rxTime --txTime</parameters>
+        <parameters>--name /skld/depth --type depth --rxTime --txTime</parameters>
         <node>localhost</node>
     </module>
 
@@ -25,111 +25,133 @@
         <parameters>--name /skeletonDumper/opc-save --rxTime --txTime</parameters>
         <node>localhost</node>
     </module>
+    
+    <module>
+        <name>yarpdatadumper</name>
+        <parameters>--name /skld/nav-save --rxTime --txTime</parameters>
+        <node>localhost</node>
+    </module>
+    
+    <module>
+        <name>yarpdatadumper</name>
+        <parameters>--name /skld/gaze-save --rxTime --txTime</parameters>
+        <node>localhost</node>
+    </module>
 
    <!--> Robot joints <!-->
     <module>
-        <name>yarpdatadumper --name /skeletonDumper/robot-left-arm --rxTime --txTime</name>
-        <parameters></parameters>
+        <name>yarpdatadumper --name /skld/robot-left-arm --rxTime --txTime</name>
         <node>localhost</node>
     </module>
 
     <module>
-        <name>yarpdatadumper --name /skeletonDumper/robot-left-wrist-tripod --rxTime --txTime</name>
-        <parameters></parameters>
+        <name>yarpdatadumper --name /skld/robot-left-wrist-tripod --rxTime --txTime</name>
         <node>localhost</node>
     </module>
 
     <module>
-        <name>yarpdatadumper --name /skeletonDumper/robot-right-arm --rxTime --txTime</name>
-        <parameters></parameters>
+        <name>yarpdatadumper --name /skld/robot-right-arm --rxTime --txTime</name>
         <node>localhost</node>
     </module>
 
     <module>
-        <name>yarpdatadumper --name /skeletonDumper/robot-right-wrist-tripod --rxTime --txTime</name>
+        <name>yarpdatadumper --name /skld/robot-right-wrist-tripod --rxTime --txTime</name>
         <node>localhost</node>
     </module>
 
     <module>
-        <name>yarpdatadumper --name /skeletonDumper/robot-head --rxTime --txTime</name>
+        <name>yarpdatadumper --name /skld/robot-head --rxTime --txTime</name>
         <node>localhost</node>
     </module>
 
     <module>
-        <name>yarpdatadumper --name /skeletonDumper/robot-torso --rxTime --txTime</name>
+        <name>yarpdatadumper --name /skld/robot-torso --rxTime --txTime</name>
         <node>localhost</node>
     </module>
 
     <module>
-        <name>yarpdatadumper --name /skeletonDumper/robot-torso-tripod --rxTime --txTime</name>
+        <name>yarpdatadumper --name /skld/robot-torso-tripod --rxTime --txTime</name>
         <node>localhost</node>
     </module>
-
+   
    <!--> Connection Camera <!-->
     <connection>
         <from>/yarpOpenPose/image:o</from>
-        <to>/skeletonDumper/skeletons-img</to>
+        <to>/skld/skeletons-img</to>
         <protocol>mjpeg</protocol>
     </connection>
 
     <connection>
         <from>/yarpOpenPose/target:o</from>
-        <to>/skeletonDumper/skeletons-data</to>
+        <to>/skld/skeletons-data</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/yarpOpenPose/float:o</from>
-        <to>/skeletonDumper/depth</to>
+        <to>/skld/depth</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/opc/broadcast:o</from>
-        <to>/skeletonDumper/opc-save</to>
+        <to>/skld/opc-save</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+    
+    <connection>
+        <from>/navController/state:o</from>
+        <to>/skld/nav-save</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+    
+    <connection>
+        <from>/cer_gaze-controller/state:o</from>
+        <to>/skld/gaze-save</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
     <!--> Connection Robot <!-->
     <connection>
         <from>/cer/left_arm/state:o</from>
-        <to>/skeletonDumper/robot-left-arm</to>
+        <to>/skld/robot-left-arm</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/cer/left_wrist_tripod/state:o</from>
-        <to>/skeletonDumper/robot-left-wrist-tripod</to>
+        <to>/skld/robot-left-wrist-tripod</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/cer/right_arm/state:o</from>
-        <to>/skeletonDumper/robot-right-arm</to>
+        <to>/skld/robot-right-arm</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/cer/right_wrist_tripod/state:o</from>
-        <to>/skeletonDumper/robot-right-wrist-tripod</to>
+        <to>/skld/robot-right-wrist-tripod</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/cer/head/state:o</from>
-        <to>/skeletonDumper/robot-head</to>
+        <to>/skld/robot-head</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/cer/torso/state:o</from>
-        <to>/skeletonDumper/robot-torso</to>
+        <to>/skld/robot-torso</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
         <from>/cer/torso_tripod/state:o</from>
-        <to>/skeletonDumper/robot-torso-tripod</to>
+        <to>/skld/robot-torso-tripod</to>
         <protocol>fast_tcp</protocol>
     </connection>
+    
 </application>

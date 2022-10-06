@@ -15,29 +15,45 @@
        </dependencies>
        <node>replayer</node>
     </module>
-
-    <!--
+    
     <module>
        <name>robotSkeletonPublisher</name>
+       <parameters>--robot cer</parameters>
        <node>replayer</node>
     </module>
-    -->
+
+    <module>
+       <name>navController</name>
+       <parameters>--velocity-angular-saturation 15.0 --distance-target 2.5</parameters>
+       <node>replayer</node>
+    </module>
+    
+    <module>
+        <name>motionAnalyzer</name>
+        <node>replayer</node>
+    </module>
 
     <module>
         <name>yarpview</name>
         <parameters>--name /viewer/depth --x 10 --y 40 --p 50 --compact</parameters>
-        <node>localhost</node>
+        <node>r1-console</node>
     </module>
 
     <module>
         <name>yarpview</name>
         <parameters>--name /viewer/skeleton --x 380 --y 40 --p 50 --compact</parameters>
-        <node>localhost</node>
+        <node>r1-console</node>
     </module>
 
     <module>
         <name>skeletonViewer</name>
-        <parameters>--x 1120 --y 10 --camera-viewup '(1.0 0.0 0.0)' --camera-position '(-4.0 -2.0 8.0)' --camera-focalpoint '(0.0 -2.0 0.0)'"</parameters>
+        <parameters>--x 1120 --y 10 --show-floor on --camera-viewup '(1.0 0.0 0.0)' --camera-position '(-4.0 -2.0 8.0)' --camera-focalpoint '(0.0 -2.0 0.0)'</parameters>
+        <node>replayer</node>
+    </module>
+    
+    <module>
+        <name>yarpscope</name>
+        <parameters>--x 1100 --y 50 --dx 800 --dy 400 --remote /motionAnalyzer/scope --bgcolor white --min -0.1 --max 0.8 --color blue --graph_size 3 --plot_title 'Step length [m]'</parameters>
         <node>replayer</node>
     </module>
 
@@ -78,11 +94,47 @@
     </connection>
     
     <connection>
+        <from>/cer_gaze-controller/state:o</from>
+        <to>/skeletonRetriever/gaze:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/navController/state:o</from>
+        <to>/skeletonRetriever/nav:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+    
+    <connection>
+        <from>/navController/state:o</from>
+        <to>/robotSkeletonPublisher/nav:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+    
+    <connection>
+        <from>/robotSkeletonPublisher/viewer:o</from>
+        <to>/skeletonViewer:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+    
+    <connection>
+        <from>/robotSkeletonPublisher/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+    
+    <connection>
         <from>/motionAnalyzer/opc</from>
         <to>/opc/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
-
+    
+    <connection>
+        <from>/motionAnalyzer/nav:cmd</from>
+        <to>/navController/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+    
     <!--
     <connection>
         <from>/robotSkeletonPublisher/viewer:o</from>
@@ -96,5 +148,4 @@
         <protocol>fast_tcp</protocol>
     </connection>
     -->
-
 </application>
