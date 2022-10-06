@@ -59,6 +59,16 @@ class Navigator : public RFModule, public navController_IDL {
   double distance_hysteresis_low{0.0};
   double distance_hysteresis_high{0.0};
   bool distance_hysteresis_active{false};
+  bool offline_mode{false}; // If true, baseControl is not supposed to run and navController
+                            // will not check baseControl rpc port, but will just expect
+                            // a port for odometry data streaming
+  bool force_odometry_reset{false}; // If true, the first odometry value acquired will be used to reset
+                                    // the odometry
+  bool first_odom_data_arrived{false}; // once the first odometry value has been acquired, this value
+                                      // will become false
+  bool no_odometry_data{false}; // If true, the navController will not send the odometry data obtained
+                                // from the navLocPort but, when asked, but will just return x=0
+                                // y = 0 and theta = 0
   double base_stop_threshold{0.1};
   double target_theta{0.0};
   int heading{1};
@@ -140,10 +150,30 @@ class Navigator : public RFModule, public navController_IDL {
     distance_hysteresis_low = abs(rf.check("distance-hysteresis-low", Value(0.2)).asFloat64());
     distance_hysteresis_high = abs(rf.check("distance-hysteresis-high", Value(0.3)).asFloat64());
     base_stop_threshold = rf.check("base-stop-threshold", Value(0.1)).asFloat64();
+    // Offline mode parameter. If 1, this->offline_mode will become true.
+    if(rf.check("offline_mode"))
+    {
+      offline_mode = rf.find("offline_mode").asInt32() == 1;
+      // Force odometry reset parameter. If 1 and if this->offline_mode,
+      // this->force_odometry_reset will become true.
+      if(rf.check("force_odom_reset"))
+      {
+        force_odometry_reset = (rf.find("force_odom_reset").asInt32() == 1 && offline_mode);
+      }
+      // No odom data parameter. If 1 and if this->offline_mode,
+      // this->no_odometry_data will become true.
+      if(rf.check("no_odom_data"))
+      {
+        no_odometry_data = (rf.find("no_odom_data").asInt32() == 1 && offline_mode);
+      }
+    }
 
-    navCmdPort.open("/navController/base/cmd:rpc");
-    navLocPort.open("/navController/base/loc:i");
-    navCtrlPort.open("/navController/base/ctrl:o");
+    if(!no_odometry_data) {navLocPort.open("/navController/base/loc:i");}
+    if(!offline_mode)
+    {
+      navCmdPort.open("/navController/base/cmd:rpc");
+      navCtrlPort.open("/navController/base/ctrl:o");
+    }
     opcPort.open("/navController/opc:i");
     statePort.open("/navController/state:o");
     stateBasePort.open("/navController/base_state:i");
@@ -164,18 +194,25 @@ class Navigator : public RFModule, public navController_IDL {
                                                              N * ones(1), Tt * ones(1), sat));
     velocity_estimator = shared_ptr<AWLinEstimator>(new AWLinEstimator(16, 0.05));
 
-    if (Network::connect(navCmdPort.getName(), "/baseControl/rpc") &&
-        Network::connect("/baseControl/odometry:o", navLocPort.getName()) &&
-        Network::connect(navCtrlPort.getName(), "/baseControl/control:i")) {
-      Bottle cmd, rep;
-      cmd.addString("run");
-      if (navCmdPort.write(cmd, rep)) {
-        if (rep.size() > 0) {
-          if (reset_odometry(0.0, 0.0, 0.0)) {
-            return true;
+    if(no_odometry_data) { return true; }
+    if (Network::connect("/baseControl/odometry:o", navLocPort.getName()))
+    {
+      if(navCmdPort.asPort().isOpen() && !navCtrlPort.isClosed()){
+        if (Network::connect(navCmdPort.getName(), "/baseControl/rpc") &&
+        Network::connect(navCtrlPort.getName(), "/baseControl/control:i"))
+        {
+          Bottle cmd, rep;
+          cmd.addString("run");
+          if (navCmdPort.write(cmd, rep)) {
+            if (rep.size() > 0) {
+              if (reset_odometry(0.0, 0.0, 0.0)) {
+                return true;
+              }
+            }
           }
         }
       }
+      return true;
     }
 
     yError() << "Unable to talk to baseControl";
@@ -188,7 +225,7 @@ class Navigator : public RFModule, public navController_IDL {
     stop();
     Bottle cmd, rep;
     cmd.addString("idle");
-    navCmdPort.write(cmd, rep);
+    if(navCmdPort.asPort().isOpen()) {navCmdPort.write(cmd, rep);}
     opcPort.interrupt();
     cv_nav_done.notify_all();
     return true;
@@ -364,7 +401,12 @@ class Navigator : public RFModule, public navController_IDL {
   bool updateModule()override {
     lock_guard<mutex> lck(mtx_update);
 
-    robot_location.getFrom(navLocPort);
+    if(!no_odometry_data) { robot_location.getFrom(navLocPort); }
+    if(force_odometry_reset && !first_odom_data_arrived)
+    {
+      reset_odometry(robot_location.x,robot_location.y,robot_location.theta);
+      first_odom_data_arrived = true;
+    }
     get_skeleton();
 
     robot_velocity.zero();
@@ -432,7 +474,7 @@ class Navigator : public RFModule, public navController_IDL {
       }
     }
 
-    robot_velocity.sendTo(navCtrlPort);
+    if(!offline_mode) {robot_velocity.sendTo(navCtrlPort);}
 
     if (statePort.getOutputCount() > 0) {
       statePort.prepare() = publish_state();
@@ -517,7 +559,7 @@ class Navigator : public RFModule, public navController_IDL {
   bool stop()override {
     lock_guard<mutex> lck(mtx_update);
     robot_velocity.zero();
-    robot_velocity.sendTo(navCtrlPort);
+    if(!offline_mode) {robot_velocity.sendTo(navCtrlPort);}
     skeleton_tag.clear();
     skeleton_location = numeric_limits<double>::quiet_NaN();
     skeleton.reset();
@@ -550,10 +592,13 @@ class Navigator : public RFModule, public navController_IDL {
       Bottle cmd, rep;
       cmd.addString("reset_odometry");
       yInfo() << "Odometry reset";
-      if (navCmdPort.write(cmd, rep)) {
-        ret = (rep.size() > 0);
-        if (ret) {
-          robot_location.H0 = get_matrix(Location(x_0, y_0, theta_0));
+      if(!offline_mode)
+      {
+        if (navCmdPort.write(cmd, rep)) {
+          ret = (rep.size() > 0);
+          if (ret) {
+            robot_location.H0 = get_matrix(Location(x_0, y_0, theta_0));
+          }
         }
       }
     } else {
@@ -625,4 +670,3 @@ int main(int argc, char* argv[]) {
   Navigator navigator;
   return navigator.runModule(rf);
 }
-
