@@ -308,6 +308,30 @@
     </connection>
 
     <connection>
+        <from>/microphone/audio:o</from>
+        <to> /googleSpeech/sound:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/googleSpeech/commands:rpc</from>
+        <to>/microphone/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/googleSpeech/commands:rpc</from>
+        <to>/microphone/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/googleSpeech/result:o</from>
+        <to>/googleSpeechProcess/text:i </to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
         <from>/managerTUG/navigation:rpc</from>
         <to>/navController/rpc</to>
         <protocol>fast_tcp</protocol>
