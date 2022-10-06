@@ -989,6 +989,11 @@ void Manager::getSkeleton()
                                                         keyps.push_back(make_pair("robotLocation",Vector{robx,roby,robtheta}));
                                                         all_keypoints.push_back(keyps);
                                                     }
+                                                    else
+                                                    {
+                                                        keyps.push_back(make_pair("robotLocation",Vector{std::nan(""),std::nan(""),std::nan("")}));
+                                                        all_keypoints.push_back(keyps);
+                                                    }
                                                 }
                                             }
                                             if(skeletonIn[KeyPointTag::shoulder_center]->isUpdated() && curr_exercise->getName()==ExerciseTag::tug)
