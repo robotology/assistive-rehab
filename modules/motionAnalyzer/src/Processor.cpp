@@ -319,15 +319,8 @@ void Step_Processor::estimateSpatialParams(const double &dist,const double &widt
     stepwidth=0.0;
     if ( (Time::now()-tlast)<=time_window )
     {
-        for(int i=0;i<stepvec.size();i++)
-        {
-            steplen+=stepvec[i];
-        }
-        if (stepvec.size()>0)
-        {
-            steplen/=stepvec.size();
-        }
-        int laststrike=stepvec.size()>numsteps ? strikes.back() : 0.0;
+        int laststrike=strikes.back();
+	steplen=feetdist[laststrike];
         stepwidth=feetwidth[laststrike];
         numsteps=(int)strikes.size();
     }
