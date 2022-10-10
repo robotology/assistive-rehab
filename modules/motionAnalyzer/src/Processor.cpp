@@ -355,10 +355,19 @@ pair<deque<double>,deque<int>> Step_Processor::findPeaks(const Vector &d, const 
             val.push_back(d[i]);
             idx.push_back(i);
         }
-        else if(d[i]>=d[i-1] && d[i]>=d[i+1])
+	        else if (i >2 && (i<d.size()-2))
         {
-            val.push_back(d[i]);
-            idx.push_back(i);
+			bool isMaximum = true;
+			for (int j=0;j<3;j++){
+				if (d[i] < d[i+j] || d[i] < d[i-j])
+				{
+					isMaximum = false;
+				}
+			}
+			if (isMaximum) {
+				val.push_back(d[i]);
+				idx.push_back(i);
+			}
         }
     }
     if (val.size()>step_window)
