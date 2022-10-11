@@ -25,13 +25,13 @@
         <parameters>--name /skeletonDumper/opc-save --rxTime --txTime</parameters>
         <node>localhost</node>
     </module>
-    
+
     <module>
         <name>yarpdatadumper</name>
         <parameters>--name /skld/nav-save --rxTime --txTime</parameters>
         <node>localhost</node>
     </module>
-    
+
     <module>
         <name>yarpdatadumper</name>
         <parameters>--name /skld/gaze-save --rxTime --txTime</parameters>
@@ -73,8 +73,26 @@
         <name>yarpdatadumper --name /skld/robot-torso-tripod --rxTime --txTime</name>
         <node>localhost</node>
     </module>
-   
+
    <!--> Connection Camera <!-->
+    <connection>
+        <from>/depthCamera/rgbImage:o</from>
+        <to>/yarpOpenPose/image:i</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/depthCamera/depthImage:o</from>
+        <to>/yarpOpenPose/float:i</to>
+        <protocol>fast_tcp+send.portmonitor+file.depthimage_compression_zlib+recv.portmonitor+file.depthimage_compression_zlib+type.dll</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/image:o</from>
+        <to>/viewer/skeleton</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
     <connection>
         <from>/yarpOpenPose/image:o</from>
         <to>/skld/skeletons-img</to>
@@ -98,13 +116,13 @@
         <to>/skld/opc-save</to>
         <protocol>fast_tcp</protocol>
     </connection>
-    
+
     <connection>
         <from>/navController/state:o</from>
         <to>/skld/nav-save</to>
         <protocol>fast_tcp</protocol>
     </connection>
-    
+
     <connection>
         <from>/cer_gaze-controller/state:o</from>
         <to>/skld/gaze-save</to>
@@ -153,5 +171,5 @@
         <to>/skld/robot-torso-tripod</to>
         <protocol>fast_tcp</protocol>
     </connection>
-    
+
 </application>

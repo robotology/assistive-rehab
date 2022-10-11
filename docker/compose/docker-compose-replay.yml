@@ -1,7 +1,29 @@
+# Run a sngle container with the command:
+# docker run -it --network host --gpus all --mount type=bind,source=${HOME}/.config/yarp,target=/root/.config/yarp icubteamcode/fdg-openpose:v2022.05.2_sources bash
+
+# Run the swarm with the desired profile with:
+# docker compose -f docker-compose-replay.yml --profile <datadump or replay or both> up
+# If you do not specify a profile, compose will launch all containers
+
 version: "3.7"
 
+# Create alias for container running gpu inference
+x-yarp-openpose: &yarp-openpose
+  image: icubteamcode/fdg-openpose:v2022.05.2_sources
+  environment:
+    - DISPLAY=${DISPLAY}
+    - QT_X11_NO_MITSHM=1
+    - XAUTHORITY=/root/.Xauthority
+  volumes:
+    - "/tmp/.X11-unix:/tmp/.X11-unix"
+    - "${XAUTHORITY}:/root/.Xauthority"
+    - "${HOME}/.config/yarp:/root/.config/yarp"
+  network_mode: "host"
+  privileged: true
+
+# Create alias for container running assistive-rehab modules
 x-fdg-basic: &fdg-basic
-  image: icubteamcode/fdg-basic:v2022.05.2_sources
+  image: icubteamcode/fdg-basic:v2022.05.2_devel_sources
   environment:
     - DISPLAY=${DISPLAY}
     - QT_X11_NO_MITSHM=1
@@ -15,77 +37,42 @@ x-fdg-basic: &fdg-basic
   network_mode: "host"
   privileged: true
 
-services: 
-
-  # yarpserver:
-  #   <<: *fdg-basic
-  #   command: sh -c "yarpserver"
+services:
 
   yarprun:
     <<: *fdg-basic
-    command: bash -c "yarp run --server /replayer --log"
+    command: bash -c "yarp run --server /container --log"
+    profiles: ["datadump", "replay"]
 
-  #objectsPropertiesCollector:
-  #  <<: *fdg-basic
-  #  command: sh -c "objectsPropertiesCollector --name opc --no-load-db --no-save-db"
+  y_openpose:
+    <<: *yarp-openpose
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    command: sh -c "yarpOpenPose --model_folder /projects/openpose/models --img_resolution 320x240 --face_enable false --hand_enable false --num_scales 1"
+    profiles: ["datadump"]
+
+  gazeController:
+    <<: *fdg-basic
+    restart: on-failure
+    command: sh -c "yarp wait /cer/head/command:i; yarp wait /cer/head/rpc:i; yarp wait /cer/head/state:o; cer_gaze-controller --cameras::file /projects/cer/build/share/CER/contexts/cameraCalibration/cerEyes_320x240.ini"
+    profiles: ["datadump"]
+
+  navController:
+    <<: *fdg-basic
+    command: sh -c "yarp wait /baseControl/rpc; yarp wait /baseControl/odometry:o; yarp wait /baseControl/control:i; navController --velocity-angular-saturation 15.0 --distance-target 2.5"
+    profiles: ["datadump"]
+
+  robotSkeletonPublisher:
+    <<: *fdg-basic
+    command: sh -c "yarp wait /cer/head/command:i; yarp wait /cer/head/rpc:i; yarp wait /cer/head/state:o; yarp wait /cer/head/stateExt:o; yarp wait /cer/torso/command:i; yarp wait /cer/torso/rpc:i; yarp wait /cer/torso/state:o; yarp wait /cer/torso/stateExt:o; yarp wait /cer/torso_tripod/command:i; yarp wait /cer/torso_tripod/rpc:i; yarp wait /cer/torso_tripod/state:o; yarp wait /cer/torso_tripod/stateExt:o; yarp wait /cer/left_arm/command:i; yarp wait /cer/left_arm/rpc:i; yarp wait /cer/left_arm/state:o; yarp wait /cer/left_arm/stateExt:o; yarp wait /cer/right_arm/command:i; yarp wait /cer/right_arm/rpc:i; yarp wait /cer/right_arm/state:o; yarp wait /cer/right_arm/stateExt:o; yarp wait /cer/left_wrist_tripod/command:i; yarp wait /cer/left_wrist_tripod/rpc:i; yarp wait /cer/left_wrist_tripod/state:o; yarp wait /cer/left_wrist_tripod/stateExt:o; yarp wait /cer/right_wrist_tripod/command:i; yarp wait /cer/right_wrist_tripod/rpc:i; yarp wait /cer/right_wrist_tripod/state:o; yarp wait /cer/right_wrist_tripod/stateExt:o; robotSkeletonPublisher --robot cer"
+    profiles: ["datadump"]
 
   dataplayer:
     <<: *fdg-basic
     command: bash -c "yarpdataplayer --withExtraTimeCol 2"
-
-  # skeletonRetriever:
-  #   <<: *fdg-basic
-  #   command: 
-  #     - /bin/bash
-  #     - -c
-  #     - |
-  #       yarp wait /opc/rpc
-  #       skeletonRetriever --camera::fov "(69.0 42.0)" --depth::kernel-size 4 --depth::iterations 3 --depth::min-distance 0.5 --depth::max-distance 6.0 --filter-keypoint-order 5
-
-  #motionAnalyzer:
-  #  <<: *fdg-basic
-  #  command: sh -c "motionAnalyzer"
-
-  #skeletonViewer:
-  #  <<: *fdg-basic
-  #  command: sh -c "skeletonViewer --x 1120 --y 10 --show-floor on --camera-viewup '(1.0 0.0 0.0)' --camera-position '(-4.0 -2.0 8.0)' --camera-focalpoint '(0.0 -2.0 0.0)'"
-
-  ###### Optional components #######
-
-  # robotSkeletonPublisher:
-  #   <<: *fdg-basic
-  #   command: sh -c "yarp wait /cer/head/command:i; yarp wait /cer/head/rpc:i; yarp wait /cer/head/state:o; yarp wait /cer/head/stateExt:o; yarp wait /cer/torso/command:i; yarp wait /cer/torso/rpc:i; yarp wait /cer/torso/state:o; yarp wait /cer/torso/stateExt:o; yarp wait /cer/torso_tripod/command:i; yarp wait /cer/torso_tripod/rpc:i; yarp wait /cer/torso_tripod/state:o; yarp wait /cer/torso_tripod/stateExt:o; yarp wait /cer/left_arm/command:i; yarp wait /cer/left_arm/rpc:i; yarp wait /cer/left_arm/state:o; yarp wait /cer/left_arm/stateExt:o; yarp wait /cer/right_arm/command:i; yarp wait /cer/right_arm/rpc:i; yarp wait /cer/right_arm/state:o; yarp wait /cer/right_arm/stateExt:o; yarp wait /cer/left_wrist_tripod/command:i; yarp wait /cer/left_wrist_tripod/rpc:i; yarp wait /cer/left_wrist_tripod/state:o; yarp wait /cer/left_wrist_tripod/stateExt:o; yarp wait /cer/right_wrist_tripod/command:i; yarp wait /cer/right_wrist_tripod/rpc:i; yarp wait /cer/right_wrist_tripod/state:o; yarp wait /cer/right_wrist_tripod/stateExt:o; robotSkeletonPublisher --robot cer"
-  
-  #yarpscope:
-  #  <<: *fdg-basic
-  #  command: sh -c "yarpscope --x 1100 --y 50 --dx 800 --dy 400 --remote /motionAnalyzer/scope --bgcolor white --min -0.1 --max 0.8 --color blue --graph_size 3 --plot_title 'Step length [m]'" 
-
-  ## Connections
-
-  #yconnect_1:
-  #  <<: *fdg-basic
-  #  command: sh -c "yarp wait /yarpOpenPose/float:o; yarp wait /skeletonRetriever/depth:i; yarp connect /yarpOpenPose/float:o /skeletonRetriever/depth:i fast_tcp"
-
-  #yconnect_2:
-  #  <<: *fdg-basic
-  #  command: sh -c "yarp wait /yarpOpenPose/target:o; yarp wait /skeletonRetriever/skeletons:i; yarp connect /yarpOpenPose/target:o /skeletonRetriever/skeletons:i fast_tcp"
-
-  #yconnect_3:
-  #  <<: *fdg-basic
-  #  command: sh -c "yarp wait /skeletonRetriever/opc:rpc; yarp wait /opc/rpc; yarp connect /skeletonRetriever/opc:rpc /opc/rpc fast_tcp"
-
-  #yconnect_4:
-  #  <<: *fdg-basic
-  #  command: sh -c "yarp wait /yarpOpenPose/image:o; yarp wait /viewer/skeleton; yarp connect /yarpOpenPose/image:o /viewer/skeleton mjpeg"
-
-  # yconnect_5:
-  #   <<: *fdg-basic
-  #   command: sh -c "yarp wait /depthCamera/depthImage:o; yarp wait /viewer/depth; yarp connect /depthCamera/depthImage:o /viewer/depth mjpeg+recv.portmonitor+type.dll+file.depthimage_to_mono"
-
-  #yconnect_6:
-  #  <<: *fdg-basic
-  #  command: sh -c "yarp wait /skeletonRetriever/viewer:o; yarp wait /skeletonViewer:i; yarp connect /skeletonRetriever/viewer:o /skeletonViewer:i fast_tcp"
-
-  #yconnect_7:
-  #  <<: *fdg-basic
-  #  command: sh -c "yarp wait /motionAnalyzer/opc; yarp wait /opc/rpc; yarp connect /motionAnalyzer/opc /opc/rpc fast_tcp"
+    profiles: ["replay"]
