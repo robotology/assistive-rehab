@@ -307,20 +307,9 @@ bool Manager::loadExercise(const string &exercise_tag)
         processors.resize(metrics.size());
         for(int i=0; i<metrics.size(); i++)
         {
-                    yDebug() << &metrics[0];
-        yDebug() << &metrics[1];
-        yDebug() << &metrics[2];
-        yDebug() << &metrics[3];
-        yDebug() << &metrics[4];
-        yDebug() << &metrics[5];
-        yDebug() << &metrics[6];
-            yDebug() << metrics.size();
             string metric_tag=metrics[i]->getParams().find("name").asString();
-            //processors[i]=createProcessor(metric_tag,metrics[i]);
-            yDebug() << "cycle " << i;
+            processors[i]=createProcessor(metric_tag,metrics[i]);
         }
-
-                    yDebug() << "ended cycles";
         if(curr_exercise->getType()==ExerciseType::rehabilitation)
         {
             Bottle cmd,reply;

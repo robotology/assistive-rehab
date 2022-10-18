@@ -96,7 +96,13 @@ yarp::os::Property Rom::getParams() const
     params.put("tag_plane",rom_params.tag_plane);
 
     Bottle bRefDir;
-    bRefDir.addList().read(rom_params.ref_dir);
+
+    Bottle bb;
+    bb = bRefDir.addList();
+
+    yDebug() <<rom_params.ref_dir.toString(3,1);
+
+    bb.read(rom_params.ref_dir);
     params.put("ref_dir",bRefDir.get(0));
 
     params.put("ref_joint",rom_params.ref_joint);
