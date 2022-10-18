@@ -3,3 +3,6 @@ build*
 *.user
 .DS_Store
 report/.ipynb_checkpoints/
+*.kdev4
+.kdev4/
+.vscode/
