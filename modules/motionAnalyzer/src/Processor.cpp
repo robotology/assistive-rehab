@@ -41,7 +41,10 @@ Processor *createProcessor(const string& metric_type, const Metric* metric_)
         return new EndPoint_Processor(metric_);
     }
     else
+    {
+        yError() << "10";
         return 0;
+    }
 }
 
 /********************************************************/
@@ -127,9 +130,11 @@ Rom_Processor::Rom_Processor()
 /********************************************************/
 Rom_Processor::Rom_Processor(const Metric* rom_)
 {
+    yDebug() << "entering rom processor constructor";
     rom=(Rom*)rom_;
     range=0.0;
     prev_range=0.0;
+    yDebug() << "exitq rom processor constructor";
 }
 
 /********************************************************/
@@ -310,14 +315,15 @@ void Step_Processor::estimateSpatialParams(const double &dist,const double &widt
         tlast=tdist[strikes.back()];
     }
 
-    
     steplen=0.0;
     stepwidth=0.0;
     if ( (Time::now()-tlast)<=time_window )
     {
         int laststrike=strikes.back();
-	steplen=feetdist[laststrike];
-        stepwidth=feetwidth[laststrike];
+	    //steplen=feetdist[laststrike];
+        //stepwidth=feetwidth[laststrike];
+        steplen = output1[0];
+        stepwidth = output2[0];
         numsteps=(int)strikes.size();
     }
 }
