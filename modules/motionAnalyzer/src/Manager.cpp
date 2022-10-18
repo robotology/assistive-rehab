@@ -134,9 +134,23 @@ Metric* Manager::loadMetricsList(const Bottle &bMetricEx, const string &metric_t
     {
         if(metric_type==MetricType::rom)
         {
+            //string st = bMetricEx.toString();
+            //yDebug() << st;
             string tag_joint=bMetricEx.find("tag_joint").asString();
-            Vector ref_dir=toVector(bMetricEx,"ref_dir");
-            string ref_joint=bMetricEx.check("ref_joint", Value("")).asString();;
+
+            Vector ref_dir;
+            if(bMetricEx.check("ref_dir"))
+            {
+                yError() << "ref_dir parameter of joint" <<tag_joint << "is missing";
+                yWarning() << "Filling ref_dir of"<< tag_joint << "with dummy values";
+                 ref_dir = Vector({999, 999, 999});
+            }
+            else
+            {
+                ref_dir=toVector(bMetricEx,"ref_dir");
+            }
+
+            string ref_joint=bMetricEx.check("ref_joint", Value("")).asString();
             string tag_plane=bMetricEx.find("tag_plane").asString();
             double minv=bMetricEx.find("min").asFloat64();
             double maxv=bMetricEx.find("max").asFloat64();
@@ -150,9 +164,10 @@ Metric* Manager::loadMetricsList(const Bottle &bMetricEx, const string &metric_t
             double step_thresh=bMetricEx.find("step_thresh").asFloat64();
             double step_window=bMetricEx.find("step_window").asFloat64();
             double time_window=bMetricEx.find("time_window").asFloat64();
+            double filter_window=bMetricEx.find("median_filter_window").asFloat64();
             double minv=bMetricEx.find("min").asFloat64();
             double maxv=bMetricEx.find("max").asFloat64();
-            Step::StepParams sp={num,den,step_thresh,step_window,time_window,minv,maxv};
+            Step::StepParams sp={num,den,filter_window, step_thresh,step_window,time_window,minv,maxv};
             return new Step(metric_type,metric_tag,sp);
         }
         if(metric_type==MetricType::end_point)
@@ -292,9 +307,20 @@ bool Manager::loadExercise(const string &exercise_tag)
         processors.resize(metrics.size());
         for(int i=0; i<metrics.size(); i++)
         {
+                    yDebug() << &metrics[0];
+        yDebug() << &metrics[1];
+        yDebug() << &metrics[2];
+        yDebug() << &metrics[3];
+        yDebug() << &metrics[4];
+        yDebug() << &metrics[5];
+        yDebug() << &metrics[6];
+            yDebug() << metrics.size();
             string metric_tag=metrics[i]->getParams().find("name").asString();
-            processors[i]=createProcessor(metric_tag,metrics[i]);
+            //processors[i]=createProcessor(metric_tag,metrics[i]);
+            yDebug() << "cycle " << i;
         }
+
+                    yDebug() << "ended cycles";
         if(curr_exercise->getType()==ExerciseType::rehabilitation)
         {
             Bottle cmd,reply;
