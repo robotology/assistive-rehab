@@ -225,8 +225,8 @@ Step_Processor::Step_Processor()
 Step_Processor::Step_Processor(const Metric* step_)
 {
     step=(Step*)step_;
-    filter_dist=new MedianFilter(step->getFilterWindow(), yarp::sig::Vector(1, 0.0));
-    filter_width=new MedianFilter(step->getFilterWindow(), yarp::sig::Vector(1, 0.0));
+    filter_dist=new MedianFilter(16, yarp::sig::Vector(1, 0.0));
+    filter_width=new MedianFilter(16, yarp::sig::Vector(1, 0.0));
     step_thresh=step->getThresh();
     step_window=step->getStepWindow();
     time_window=step->getTimeWindow();
@@ -317,13 +317,16 @@ void Step_Processor::estimateSpatialParams(const double &dist,const double &widt
 
     steplen=0.0;
     stepwidth=0.0;
+
+            steplen = output1[0];
+        stepwidth = output2[0];
     if ( (Time::now()-tlast)<=time_window )
     {
         int laststrike=strikes.back();
 	    //steplen=feetdist[laststrike];
         //stepwidth=feetwidth[laststrike];
-        steplen = output1[0];
-        stepwidth = output2[0];
+        //steplen = output1[0];
+        //stepwidth = output2[0];
         numsteps=(int)strikes.size();
     }
 }
