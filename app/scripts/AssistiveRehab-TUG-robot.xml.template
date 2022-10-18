@@ -1,0 +1,353 @@
+<application>
+<name>Assistive Rehabilitation TUG App</name>
+    <module>
+        <name>yarpdev</name>
+        <parameters>--device speech --lingware-context speech --default-language it-IT --robot r1 --pitch 80 --speed 110</parameters>
+        <node>r1-face</node>
+    </module>
+
+    <module>
+        <name>iSpeak</name>
+        <parameters>--package speech-dev</parameters>
+        <node>r1-face</node>
+    </module>
+
+    <module>
+        <name>yarpdev</name>
+        <parameters>--device faceDisplayServer</parameters>
+        <node>r1-face</node>
+    </module>
+
+    <module>
+        <name>yarpdev</name>
+        <parameters>--context AssistiveRehab --from realsense2.ini</parameters>
+        <node>r1-torso</node>
+    </module>
+
+    <!--<module>
+        <name>yarprobotinterface</name>
+        <workdir>/usr/local/src/robot/robots-configuration/R1SN003</workdir>
+        <node>r1-base</node>
+    </module>-->
+
+     <module>
+        <name>faceExpressionImage</name>
+        <node>r1-face</node>
+    </module>
+
+    <module>
+        <name>yarpview</name>
+        <parameters>--name /viewer/depth --x 10 --y 40 --p 50</parameters>
+        <node>r1-console</node>
+    </module>
+
+    <module>
+        <name>yarpview</name>
+        <parameters>--name /viewer/skeleton --x 380 --y 40 --p 50</parameters>
+        <node>r1-console</node>
+    </module>
+
+    <module>
+        <name>yarpview</name>
+        <parameters>--name /viewer/line --x 770 --y 40 --p 50</parameters>
+        <node>r1-console</node>
+    </module>
+
+
+    <module>
+       <name>yarpview</name>
+       <parameters>--name /viewer/obstacles --w 400 --h 400 --p 50 --compact</parameters>
+       <node>r1-console</node>
+    </module>
+    
+    <connection>
+        <from>/joystickCtrl:o</from>
+        <to>/baseControl/joystick1:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/iSpeak/speech-dev/rpc</from>
+        <to>/r1/speech:rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/iSpeak/r1:rpc</from>
+        <to>/faceExpressionImage/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/faceExpressionImage/image:o</from>
+        <to>/robot/faceDisplay/image:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/iSpeak/speech-dev/rpc</from>
+        <to>/r1/speech:rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/iSpeak/r1:rpc</from>
+        <to>/faceExpressionImage/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/depthCamera/rgbImage:o</from>
+        <to>/yarpOpenPose/image:i</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/depthCamera/depthImage:o</from>
+        <to>/yarpOpenPose/float:i</to>
+        <protocol>fast_tcp+send.portmonitor+file.depthimage_compression_zlib+recv.portmonitor+file.depthimage_compression_zlib+type.dll</protocol>
+        <!--<protocol>fast_tcp+send.portmonitor+file.depthimage_compression_zfp+recv.portmonitor+file.depthimage_compression_zfp+type.dll</protocol>-->
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/float:o</from>
+        <to>/skeletonRetriever/depth:i</to>
+        <protocol>fast_tcp</protocol>
+        <!--<protocol>fast_tcp+send.portmonitor+file.depthimage_compression_zfp+recv.portmonitor+file.depthimage_compression_zfp+type.dll</protocol>-->
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/target:o</from>
+        <to>/skeletonRetriever/skeletons:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonRetriever/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer_gaze-controller/state:o</from>
+        <to>/skeletonRetriever/gaze:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/navController/state:o</from>
+        <to>/skeletonRetriever/nav:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/opc/broadcast:o</from>
+        <to>/skeletonLocker/opc:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonLocker/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/opc/broadcast:o</from>
+        <to>/attentionManager/opc:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/attentionManager/gaze/cmd:rpc</from>
+        <to>/cer_gaze-controller/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer_gaze-controller/state:o</from>
+        <to>/attentionManager/gaze/state:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/depthCamera/rgbImage:o</from>
+        <to>/lineDetector/img:i</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer_gaze-controller/state:o</from>
+        <to>/lineDetector/gaze/state:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/lineDetector/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/lineDetector/nav:rpc</from>
+        <to>/navController/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/lineDetector/viewer:rpc</from>
+        <to>/skeletonViewer:rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/motionAnalyzer/opc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/float:o</from>
+        <to>/viewer/depth</to>
+        <protocol>fast_tcp+recv.portmonitor+type.dll+file.depthimage_to_mono</protocol>
+    </connection>
+
+    <connection>
+        <from>/lineDetector/img:o</from>
+        <to>/viewer/line</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/image:o</from>
+        <to>/viewer/skeleton</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/robotSkeletonPublisher/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/navController/state:o</from>
+        <to>/robotSkeletonPublisher/nav:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/robotSkeletonPublisher/viewer:o</from>
+        <to>/skeletonViewer:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonLocker/viewer:o</from>
+        <to>/skeletonViewer:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonRetriever/viewer:o</from>
+        <to>/skeletonViewer:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/opc/broadcast:o</from>
+        <to>/navController/opc:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/attention:rpc</from>
+        <to>/attentionManager/cmd:rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/analyzer:rpc</from>
+        <to>/motionAnalyzer/cmd</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+    
+    <connection>
+        <from>/motionAnalyzer/nav:cmd</from>
+        <to>/navController/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/speech:o</from>
+        <to>/iSpeak</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/speech:rpc</from>
+        <to>/iSpeak/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/navigation:rpc</from>
+        <to>/navController/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/locker:rpc</from>
+        <to>/skeletonLocker/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/googleSpeechProcess/result:o</from>
+        <to>/managerTUG/answer:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/opc/broadcast:o</from>
+        <to>/managerTUG/opc:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/trigger:rpc</from>
+        <to>/googleSpeech/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/left_arm:rpc</from>
+        <to>/ctpservice/left_arm/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/right_arm:rpc</from>
+        <to>/ctpservice/right_arm/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/obstacleDetector/obstacle:o</from>
+        <to>/managerTUG/obstacle:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/obstacleDetector/nav:rpc</from>
+        <to>/navController/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/obstacleDetector/viewer:o</from>
+        <to>/viewer/obstacles</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+</application>
+
