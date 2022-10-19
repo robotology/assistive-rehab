@@ -132,6 +132,7 @@ Step::Step(const Step &r)
     this->name=r.name;
     this->step_params.num=r.step_params.num;
     this->step_params.den=r.step_params.den;
+    this->step_params.median_filter_window=r.step_params.median_filter_window;
     this->step_params.thresh=r.step_params.thresh;
     this->step_params.step_window=r.step_params.step_window;
     this->step_params.time_window=r.step_params.time_window;

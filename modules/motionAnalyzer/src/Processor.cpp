@@ -225,8 +225,8 @@ Step_Processor::Step_Processor()
 Step_Processor::Step_Processor(const Metric* step_)
 {
     step=(Step*)step_;
-    filter_dist=new MedianFilter(16, yarp::sig::Vector(1, 0.0));
-    filter_width=new MedianFilter(16, yarp::sig::Vector(1, 0.0));
+    filter_dist=new MedianFilter(step->getFilterWindow(), yarp::sig::Vector(1, 0.0));
+    filter_width=new MedianFilter(step->getFilterWindow(), yarp::sig::Vector(1, 0.0));
     step_thresh=step->getThresh();
     step_window=step->getStepWindow();
     time_window=step->getTimeWindow();
