@@ -711,7 +711,7 @@ class Viewer : public RFModule, public skeletonViewer_IDL
             vtk_floor->SetOrigin(-5.0,-5.0,0.0);
             vtk_floor->SetPoint1(5.0,-5.0,0.0);
             vtk_floor->SetPoint2(-5.0,5.0,0.0);
-            vtk_floor->SetResolution(10,10);
+            vtk_floor->SetResolution(100,100);
             vtk_floor->SetCenter(floor_center.data());
             vtk_floor->SetNormal(floor_normal.data());
             vtk_floor->Update();
