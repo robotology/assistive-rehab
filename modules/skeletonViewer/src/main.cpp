@@ -270,7 +270,7 @@ public:
             // override color
             update_color(prop);
             opacity=prop.check("opacity",Value(1.0)).asFloat64();
-            
+
             if (skeleton->getNumKeyPoints()>0)
             {
                 auto k=(*skeleton)[0];
@@ -318,7 +318,7 @@ public:
 
             update_color(prop);
             opacity=prop.check("opacity",Value(1.0)).asFloat64();
-            
+
             if (skeleton->getNumKeyPoints()>0)
             {
                 update_limbs((*skeleton)[0]);
@@ -445,7 +445,7 @@ public:
     }
 
     /****************************************************************/
-    void Execute(vtkObject *caller, unsigned long vtkNotUsed(eventId), 
+    void Execute(vtkObject *caller, unsigned long vtkNotUsed(eventId),
                  void *vtkNotUsed(callData))
     {
         lock_guard<mutex> lg(mtx);
@@ -711,7 +711,19 @@ class Viewer : public RFModule, public skeletonViewer_IDL
             vtk_floor->SetOrigin(-5.0,-5.0,0.0);
             vtk_floor->SetPoint1(5.0,-5.0,0.0);
             vtk_floor->SetPoint2(-5.0,5.0,0.0);
-            vtk_floor->SetResolution(100,100);
+
+            std::array<int,2> grid_resolution = {10, 10};
+            if (rf.check("grid-resolution"))
+            {
+                if (const Bottle *ptr=rf.find("grid-resolution").asList())
+                {
+                    size_t len=std::min(grid_resolution.size(),ptr->size());
+                    for (size_t i=0; i<len; i++)
+                        grid_resolution[i]=ptr->get(i).asInt32();
+                }
+            }
+            vtk_floor->SetResolution(grid_resolution[0], grid_resolution[1]);
+
             vtk_floor->SetCenter(floor_center.data());
             vtk_floor->SetNormal(floor_normal.data());
             vtk_floor->Update();
@@ -734,7 +746,7 @@ class Viewer : public RFModule, public skeletonViewer_IDL
         vtk_updateCallback->set_closing(closing);
         vtk_renderWindowInteractor->AddObserver(vtkCommand::TimerEvent,vtk_updateCallback);
         vtk_renderWindowInteractor->Start();
-        
+
         return true;
     }
 
