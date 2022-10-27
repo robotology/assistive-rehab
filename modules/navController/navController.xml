@@ -21,6 +21,9 @@
     <param default="0.2" desc="The low threshold of the hsyteresis on the distance error (m).">distance-hysteresis-low</param>
     <param default="0.3" desc="The high threshold of the hsyteresis on the distance error (m).">distance-hysteresis-high</param>
     <param default="0.1" desc="The maximum velocity to consider the robot steady (deg/s).">base-stop-threshold</param>
+    <param default="0" desc="Run module without connection to baseControl, useful for offline replay of experiments.">offline_mode</param>
+    <param default="0" desc="Stream odometry data as (x: 0, y: 0, theta: 0) if enabled. Useful offline.">no_odom_data</param>
+    <param default="0" desc="Uses the first odometry value acquired will for resetting.">force_odom_reset</param>
   </arguments>
 
   <authors>

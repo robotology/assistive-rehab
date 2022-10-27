@@ -26,6 +26,8 @@
     <param default="off" desc="Switch it on to display the floor.">show-floor</param>
     <param default="(0.0 0.0 0.0)" desc="The floor center in world coordinates.">floor-center</param>
     <param default="(0.0 0.0 1.0)" desc="The floor normal in world coordinates.">floor-normal</param>
+    <param default="(10 10)" desc="Grid resolution of the floor expressed in number of squares per side">grid-resolution</param>
+
   </arguments>
 
   <authors>
