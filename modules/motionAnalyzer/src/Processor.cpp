@@ -317,16 +317,18 @@ void Step_Processor::estimateSpatialParams(const double &dist,const double &widt
 
     steplen=0.0;
     stepwidth=0.0;
-
-            steplen = output1[0];
-        stepwidth = output2[0];
     if ( (Time::now()-tlast)<=time_window )
     {
-        int laststrike=strikes.back();
-	    //steplen=feetdist[laststrike];
-        //stepwidth=feetwidth[laststrike];
-        //steplen = output1[0];
-        //stepwidth = output2[0];
+        for(int i=0;i<stepvec.size();i++)
+        {
+            steplen+=stepvec[i];
+        }
+        if (stepvec.size()>0)
+        {
+            steplen/=stepvec.size();
+        }
+        int laststrike=stepvec.size()>numsteps ? strikes.back() : 0.0;
+        stepwidth=feetwidth[laststrike];
         numsteps=(int)strikes.size();
     }
 }
@@ -364,19 +366,10 @@ pair<deque<double>,deque<int>> Step_Processor::findPeaks(const Vector &d, const 
             val.push_back(d[i]);
             idx.push_back(i);
         }
-	        else if (i >2 && (i<d.size()-2))
+        else if(d[i]>=d[i-1] && d[i]>=d[i+1])
         {
-			bool isMaximum = true;
-			for (int j=0;j<3;j++){
-				if (d[i] < d[i+j] || d[i] < d[i-j])
-				{
-					isMaximum = false;
-				}
-			}
-			if (isMaximum) {
-				val.push_back(d[i]);
-				idx.push_back(i);
-			}
+            val.push_back(d[i]);
+            idx.push_back(i);
         }
     }
     if (val.size()>step_window)
