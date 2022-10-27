@@ -9,7 +9,7 @@
 
     <module>
        <name>skeletonRetriever</name>
-       <parameters>--camera::fov "(54 42)" --depth::enable false --depth::kernel-size 1  --depth::iterations 1 --depth::min-distance 0.5 --depth::max-distance 6.0 --filter-keypoint-order 5</parameters>
+       <parameters>--camera::fov "(54 42)" --depth::enable false --depth::kernel-size 1  --depth::iterations 1 --depth::min-distance 0.5 --depth::max-distance 6.0 --filter-keypoint-order 1</parameters>
        <dependencies>
           <port timeout="5">/opc/rpc</port>
        </dependencies>

@@ -23,6 +23,6 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
-    command: sh -c "yarpOpenPose --model_folder /projects/openpose/models --img_resolution 320x240 --face_enable false --hand_enable false --num_scales 1"
+    command: sh -c "yarpOpenPose --model_folder /projects/openpose/models --img_resolution 424x240 --face_enable false --hand_enable false --num_scales 1"
 
 # docker run -it --network host --gpus all --mount type=bind,source=${HOME}/.config/yarp,target=/root/.config/yarp icubteamcode/fdg-openpose:v2022.05.2_sources bash

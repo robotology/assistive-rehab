@@ -79,6 +79,7 @@ public:
     {
         yarp::sig::Vector num;
         yarp::sig::Vector den;
+        double median_filter_window;
         double thresh,step_window,time_window,minv,maxv;
     } step_params;
 
@@ -89,6 +90,7 @@ public:
 
     yarp::sig::Vector getNum() const { return step_params.num; }
     yarp::sig::Vector getDen() const { return step_params.den; }
+    double getFilterWindow() const { return step_params.median_filter_window; }
     double getThresh() const { return step_params.thresh; }
     double getStepWindow() const { return step_params.step_window; }
     double getTimeWindow() const { return step_params.time_window; }

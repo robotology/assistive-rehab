@@ -77,8 +77,8 @@ class Step_Processor : public Processor
     yarp::sig::Vector feetdist;
     yarp::sig::Vector feetwidth;
     yarp::sig::Vector tdist;
-    iCub::ctrl::Filter* filter_dist;
-    iCub::ctrl::Filter* filter_width;
+    iCub::ctrl::MedianFilter* filter_dist;
+    iCub::ctrl::MedianFilter* filter_width;
     double step_thresh,step_window,time_window;
 
     double steplen,prev_steplen;
