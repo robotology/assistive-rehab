@@ -1,0 +1,175 @@
+<application>
+<name>Assistive Rehabilitation skeletonDumper Real App</name>
+
+   <!--> Camera <!-->
+    <module>
+        <name>yarpdatadumper</name>
+        <parameters>--name /skeletonDumper/skeletons-img --type image_jpg --rxTime --txTime</parameters>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdatadumper</name>
+        <parameters>--name /dump/skeletons-data --rxTime --txTime</parameters>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdatadumper</name>
+        <parameters>--name /dump/depth --type depth --rxTime --txTime</parameters>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdatadumper</name>
+        <parameters>--name /skeletonDumper/opc-save --rxTime --txTime</parameters>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdatadumper</name>
+        <parameters>--name /dump/nav-save --rxTime --txTime</parameters>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdatadumper</name>
+        <parameters>--name /dump/gaze-save --rxTime --txTime</parameters>
+        <node>localhost</node>
+    </module>
+
+   <!--> Robot joints <!-->
+    <module>
+        <name>yarpdatadumper --name /dump/robot-left-arm --rxTime --txTime</name>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdatadumper --name /dump/robot-left-wrist-tripod --rxTime --txTime</name>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdatadumper --name /dump/robot-right-arm --rxTime --txTime</name>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdatadumper --name /dump/robot-right-wrist-tripod --rxTime --txTime</name>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdatadumper --name /dump/robot-head --rxTime --txTime</name>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdatadumper --name /dump/robot-torso --rxTime --txTime</name>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdatadumper --name /dump/robot-torso-tripod --rxTime --txTime</name>
+        <node>localhost</node>
+    </module>
+
+   <!--> Connection Camera <!-->
+    <connection>
+        <from>/depthCamera/rgbImage:o</from>
+        <to>/yarpOpenPose/image:i</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/depthCamera/depthImage:o</from>
+        <to>/yarpOpenPose/float:i</to>
+        <protocol>fast_tcp+send.portmonitor+file.depthimage_compression_zlib+recv.portmonitor+file.depthimage_compression_zlib+type.dll</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/image:o</from>
+        <to>/viewer/skeleton</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/image:o</from>
+        <to>/dump/skeletons-img</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/target:o</from>
+        <to>/dump/skeletons-data</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/float:o</from>
+        <to>/dump/depth</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/opc/broadcast:o</from>
+        <to>/dump/opc-save</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/navController/state:o</from>
+        <to>/dump/nav-save</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer_gaze-controller/state:o</from>
+        <to>/dump/gaze-save</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <!--> Connection Robot <!-->
+    <connection>
+        <from>/cer/left_arm/state:o</from>
+        <to>/dump/robot-left-arm</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer/left_wrist_tripod/state:o</from>
+        <to>/dump/robot-left-wrist-tripod</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer/right_arm/state:o</from>
+        <to>/dump/robot-right-arm</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer/right_wrist_tripod/state:o</from>
+        <to>/dump/robot-right-wrist-tripod</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer/head/state:o</from>
+        <to>/dump/robot-head</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer/torso/state:o</from>
+        <to>/dump/robot-torso</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer/torso_tripod/state:o</from>
+        <to>/dump/robot-torso-tripod</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+</application>
