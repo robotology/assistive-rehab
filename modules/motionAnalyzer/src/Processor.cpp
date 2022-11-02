@@ -236,11 +236,13 @@ Step_Processor::Step_Processor(const Metric* step_)
     cadence=0.0;
     speed=0.0;
     numsteps=0;
+    steplen_raw=0.0;
 
     prev_steplen=0.0;
     prev_stepwidth=0.0;
     prev_cadence=0.0;
     prev_speed=0.0;
+    prev_steplen_raw=0.0;
 }
 
 /********************************************************/
@@ -271,6 +273,7 @@ void Step_Processor::estimate()
         prev_stepwidth=stepwidth;
         prev_cadence=cadence;
         prev_speed=speed;
+        prev_steplen_raw=steplen_raw;
     }
     else
     {
@@ -278,6 +281,7 @@ void Step_Processor::estimate()
         stepwidth=prev_stepwidth;
         cadence=prev_cadence;
         speed=prev_speed;
+        steplen_raw=prev_steplen_raw;
     }
 //    yInfo()<<"Step parameters:"<<Time::now()-t0<<steplen<<stepwidth<<cadence<<speed<<numsteps;
 }
@@ -292,6 +296,7 @@ Property Step_Processor::getResult()
     result.put(props[2],cadence);
     result.put(props[3],speed);
     result.put(props[4],numsteps);
+    result.put(props[5],steplen_raw);
     return result;
 }
 
@@ -315,9 +320,11 @@ void Step_Processor::estimateSpatialParams(const double &dist,const double &widt
         tlast=tdist[strikes.back()];
     }
 
+    steplen_raw = output1[0];
+
     steplen=0.0;
     stepwidth=0.0;
-    if ( (Time::now()-tlast)<=time_window )
+    if ((Time::now()-tlast)<=time_window)
     {
         for(int i=0;i<stepvec.size();i++)
         {
@@ -327,7 +334,7 @@ void Step_Processor::estimateSpatialParams(const double &dist,const double &widt
         {
             steplen/=stepvec.size();
         }
-        int laststrike=stepvec.size()>numsteps ? strikes.back() : 0.0;
+        int laststrike=stepvec.size()>numsteps ? strikes.back() : 0;
         stepwidth=feetwidth[laststrike];
         numsteps=(int)strikes.size();
     }
@@ -389,11 +396,13 @@ void Step_Processor::reset()
     cadence=0.0;
     speed=0.0;
     numsteps=0;
+    steplen_raw=0.0;
 
     prev_steplen=0.0;
     prev_stepwidth=0.0;
     prev_cadence=0.0;
     prev_speed=0.0;
+    prev_steplen_raw=0.0;
 }
 
 /********************************************************/
