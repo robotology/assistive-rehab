@@ -111,6 +111,22 @@ Vector Processor::projectOnPlane(const Vector &v,const Vector &plane)
     return v-dist*plane;
 }
 
+void Processor::updateCurrentFrame(SkeletonStd &skeleton_)
+{
+    Vector coronal = skeleton_.getCoronal();
+    Vector sagittal = skeleton_.getSagittal();
+    Vector transverse = skeleton_.getTransverse();
+    Vector p = skeleton_[KeyPointTag::shoulder_center]->getPoint();
+    Matrix T1(4,4);
+    T1.setSubcol(coronal,0,0);
+    T1.setSubcol(sagittal,0,1);
+    T1.setSubcol(transverse,0,2);
+    T1.setSubcol(p,0,3);
+    T1(3,3)=1.0;
+    curr_frame = SE3inv(T1);
+    yDebug() << "DIR\n" << T1.toString();
+}
+
 /****************************************************************/
 Vector Processor::toCurrFrame(const string &tag)
 {
@@ -251,18 +267,20 @@ void Step_Processor::estimate()
     if(curr_skeleton[KeyPointTag::ankle_left]->isUpdated() &&
             curr_skeleton[KeyPointTag::ankle_right]->isUpdated())
     {
+        updateCurrentFrame(curr_skeleton);
         Vector k1=toCurrFrame(KeyPointTag::ankle_left);
         Vector k2=toCurrFrame(KeyPointTag::ankle_right);
-        //Vector sag_plane=curr_skeleton.getSagittal();
-        //Vector v=k1-k2;        
-        //Vector v_steplen=projectOnPlane(v,sag_plane);
-        //double d1=norm(v_steplen);
-        double d1=abs(k1[1]-k2[1]);        
-        //double d1=norm(v_steplen);
+        
+        // Vector sag_plane=curr_skeleton.getSagittal();
+        // Vector v=k1-k2;        
+        // Vector v_steplen=projectOnPlane(v,sag_plane);
+        // double d1=norm(v_steplen);
 
-        //Vector cor_plane=curr_skeleton.getCoronal();
-        //Vector v_stepwidth=projectOnPlane(v,cor_plane);
-        //double d2=norm(v_stepwidth);
+        double d1=abs(k1[1]-k2[1]);        
+
+        // Vector cor_plane=curr_skeleton.getCoronal();
+        // Vector v_stepwidth=projectOnPlane(v,cor_plane);
+        // double d2=norm(v_stepwidth);
         double d2=abs(k1[0]-k2[0]);
         
         estimateSpatialParams(d1,d2);
@@ -324,7 +342,8 @@ void Step_Processor::estimateSpatialParams(const double &dist,const double &widt
 
     steplen=0.0;
     stepwidth=0.0;
-    if ((Time::now()-tlast)<=time_window)
+    if (//(Time::now()-tlast)<=time_window
+         steplen_raw > step_thresh)
     {
         for(int i=0;i<stepvec.size();i++)
         {
