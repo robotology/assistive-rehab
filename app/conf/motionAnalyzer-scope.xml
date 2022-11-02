@@ -2,21 +2,16 @@
 <portscope rows="1" columns="1" carrier="tcp">
     <plot gridx="0"
           gridy="0"
-          minval="-10"
-          maxval="110"
+          minval="-0.05"
+          maxval="0.8"
           bgcolor="White">
         <graph remote="/motionAnalyzer/scope"
                index="0"
                color="Blue"
                type="lines"
                size="4" />
-        <graph remote="/motionAnalyzer/scope"
-               index="1"
-               color="Red"
-               size="3"
-               type="lines" />
-        <graph remote="/motionAnalyzer/scope"
-               index="2"
+        <graph remote="/motionAnalyzer/scopeRaw"
+               index="0"
                color="Red"
                size="3"
                type="lines" />
