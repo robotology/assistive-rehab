@@ -102,6 +102,7 @@ void Processor::setStartingTime(const double &tnow)
 void Processor::update(SkeletonStd &curr_skeleton_)
 {
     curr_skeleton.update(curr_skeleton_.toProperty());
+    updateCurrentFrame(curr_skeleton);
 }
 
 /****************************************************************/
@@ -109,6 +110,21 @@ Vector Processor::projectOnPlane(const Vector &v,const Vector &plane)
 {
     double dist=dot(v,plane);
     return v-dist*plane;
+}
+
+void Processor::updateCurrentFrame(SkeletonStd &skeleton_)
+{
+    Vector coronal = skeleton_.getCoronal();
+    Vector sagittal = skeleton_.getSagittal();
+    Vector transverse = skeleton_.getTransverse();
+    Vector p = skeleton_[KeyPointTag::shoulder_center]->getPoint();
+    Matrix T1(4,4);
+    T1.setSubcol(coronal,0,0);
+    T1.setSubcol(sagittal,0,1);
+    T1.setSubcol(transverse,0,2);
+    T1.setSubcol(p,0,3);
+    T1(3,3)=1.0;
+    curr_frame = SE3inv(T1);
 }
 
 /****************************************************************/
@@ -331,13 +347,11 @@ void Step_Processor::estimateSpatialParams(const double &dist,const double &widt
         for(int i=0;i<stepvec.size();i++)
         {
             steplen+=stepvec[i];
-            if(stepvec[i] > steplen)
-                steplen = stepvec[i];
         }
-        // if (stepvec.size()>0)
-        // {
-        //     steplen/=stepvec.size();
-        // }
+        if (stepvec.size()>0)
+        {
+            steplen/=stepvec.size();
+        }
         int laststrike=stepvec.size()>numsteps ? strikes.back() : 0;
        //steplen = stepvec.back();
         stepwidth=feetwidth[laststrike];

@@ -47,6 +47,7 @@ public:
     void setStartingTime(const double &tnow);
     void update(assistive_rehab::SkeletonStd& curr_skeleton_);
     yarp::sig::Vector projectOnPlane(const yarp::sig::Vector &v,const yarp::sig::Vector &plane);
+    void updateCurrentFrame(assistive_rehab::SkeletonStd &skeleton_);
     yarp::sig::Vector toCurrFrame(const std::string &tag);
 
     yarp::sig::Vector getPlaneNormal() const { return plane_normal; }
