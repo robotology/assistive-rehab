@@ -102,7 +102,6 @@ void Processor::setStartingTime(const double &tnow)
 void Processor::update(SkeletonStd &curr_skeleton_)
 {
     curr_skeleton.update(curr_skeleton_.toProperty());
-    updateCurrentFrame(curr_skeleton);
 }
 
 /****************************************************************/
@@ -125,6 +124,7 @@ void Processor::updateCurrentFrame(SkeletonStd &skeleton_)
     T1.setSubcol(p,0,3);
     T1(3,3)=1.0;
     curr_frame = SE3inv(T1);
+    yDebug() << "DIR\n" << T1.toString();
 }
 
 /****************************************************************/
@@ -267,19 +267,21 @@ void Step_Processor::estimate()
     if(curr_skeleton[KeyPointTag::ankle_left]->isUpdated() &&
             curr_skeleton[KeyPointTag::ankle_right]->isUpdated())
     {
+        updateCurrentFrame(curr_skeleton);
         Vector k1=toCurrFrame(KeyPointTag::ankle_left);
         Vector k2=toCurrFrame(KeyPointTag::ankle_right);
-        Vector sag_plane=curr_skeleton.getSagittal();
-        Vector v=k1-k2;        
-        Vector v_steplen=projectOnPlane(v,sag_plane);
-        double d1=norm(v_steplen);
+        
+        // Vector sag_plane=curr_skeleton.getSagittal();
+        // Vector v=k1-k2;        
+        // Vector v_steplen=projectOnPlane(v,sag_plane);
+        // double d1=norm(v_steplen);
 
-//        double d1=abs(k1[1]-k2[1]);        
+        double d1=abs(k1[1]-k2[1]);        
 
-        Vector cor_plane=curr_skeleton.getCoronal();
-        Vector v_stepwidth=projectOnPlane(v,cor_plane);
-        double d2=norm(v_stepwidth);
-//        double d2=abs(k1[0]-k2[0]);
+        // Vector cor_plane=curr_skeleton.getCoronal();
+        // Vector v_stepwidth=projectOnPlane(v,cor_plane);
+        // double d2=norm(v_stepwidth);
+        double d2=abs(k1[0]-k2[0]);
         
         estimateSpatialParams(d1,d2);
         cadence=estimateCadence();
