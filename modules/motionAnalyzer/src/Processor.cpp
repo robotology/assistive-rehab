@@ -328,16 +328,18 @@ void Step_Processor::estimateSpatialParams(const double &dist,const double &widt
          steplen_raw > step_thresh)
     {
 
-        // for(int i=0;i<stepvec.size();i++)
-        // {
-        //     steplen+=stepvec[i];
-        // }
+        for(int i=0;i<stepvec.size();i++)
+        {
+            steplen+=stepvec[i];
+            if(stepvec[i] > steplen)
+                steplen = stepvec[i];
+        }
         // if (stepvec.size()>0)
         // {
         //     steplen/=stepvec.size();
         // }
         int laststrike=stepvec.size()>numsteps ? strikes.back() : 0;
-        steplen = stepvec.back();
+       //steplen = stepvec.back();
         stepwidth=feetwidth[laststrike];
         numsteps=(int)strikes.size();
     }
