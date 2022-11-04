@@ -9,10 +9,15 @@
                index="0"
                color="Blue"
                type="lines"
-               size="4" />
+               size="1" />
         <graph remote="/motionAnalyzer/scopeRaw"
                index="0"
                color="Red"
+               size="3"
+               type="lines" />
+        <graph remote="/motionAnalyzer/scopeRaw"
+               index="1"
+               color="Green"
                size="3"
                type="lines" />
     </plot>
