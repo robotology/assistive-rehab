@@ -84,6 +84,7 @@ class Step_Processor : public Processor
 
     double steplen,prev_steplen;
     double steplen_raw, prev_steplen_raw;
+    double stepwidth_raw, prev_stepwidth_raw;
     double stepwidth,prev_stepwidth;
     int numsteps;
     double cadence,prev_cadence;

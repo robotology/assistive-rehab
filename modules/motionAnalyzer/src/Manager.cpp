@@ -1072,6 +1072,8 @@ void Manager::estimate()
             scopebottleout.addFloat64(res);
             res = result.find("step_length_raw").asFloat64();
             scopebottleout_raw.addFloat64(res);
+            res = result.find("step_width_raw").asFloat64();
+            scopebottleout_raw.addFloat64(res);
         }
     }
     scopePort.write();

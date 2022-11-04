@@ -253,12 +253,13 @@ Step_Processor::Step_Processor(const Metric* step_)
     speed=0.0;
     numsteps=0;
     steplen_raw=0.0;
-
+    stepwidth_raw=0.0;
     prev_steplen=0.0;
     prev_stepwidth=0.0;
     prev_cadence=0.0;
     prev_speed=0.0;
     prev_steplen_raw=0.0;
+    prev_stepwidth_raw=0.0;
 }
 
 /********************************************************/
@@ -292,6 +293,7 @@ void Step_Processor::estimate()
         prev_cadence=cadence;
         prev_speed=speed;
         prev_steplen_raw=steplen_raw;
+        prev_stepwidth_raw=stepwidth_raw;
     }
     else
     {
@@ -300,6 +302,7 @@ void Step_Processor::estimate()
         cadence=prev_cadence;
         speed=prev_speed;
         steplen_raw=prev_steplen_raw;
+        stepwidth_raw=prev_stepwidth_raw;
     }
 //    yInfo()<<"Step parameters:"<<Time::now()-t0<<steplen<<stepwidth<<cadence<<speed<<numsteps;
 }
@@ -315,6 +318,7 @@ Property Step_Processor::getResult()
     result.put(props[3],speed);
     result.put(props[4],numsteps);
     result.put(props[5],steplen_raw);
+    result.put(props[6],stepwidth_raw);
     return result;
 }
 
@@ -339,7 +343,7 @@ void Step_Processor::estimateSpatialParams(const double &dist,const double &widt
     }
 
     steplen_raw = output1[0];
-
+    stepwidth_raw = output2[0];
     steplen=0.0;
     stepwidth=0.0;
     if (//(Time::now()-tlast)<=time_window
@@ -416,12 +420,16 @@ void Step_Processor::reset()
     speed=0.0;
     numsteps=0;
     steplen_raw=0.0;
+    stepwidth_raw=0.0;
+
 
     prev_steplen=0.0;
     prev_stepwidth=0.0;
     prev_cadence=0.0;
     prev_speed=0.0;
     prev_steplen_raw=0.0;
+    prev_stepwidth_raw=0.0;
+
 }
 
 /********************************************************/
