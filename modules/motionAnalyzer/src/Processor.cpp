@@ -260,6 +260,7 @@ Step_Processor::Step_Processor(const Metric* step_)
     numsteps=0;
     steplen_raw=0.0;
     stepwidth_raw=0.0;
+    
     prev_steplen=0.0;
     prev_stepwidth=0.0;
     prev_cadence=0.0;
@@ -288,7 +289,7 @@ void Step_Processor::estimate()
         Vector v_stepwidth=projectOnPlane(v,cor_plane);
         double d2=norm(v_stepwidth);
 
-        yDebug() << "vlen: " << v_steplen.toString() << "vwidth" << v_stepwidth.toString();
+        //yDebug() << "vlen: " << v_steplen.toString() << "vwidth" << v_stepwidth.toString();
 
         // double d1=abs(k1[1]-k2[1]);        
         // double d2=abs(k1[0]-k2[0]);

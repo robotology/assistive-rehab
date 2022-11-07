@@ -30,6 +30,7 @@
 
     <module>
         <name>motionAnalyzer</name>
+        <parameters>--median_filter_window 2</parameters>
         <node>container</node>
     </module>
 
@@ -54,7 +55,7 @@
     <module>
         <name>yarpscope</name>
         <parameters>--x 1100 --y 50 --dx 800 --dy 400 --remote /motionAnalyzer/scope --bgcolor white --min -0.1 --max 0.8 --color blue --graph_size 3 --plot_title 'Step length [m]'</parameters>
-        <node>container</node>
+        <node>r1-console</node>
     </module>
 
     <connection>
