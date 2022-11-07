@@ -127,12 +127,6 @@ void Processor::updateCurrentFrame(SkeletonStd &skeleton_)
     T1.setSubcol(p,0,3);
     T1(3,3)=1.0;
     curr_frame = SE3inv(T1);
-
-    skeleton_.print(std::cout);
-
-    yDebug() << "DIR\n" << T1.toString();
-    yDebug() << "INV\n" << curr_frame.toString();
-
 }
 
 /****************************************************************/

@@ -953,8 +953,9 @@ class Retriever : public RFModule
         update_gaze_frame();
         rootFrame=navFrame*gazeFrame;
 
-        yDebug() << "NAV\n" << navFrame.toString();
-yDebug() << "GAZE\n" << gazeFrame.toString();
+        // yDebug() << "NAV\n" << navFrame.toString();
+        // yDebug() << "GAZE\n" << gazeFrame.toString();
+        
         // handle skeletons acquired from detector
         if (Bottle *b1=skeletonsPort.read(false))
         {
