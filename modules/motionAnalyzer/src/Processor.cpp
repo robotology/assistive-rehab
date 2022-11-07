@@ -260,6 +260,7 @@ Step_Processor::Step_Processor(const Metric* step_)
     numsteps=0;
     steplen_raw=0.0;
     stepwidth_raw=0.0;
+    
     prev_steplen=0.0;
     prev_stepwidth=0.0;
     prev_cadence=0.0;
