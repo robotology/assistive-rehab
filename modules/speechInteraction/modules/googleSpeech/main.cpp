@@ -273,10 +273,6 @@ public:
                 b.addString(alternative.transcript());
             }
         }
-        
-
-
-
 
         return b;
     }
@@ -410,6 +406,163 @@ public:
 };
 
 /********************************************************/
+<<<<<<< Updated upstream
+=======
+/********************************************************/
+/************ FAKE PROCESSING MODULES ****************/
+/********************************************************/
+/********************************************************/
+class FakeProcessing
+{
+    std::string moduleName;
+    yarp::os::RpcServer handlerPort;
+    yarp::os::BufferedPort<yarp::os::Bottle> port;
+    yarp::os::BufferedPort<yarp::os::Bottle> targetPort;
+    yarp::os::BufferedPort<yarp::os::Bottle> questionPort;
+    yarp::os::BufferedPort<yarp::os::Bottle> statusPort;
+    yarp::os::RpcClient audioCommand;
+    yarp::os::Mutex mutex;
+
+    std::deque<yarp::os::Bottle> sounds;
+
+    int samples;
+    int channels;
+    int padding;
+    bool getSounds;
+    bool sendForQuery;
+    std::string language;
+    int sample_rate;
+
+    std::chrono::time_point<std::chrono::system_clock> start, end;
+
+public:
+    /********************************************************/
+
+    FakeProcessing( const std::string &moduleName, const std::string &language, const int sample_rate )
+    {
+        this->moduleName = moduleName;
+        yInfo() << "language " << language;
+        yInfo() << "sample_rate " << sample_rate;
+
+        this->language = language;
+        this->sample_rate = sample_rate;
+
+        port.setStrict();
+        samples = 0;
+        channels = 0;
+        padding = 0;
+        getSounds = false;
+        sendForQuery = false;
+    }
+
+    /********************************************************/
+    ~FakeProcessing() {};
+
+    /********************************************************/
+    bool open()
+    {
+        port.setStrict(true);
+
+        port.open("/" + moduleName + "/sound:i");
+        targetPort.open("/"+ moduleName + "/result:o");
+        audioCommand.open("/"+ moduleName + "/commands:rpc");
+        questionPort.open("/"+ moduleName + "/question:o");
+        statusPort.open("/"+ moduleName + "/status:o");
+
+        return true;
+    }
+
+    /********************************************************/
+    void close()
+    {
+        port.close();
+        targetPort.close();
+        audioCommand.close();
+        questionPort.close();
+        statusPort.close();
+    }
+};
+
+
+/********************************************************/
+class FakeModule : public yarp::os::RFModule, public googleSpeech_IDL
+{
+    yarp::os::ResourceFinder    *rf;
+    yarp::os::RpcServer         rpcPort;
+
+    FakeProcessing              *processing;
+    friend class                processing;
+
+    bool                        closing;
+
+    /********************************************************/
+    bool attach(yarp::os::RpcServer &source)
+    {
+        return this->yarp().attachAsServer(source);
+    }
+
+public:
+    /********************************************************/
+    FakeModule() : closing(false) { }
+
+    /********************************************************/
+    bool configure(yarp::os::ResourceFinder &rf)
+    {
+        this->rf=&rf;
+        std::string moduleName = rf.check("name", yarp::os::Value("yarp-google-speech"), "module name (string)").asString();
+
+        setName(moduleName.c_str());
+
+        rpcPort.open(("/"+getName("/rpc")).c_str());
+
+        attach(rpcPort);
+
+        return true;
+    }
+
+    /**********************************************************/
+    bool close()
+    {
+        processing->close();
+        delete processing;
+        return true;
+    }
+
+    /**********************************************************/
+    bool start()
+    {
+        return true;
+    }
+
+    /**********************************************************/
+    bool stop()
+    {
+        return true;
+    }
+
+    /********************************************************/
+    double getPeriod()
+    {
+        return 1.0;
+    }
+
+    /********************************************************/
+    bool quit()
+    {
+        closing=true;
+        return true;
+    }
+
+    /********************************************************/
+    bool updateModule()
+    {
+        return !closing;
+    }
+};
+
+
+/********************************************************/
+>>>>>>> Stashed changes
 int main(int argc, char *argv[])
 {
     yarp::os::Network::init();
