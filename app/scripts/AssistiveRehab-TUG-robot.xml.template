@@ -59,6 +59,12 @@
        <parameters>--name /viewer/obstacles --w 400 --h 400 --p 50 --compact</parameters>
        <node>r1-console</node>
     </module>
+
+    <module>
+        <name>yarpscope</name>
+        <parameters>--context AssistiveRehab --xml motionAnalyzer-scope.xml</parameters>
+        <node>r1-console<node>        
+    </module>
     
     <connection>
         <from>/joystickCtrl:o</from>
@@ -99,6 +105,12 @@
     <connection>
         <from>/depthCamera/rgbImage:o</from>
         <to>/yarpOpenPose/image:i</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/depthCamera/rgbImage:o</from>
+        <to>/lineDetector/img:i</to>
         <protocol>mjpeg</protocol>
     </connection>
 
@@ -169,9 +181,9 @@
     </connection>
 
     <connection>
-        <from>/depthCamera/rgbImage:o</from>
-        <to>/lineDetector/img:i</to>
-        <protocol>mjpeg</protocol>
+        <from>/lineDetector/cam:rpc</from>
+        <to>/depthCamera/rpc:i</to>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
@@ -197,6 +209,13 @@
         <to>/skeletonViewer:rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>
+
+    <connection>
+        <from>/lineDetector/gazebo:rpc</from>
+        <to>/tug_input_port</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
 
     <connection>
         <from>/motionAnalyzer/opc</from>
@@ -347,5 +366,38 @@
         <to>/viewer/obstacles</to>
         <protocol>mjpeg</protocol>
     </connection>
+
+    <connection>
+        <from>/googleSpeech/status:o</from>
+        <to>/eventCollector/speech:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+
+    <connection>
+        <from>/googleSpeechProcess/status:o</from>
+        <to>/eventCollector/speech-process:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/obstacleDetector/obstacle:o</from>
+        <to>/eventCollector/obstacle:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/collector:rpc</from>
+        <to>/eventCollector/cmd</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from> /speech/trigger:o</from>
+        <to>/managerTUG/cmd:rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+
 </application>
 
