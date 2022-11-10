@@ -111,6 +111,24 @@ Vector Processor::projectOnPlane(const Vector &v,const Vector &plane)
     return v-dist*plane;
 }
 
+void Processor::updateCurrentFrame(SkeletonStd &skeleton_)
+{
+    if(!skeleton_.update_planes())
+        yError() << "Not all planes are updated";
+
+    Vector coronal = skeleton_.getCoronal();
+    Vector sagittal = skeleton_.getSagittal();
+    Vector transverse = skeleton_.getTransverse();
+    Vector p = skeleton_[KeyPointTag::shoulder_center]->getPoint();
+    Matrix T1(4,4);
+    T1.setSubcol(coronal,0,0);
+    T1.setSubcol(sagittal,0,1);
+    T1.setSubcol(transverse,0,2);
+    T1.setSubcol(p,0,3);
+    T1(3,3)=1.0;
+    curr_frame = SE3inv(T1);
+}
+
 /****************************************************************/
 Vector Processor::toCurrFrame(const string &tag)
 {
@@ -130,11 +148,9 @@ Rom_Processor::Rom_Processor()
 /********************************************************/
 Rom_Processor::Rom_Processor(const Metric* rom_)
 {
-    yDebug() << "entering rom processor constructor";
     rom=(Rom*)rom_;
     range=0.0;
     prev_range=0.0;
-    yDebug() << "exitq rom processor constructor";
 }
 
 /********************************************************/
@@ -236,11 +252,15 @@ Step_Processor::Step_Processor(const Metric* step_)
     cadence=0.0;
     speed=0.0;
     numsteps=0;
-
+    steplen_raw=0.0;
+    stepwidth_raw=0.0;
+    
     prev_steplen=0.0;
     prev_stepwidth=0.0;
     prev_cadence=0.0;
     prev_speed=0.0;
+    prev_steplen_raw=0.0;
+    prev_stepwidth_raw=0.0;
 }
 
 /********************************************************/
@@ -249,20 +269,23 @@ void Step_Processor::estimate()
     if(curr_skeleton[KeyPointTag::ankle_left]->isUpdated() &&
             curr_skeleton[KeyPointTag::ankle_right]->isUpdated())
     {
+        updateCurrentFrame(curr_skeleton);
         Vector k1=toCurrFrame(KeyPointTag::ankle_left);
         Vector k2=toCurrFrame(KeyPointTag::ankle_right);
-        //Vector sag_plane=curr_skeleton.getSagittal();
-        //Vector v=k1-k2;        
-        //Vector v_steplen=projectOnPlane(v,sag_plane);
-        //double d1=norm(v_steplen);
-        double d1=abs(k1[1]-k2[1]);        
-        //double d1=norm(v_steplen);
 
-        //Vector cor_plane=curr_skeleton.getCoronal();
-        //Vector v_stepwidth=projectOnPlane(v,cor_plane);
-        //double d2=norm(v_stepwidth);
-        double d2=abs(k1[0]-k2[0]);
-        
+        Vector v=k1-k2;
+
+        Vector sag_plane=curr_skeleton.getSagittal();
+        Vector v_steplen=projectOnPlane(v,sag_plane);
+        double d1=norm(v_steplen);
+
+        Vector cor_plane=curr_skeleton.getCoronal();
+        Vector v_stepwidth=projectOnPlane(v,cor_plane);
+        double d2=norm(v_stepwidth);
+
+        // double d1=abs(k1[1]-k2[1]);
+        // double d2=abs(k1[0]-k2[0]);
+
         estimateSpatialParams(d1,d2);
         cadence=estimateCadence();
         speed=estimateSpeed();
@@ -271,6 +294,8 @@ void Step_Processor::estimate()
         prev_stepwidth=stepwidth;
         prev_cadence=cadence;
         prev_speed=speed;
+        prev_steplen_raw=steplen_raw;
+        prev_stepwidth_raw=stepwidth_raw;
     }
     else
     {
@@ -278,8 +303,9 @@ void Step_Processor::estimate()
         stepwidth=prev_stepwidth;
         cadence=prev_cadence;
         speed=prev_speed;
+        steplen_raw=prev_steplen_raw;
+        stepwidth_raw=prev_stepwidth_raw;
     }
-//    yInfo()<<"Step parameters:"<<Time::now()-t0<<steplen<<stepwidth<<cadence<<speed<<numsteps;
 }
 
 /********************************************************/
@@ -292,6 +318,8 @@ Property Step_Processor::getResult()
     result.put(props[2],cadence);
     result.put(props[3],speed);
     result.put(props[4],numsteps);
+    result.put(props[5],steplen_raw);
+    result.put(props[6],stepwidth_raw);
     return result;
 }
 
@@ -315,9 +343,11 @@ void Step_Processor::estimateSpatialParams(const double &dist,const double &widt
         tlast=tdist[strikes.back()];
     }
 
+    steplen_raw = output1[0];
+    stepwidth_raw = output2[0];
     steplen=0.0;
     stepwidth=0.0;
-    if ( (Time::now()-tlast)<=time_window )
+    if ((Time::now()-tlast)<=time_window)
     {
         for(int i=0;i<stepvec.size();i++)
         {
@@ -327,7 +357,7 @@ void Step_Processor::estimateSpatialParams(const double &dist,const double &widt
         {
             steplen/=stepvec.size();
         }
-        int laststrike=stepvec.size()>numsteps ? strikes.back() : 0.0;
+        int laststrike=stepvec.size()>numsteps ? strikes.back() : 0;
         stepwidth=feetwidth[laststrike];
         numsteps=(int)strikes.size();
     }
@@ -389,11 +419,17 @@ void Step_Processor::reset()
     cadence=0.0;
     speed=0.0;
     numsteps=0;
+    steplen_raw=0.0;
+    stepwidth_raw=0.0;
+
 
     prev_steplen=0.0;
     prev_stepwidth=0.0;
     prev_cadence=0.0;
     prev_speed=0.0;
+    prev_steplen_raw=0.0;
+    prev_stepwidth_raw=0.0;
+
 }
 
 /********************************************************/

@@ -318,7 +318,7 @@ public:
             pl.append(id);
             if (opcRpcPort.write(cmd,rep))
             {
-                yInfo()<<"Setting to opc"<<s.tag<<s.opc_id;
+                yInfoThrottle(5)<<"Setting to opc"<<s.tag<<s.opc_id;
                 return (rep.get(0).asVocab32()==Vocab32::encode("ack"));
             }
         }

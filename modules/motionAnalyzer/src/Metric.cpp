@@ -124,6 +124,8 @@ Step::Step(const string &type, const string &name, const StepParams &params)
     properties.push_back("cadence");
     properties.push_back("speed");
     properties.push_back("num_steps");
+    properties.push_back("step_length_raw");
+    properties.push_back("step_width_raw");
 }
 
 Step::Step(const Step &r)

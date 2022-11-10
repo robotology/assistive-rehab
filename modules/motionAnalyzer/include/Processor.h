@@ -47,6 +47,7 @@ public:
     void setStartingTime(const double &tnow);
     void update(assistive_rehab::SkeletonStd& curr_skeleton_);
     yarp::sig::Vector projectOnPlane(const yarp::sig::Vector &v,const yarp::sig::Vector &plane);
+    void updateCurrentFrame(assistive_rehab::SkeletonStd &skeleton_);
     yarp::sig::Vector toCurrFrame(const std::string &tag);
 
     yarp::sig::Vector getPlaneNormal() const { return plane_normal; }
@@ -82,6 +83,8 @@ class Step_Processor : public Processor
     double step_thresh,step_window,time_window;
 
     double steplen,prev_steplen;
+    double steplen_raw, prev_steplen_raw;
+    double stepwidth_raw, prev_stepwidth_raw;
     double stepwidth,prev_stepwidth;
     int numsteps;
     double cadence,prev_cadence;
@@ -104,6 +107,7 @@ public:
     double estimateSpeed();
 
     double getStepLen() const { return steplen; }
+    double getStepLenRaw() const { return steplen_raw; }
     double getStepWidth() const { return stepwidth; }
     double getNumSteps() const { return numsteps; }
     double getCadence() const { return cadence; }

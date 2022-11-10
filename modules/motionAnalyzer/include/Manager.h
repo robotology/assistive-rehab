@@ -42,6 +42,7 @@ class Manager : public yarp::os::RFModule,
     yarp::os::RpcClient actionPort;
     yarp::os::RpcClient navPort;
     yarp::os::BufferedPort<yarp::os::Bottle> scopePort;
+    yarp::os::BufferedPort<yarp::os::Bottle> scopeRawPort;
 
     enum class State { idle, sitting, standing, crossed } state;
     bool standing;

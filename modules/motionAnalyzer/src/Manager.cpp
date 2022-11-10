@@ -689,6 +689,7 @@ bool Manager::start(const bool use_robot_template)
     starting=true;
     if(curr_exercise->getType()==ExerciseType::rehabilitation)
     {
+        yDebug() << "starting with Exercise type: Rehabilitation";
         bool out=false;
         while(out==false)
         {
@@ -873,7 +874,6 @@ Property Manager::getState()
 /********************************************************/
 bool Manager::isStanding()
 {
-    yInfo()<<"shoulder height speed"<<shoulder_center_height_vel;
     standing=(shoulder_center_height_vel>standing_thresh);
     return standing;
 }
@@ -881,7 +881,6 @@ bool Manager::isStanding()
 /********************************************************/
 bool Manager::isSitting()
 {
-    yInfo()<<"shoulder height speed"<<shoulder_center_height_vel;
     return (shoulder_center_height_vel<-standing_thresh);
 }
 
@@ -1055,7 +1054,9 @@ void Manager::updateState()
 void Manager::estimate()
 {
     Bottle &scopebottleout=scopePort.prepare();
+    Bottle &scopebottleout_raw=scopeRawPort.prepare();
     scopebottleout.clear();
+    scopebottleout_raw.clear();
     bResult.clear();
     for(int i=0; i<processors.size(); i++)
     {
@@ -1064,13 +1065,19 @@ void Manager::estimate()
         Property result=processors[i]->getResult();
         bResult.addList().read(result);
         if(result.check(prop_tag) &&
-                processors[i]->getProcessedMetric()==curr_metric->getParams().find("name").asString())
+            processors[i]->getProcessedMetric()==curr_metric->getParams().find("name").asString())
         {
             double res=result.find(prop_tag).asFloat64();
             scopebottleout.addFloat64(res);
+            res = result.find("step_length_raw").asFloat64();
+            scopebottleout_raw.addFloat64(res);
+            
+            res = result.find("step_width_raw").asFloat64();
+            scopebottleout_raw.addFloat64(res);
         }
     }
     scopePort.write();
+    scopeRawPort.write();
 }
 
 /********************************************************/
@@ -1088,6 +1095,7 @@ bool Manager::configure(ResourceFinder &rf)
 
     opcPort.open(("/" + getName() + "/opc").c_str());
     scopePort.open(("/" + getName() + "/scope").c_str());
+    scopeRawPort.open(("/" + getName() + "/scopeRaw").c_str());
     scalerPort.open(("/" + getName() + "/scaler:cmd").c_str());
     dtwPort.open(("/" + getName() + "/dtw:cmd").c_str());
     actionPort.open(("/" + getName() + "/action:cmd").c_str());
@@ -1120,6 +1128,7 @@ bool Manager::interruptModule()
 {
     opcPort.interrupt();
     scopePort.interrupt();
+    scopeRawPort.interrupt();
     scalerPort.interrupt();
     dtwPort.interrupt();
     actionPort.interrupt();
@@ -1148,6 +1157,7 @@ bool Manager::close()
 
     opcPort.close();
     scopePort.close();
+    scopeRawPort.close();
     scalerPort.close();
     dtwPort.close();
     actionPort.close();

@@ -154,7 +154,7 @@ public:
         }
         // update 1: incorporate filtered feedback
         skeleton->update_withpixels(unordered_filtered);
-        
+
         size_t latch_size=unordered_filtered.size();
         for (auto &it1:limbs_length)
         {

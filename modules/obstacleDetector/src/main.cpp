@@ -256,11 +256,11 @@ public:
             if (clusters_front.data())
             {
                 t0=Time::now();
-                yInfo()<<"Detected an obstacle from front at time"<<t0;
+                yInfoThrottle(5)<<"Detected an obstacle from front at time"<<t0;
                 // we keep only clusters with number of points > minpoints
                 vector<int> ids;
                 nclusters=removeOutliers(clusters_front,ids);
-                yInfo()<<"Number of obstacles from front laser"<<nclusters;
+                yInfoThrottle(5)<<"Number of obstacles from front laser"<<nclusters;
 
                 // we consider the closest cluster
                 dfront=getClosestCluster(clusters_front,ids);
@@ -275,11 +275,11 @@ public:
             if (clusters_rear.data())
             {
                 t0=Time::now();
-                yInfo()<<"Detected an obstacle from front at time"<<t0;
+                yInfoThrottle(5)<<"Detected an obstacle from front at time"<<t0;
                 // we keep only clusters with number of points > minpoints
                 vector<int> ids;
                 nclusters=removeOutliers(clusters_rear,ids);
-                yInfo()<<"Number of obstacles from rear laser"<<nclusters;
+                yInfoThrottle(5)<<"Number of obstacles from rear laser"<<nclusters;
 
                 // we consider the closest cluster
                 drear=getClosestCluster(clusters_rear,ids);

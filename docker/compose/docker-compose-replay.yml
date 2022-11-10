@@ -54,7 +54,7 @@ services:
               count: 1
               capabilities: [gpu]
     command: sh -c "yarpOpenPose --model_folder /projects/openpose/models --img_resolution 320x240 --face_enable false --hand_enable false --num_scales 1"
-    profiles: ["datadump"]
+    profiles: ["cuda"]
 
   gazeController:
     <<: *fdg-basic
