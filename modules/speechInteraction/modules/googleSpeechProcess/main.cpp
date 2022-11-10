@@ -1,5 +1,3 @@
-
-
 /*
  * Copyright (C) 2018 iCub Facility - Istituto Italiano di Tecnologia
  * Author: Vadim Tikhanoff
@@ -554,7 +552,6 @@ public:
         }
     }
 
-
     /********************************************************/
     bool start_acquisition()
     {
@@ -759,19 +756,10 @@ public:
 
         yarp::os::Bottle &outStatus = statusPort.prepare();
         outStatus.clear();
-        if ( true )
-        {
-            yInfo() << "Status returned OK";
-            yInfo() << "\n------Response------\n";
+        yDebug() << "Status returned OK";
+        yDebug() << "\n------Response------\n";
 
-            outStatus.addString("everything ok");
-
-        }
-        // else if ( !status.ok() )
-        // {
-        //     yError() << "Status Returned Canceled";
-        //     outStatus.addString(status.error_message());
-        // }
+        outStatus.addString("everything ok");
         statusPort.write();
 
         yarp::os::Bottle b;
