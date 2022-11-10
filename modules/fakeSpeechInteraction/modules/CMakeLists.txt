@@ -2,5 +2,5 @@
 # All Rights Reserved.
 # Authors: Vadim Tikhanoff <vadim.tikhanoff@iit.it>
 
-add_subdirectory(googleSpeech)
-add_subdirectory(googleSpeechProcess)
+add_subdirectory(fakeGoogleSpeech)
+add_subdirectory(fakeGoogleSpeechProcess)
