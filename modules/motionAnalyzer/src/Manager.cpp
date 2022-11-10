@@ -874,7 +874,6 @@ Property Manager::getState()
 /********************************************************/
 bool Manager::isStanding()
 {
-    //yInfo()<<"shoulder height speed"<<shoulder_center_height_vel;
     standing=(shoulder_center_height_vel>standing_thresh);
     return standing;
 }
@@ -882,7 +881,6 @@ bool Manager::isStanding()
 /********************************************************/
 bool Manager::isSitting()
 {
-    //yInfo()<<"shoulder height speed"<<shoulder_center_height_vel;
     return (shoulder_center_height_vel<-standing_thresh);
 }
 

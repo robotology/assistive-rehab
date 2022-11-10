@@ -339,17 +339,17 @@ bool Skeleton::setTransverse(const Vector &transverse)
 
 Vector Skeleton::getCoronal() const
 {
-    return (coronal);
+    return coronal;
 }
 
 Vector Skeleton::getSagittal() const
 {
-    return (sagittal);
+    return sagittal;
 }
 
 Vector Skeleton::getTransverse() const
 {
-    return (transverse);
+    return transverse;
 }
 
 double Skeleton::getMaxPath() const

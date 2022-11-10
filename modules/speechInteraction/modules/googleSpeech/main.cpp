@@ -273,7 +273,6 @@ public:
                 b.addString(alternative.transcript());
             }
         }
-
         return b;
     }
 
@@ -299,7 +298,7 @@ public:
             trigger.addString("asking");
             questionPort.write();
         }
-        
+
         start = std::chrono::system_clock::now();
         getSounds = true;
         return true;
@@ -317,7 +316,7 @@ public:
         getSounds = false;
         sendForQuery = true;
         return true;
-    } 
+    }
 };
 
 /********************************************************/
@@ -406,12 +405,11 @@ public:
 };
 
 /********************************************************/
-<<<<<<< Updated upstream
-=======
 /********************************************************/
 /************ FAKE PROCESSING MODULES ****************/
 /********************************************************/
 /********************************************************/
+
 class FakeProcessing
 {
     std::string moduleName;

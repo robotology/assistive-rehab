@@ -154,7 +154,7 @@ public:
         }
         // update 1: incorporate filtered feedback
         skeleton->update_withpixels(unordered_filtered);
-        
+
         size_t latch_size=unordered_filtered.size();
         for (auto &it1:limbs_length)
         {
@@ -953,9 +953,6 @@ class Retriever : public RFModule
         update_gaze_frame();
         rootFrame=navFrame*gazeFrame;
 
-        // yDebug() << "NAV\n" << navFrame.toString();
-        // yDebug() << "GAZE\n" << gazeFrame.toString();
-        
         // handle skeletons acquired from detector
         if (Bottle *b1=skeletonsPort.read(false))
         {
