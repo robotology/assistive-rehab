@@ -273,11 +273,6 @@ public:
                 b.addString(alternative.transcript());
             }
         }
-        
-
-
-
-
         return b;
     }
 
