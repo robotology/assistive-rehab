@@ -23,7 +23,7 @@ x-fdg-speech: &fdg-speech
 services:
   node-button.js:
     <<: *fdg-speech
-    command: sh -c "yarp wait /managerTUG/cmd:rpc; cd /projects/assistive-rehab/app/scripts; /root/.nvm/versions/node/v14.17.0/bin/node node-button.js --host 0.0.0.0 --listenPort 80"
+    command: sh -c "cd /projects/assistive-rehab/app/scripts; /root/.nvm/versions/node/v14.17.0/bin/node node-button.js --host 0.0.0.0 --listenPort 80"
   
   # microphone:
   #   <<: *fdg-speech
@@ -31,20 +31,8 @@ services:
 
   fakeGoogleSpeech:
     <<: *fdg-speech
-    command: sh -c "googleSpeech --offline --language_code it-IT"
+    command: sh -c "fakeGoogleSpeech --language_code it-IT"
   
   fakeGoogleSpeechProcess:
     <<: *fdg-speech
-    command: sh -c "googleSpeechProcess --offline"
-
-  # yconnect_0:
-  #   <<: *fdg-speech
-  #   command: sh -c "yarp wait /microphone/audio:o; yarp wait /googleSpeech/sound:i; yarp connect /microphone/audio:o /googleSpeech/sound:i fast_tcp"
-
-  # yconnect_1:
-  #   <<: *fdg-speech
-  #   command: sh -c "yarp wait /googleSpeech/commands:rpc; yarp wait /microphone/rpc; yarp connect /googleSpeech/commands:rpc /microphone/rpc fast_tcp"
-
-  # yconnect_2:
-  #   <<: *fdg-speech
-  #   command: sh -c "yarp wait /googleSpeech/result:o; yarp wait /googleSpeechProcess/text:i; yarp connect /googleSpeech/result:o /googleSpeechProcess/text:i fast_tcp"
+    command: sh -c "fakeGoogleSpeechProcess"
