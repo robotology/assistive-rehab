@@ -102,7 +102,7 @@ public:
 
     std::pair< std::deque<double>,std::deque<int> > findPeaks(const yarp::sig::Vector &d,
                                                               const double &minv);
-    void estimateSpatialParams(const double &dist,const double &width);
+    void estimateSpatialParams(const yarp::sig::Vector &dist);
     double estimateCadence();
     double estimateSpeed();
 
