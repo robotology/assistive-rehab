@@ -254,7 +254,7 @@ Step_Processor::Step_Processor(const Metric* step_)
     numsteps=0;
     steplen_raw=0.0;
     stepwidth_raw=0.0;
-    
+
     prev_steplen=0.0;
     prev_stepwidth=0.0;
     prev_cadence=0.0;
@@ -315,7 +315,8 @@ Property Step_Processor::getResult()
 /********************************************************/
 void Step_Processor::estimateSpatialParams(const Vector& dist)
 {
-    // Projection on skeleton planes needs precise pose estimation
+    // Projection on skeleton planes is commented out because
+    // it needs precise keypoints estimation
     // Vector v_steplen = projectOnPlane(dist, curr_skeleton.getSagittal());
     // Vector v_stepwidth = projectOnPlane(dist,  curr_skeleton.getCoronal());
 
