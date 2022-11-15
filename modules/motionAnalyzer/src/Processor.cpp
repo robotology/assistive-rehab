@@ -254,7 +254,7 @@ Step_Processor::Step_Processor(const Metric* step_)
     numsteps=0;
     steplen_raw=0.0;
     stepwidth_raw=0.0;
-    
+
     prev_steplen=0.0;
     prev_stepwidth=0.0;
     prev_cadence=0.0;
@@ -270,25 +270,14 @@ void Step_Processor::estimate()
             curr_skeleton[KeyPointTag::ankle_right]->isUpdated())
     {
         updateCurrentFrame(curr_skeleton);
-        Vector k1=toCurrFrame(KeyPointTag::ankle_left);
-        Vector k2=toCurrFrame(KeyPointTag::ankle_right);
+        Vector k1 = toCurrFrame(KeyPointTag::ankle_left);
+        Vector k2 = toCurrFrame(KeyPointTag::ankle_right);
 
-        Vector v=k1-k2;
+        Vector ankles_diff = k1 - k2;
 
-        Vector sag_plane=curr_skeleton.getSagittal();
-        Vector v_steplen=projectOnPlane(v,sag_plane);
-        double d1=norm(v_steplen);
-
-        Vector cor_plane=curr_skeleton.getCoronal();
-        Vector v_stepwidth=projectOnPlane(v,cor_plane);
-        double d2=norm(v_stepwidth);
-
-        // double d1=abs(k1[1]-k2[1]);
-        // double d2=abs(k1[0]-k2[0]);
-
-        estimateSpatialParams(d1,d2);
-        cadence=estimateCadence();
-        speed=estimateSpeed();
+        estimateSpatialParams(ankles_diff);
+        cadence = estimateCadence();
+        speed = estimateSpeed();
 
         prev_steplen=steplen;
         prev_stepwidth=stepwidth;
@@ -324,42 +313,49 @@ Property Step_Processor::getResult()
 }
 
 /********************************************************/
-void Step_Processor::estimateSpatialParams(const double &dist,const double &width)
+void Step_Processor::estimateSpatialParams(const Vector& dist)
 {
-    Vector u1({dist}),u2({width});
-    Vector output1=filter_dist->filt(u1);
-    Vector output2=filter_width->filt(u2);
-    feetdist.push_back(output1[0]);
-    feetwidth.push_back(output2[0]);
+    // Projection on skeleton planes is commented out because
+    // it needs precise keypoints estimation
+    // Vector v_steplen = projectOnPlane(dist, curr_skeleton.getSagittal());
+    // Vector v_stepwidth = projectOnPlane(dist,  curr_skeleton.getCoronal());
+
+    // double d1=abs(k1[1]-k2[1]);
+    // double d2=abs(k1[0]-k2[0]);
+
+    Vector u1({norm(dist)}), u2({abs(dist[1])});
+
+    // Distance between feet as norm to keep invariance
+    Vector feet_euclidean_distance = filter_dist->filt(u1);
+
+    //In the skeleton frame the step width is measured only along Y
+    Vector step_width_curr_frame = filter_width->filt(u2);
+
+    // Store metrics for plotting
+    steplen = steplen_raw = feet_euclidean_distance[0];
+    stepwidth = stepwidth_raw = step_width_curr_frame[0];
+
+    feetdist.push_back(steplen);
+    feetwidth.push_back(stepwidth);
+
     tdist.push_back(Time::now());
 
     pair<deque<double>,deque<int>> step_params;
+
     double tlast=0.0;
     step_params=findPeaks(feetdist,step_thresh);
     deque<double> stepvec=step_params.first;
     deque<int> strikes=step_params.second;
+
     if (strikes.size()>0)
     {
         tlast=tdist[strikes.back()];
     }
 
-    steplen_raw = output1[0];
-    stepwidth_raw = output2[0];
-    steplen=0.0;
-    stepwidth=0.0;
-    if ((Time::now()-tlast)<=time_window)
+    if ((Time::now() - tlast) <= time_window)
     {
-        for(int i=0;i<stepvec.size();i++)
-        {
-            steplen+=stepvec[i];
-        }
-        if (stepvec.size()>0)
-        {
-            steplen/=stepvec.size();
-        }
-        int laststrike=stepvec.size()>numsteps ? strikes.back() : 0;
-        stepwidth=feetwidth[laststrike];
-        numsteps=(int)strikes.size();
+        int laststrike = stepvec.size()>numsteps ? strikes.back() : 0;
+        numsteps = (int)strikes.size();
     }
 }
 
