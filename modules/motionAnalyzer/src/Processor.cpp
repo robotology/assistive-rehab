@@ -323,12 +323,12 @@ void Step_Processor::estimateSpatialParams(const Vector& dist)
     // double d1=abs(k1[1]-k2[1]);
     // double d2=abs(k1[0]-k2[0]);
 
-    Vector u1({norm(dist)}), u2({dist[1]});
+    Vector u1({norm(dist)}), u2({abs(dist[1])});
 
     // Distance between feet as norm to keep invariance
     Vector feet_euclidean_distance = filter_dist->filt(u1);
 
-    //In the skeleton frame the step width is measured along Y
+    //In the skeleton frame the step width is measured only along Y
     Vector step_width_curr_frame = filter_width->filt(u2);
 
     // Store metrics for plotting
