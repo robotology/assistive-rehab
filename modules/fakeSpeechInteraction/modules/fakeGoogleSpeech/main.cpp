@@ -35,7 +35,6 @@
 #include <yarp/os/Time.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
-#include <yarp/os/Semaphore.h>
 #include <yarp/sig/SoundFile.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/sig/SoundFile.h>
@@ -51,7 +50,6 @@ class FakeProcessing
     yarp::os::BufferedPort<yarp::os::Bottle> questionPort;
     yarp::os::BufferedPort<yarp::os::Bottle> statusPort;
     yarp::os::RpcClient audioCommand;
-    yarp::os::Mutex mutex;
 
     std::deque<yarp::os::Bottle> sounds;
 
@@ -201,7 +199,7 @@ int main(int argc, char *argv[])
     if (!yarp.checkNetwork())
     {
         yError("YARP server not available!");
-        return 1;
+        return EXIT_FAILURE;
     }
 
     yarp::os::ResourceFinder rf;
