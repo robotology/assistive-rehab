@@ -61,7 +61,7 @@ jobs:
         #wget https://github.com/bazelbuild/bazel/releases/download/0.26.1/bazel_0.26.1-linux-x86_64.deb
         #sudo dpkg -i bazel_0.26.1-linux-x86_64.deb
         
-    - name: Determine YCM and YARP versions by ICUB
+    - name: Determine YCM and YARP versions required by ICUB
       shell: bash
       run: |
         cd ${GITHUB_WORKSPACE}
