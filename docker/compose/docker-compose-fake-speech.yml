@@ -7,6 +7,7 @@ x-fdg-speech: &fdg-speech
     - XAUTHORITY=/root/.Xauthority
     - PULSE_SERVER=unix:${XDG_RUNTIME_DIR}/pulse/native
     - FILE_INPUT=google-key.json
+    - ROBOT_CODE=/projects
     - XDG_RUNTIME_DIR
   volumes:
     - "/tmp/.X11-unix:/tmp/.X11-unix"

@@ -19,8 +19,8 @@ ENV YARP_COLORED_OUTPUT=1
 
 ENV CER_DIR=/projects/cer/build
 RUN cd ${PROJECTS_DIR} &&  \
-    cd assistive-rehab && \
-    git checkout feat/offline-tests && \
+    cd assistive-rehab && git pull --rebase && \
+    git checkout master && \
     cd build && \
     cmake .. \
         -G "$CMAKE_GENERATOR" \
