@@ -65,9 +65,9 @@ jobs:
       shell: bash
       run: |
         cd ${GITHUB_WORKSPACE}
-        wget https://raw.githubusercontent.com/robotology/icub-main/devel/CMakeLists.txt
-        grep -m 1 YCM_REQUIRED_VERSION CMakeLists.txt | sed "s/[^0-9.]//g" >> YCM_VERSION.txt
-        grep -m 1 YARP_REQUIRED_VERSION CMakeLists.txt | sed "s/[^0-9.]//g" >> YARP_VERSION.txt
+        wget -O CMakeLists.txt.icub-main https://raw.githubusercontent.com/robotology/icub-main/devel/CMakeLists.txt
+        grep -m 1 YCM_REQUIRED_VERSION CMakeLists.txt.icub-main | sed "s/[^0-9.]//g" >> YCM_VERSION.txt
+        grep -m 1 YARP_REQUIRED_VERSION CMakeLists.txt.icub-main | sed "s/[^0-9.]//g" >> YARP_VERSION.txt
         echo "ycm_version=$(cat YCM_VERSION.txt)" >> $GITHUB_ENV
         echo "yarp_version=$(cat YARP_VERSION.txt)" >> $GITHUB_ENV
         
