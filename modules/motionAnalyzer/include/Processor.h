@@ -76,16 +76,16 @@ class Step_Processor : public Processor
 {
     Step* step;
     yarp::sig::Vector feetdist;
-    yarp::sig::Vector feetwidth;
     yarp::sig::Vector tdist;
     iCub::ctrl::MedianFilter* filter_dist;
     iCub::ctrl::MedianFilter* filter_width;
+    iCub::ctrl::MedianFilter* filter_length;
+
     double step_thresh,step_window,time_window;
 
     double steplen,prev_steplen;
-    double steplen_raw, prev_steplen_raw;
-    double stepwidth_raw, prev_stepwidth_raw;
     double stepwidth,prev_stepwidth;
+    double stepdist;
     int numsteps;
     double cadence,prev_cadence;
     double speed,prev_speed;
@@ -107,7 +107,6 @@ public:
     double estimateSpeed();
 
     double getStepLen() const { return steplen; }
-    double getStepLenRaw() const { return steplen_raw; }
     double getStepWidth() const { return stepwidth; }
     double getNumSteps() const { return numsteps; }
     double getCadence() const { return cadence; }

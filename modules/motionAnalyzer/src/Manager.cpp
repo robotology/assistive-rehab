@@ -1054,9 +1054,7 @@ void Manager::updateState()
 void Manager::estimate()
 {
     Bottle &scopebottleout=scopePort.prepare();
-    Bottle &scopebottleout_raw=scopeRawPort.prepare();
     scopebottleout.clear();
-    scopebottleout_raw.clear();
     bResult.clear();
     for(int i=0; i<processors.size(); i++)
     {
@@ -1069,15 +1067,9 @@ void Manager::estimate()
         {
             double res=result.find(prop_tag).asFloat64();
             scopebottleout.addFloat64(res);
-            res = result.find("step_length_raw").asFloat64();
-            scopebottleout_raw.addFloat64(res);
-            
-            res = result.find("step_width_raw").asFloat64();
-            scopebottleout_raw.addFloat64(res);
         }
     }
     scopePort.write();
-    scopeRawPort.write();
 }
 
 /********************************************************/
