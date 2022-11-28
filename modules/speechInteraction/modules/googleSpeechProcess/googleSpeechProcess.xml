@@ -16,7 +16,6 @@
         <param default="googleSpeechProcess" desc="Module's name; all the open ports will be tagged with the prefix /name.">name</param>
         <param default="en-US" desc="Use English US">language_code</param>
         <param default="16000" desc="Use 16000 hertz for the sample rate">sample_rate_hertz</param>
-        <param default="false" desc="Runs the module without connecting to Google Services. Does not process the transcript">offline</param>
   </arguments>
 
   <authors>
