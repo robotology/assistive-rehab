@@ -159,15 +159,16 @@ Metric* Manager::loadMetricsList(const Bottle &bMetricEx, const string &metric_t
         }
         if(metric_type==MetricType::step)
         {
-            num=toVector(bMetricEx,"num");
-            den=toVector(bMetricEx,"den");
             double step_thresh=bMetricEx.find("step_thresh").asFloat64();
             double step_window=bMetricEx.find("step_window").asFloat64();
             double time_window=bMetricEx.find("time_window").asFloat64();
             double filter_window=bMetricEx.find("median_filter_window").asFloat64();
+            bool enable_plane_projection = bMetricEx.find("enable_plane_projection").asBool();
             double minv=bMetricEx.find("min").asFloat64();
             double maxv=bMetricEx.find("max").asFloat64();
-            Step::StepParams sp={num,den,filter_window, step_thresh,step_window,time_window,minv,maxv};
+            Step::StepParams sp = {filter_window, step_thresh,
+                                   step_window,time_window,
+                                   minv,maxv, enable_plane_projection};
             return new Step(metric_type,metric_tag,sp);
         }
         if(metric_type==MetricType::end_point)
@@ -1352,23 +1353,23 @@ matvar_t* Manager::createStepField(const Property &params)
 {
     string metric_name=params.find("name").asString();
     int numFields=7;
-    const char *subfields[numFields]={"num","den","max","min","tstart","tend","step_thresh"};
+    const char *subfields[numFields]={"median_filter_window", "max","min","tstart","tend","step_thresh", "enable_step_projection"};
     size_t dim_struct[2]={1,1};
     matvar_t* submatvar;
     submatvar=Mat_VarCreateStruct(metric_name.c_str(),2,dim_struct,subfields,numFields);
-    size_t dims_field_num[2]={1,num.size()};
-    size_t dims_field_den[2]={1,den.size()};
-    createSubfield(submatvar,num.data(),dims_field_num,subfields[0]);
-    createSubfield(submatvar,den.data(),dims_field_den,subfields[1]);
     size_t dims[2]={1,1};
     double max_val=params.find("max").asFloat64();
     double min_val=params.find("min").asFloat64();
     double step_thresh=params.find("step_thresh").asFloat64();
-    createSubfield(submatvar,&max_val,dims,subfields[2]);
-    createSubfield(submatvar,&min_val,dims,subfields[3]);
-    createSubfield(submatvar,&tstart_session,dims,subfields[4]);
-    createSubfield(submatvar,&tend_session,dims,subfields[5]);
-    createSubfield(submatvar,&step_thresh,dims,subfields[6]);
+    double flt=params.find("median_filter_window").asFloat64();
+    double proj=params.find("enable_step_projection").asFloat64();
+    createSubfield(submatvar,&flt,dims,subfields[0]);
+    createSubfield(submatvar,&max_val,dims,subfields[1]);
+    createSubfield(submatvar,&min_val,dims,subfields[2]);
+    createSubfield(submatvar,&tstart_session,dims,subfields[3]);
+    createSubfield(submatvar,&tend_session,dims,subfields[4]);
+    createSubfield(submatvar,&step_thresh,dims,subfields[5]);
+    createSubfield(submatvar,&proj,dims,subfields[6]);
     return submatvar;
 }
 

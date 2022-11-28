@@ -83,7 +83,6 @@ class Manager : public yarp::os::RFModule,
     double shoulder_center_height_vel,standing_thresh,finishline_thresh;
     std::vector<double> line_pose;
     yarp::sig::Matrix world_frame;
-    yarp::sig::Vector num,den;
 
     yarp::os::Bottle bResult;
 

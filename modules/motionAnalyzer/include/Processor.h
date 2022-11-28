@@ -82,7 +82,7 @@ class Step_Processor : public Processor
     iCub::ctrl::MedianFilter* filter_length;
 
     double step_thresh,step_window,time_window;
-
+    bool enable_step_projection;
     double steplen, prev_steplen;
     double stepwidth, prev_stepwidth;
     double stepdist, prev_stepdist;
