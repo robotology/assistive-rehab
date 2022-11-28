@@ -293,6 +293,8 @@ bool Manager::setTemplateTag(const string &template_tag)
         yError() << "feedbackProducer could not load the template tag";
         return false;
     }
+
+    return true;
 }
 
 /********************************************************/
@@ -1087,7 +1089,6 @@ bool Manager::configure(ResourceFinder &rf)
 
     opcPort.open(("/" + getName() + "/opc").c_str());
     scopePort.open(("/" + getName() + "/scope").c_str());
-    scopeRawPort.open(("/" + getName() + "/scopeRaw").c_str());
     scalerPort.open(("/" + getName() + "/scaler:cmd").c_str());
     dtwPort.open(("/" + getName() + "/dtw:cmd").c_str());
     actionPort.open(("/" + getName() + "/action:cmd").c_str());
@@ -1120,7 +1121,6 @@ bool Manager::interruptModule()
 {
     opcPort.interrupt();
     scopePort.interrupt();
-    scopeRawPort.interrupt();
     scalerPort.interrupt();
     dtwPort.interrupt();
     actionPort.interrupt();
@@ -1149,7 +1149,6 @@ bool Manager::close()
 
     opcPort.close();
     scopePort.close();
-    scopeRawPort.close();
     scalerPort.close();
     dtwPort.close();
     actionPort.close();

@@ -83,12 +83,12 @@ class Step_Processor : public Processor
 
     double step_thresh,step_window,time_window;
 
-    double steplen,prev_steplen;
-    double stepwidth,prev_stepwidth;
-    double stepdist;
+    double steplen, prev_steplen;
+    double stepwidth, prev_stepwidth;
+    double stepdist, prev_stepdist;
     int numsteps;
-    double cadence,prev_cadence;
-    double speed,prev_speed;
+    double cadence, prev_cadence;
+    double speed, prev_speed;
 
 public:
     Step_Processor();

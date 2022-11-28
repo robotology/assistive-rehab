@@ -26,7 +26,7 @@ namespace MetricType
 extern const std::string rom;
 extern const std::string end_point;
 extern const std::string step;
-} 
+}
 
 class Metric
 {

@@ -337,8 +337,8 @@ void Step_Processor::estimateSpatialParams(const Vector& dist)
     Vector step_length_curr_frame = filter_length->filt(u3);
 
     // Store metrics for plotting
-    steplen = steplen_raw = step_length_curr_frame[0];
-    stepwidth = stepwidth_raw = step_width_curr_frame[0];
+    steplen = step_length_curr_frame[0];
+    stepwidth = step_width_curr_frame[0];
     stepdist = feet_euclidean_distance[0];
 
     feetdist.push_back(stepdist);
