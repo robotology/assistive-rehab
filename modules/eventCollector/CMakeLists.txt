@@ -3,6 +3,7 @@
 # Authors: Valentina Vasco <valentina.vasco@iit.it> Alexandre Antunes <alexandre.gomespereira@iit.it>
 
 find_package(JSONCPP)
+
 if(JSONCPP_FOUND)
     project(eventCollector)
 
