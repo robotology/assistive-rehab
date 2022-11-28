@@ -1353,7 +1353,7 @@ matvar_t* Manager::createStepField(const Property &params)
 {
     string metric_name=params.find("name").asString();
     int numFields=7;
-    const char *subfields[numFields]={"median_filter_window", "max","min","tstart","tend","step_thresh", "enable_step_projection"};
+    const char *subfields[numFields]={"median_filter_window", "max","min","tstart","tend","step_thresh", "enable_plane_projection"};
     size_t dim_struct[2]={1,1};
     matvar_t* submatvar;
     submatvar=Mat_VarCreateStruct(metric_name.c_str(),2,dim_struct,subfields,numFields);

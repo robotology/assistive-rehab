@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     Manager manager;
     ResourceFinder rf;
 
-    rf.setDefaultContext("motionAnalyzer");  
+    rf.setDefaultContext("motionAnalyzer");
     rf.setDefaultConfigFile("motion-repertoire.ini");
     rf.configure(argc, argv);
 

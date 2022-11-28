@@ -324,7 +324,7 @@ void Step_Processor::estimateSpatialParams(const Vector& dist)
 
     // Use with care: projection on skeleton planes needs precise
     // keypoints estimation
-    if (enable_step_projection)
+    if (enable_plane_projection)
     {
         Vector step_sag = projectOnPlane(difference_filtered, curr_skeleton.getSagittal());
         Vector step_cor = projectOnPlane(difference_filtered, curr_skeleton.getCoronal());
