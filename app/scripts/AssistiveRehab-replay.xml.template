@@ -9,7 +9,7 @@
 
     <module>
        <name>skeletonRetriever</name>
-       <parameters>--camera::fov "(86 57)" --depth::enable false --depth::kernel-size 3  --depth::iterations 1 --depth::min-distance 0.5 --depth::max-distance 6.0 --filter-keypoint-order 4</parameters>
+       <parameters>--camera::fov "(86 57)" --depth::enable true --depth::kernel-size 8  --depth::iterations 1 --depth::min-distance 0.5 --depth::max-distance 6.0 --filter-keypoint-order 8</parameters>
        <dependencies>
           <port timeout="5">/opc/rpc</port>
        </dependencies>
@@ -30,7 +30,7 @@
 
     <module>
         <name>motionAnalyzer</name>
-        <parameters>--median_filter_window 2</parameters>
+        <parameters>--median_filter_window 4</parameters>
         <node>container</node>
     </module>
 

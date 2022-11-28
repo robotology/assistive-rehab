@@ -42,7 +42,6 @@ class Manager : public yarp::os::RFModule,
     yarp::os::RpcClient actionPort;
     yarp::os::RpcClient navPort;
     yarp::os::BufferedPort<yarp::os::Bottle> scopePort;
-    yarp::os::BufferedPort<yarp::os::Bottle> scopeRawPort;
 
     enum class State { idle, sitting, standing, crossed } state;
     bool standing;
@@ -84,7 +83,6 @@ class Manager : public yarp::os::RFModule,
     double shoulder_center_height_vel,standing_thresh,finishline_thresh;
     std::vector<double> line_pose;
     yarp::sig::Matrix world_frame;
-    yarp::sig::Vector num,den;
 
     yarp::os::Bottle bResult;
 

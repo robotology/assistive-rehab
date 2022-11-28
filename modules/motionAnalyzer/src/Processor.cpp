@@ -241,8 +241,8 @@ Step_Processor::Step_Processor()
 Step_Processor::Step_Processor(const Metric* step_)
 {
     step=(Step*)step_;
-    filter_dist=new MedianFilter(step->getFilterWindow(), yarp::sig::Vector(1, 0.0));
-    filter_width=new MedianFilter(step->getFilterWindow(), yarp::sig::Vector(1, 0.0));
+    filter_dist = new MedianFilter(step->getFilterWindow(), yarp::sig::Vector(1, 0.0));
+
     step_thresh=step->getThresh();
     step_window=step->getStepWindow();
     time_window=step->getTimeWindow();
@@ -252,15 +252,13 @@ Step_Processor::Step_Processor(const Metric* step_)
     cadence=0.0;
     speed=0.0;
     numsteps=0;
-    steplen_raw=0.0;
-    stepwidth_raw=0.0;
+    stepdist = 0.0;
 
     prev_steplen=0.0;
     prev_stepwidth=0.0;
     prev_cadence=0.0;
     prev_speed=0.0;
-    prev_steplen_raw=0.0;
-    prev_stepwidth_raw=0.0;
+    prev_stepdist = 0.0;
 }
 
 /********************************************************/
@@ -283,8 +281,7 @@ void Step_Processor::estimate()
         prev_stepwidth=stepwidth;
         prev_cadence=cadence;
         prev_speed=speed;
-        prev_steplen_raw=steplen_raw;
-        prev_stepwidth_raw=stepwidth_raw;
+        prev_stepdist = stepdist;
     }
     else
     {
@@ -292,8 +289,7 @@ void Step_Processor::estimate()
         stepwidth=prev_stepwidth;
         cadence=prev_cadence;
         speed=prev_speed;
-        steplen_raw=prev_steplen_raw;
-        stepwidth_raw=prev_stepwidth_raw;
+        stepdist = prev_stepdist;
     }
 }
 
@@ -307,43 +303,53 @@ Property Step_Processor::getResult()
     result.put(props[2],cadence);
     result.put(props[3],speed);
     result.put(props[4],numsteps);
-    result.put(props[5],steplen_raw);
-    result.put(props[6],stepwidth_raw);
+    result.put(props[5],stepdist);
     return result;
 }
 
 /********************************************************/
 void Step_Processor::estimateSpatialParams(const Vector& dist)
 {
-    // Projection on skeleton planes is commented out because
-    // it needs precise keypoints estimation
-    // Vector v_steplen = projectOnPlane(dist, curr_skeleton.getSagittal());
-    // Vector v_stepwidth = projectOnPlane(dist,  curr_skeleton.getCoronal());
+    Vector x({dist[0]}), y({dist[1]});
 
-    // double d1=abs(k1[1]-k2[1]);
-    // double d2=abs(k1[0]-k2[0]);
+    x = filter_dist->filt(x);
+    y = filter_dist->filt(y);
 
-    Vector u1({norm(dist)}), u2({abs(dist[1])});
+    Vector difference_filtered(cat(x, y));
 
     // Distance between feet as norm to keep invariance
-    Vector feet_euclidean_distance = filter_dist->filt(u1);
+    // wrt to skeleton orientation
+    Vector feet_euclidean_distance({norm(difference_filtered)});
+    stepdist = feet_euclidean_distance[0];
 
-    //In the skeleton frame the step width is measured only along Y
-    Vector step_width_curr_frame = filter_width->filt(u2);
+    // Use with care: projection on skeleton planes needs precise
+    // keypoints estimation
+    if (enable_plane_projection)
+    {
+        Vector step_sag = projectOnPlane(difference_filtered, curr_skeleton.getSagittal());
+        Vector step_cor = projectOnPlane(difference_filtered, curr_skeleton.getCoronal());
 
-    // Store metrics for plotting
-    steplen = steplen_raw = feet_euclidean_distance[0];
-    stepwidth = stepwidth_raw = step_width_curr_frame[0];
+        steplen = abs(step_sag[0]);
+        stepwidth = abs(step_cor[0]);
+    }
+    else
+    {
+        // Distance along X between keypoints in skeleton frame
+        // Low-accuracy metric to measure step length
+        steplen = abs(difference_filtered[0]);
 
-    feetdist.push_back(steplen);
-    feetwidth.push_back(stepwidth);
+        // Distance along Y between keypoints in skeleton frame
+        // Low-accuracy metric to measure step width
+        stepwidth = abs(difference_filtered[1]);
+    }
 
+    feetdist.push_back(stepdist);
     tdist.push_back(Time::now());
 
     pair<deque<double>,deque<int>> step_params;
 
     double tlast=0.0;
-    step_params=findPeaks(feetdist,step_thresh);
+    step_params=findPeaks(feetdist, step_thresh);
     deque<double> stepvec=step_params.first;
     deque<int> strikes=step_params.second;
 
@@ -415,24 +421,19 @@ void Step_Processor::reset()
     cadence=0.0;
     speed=0.0;
     numsteps=0;
-    steplen_raw=0.0;
-    stepwidth_raw=0.0;
-
+    stepdist = 0.0;
 
     prev_steplen=0.0;
     prev_stepwidth=0.0;
     prev_cadence=0.0;
     prev_speed=0.0;
-    prev_steplen_raw=0.0;
-    prev_stepwidth_raw=0.0;
-
+    prev_stepdist = 0.0;
 }
 
 /********************************************************/
 Step_Processor::~Step_Processor()
 {
     delete filter_dist;
-    delete filter_width;
 }
 
 /****************************************/

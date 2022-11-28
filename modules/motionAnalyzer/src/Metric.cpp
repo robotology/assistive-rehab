@@ -124,22 +124,20 @@ Step::Step(const string &type, const string &name, const StepParams &params)
     properties.push_back("cadence");
     properties.push_back("speed");
     properties.push_back("num_steps");
-    properties.push_back("step_length_raw");
-    properties.push_back("step_width_raw");
+    properties.push_back("step_distance");
 }
 
 Step::Step(const Step &r)
 {
     this->type=r.type;
     this->name=r.name;
-    this->step_params.num=r.step_params.num;
-    this->step_params.den=r.step_params.den;
     this->step_params.median_filter_window=r.step_params.median_filter_window;
     this->step_params.thresh=r.step_params.thresh;
     this->step_params.step_window=r.step_params.step_window;
     this->step_params.time_window=r.step_params.time_window;
     this->step_params.minv=r.step_params.minv;
     this->step_params.maxv=r.step_params.maxv;
+    this->step_params.enable_plane_projection = r.step_params.enable_plane_projection;
     this->properties=r.properties;
 }
 
@@ -147,13 +145,13 @@ Step& Step::operator = (const Step &r)
 {
     this->type=r.type;
     this->name=r.name;
-    this->step_params.num=r.step_params.num;
-    this->step_params.den=r.step_params.den;
+    this->step_params.median_filter_window=r.step_params.median_filter_window;
     this->step_params.thresh=r.step_params.thresh;
     this->step_params.step_window=r.step_params.step_window;
     this->step_params.time_window=r.step_params.time_window;
     this->step_params.minv=r.step_params.minv;
     this->step_params.maxv=r.step_params.maxv;
+    this->step_params.enable_plane_projection = r.step_params.enable_plane_projection;
     return *this;
 }
 
@@ -161,11 +159,14 @@ void Step::print(ostream &os) const
 {
     os<<"\t"<<"type= "<<type<<endl<<"\t";
     os<<"name= "<<name<<endl<<"\t";
+    os<<"median_filter_window= "<<step_params.median_filter_window<<endl<<"\t";
     os<<"thresh= "<<step_params.thresh<<endl<<"\t";
     os<<"step window= "<<step_params.step_window<<endl<<"\t";
     os<<"time window= "<<step_params.time_window<<endl<<"\t";
     os<<"min= "<<step_params.minv<<endl<<"\t";
-    os<<"max= "<<step_params.maxv<<endl;
+    os<<"max= "<<step_params.maxv<<endl<<"\t";
+    os<<"enable_plane_projection= " << step_params.enable_plane_projection << endl;
+
 }
 
 yarp::os::Property Step::getParams() const
@@ -174,19 +175,13 @@ yarp::os::Property Step::getParams() const
     params.put("type",type);
     params.put("name",name);
 
-    Bottle bNum;
-    bNum.addList().read(step_params.num);
-    params.put("num",bNum.get(0));
-
-    Bottle bDen;
-    bDen.addList().read(step_params.den);
-    params.put("den",bDen.get(0));
-
+    params.put("median_filter_window",step_params.median_filter_window);
     params.put("min",step_params.minv);
     params.put("max",step_params.maxv);
     params.put("step_thresh",step_params.thresh);
     params.put("step_window",step_params.step_window);
     params.put("time_window",step_params.time_window);
+    params.put("enable_plane_projection",step_params.enable_plane_projection);
     return params;
 }
 

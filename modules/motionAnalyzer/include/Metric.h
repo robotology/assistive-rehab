@@ -26,7 +26,7 @@ namespace MetricType
 extern const std::string rom;
 extern const std::string end_point;
 extern const std::string step;
-} 
+}
 
 class Metric
 {
@@ -77,10 +77,9 @@ public:
     std::string name;
     struct StepParams
     {
-        yarp::sig::Vector num;
-        yarp::sig::Vector den;
         double median_filter_window;
         double thresh,step_window,time_window,minv,maxv;
+        bool enable_plane_projection;
     } step_params;
 
     Step() {;}
@@ -88,9 +87,8 @@ public:
     Step(const Step &r);
     Step& operator = (const Step &r);
 
-    yarp::sig::Vector getNum() const { return step_params.num; }
-    yarp::sig::Vector getDen() const { return step_params.den; }
     double getFilterWindow() const { return step_params.median_filter_window; }
+    double isPlaneProjectionEnabled() const { return step_params.enable_plane_projection; }
     double getThresh() const { return step_params.thresh; }
     double getStepWindow() const { return step_params.step_window; }
     double getTimeWindow() const { return step_params.time_window; }
