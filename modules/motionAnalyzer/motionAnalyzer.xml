@@ -145,7 +145,7 @@
 
    \code
    [step_0]
-   median_filter_window           2
+   median_filter_window           4
    step_thresh                    0.25
    step_window                    3
    time_window                    3.0
@@ -156,6 +156,7 @@
    A step is identified as occurring between two consecutive maximum values of the distance between the feet.
    The average step length is evaluated by first computing such distance along the sagittal plane and extracting the last
    `step_window` maximum values exceeding `step_thresh`. Only the maximum values occurring within the last `time_window` seconds from the last detected step are considered.
+   `enable_plane_projection` is a flag that enables the projection of the difference between the two ankles on the sagittal and coronal planes of the skeleton.
   </description-long>
 
   <arguments>

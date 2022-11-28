@@ -1,29 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<portscope rows="2" columns="1" carrier="tcp" no-persistent="1">
+<portscope rows="1" columns="1" carrier="tcp" no-persistent="1">
     <plot gridx="0"
-          gridy="1"
+          gridy="0"
           minval="-0.05"
           maxval="0.8"
           bgcolor="White"
-          title="Step Width [m]">
-        <graph remote="/motionAnalyzer/scopeRaw"
-               index="1"
+          title="Step Metric [m]">
+        <graph remote="/motionAnalyzer/scope"
+               index="0"
                color="Red"
                size="2"
                type="lines"
-               title="Step Width [m]" />
-    </plot>
-    <plot gridx="0"
-       gridy="0"
-       minval="-0.05"
-       maxval="0.8"
-       bgcolor="White"
-       title="Step Length [m]">
-       <graph remote="/motionAnalyzer/scope"
-               index="0"
-               color="Blue"
-               type="lines"
-               size="2"
-               title="Step Length [m]"/>
+               title="Step Metric [m]" />
     </plot>
 </portscope>
+

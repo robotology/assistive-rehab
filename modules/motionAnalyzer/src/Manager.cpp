@@ -1362,7 +1362,7 @@ matvar_t* Manager::createStepField(const Property &params)
     double min_val=params.find("min").asFloat64();
     double step_thresh=params.find("step_thresh").asFloat64();
     double flt=params.find("median_filter_window").asFloat64();
-    double proj=params.find("enable_step_projection").asFloat64();
+    double proj=params.find("enable_plane_projection").asFloat64();
     createSubfield(submatvar,&flt,dims,subfields[0]);
     createSubfield(submatvar,&max_val,dims,subfields[1]);
     createSubfield(submatvar,&min_val,dims,subfields[2]);

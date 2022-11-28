@@ -242,8 +242,6 @@ Step_Processor::Step_Processor(const Metric* step_)
 {
     step=(Step*)step_;
     filter_dist = new MedianFilter(step->getFilterWindow(), yarp::sig::Vector(1, 0.0));
-    filter_width = new MedianFilter(step->getFilterWindow(), yarp::sig::Vector(1, 0.0));
-    filter_length = new MedianFilter(step->getFilterWindow(), yarp::sig::Vector(1, 0.0));
 
     step_thresh=step->getThresh();
     step_window=step->getStepWindow();
@@ -312,19 +310,24 @@ Property Step_Processor::getResult()
 /********************************************************/
 void Step_Processor::estimateSpatialParams(const Vector& dist)
 {
-    Vector distance_filtered = filter_dist->filt(dist);
+    Vector x({dist[0]}), y({dist[1]});
+
+    x = filter_dist->filt(x);
+    y = filter_dist->filt(y);
+
+    Vector difference_filtered(cat(x, y));
 
     // Distance between feet as norm to keep invariance
     // wrt to skeleton orientation
-    Vector feet_euclidean_distance({norm(distance_filtered)});
+    Vector feet_euclidean_distance({norm(difference_filtered)});
     stepdist = feet_euclidean_distance[0];
 
     // Use with care: projection on skeleton planes needs precise
     // keypoints estimation
     if (enable_step_projection)
     {
-        Vector step_sag = projectOnPlane(distance_filtered, curr_skeleton.getSagittal());
-        Vector step_cor = projectOnPlane(distance_filtered, curr_skeleton.getCoronal());
+        Vector step_sag = projectOnPlane(difference_filtered, curr_skeleton.getSagittal());
+        Vector step_cor = projectOnPlane(difference_filtered, curr_skeleton.getCoronal());
 
         steplen = abs(step_sag[0]);
         stepwidth = abs(step_cor[0]);
@@ -333,11 +336,11 @@ void Step_Processor::estimateSpatialParams(const Vector& dist)
     {
         // Distance along X between keypoints in skeleton frame
         // Low-accuracy metric to measure step length
-        steplen = abs(distance_filtered[1]);
+        steplen = abs(difference_filtered[0]);
 
         // Distance along Y between keypoints in skeleton frame
         // Low-accuracy metric to measure step width
-        stepwidth = abs(distance_filtered[0]);
+        stepwidth = abs(difference_filtered[1]);
     }
 
     feetdist.push_back(stepdist);
@@ -431,8 +434,6 @@ void Step_Processor::reset()
 Step_Processor::~Step_Processor()
 {
     delete filter_dist;
-    delete filter_width;
-    delete filter_length;
 }
 
 /****************************************/
