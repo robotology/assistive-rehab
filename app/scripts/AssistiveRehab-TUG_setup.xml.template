@@ -26,7 +26,7 @@
 
     <module>
         <name>yarpdev</name>
-        <parameters>--context AssistiveRehab --from realsense2.ini</parameters>
+        <parameters>--context AssistiveRehab --from realsense2_640x480.ini</parameters>
         <node>r1-torso</node>
     </module>
 
@@ -58,6 +58,12 @@
        <name>yarpview</name>
        <parameters>--name /viewer/obstacles --w 400 --h 400 --p 50 --compact</parameters>
        <node>r1-console</node>
+    </module>
+
+    <module>
+        <name>yarpscope</name>
+        <parameters>--context AssistiveRehab --xml motionAnalyzer-scope.xml</parameters>
+        <node>r1-console</node>        
     </module>
     
     <connection>
@@ -106,14 +112,12 @@
         <from>/depthCamera/depthImage:o</from>
         <to>/yarpOpenPose/float:i</to>
         <protocol>fast_tcp+send.portmonitor+file.depthimage_compression_zlib+recv.portmonitor+file.depthimage_compression_zlib+type.dll</protocol>
-        <!--<protocol>fast_tcp+send.portmonitor+file.depthimage_compression_zfp+recv.portmonitor+file.depthimage_compression_zfp+type.dll</protocol>-->
     </connection>
 
     <connection>
         <from>/yarpOpenPose/float:o</from>
         <to>/skeletonRetriever/depth:i</to>
         <protocol>fast_tcp</protocol>
-        <!--<protocol>fast_tcp+send.portmonitor+file.depthimage_compression_zfp+recv.portmonitor+file.depthimage_compression_zfp+type.dll</protocol>-->
     </connection>
 
     <connection>
@@ -353,7 +357,7 @@
     <connection>
         <from>/obstacleDetector/viewer:o</from>
         <to>/viewer/obstacles</to>
-        <protocol>fast_tcp</protocol>
+        <protocol>mjpeg</protocol>
     </connection>
 
     <connection>
