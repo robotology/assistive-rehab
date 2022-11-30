@@ -22,7 +22,7 @@ services:
 
   skeletonViewer:
     <<: *fdg-basic
-    command: sh -c "skeletonViewer --x 1120 --y 10 --show-floor on --camera-viewup '(1.0 0.0 0.0)' --camera-position '(-4.0 -2.0 8.0)' --camera-focalpoint '(0.0 -2.0 0.0)' --grid-resolution "(100 100)""
+    command: sh -c "skeletonViewer --x 1120 --y 10 --show-floor on --camera-viewup '(1.0 0.0 0.0)' --camera-position '(-4.0 -2.0 8.0)' --camera-focalpoint '(0.0 -2.0 0.0)' --grid-resolution '(100 100)'"
 
   lineDetector:
     <<: *fdg-basic

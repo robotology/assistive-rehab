@@ -19,6 +19,7 @@
 #include <yarp/os/RpcClient.h>
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/math/Math.h>
+#include <yarp/os/LogComponent.h>
 
 #include <condition_variable>
 
@@ -28,6 +29,11 @@
 #include <AssistiveRehab/skeleton.h>
 
 #include "src/managerTUG_IDL.h"
+
+namespace
+{
+    YARP_LOG_COMPONENT(MANAGERTUG, "managerTUG")
+}
 
 using namespace std;
 using namespace yarp::os;
@@ -1468,6 +1474,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::obstacle)
         {
+            yCDebugThrottle(MANAGERTUG, 1) << "Entering state::obstacle";
             if (reinforce_obstacle_cnt==0)
             {
                 if (simulation)
@@ -1552,6 +1559,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state>=State::obstacle)
         {
+            yCDebugThrottle(MANAGERTUG, 1) << "Entering state BEYOND obstacle state";
             if (obstacle_manager->hasObstacle())
             {
                 state=State::obstacle;
@@ -1587,6 +1595,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::idle)
         {
+            yCDebugThrottle(MANAGERTUG, 1) << "Entering state::idle";
             prev_state=state;
             if (Time::now()-t0>10.0)
             {
@@ -1605,6 +1614,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state>=State::follow)
         {
+            yCDebugThrottle(MANAGERTUG, 1) << "Entering state::follow";
             if (follow_tag!=tag)
             {
                 Bottle cmd,rep;
@@ -1619,6 +1629,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::lock)
         {
+            yCDebugThrottle(MANAGERTUG, 1) << "Entering state::lock";
             prev_state=state;
             if (!follow_tag.empty())
             {
@@ -1638,6 +1649,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::seek_locked)
         {
+            yCDebugThrottle(MANAGERTUG, 1) << "Entering state::seek_skeleton";
             prev_state=state;
             if (findLocked(follow_tag) && is_follow_tag_ahead)
             {
@@ -1647,6 +1659,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::seek_skeleton)
         {
+            yCDebugThrottle(MANAGERTUG, 1) << "Entering state::seek_skeleton";
             prev_state=state;
             if (!follow_tag.empty() && is_follow_tag_ahead)
             {
@@ -1656,6 +1669,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::follow)
         {
+            yCDebugThrottle(MANAGERTUG, 1) << "Entering state::follow";
             prev_state=state;
             if (simulation)
             {
@@ -1714,6 +1728,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::engaged)
         {
+            yCDebugThrottle(MANAGERTUG, 1) << "Entering state::engaged";
             prev_state=state;
             answer_manager->wakeUp();
             Bottle cmd,rep;
@@ -1798,6 +1813,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::point_start)
         {
+            yCDebugThrottle(MANAGERTUG, 1) << "Entering state::point_start";
             prev_state=state;
             string part=which_part();
             if (simulation)
@@ -1828,10 +1844,12 @@ class Manager : public RFModule, public managerTUG_IDL
             state=obstacle_manager->hasObstacle()
                     ? State::obstacle : State::explain;
             reinforce_obstacle_cnt=0;
+
         }
 
         if (state==State::explain)
         {
+            yCDebugThrottle(MANAGERTUG, 1) << "Entering state::explain";
             prev_state=state;
             Speech s("explain-start");
             speak(s);
@@ -1853,6 +1871,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::reach_line)
         {
+            yCDebugThrottle(MANAGERTUG, 1) << "Entering state::reach_line";
             prev_state=state;
             bool navigating=true;
             Bottle cmd,rep;
@@ -1900,6 +1919,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::point_line)
         {
+            yCDebugThrottle(MANAGERTUG, 1) << "Entering state::point_line";
             prev_state=state;
             string part=which_part();
             point(pointing_finish,part,false);
@@ -1917,6 +1937,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::starting)
         {
+            yCDebugThrottle(MANAGERTUG, 1) << "Entering state::starting";
             prev_state=state;
             Bottle cmd,rep;
             cmd.addString("track_skeleton");
@@ -2082,6 +2103,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::finished)
         {
+            yCDebugThrottle(MANAGERTUG, 1) << "Entering state::finished";
             t=Time::now()-tstart;
             prev_state=state;
             yInfo()<<"Test finished in"<<t<<"seconds";
@@ -2102,6 +2124,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::not_passed)
         {
+            yCDebugThrottle(MANAGERTUG, 1) << "Entering state::not_passed";
             t=Time::now()-tstart;
             prev_state=state;
             Bottle cmd,rep;
