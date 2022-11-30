@@ -70,6 +70,36 @@ bool reply(const string &s, const bool &wait,
     return ret;
 }
 
+bool checkOutputPorts(yarp::os::BufferedPort<yarp::os::Bottle>& port)
+{
+    if(port.getOutputCount() == 0)
+    {
+        yCDebug(MANAGERTUG) << "Port" << port.getName() << "not connected.";
+        return true;
+    }
+    return false;
+}
+
+bool checkInputPorts(yarp::os::BufferedPort<yarp::os::Bottle>& port)
+{
+    if(port.getInputCount() == 0)
+    {
+        yCDebug(MANAGERTUG) << "Port" << port.getName() << "not connected.";
+        return true;
+    }
+    return false;
+}
+
+bool checkPorts(yarp::os::RpcClient& port)
+{
+    if(port.getOutputCount() == 0)
+    {
+        yCDebug(MANAGERTUG) << "Port" << port.getName() << "not connected.";
+        return true;
+    }
+    return false;
+}
+
 /****************************************************************/
 class ObstacleManager : public PeriodicThread
 {
@@ -410,14 +440,17 @@ public:
     /********************************************************/
     bool connected()
     {
-        if(this->getInputCount() < 1)
+
+        yCDebugThrottle(MANAGERTUG, 5) << "answer_manager input count" << this->getInputCount();
+
+        if(this->getInputCount() == 0)
         {
+            yCDebugThrottle(MANAGERTUG, 5) << this->getName() << "not connected.";
+
             return false;
         }
-        else
-        {
-            return true;
-        }
+
+        return true;
     }
 
     /********************************************************/
@@ -1414,13 +1447,14 @@ class Manager : public RFModule, public managerTUG_IDL
     bool updateModule() override
     {
         lock_guard<mutex> lg(mtx);
-        if((analyzerPort.getOutputCount()==0) || (speechStreamPort.getOutputCount()==0) ||
-                (speechRpcPort.getOutputCount()==0) || (attentionPort.getOutputCount()==0) ||
-                (navigationPort.getOutputCount()==0) || (leftarmPort.getOutputCount()==0) ||
-                (rightarmPort.getOutputCount())==0 || (opcPort.getInputCount()==0) ||
-                (obstaclePort.getInputCount()==0) || !answer_manager->connected())
+
+        if(checkPorts(analyzerPort) || checkOutputPorts(speechStreamPort) ||
+                checkPorts(speechRpcPort) || checkPorts(attentionPort) ||
+                checkPorts(navigationPort) || checkPorts(leftarmPort) ||
+                checkPorts(rightarmPort) || checkInputPorts(opcPort) ||
+                checkInputPorts(obstaclePort) || !answer_manager->connected())
         {
-            yInfo()<<"not connected";
+            yInfoThrottle(5) << "ManagerTUG not connected";
             connected=false;
             return true;
         }
@@ -1454,7 +1488,7 @@ class Manager : public RFModule, public managerTUG_IDL
         else
         {
             world_configured=false;
-            yInfo()<<"World not configured";
+            yInfoThrottle(5)<<"World not configured";
             return true;
         }
 
@@ -1916,6 +1950,8 @@ class Manager : public RFModule, public managerTUG_IDL
                 }
             }
         }
+
+        yCDebug(MANAGERTUG) << "state is" << static_cast<int>(state);
 
         if (state==State::point_line)
         {
