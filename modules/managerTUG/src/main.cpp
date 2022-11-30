@@ -1446,6 +1446,9 @@ class Manager : public RFModule, public managerTUG_IDL
     /****************************************************************/
     bool updateModule() override
     {
+
+        yCDebugThrottle(MANAGERTUG, 5) << "Current state is" << static_cast<int>(state);
+
         lock_guard<mutex> lg(mtx);
 
         if(checkPorts(analyzerPort) || checkOutputPorts(speechStreamPort) ||
@@ -1488,7 +1491,7 @@ class Manager : public RFModule, public managerTUG_IDL
         else
         {
             world_configured=false;
-            yInfoThrottle(5)<<"World not configured";
+            yInfoThrottle(5) << "Start and finish line not yet defined.";
             return true;
         }
 
@@ -1563,6 +1566,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state>State::frozen)
         {
+            yInfoThrottle(5) << "State BEYOND frozen:" << static_cast<int>(state);
             if (trigger_manager->freeze())
             {
                 prev_state=state;
@@ -1588,12 +1592,13 @@ class Manager : public RFModule, public managerTUG_IDL
                     }
                 }
                 state=State::frozen;
+                 yCDebugThrottle(MANAGERTUG, 1) << "Entering state::frozen";
+
             }
         }
 
         if (state>=State::obstacle)
         {
-            yCDebugThrottle(MANAGERTUG, 1) << "Entering state BEYOND obstacle state";
             if (obstacle_manager->hasObstacle())
             {
                 state=State::obstacle;
@@ -1807,7 +1812,7 @@ class Manager : public RFModule, public managerTUG_IDL
                                             Bottle &props=*rep.get(0).asList();
                                             if (props.size()>0)
                                             {
-                                                string prop="step_length";//select_randomly(props);
+                                                string prop="step_distance";//select_randomly(props);
                                                 yInfo()<<"Selected prop:"<<prop;
                                                 cmd.clear();
                                                 rep.clear();
@@ -1928,11 +1933,14 @@ class Manager : public RFModule, public managerTUG_IDL
                 }
                 double y=finishline_pose[1]-1.0;
                 double theta=starting_pose[2];
+                yCDebug(MANAGERTUG) << "Setting destination x:" << x
+                                    << "y:" << y << "theta:" << theta ;
                 ok_go=go_to(Vector({x,y,theta}),false);
             }
 
             if (ok_go)
             {
+                yCDebugThrottle(MANAGERTUG, 1) << "Moving to finish line";
                 Time::delay(getPeriod());
                 cmd.clear();
                 rep.clear();
@@ -1950,8 +1958,6 @@ class Manager : public RFModule, public managerTUG_IDL
                 }
             }
         }
-
-        yCDebug(MANAGERTUG) << "state is" << static_cast<int>(state);
 
         if (state==State::point_line)
         {
