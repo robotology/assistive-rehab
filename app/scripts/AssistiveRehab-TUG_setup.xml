@@ -59,6 +59,12 @@
        <node>r1-console</node>
     </module>
 
+    <module>
+        <name>yarpscope</name>
+        <parameters>--context AssistiveRehab --xml motionAnalyzer-scope.xml</parameters>
+        <node>r1-console</node>
+    </module>
+
     <connection>
         <from>/joystickCtrl:o</from>
         <to>/baseControl/joystick1:i</to>
