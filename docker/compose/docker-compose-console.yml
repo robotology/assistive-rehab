@@ -16,6 +16,10 @@ x-fdg-basic: &fdg-basic
   privileged: true
 
 services:
+  yarprunConsole:
+    <<: *fdg-basic
+    command: sh -c "yarprun --server /r1-console --log"
+
   objectsPropertiesCollector:
     <<: *fdg-basic
     command: sh -c "objectsPropertiesCollector --name opc --no-load-db --no-save-db --sync-bc 0.1"
@@ -37,7 +41,7 @@ services:
         yarp wait /depthCamera/rgbImage:o
         yarp wait /depthCamera/depthImage:o
         yarp wait /opc/rpc
-        skeletonRetriever --depth::kernel-size 4 --depth::iterations 3 --depth::min-distance 0.5 --depth::max-distance 6.0
+        skeletonRetriever --depth::enable true --depth::kernel-size 8  --depth::iterations 1 --depth::min-distance 0.5 --depth::max-distance 6.0 --filter-keypoint-order 8
 
   skeletonLocker:
     <<: *fdg-basic
