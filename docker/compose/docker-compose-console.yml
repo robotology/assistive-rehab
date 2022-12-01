@@ -82,7 +82,7 @@ services:
   gazeController:
     <<: *fdg-basic
     restart: on-failure
-    command: sh -c "yarp wait /cer/head/command:i; yarp wait /cer/head/rpc:i; yarp wait /cer/head/state:o; cer_gaze-controller --cameras::file /projects/cer/build/share/CER/contexts/cameraCalibration/cerEyes_320x240.ini"
+    command: sh -c "yarp wait /cer/head/command:i; yarp wait /cer/head/rpc:i; yarp wait /cer/head/state:o; cer_gaze-controller --cameras::file /projects/cer/build/share/CER/contexts/cameraCalibration/cerEyes_640x480.ini"
 
   navController:
     <<: *fdg-basic
