@@ -19,20 +19,20 @@
 service eventCollector_IDL
 {
    /**
-   * Start collecting.
+   * Start event collection.
    * @param skeletonTag tag of the skeleton under evaluation
    * @return true/false on success/failure.
    */
    bool start(1:string skeletonTag);
 
    /**
-   * Stop collecting.
+   * Stop event collection and save data to JSON file.
    * @return true/false on success/failure.
    */
    bool stop();
 
    /**
-   * Save collected data to JSON file.
+   * Save collected data to JSON file without stopping collection.
    * @return true/false on success/failure.
    */
    bool save_data();

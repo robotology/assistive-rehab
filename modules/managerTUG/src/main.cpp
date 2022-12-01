@@ -2163,6 +2163,9 @@ class Manager : public RFModule, public managerTUG_IDL
             s.setKey("greetings");
             speak(s);
             success_status="passed";
+            cmd.clear();
+            cmd.addString("stop");
+            collectorPort.write(cmd, rep);
             disengage();
         }
 
@@ -2182,6 +2185,10 @@ class Manager : public RFModule, public managerTUG_IDL
             s.reset();
             s.setKey("greetings");
             speak(s);
+            success_status = "not_passed";
+            cmd.clear();
+            cmd.addString("stop");
+            collectorPort.write(cmd, rep);
             disengage();
         }
 
