@@ -33,6 +33,8 @@ using namespace yarp::sig;
 using namespace yarp::math;
 using namespace assistive_rehab;
 
+namespace {YARP_LOG_COMPONENT(ATTENTION, "attentionManager")}
+
 /****************************************************************/
 class Attention : public RFModule, public attentionManager_IDL
 {
@@ -84,6 +86,7 @@ class Attention : public RFModule, public attentionManager_IDL
     bool look(const string &tag, const string &keypoint) override
     {
         lock_guard<mutex> lg(mtx);
+
         if (state<State::idle)
         {
             return false;
@@ -375,6 +378,8 @@ class Attention : public RFModule, public attentionManager_IDL
         Bottle loc;
         loc.addList().read(v);
 
+        yCDebug(ATTENTION) << "Looking towards" << type << "coordinates:" << v.toString();
+
         Property options;
         options.put("control-frame","depth_rgb");
         options.put("target-type",type);
@@ -577,13 +582,14 @@ class Attention : public RFModule, public attentionManager_IDL
                 }
                 else
                 {
-                    x=gaze_frame*x;
+                    x = gaze_frame * x;
                     look("image",(*s)[keypoint]->getPixel());
                 }
                 x.pop_back();
                 is_following_x=x;
-                is_following_coronal=(*s).getCoronal();
-                is_following_sagittal=(*s).getSagittal();
+                Matrix T_gaze2base = (*s).getTransformation().submatrix(0,3,0,3);
+                is_following_coronal = (*s).getCoronal();
+                is_following_sagittal = (*s).getSagittal();
 
                 // gaze speed is faster when chasing,
                 // hence wait till the first movement is done

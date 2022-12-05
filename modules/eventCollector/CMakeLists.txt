@@ -2,9 +2,9 @@
 # All Rights Reserved.
 # Authors: Valentina Vasco <valentina.vasco@iit.it> Alexandre Antunes <alexandre.gomespereira@iit.it>
 
-find_package(JSONCPP)
+find_package(jsoncpp)
 
-if(JSONCPP_FOUND)
+if(jsoncpp_FOUND)
     project(eventCollector)
 
     set(doc_files ${PROJECT_NAME}.xml)
@@ -16,7 +16,7 @@ if(JSONCPP_FOUND)
     source_group("Source Files" FILES ${source})
     source_group("IDL Files" FILES src/idl.thrift)
     source_group("DOC Files" FILES ${doc_files})
-    
+
     add_executable(${PROJECT_NAME} ${source} src/idl.thrift ${IDL_GEN_FILES} ${doc_files})
     target_include_directories(${PROJECT_NAME} PRIVATE ${JSONCPP_INCLUDE_DIR})
     target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)

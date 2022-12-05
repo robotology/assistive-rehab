@@ -59,7 +59,6 @@
         <to>/skeletonRetriever/depth:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
-    </connection>
 
     <connection>
         <from>/yarpOpenPose/target:o</from>

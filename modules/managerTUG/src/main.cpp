@@ -19,6 +19,7 @@
 #include <yarp/os/RpcClient.h>
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/math/Math.h>
+#include <yarp/os/LogComponent.h>
 
 #include <condition_variable>
 
@@ -28,6 +29,11 @@
 #include <AssistiveRehab/skeleton.h>
 
 #include "src/managerTUG_IDL.h"
+
+namespace
+{
+    YARP_LOG_COMPONENT(MANAGERTUG, "managerTUG")
+}
 
 using namespace std;
 using namespace yarp::os;
@@ -62,6 +68,36 @@ bool reply(const string &s, const bool &wait,
     Time::delay(0.1);
 
     return ret;
+}
+
+bool checkOutputPorts(yarp::os::BufferedPort<yarp::os::Bottle>& port)
+{
+    if(port.getOutputCount() == 0)
+    {
+        yCDebug(MANAGERTUG) << "Port" << port.getName() << "not connected.";
+        return true;
+    }
+    return false;
+}
+
+bool checkInputPorts(yarp::os::BufferedPort<yarp::os::Bottle>& port)
+{
+    if(port.getInputCount() == 0)
+    {
+        yCDebug(MANAGERTUG) << "Port" << port.getName() << "not connected.";
+        return true;
+    }
+    return false;
+}
+
+bool checkPorts(yarp::os::RpcClient& port)
+{
+    if(port.getOutputCount() == 0)
+    {
+        yCDebug(MANAGERTUG) << "Port" << port.getName() << "not connected.";
+        return true;
+    }
+    return false;
 }
 
 /****************************************************************/
@@ -404,14 +440,17 @@ public:
     /********************************************************/
     bool connected()
     {
-        if(this->getInputCount() < 1)
+
+        yCDebugThrottle(MANAGERTUG, 5) << "answer_manager input count" << this->getInputCount();
+
+        if(this->getInputCount() == 0)
         {
+            yCDebugThrottle(MANAGERTUG, 5) << this->getName() << "not connected.";
+
             return false;
         }
-        else
-        {
-            return true;
-        }
+
+        return true;
     }
 
     /********************************************************/
@@ -1407,14 +1446,18 @@ class Manager : public RFModule, public managerTUG_IDL
     /****************************************************************/
     bool updateModule() override
     {
+
+        yCDebug(MANAGERTUG) << "Current state:" << static_cast<int>(state);
+
         lock_guard<mutex> lg(mtx);
-        if((analyzerPort.getOutputCount()==0) || (speechStreamPort.getOutputCount()==0) ||
-                (speechRpcPort.getOutputCount()==0) || (attentionPort.getOutputCount()==0) ||
-                (navigationPort.getOutputCount()==0) || (leftarmPort.getOutputCount()==0) ||
-                (rightarmPort.getOutputCount())==0 || (opcPort.getInputCount()==0) ||
-                (obstaclePort.getInputCount()==0) || !answer_manager->connected())
+
+        if(checkPorts(analyzerPort) || checkOutputPorts(speechStreamPort) ||
+                checkPorts(speechRpcPort) || checkPorts(attentionPort) ||
+                checkPorts(navigationPort) || checkPorts(leftarmPort) ||
+                checkPorts(rightarmPort) || checkInputPorts(opcPort) ||
+                checkInputPorts(obstaclePort) || !answer_manager->connected())
         {
-            yInfo()<<"not connected";
+            yCInfoThrottle(MANAGERTUG, 5) << "ManagerTUG not connected";
             connected=false;
             return true;
         }
@@ -1448,7 +1491,7 @@ class Manager : public RFModule, public managerTUG_IDL
         else
         {
             world_configured=false;
-            yInfo()<<"World not configured";
+            yCDebug(MANAGERTUG) << "Start and finish line not yet defined.";
             return true;
         }
 
@@ -1468,6 +1511,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::obstacle)
         {
+            yCDebug(MANAGERTUG) << "Entering state::obstacle";
             if (reinforce_obstacle_cnt==0)
             {
                 if (simulation)
@@ -1522,6 +1566,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state>State::frozen)
         {
+            yCDebug(MANAGERTUG) << "State BEYOND frozen:" << static_cast<int>(state);
             if (trigger_manager->freeze())
             {
                 prev_state=state;
@@ -1547,6 +1592,8 @@ class Manager : public RFModule, public managerTUG_IDL
                     }
                 }
                 state=State::frozen;
+                 yCDebug(MANAGERTUG) << "Entering state::frozen";
+
             }
         }
 
@@ -1587,6 +1634,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::idle)
         {
+            yCDebug(MANAGERTUG) << "Entering state::idle";
             prev_state=state;
             if (Time::now()-t0>10.0)
             {
@@ -1605,8 +1653,11 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state>=State::follow)
         {
+            yCDebug(MANAGERTUG) <<
+            "Entering BEYOND state::follow: follow_tag:" << follow_tag  << "tag:" << tag;
             if (follow_tag!=tag)
             {
+                yCDebug(MANAGERTUG) << "Skeleton Disengaged";
                 Bottle cmd,rep;
                 cmd.addString("stop");
                 analyzerPort.write(cmd,rep);
@@ -1619,6 +1670,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::lock)
         {
+            yCDebug(MANAGERTUG) << "Entering state::lock";
             prev_state=state;
             if (!follow_tag.empty())
             {
@@ -1638,6 +1690,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::seek_locked)
         {
+            yCDebug(MANAGERTUG) << "Entering state::seek_skeleton";
             prev_state=state;
             if (findLocked(follow_tag) && is_follow_tag_ahead)
             {
@@ -1647,6 +1700,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::seek_skeleton)
         {
+            yCDebug(MANAGERTUG) << "Entering state::seek_skeleton";
             prev_state=state;
             if (!follow_tag.empty() && is_follow_tag_ahead)
             {
@@ -1656,6 +1710,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::follow)
         {
+            yCDebug(MANAGERTUG) << "Entering state::follow";
             prev_state=state;
             if (simulation)
             {
@@ -1714,6 +1769,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::engaged)
         {
+            yCDebug(MANAGERTUG) << "Entering state::engaged";
             prev_state=state;
             answer_manager->wakeUp();
             Bottle cmd,rep;
@@ -1758,7 +1814,7 @@ class Manager : public RFModule, public managerTUG_IDL
                                             Bottle &props=*rep.get(0).asList();
                                             if (props.size()>0)
                                             {
-                                                string prop="step_length";//select_randomly(props);
+                                                string prop="step_distance";//select_randomly(props);
                                                 yInfo()<<"Selected prop:"<<prop;
                                                 cmd.clear();
                                                 rep.clear();
@@ -1798,6 +1854,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::point_start)
         {
+            yCDebug(MANAGERTUG) << "Entering state::point_start";
             prev_state=state;
             string part=which_part();
             if (simulation)
@@ -1828,10 +1885,12 @@ class Manager : public RFModule, public managerTUG_IDL
             state=obstacle_manager->hasObstacle()
                     ? State::obstacle : State::explain;
             reinforce_obstacle_cnt=0;
+
         }
 
         if (state==State::explain)
         {
+            yCDebug(MANAGERTUG) << "Entering state::explain";
             prev_state=state;
             Speech s("explain-start");
             speak(s);
@@ -1853,6 +1912,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::reach_line)
         {
+            yCDebug(MANAGERTUG) << "Entering state::reach_line";
             prev_state=state;
             bool navigating=true;
             Bottle cmd,rep;
@@ -1875,11 +1935,14 @@ class Manager : public RFModule, public managerTUG_IDL
                 }
                 double y=finishline_pose[1]-1.0;
                 double theta=starting_pose[2];
+                yCDebug(MANAGERTUG) << "Setting destination x:" << x
+                                    << "y:" << y << "theta:" << theta ;
                 ok_go=go_to(Vector({x,y,theta}),false);
             }
 
             if (ok_go)
             {
+                yCDebug(MANAGERTUG) << "Moving to finish line";
                 Time::delay(getPeriod());
                 cmd.clear();
                 rep.clear();
@@ -1900,6 +1963,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::point_line)
         {
+            yCDebug(MANAGERTUG) << "Entering state::point_line";
             prev_state=state;
             string part=which_part();
             point(pointing_finish,part,false);
@@ -1917,6 +1981,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::starting)
         {
+            yCDebug(MANAGERTUG) << "Entering state::starting";
             prev_state=state;
             Bottle cmd,rep;
             cmd.addString("track_skeleton");
@@ -2082,6 +2147,7 @@ class Manager : public RFModule, public managerTUG_IDL
 
         if (state==State::finished)
         {
+            yCDebug(MANAGERTUG) << "Entering state::finished";
             t=Time::now()-tstart;
             prev_state=state;
             yInfo()<<"Test finished in"<<t<<"seconds";
@@ -2097,11 +2163,15 @@ class Manager : public RFModule, public managerTUG_IDL
             s.setKey("greetings");
             speak(s);
             success_status="passed";
+            cmd.clear();
+            cmd.addString("stop");
+            collectorPort.write(cmd, rep);
             disengage();
         }
 
         if (state==State::not_passed)
         {
+            yCDebug(MANAGERTUG) << "Entering state::not_passed";
             t=Time::now()-tstart;
             prev_state=state;
             Bottle cmd,rep;
@@ -2115,8 +2185,14 @@ class Manager : public RFModule, public managerTUG_IDL
             s.reset();
             s.setKey("greetings");
             speak(s);
+            success_status = "not_passed";
+            cmd.clear();
+            cmd.addString("stop");
+            collectorPort.write(cmd, rep);
             disengage();
         }
+
+        yCDebug(MANAGERTUG) << "Finishing UpdateModule";
 
         return true;
     }

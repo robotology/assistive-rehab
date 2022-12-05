@@ -240,7 +240,7 @@ public:
 
             for (int i=0; i<new_skeletons.size(); i++)
             {
-                yInfo()<<new_skeletons[i].skeleton->getTag()<<"has score:"<<new_skeletons[i].score<<"and locked skeleton has radius:"<<locked->radius;
+                yInfoThrottle(10)<<new_skeletons[i].skeleton->getTag()<<"has score:"<<new_skeletons[i].score<<"and locked skeleton has radius:"<<locked->radius;
             }
         }
 

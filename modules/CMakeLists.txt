@@ -24,3 +24,4 @@ add_subdirectory(obstacleDetector)
 add_subdirectory(contactPlugin)
 add_subdirectory(forcePlugin)
 add_subdirectory(eventCollector)
+

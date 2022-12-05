@@ -9,7 +9,7 @@
   <version>0.6.0</version>
 
   <description-long>
-   This module redirects the robot's gaze toward a keypoint of the skeleton in the scene.
+   This module redirects the robot's gaze toward a keypoint of the skeleton in the scene. By default the skeleton keypoint is the head.
    It sends commands to cer_gaze-controller.
   </description-long>
 

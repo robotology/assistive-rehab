@@ -63,12 +63,13 @@ class Collector : public RFModule, public eventCollector_IDL
     Json::Value jsonTrialInstance;
     Json::Value jsonNavErrorMessage;
     Json::Value jsonSpeechErrorMessage;
-    bool starting;
+    bool started;
     bool got_speech;
     mutex mtx;
 
     int trialNumber;
     double timeFromStart;
+    std::string skeletonTag;
 
     std::string configFileName;
     std::string outputFileName;
@@ -97,7 +98,7 @@ public:
         rpcPort.open(("/" + getName() + "/cmd").c_str());
         attach(rpcPort);
 
-        starting=false;
+        started=false;
         got_speech=false;
         
         jsonRoot["Trial"] = {}; 
@@ -122,11 +123,10 @@ public:
     /********************************************************/
     bool close()
     {
-        if (starting)
+        if (started)
         {
-            stop();
+             stop();
         }
-        save_data();
         googleSpeechPort.close();
         googleProcessPort.close();
         obstacleDetectorPort.close();
@@ -146,7 +146,7 @@ public:
     {
         lock_guard<mutex> lg(mtx);
 
-        if (!starting)
+        if (!started)
         {
             return true;
         }
@@ -224,7 +224,17 @@ public:
     /****************************************************************/
     bool save_data()
     {
-        outputFileName = outfolder + "collected_events.json";
+        lock_guard<mutex> lg(mtx);
+        auto time = std::time(nullptr);
+        auto tm = *std::localtime(&time);
+        std::ostringstream date_stream;
+        date_stream << std::put_time(&tm, "%d-%m-%Y %H-%M-%S");
+        jsonTrialInstance["Stop-Time"] = date_stream.str();
+
+        // we had the trial instance to the trial list when we stop a trial
+        jsonRoot["Trial"].append(jsonTrialInstance);
+
+        outputFileName = outfolder + "collected_events_user" + skeletonTag + ".json";
         std::ofstream output_doc(outputFileName.c_str(), std::ofstream::binary);
         output_doc << jsonRoot;
 
@@ -301,7 +311,7 @@ public:
     //}
 
     /****************************************************************/
-    bool start(const string &skeletonTag) override
+    bool start(const string &skeleton_tag) override
     {
         lock_guard<mutex> lg(mtx);
         yInfo()<<"Starting collecting";
@@ -315,7 +325,8 @@ public:
         config_doc >> jsonTrialInstance; 
         // we add the trial number to the instance
         jsonTrialInstance["Number"] = trialNumber;
-        jsonTrialInstance["User-id"] = skeletonTag;
+        jsonTrialInstance["User-id"] = skeleton_tag;
+        skeletonTag = skeleton_tag;
 
         // now we get the current date in order to store it on the instance
         auto time = std::time(nullptr);
@@ -330,24 +341,15 @@ public:
 
         // We start measuring the time to monitor events
 
-        starting=true;
+        started = true;
         return true;
     }
 
     /****************************************************************/
     bool stop() override
-    {
-        lock_guard<mutex> lg(mtx);
-        auto time = std::time(nullptr);
-        auto tm = *std::localtime(&time);
-        std::ostringstream date_stream;
-        date_stream << std::put_time(&tm, "%d-%m-%Y %H-%M-%S");
-        jsonTrialInstance["Stop-Time"] = date_stream.str();
-
-        // we had the trial instance to the trial list when we stop a trial
-        jsonRoot["Trial"].append(jsonTrialInstance);
-
-        starting=false;
+    {   
+        save_data();
+        started=false;
         return true;
     }
 
