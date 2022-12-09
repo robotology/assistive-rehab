@@ -19,6 +19,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/aruco.hpp>
+#include <opencv2/calib3d.hpp>
 
 #include "src/lineDetector_IDL.h"
 
@@ -715,8 +716,8 @@ class Detector : public RFModule, public lineDetector_IDL
             if (valid>0)
             {
                 yInfo()<<"n. of valid markers:"<<valid;
-                cv::aruco::drawAxis(inImgMat,cam_intrinsic,cam_distortion,rvec_v[line_idx],tvec_v[line_idx],0.5);
-                 cv::Mat Rmat;
+                cv::drawFrameAxes(inImgMat,cam_intrinsic,cam_distortion,rvec_v[line_idx],tvec_v[line_idx],0.5);
+                cv::Mat Rmat;
                 cv::Rodrigues(rvec_v[line_idx],Rmat);
                 yarp::sig::Matrix R=toYarpMat(Rmat);
                 yarp::sig::Vector pose({tvec_v[line_idx][0],tvec_v[line_idx][1],tvec_v[line_idx][2],1.0});
