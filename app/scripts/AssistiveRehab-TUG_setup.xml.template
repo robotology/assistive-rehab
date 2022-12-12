@@ -25,7 +25,7 @@
     </module>
 
     <module>
-        <name>yarpdev</name>
+        <name>yarprobotinterface</name>
         <parameters>--context AssistiveRehab --from realsense2_640x480.ini</parameters>
         <node>r1-torso</node>
     </module>

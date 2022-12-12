@@ -234,9 +234,12 @@ public:
         // we had the trial instance to the trial list when we stop a trial
         jsonRoot["Trial"].append(jsonTrialInstance);
 
-        outputFileName = outfolder + "collected_events_user" + skeletonTag + ".json";
+        outputFileName = outfolder + "/collected_events_user" + skeletonTag + ".json";
+        yInfo() << "Saving events in" << outputFileName;
         std::ofstream output_doc(outputFileName.c_str(), std::ofstream::binary);
         output_doc << jsonRoot;
+
+        jsonRoot["Trial"] = {}; 
 
         return true;
 

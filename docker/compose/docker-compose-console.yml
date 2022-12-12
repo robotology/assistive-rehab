@@ -90,7 +90,7 @@ services:
 
   obstacleDetector:
     <<: *fdg-basic
-    command: sh -c "yarp wait /navController/rpc; obstacleDetector --robot cer --dist-obstacle 0.1"
+    command: sh -c "yarp wait /navController/rpc; obstacleDetector --robot cer --dist-obstacle 0.5"
 
   ctpServiceRight:
     <<: *fdg-basic
