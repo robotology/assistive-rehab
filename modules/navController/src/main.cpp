@@ -420,17 +420,22 @@ class Navigator : public RFModule, public navController_IDL {
           double e = norm(skeleton_location.subVector(0, 1) - pos.subVector(0, 1)) - distance_target;
           double abs_e = abs(e);
           double command = velocity_linear_magnitude * sign(e);
-          if (distance_hysteresis_active) {
-            if (abs_e > distance_hysteresis_high) {
+          if (distance_hysteresis_active) 
+          {
+              if (abs_e > distance_hysteresis_high) {
+                robot_velocity.x = command;
+                distance_hysteresis_active = false;
+                yInfo() << "Tracking" << skeleton_tag << ": navigation activated";
+              }
+          } 
+          else if (abs_e > distance_hysteresis_low) 
+          {
               robot_velocity.x = command;
-              distance_hysteresis_active = false;
-              yInfo() << "Tracking" << skeleton_tag << ": navigation activated";
-            }
-          } else if (abs_e > distance_hysteresis_low) {
-            robot_velocity.x = command;
-          } else {
-            distance_hysteresis_active = true;
-            yInfo() << "Tracking" << skeleton_tag << ": navigation deactivated";
+          } 
+          else 
+          {
+              distance_hysteresis_active = true;
+              yInfo() << "Tracking" << skeleton_tag << ": navigation deactivated";
           }
         }
       }
