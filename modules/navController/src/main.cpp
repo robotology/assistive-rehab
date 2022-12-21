@@ -126,11 +126,9 @@ class Navigator : public RFModule, public navController_IDL {
     void sendTo(BufferedPort<Bottle>& navCtrlPort) {
       Bottle& b = navCtrlPort.prepare();
       b.clear();
-      b.addInt32(3);
       b.addFloat64(x);
       b.addFloat64(0.0);
       b.addFloat64(theta);
-      b.addFloat64(100.0);
       navCtrlPort.writeStrict();
     }
   } robot_velocity;
@@ -195,11 +193,11 @@ class Navigator : public RFModule, public navController_IDL {
     velocity_estimator = shared_ptr<AWLinEstimator>(new AWLinEstimator(16, 0.05));
 
     if(no_odometry_data) { return true; }
-    if (Network::connect("/baseControl/odometry:o", navLocPort.getName()))
+    if (Network::connect("/odometry2D_nws_yarp/odometry:o", navLocPort.getName()))
     {
       if(navCmdPort.asPort().isOpen() && !navCtrlPort.isClosed()){
         if (Network::connect(navCmdPort.getName(), "/baseControl/rpc") &&
-        Network::connect(navCtrlPort.getName(), "/baseControl/control:i"))
+        Network::connect(navCtrlPort.getName(), "/baseControl/input/command:i"))
         {
           Bottle cmd, rep;
           cmd.addString("run");
