@@ -55,6 +55,6 @@ int main(int argc, char *argv[])
     rf.setDefaultConfigFile("config-it.ini");
     rf.configure(argc,argv);
 
-    Manager manager;
-    return manager.runModule(rf);
+    // Manager manager;
+    // return manager.runModule(rf);
 }
