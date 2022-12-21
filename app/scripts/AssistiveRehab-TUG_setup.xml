@@ -67,7 +67,7 @@
 
     <connection>
         <from>/joystickCtrl:o</from>
-        <to>/baseControl/joystick1:i</to>
+        <to>/baseControl/input/joystick1:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
