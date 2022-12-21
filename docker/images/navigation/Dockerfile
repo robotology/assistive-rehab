@@ -14,10 +14,8 @@ ARG INSTALL_DIR="/usr/local"
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install navigation
-#commit: before baseControl is deprecated
 RUN cd ${PROJECTS_DIR} && git clone https://github.com/robotology/navigation && \
-    cd navigation && git checkout 2c3834b4db013961c1dce3264e2388ed2ed6c297 && \
-    mkdir build && cd build && \
+    cd navigation && mkdir build && cd build && \
     cmake .. \
         -G "$CMAKE_GENERATOR" \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
