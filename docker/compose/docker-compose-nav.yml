@@ -11,14 +11,14 @@ services:
 
   baseControl:
     <<: *fdg-navigation
-    command: sh -c "yarp wait /cer/mobile_base/command:i; yarp wait /cer/mobile_base/rpc:i; yarp wait /cer/mobile_base/state:o; yarp wait /cer/mobile_base/stateExt:o; baseControl --context baseControl --from baseCtrl_cer.ini --skip_robot_interface_check"
+    command: sh -c "yarp wait /cer/mobile_base/command:i; yarp wait /cer/mobile_base/rpc:i; yarp wait /cer/mobile_base/state:o; yarp wait /cer/mobile_base/stateExt:o; baseControl2 --context baseControl2 --from baseCtrl_cer_ros2.ini --skip_robot_interface_check"
     
-  joystickControl:
-    <<: *fdg-navigation
-    command: sh -c "yarp wait /cer/mobile_base/command:i; yarp wait /cer/mobile_base/rpc:i; yarp wait /cer/mobile_base/state:o; joystickCtrl --context joystickCtrl --from cer_linux.ini --force_configuration --GENERAL::outputPortName /joystickCtrl:o"
+  # joystickControl:
+  #   <<: *fdg-navigation
+  #   command: sh -c "yarp wait /cer/mobile_base/command:i; yarp wait /cer/mobile_base/rpc:i; yarp wait /cer/mobile_base/state:o; joystickCtrl --context joystickCtrl --from cer_linux.ini --force_configuration --GENERAL::outputPortName /joystickCtrl:o"
     
-  yconnect_0:
-    <<: *fdg-navigation
-    restart: on-failure
-    command: sh -c "yarp wait /joystickCtrl:o; yarp wait /baseControl/joystick1:i; yarp connect /joystickCtrl:o /baseControl/joystick1:i fast_tcp"
+  # yconnect_0:
+  #   <<: *fdg-navigation
+  #   restart: on-failure
+  #   command: sh -c "yarp wait /joystickCtrl:o; yarp wait /baseControl/input/joystick1:i; yarp connect /joystickCtrl:o /baseControl/input/joystick1:i fast_tcp"
 
