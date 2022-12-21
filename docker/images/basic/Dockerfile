@@ -27,7 +27,9 @@ RUN apt update && apt install -y \
     # for event collection
     libjsoncpp-dev \
     software-properties-common \
-    wget
+    wget \
+    vim \
+    gdb
 
 # Install realsense and utilities
 #from https://github.com/IntelRealSense/librealsense/blob/master/doc/distribution_linux.md
