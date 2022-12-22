@@ -77,7 +77,7 @@ services:
         yarp wait /ctpservice/left_arm/rpc
         yarp wait /ctpservice/right_arm/rpc
         yarp wait /obstacleDetector/obstacle:o
-        managerTUG --lock false --max-timeout 30.0 --engage-azimuth "(50.0 160.0)" --starting-pose "(1.1 -2.8 120.0)"
+        managerTUG --lock false --max-timeout 30.0 --engage-azimuth "(50.0 160.0)" --starting-pose "(2 -4.0 110.0)"
 
   gazeController:
     <<: *fdg-basic
@@ -86,11 +86,11 @@ services:
 
   navController:
     <<: *fdg-basic
-    command: sh -c "yarp wait /baseControl/rpc; yarp wait /baseControl/odometry:o; yarp wait /baseControl/control:i; navController --velocity-angular-saturation 15.0 --distance-target 2.5"
+    command: sh -c "yarp wait /baseControl/rpc; yarp wait /baseControl/odometry:o; yarp wait /baseControl/control:i; navController --velocity-angular-saturation 15.0 --distance-target 1.8"
 
   obstacleDetector:
     <<: *fdg-basic
-    command: sh -c "yarp wait /navController/rpc; obstacleDetector --robot cer --dist-obstacle 0.5"
+    command: sh -c "yarp wait /navController/rpc; obstacleDetector --robot cer --dist-obstacle 0.6"
 
   ctpServiceRight:
     <<: *fdg-basic
