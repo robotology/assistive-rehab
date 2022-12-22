@@ -19,12 +19,12 @@ class AnswerManager: public yarp::os::BufferedPort<Bottle>
 
 public:
     AnswerManager(const string &module_name, 
-                  const std::unordered_map<string,string> &speak_map,
+                  const std::unordered_map<std::string,std::string> &speak_map,
                   const bool &simulation);
 
     ~AnswerManager();
 
-    void setPorts(yarp::os::BufferedPort<Bottle> *speechPort, 
+    void setPorts(yarp::os::BufferedPort<yarp::os::Bottle> *speechPort, 
                   yarp::os::RpcClient *speechRpc,
                   yarp::os::RpcClient *gazeboPort);
                   
