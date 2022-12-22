@@ -82,8 +82,8 @@
        <parameters>--velocity-angular-saturation 15.0</parameters>
        <dependencies>
          <port>/baseControl/rpc</port>
-         <port>/baseControl/odometry:o</port>
-         <port>/baseControl/control:i</port>
+         <port>/odometry2D_nws_yarp/odometry:o</port>
+         <port>/baseControl/input/command:i</port>
        </dependencies>
        <node>r1-console-linux</node>
     </module>

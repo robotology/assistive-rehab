@@ -86,7 +86,7 @@ services:
 
   navController:
     <<: *fdg-basic
-    command: sh -c "yarp wait /baseControl/rpc; yarp wait /baseControl/odometry:o; yarp wait /baseControl/control:i; navController --velocity-angular-saturation 15.0 --distance-target 1.8"
+    command: sh -c "yarp wait /baseControl/rpc; yarp wait /odometry2D_nws_yarp/odometry:o; yarp wait /baseControl/input/command:i; navController --velocity-angular-saturation 15.0 --distance-target 1.8"
 
   obstacleDetector:
     <<: *fdg-basic

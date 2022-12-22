@@ -81,6 +81,8 @@ class Navigator : public RFModule, public navController_IDL {
   Vector skeleton_location{zeros(3)};
 
   RpcClient navCmdPort;
+  RpcClient odomCmdPort; // To send the reset odometry command
+                         // since now it has to be sent to odometry_nws_yarp
   BufferedPort<OdometryData> navLocPort;
   BufferedPort<Bottle> navCtrlPort;
   BufferedPort<Bottle> opcPort;
@@ -126,11 +128,9 @@ class Navigator : public RFModule, public navController_IDL {
     void sendTo(BufferedPort<Bottle>& navCtrlPort) {
       Bottle& b = navCtrlPort.prepare();
       b.clear();
-      b.addInt32(3);
       b.addFloat64(x);
       b.addFloat64(0.0);
       b.addFloat64(theta);
-      b.addFloat64(100.0);
       navCtrlPort.writeStrict();
     }
   } robot_velocity;
@@ -173,6 +173,7 @@ class Navigator : public RFModule, public navController_IDL {
     {
       navCmdPort.open("/navController/base/cmd:rpc");
       navCtrlPort.open("/navController/base/ctrl:o");
+      odomCmdPort.open("/navController/base/odomCmd:o");
     }
     opcPort.open("/navController/opc:i");
     statePort.open("/navController/state:o");
@@ -195,11 +196,11 @@ class Navigator : public RFModule, public navController_IDL {
     velocity_estimator = shared_ptr<AWLinEstimator>(new AWLinEstimator(16, 0.05));
 
     if(no_odometry_data) { return true; }
-    if (Network::connect("/baseControl/odometry:o", navLocPort.getName()))
+    if (Network::connect("/odometry2D_nws_yarp/odometry:o", navLocPort.getName()))
     {
       if(navCmdPort.asPort().isOpen() && !navCtrlPort.isClosed()){
-        if (Network::connect(navCmdPort.getName(), "/baseControl/rpc") &&
-        Network::connect(navCtrlPort.getName(), "/baseControl/control:i"))
+        if (Network::connect(navCmdPort.getName(), "/baseControl/rpc") && Network::connect(odomCmdPort.getName(), "/odometry2D_nws_yarp/rpc") &&
+        Network::connect(navCtrlPort.getName(), "/baseControl/input/command:i"))
         {
           Bottle cmd, rep;
           cmd.addString("run");
@@ -590,11 +591,11 @@ class Navigator : public RFModule, public navController_IDL {
     bool ret = false;
     if (state == State::idle) {
       Bottle cmd, rep;
-      cmd.addString("reset_odometry");
+      cmd.addString("reset_odometry_RPC");
       yInfo() << "Odometry reset";
       if(!offline_mode)
       {
-        if (navCmdPort.write(cmd, rep)) {
+        if (odomCmdPort.write(cmd, rep)) {
           ret = (rep.size() > 0);
           if (ret) {
             robot_location.H0 = get_matrix(Location(x_0, y_0, theta_0));
