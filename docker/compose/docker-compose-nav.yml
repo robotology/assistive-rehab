@@ -20,5 +20,5 @@ services:
   # yconnect_0:
   #   <<: *fdg-navigation
   #   restart: on-failure
-  #   command: sh -c "yarp wait /joystickCtrl:o; yarp wait /baseControl/input/joystick1:i; yarp connect /joystickCtrl:o /baseControl/input/joystick1:i fast_tcp"
+  #   command: sh -c "yarp wait /joystickCtrl:o; yarp wait /baseControl/input/joystick:i; yarp connect /joystickCtrl:o /baseControl/input/joystick:i fast_tcp"
 
