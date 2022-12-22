@@ -17,7 +17,7 @@ namespace
 
 bool reply(const string &s, const bool &wait,
            BufferedPort<Bottle> &speechPort,
-           const RpcClient &speechRpcPort=yarp::os::RpcClient())
+           const RpcClient &speechRpcPort)
 {
     bool ret=false;
     Bottle &b=speechPort.prepare();

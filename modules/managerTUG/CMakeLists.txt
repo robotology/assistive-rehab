@@ -25,6 +25,8 @@ add_executable(${PROJECT_NAME}
     src/Speech.cpp 
     src/SpeechParam.h 
     src/SpeechParam.cpp 
+    src/TriggerManager.h 
+    src/TriggerManager.cpp 
     src/idl.thrift ${IDL_GEN_FILES} ${doc_files})
 target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} AssistiveRehab)
