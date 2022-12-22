@@ -1,14 +1,16 @@
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/RpcClient.h>
+#include <unordered_map>
 
-class AnswerManager: public yarp::os::BufferedPort<Bottle>
+
+class AnswerManager: public yarp::os::BufferedPort<yarp::os::Bottle>
 {
     std::string module_name;
-    std::unordered_map<string,string> speak_map;
+    std::unordered_map<std::string,std::string> speak_map;
     bool simulation;
-    yarp::os::BufferedPort<Bottle> *speechPort;
-    RpcClient *speechRpc;
-    RpcClient *gazeboPort;
+    yarp::os::BufferedPort<yarp::os::Bottle> *speechPort;
+    yarp::os::RpcClient *speechRpc;
+    yarp::os::RpcClient *gazeboPort;
     bool replied;
     bool silent;
     double time;
@@ -18,7 +20,7 @@ class AnswerManager: public yarp::os::BufferedPort<Bottle>
     std::mutex mtx;
 
 public:
-    AnswerManager(const string &module_name, 
+    AnswerManager(const std::string &module_name, 
                   const std::unordered_map<std::string,std::string> &speak_map,
                   const bool &simulation);
 

@@ -1,7 +1,9 @@
 #include "AnswerManager.h"
 #include <condition_variable>
+#include "helpers.h"
 
 #include <mutex>
+
 #include <cmath>
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/Network.h>
@@ -18,7 +20,6 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
 using namespace yarp::math;
-using namespace assistive_rehab;
 
 namespace
 {
@@ -91,7 +92,7 @@ void AnswerManager::interrupt()
 
 void AnswerManager::onRead( yarp::os::Bottle &answer )
 {
-    yCDebug(ANSWERMANAGER) << "onRead answer is" << answer.c_str();
+    yCDebug(ANSWERMANAGER) << "onRead answer is" << answer.toString().c_str();
     lock_guard<mutex> lg(mtx);
     if(!silent)
     {

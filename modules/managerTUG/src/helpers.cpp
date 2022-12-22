@@ -1,15 +1,23 @@
+#include "helpers.h"
+#include <yarp/os/Time.h>
+#include <yarp/os/LogComponent.h>
+#include <yarp/os/LogStream.h>
 
+#include <string>
 
 using namespace std;
 using namespace yarp::os;
-using namespace yarp::sig;
-using namespace yarp::math;
-using namespace assistive_rehab;
+
+namespace
+{
+    YARP_LOG_COMPONENT(HELPERS, "helpers")
+}
+
 
 
 bool reply(const string &s, const bool &wait,
            BufferedPort<Bottle> &speechPort,
-           const RpcClient &speechRpcPort=RpcClient())
+           const RpcClient &speechRpcPort=yarp::os::RpcClient())
 {
     bool ret=false;
     Bottle &b=speechPort.prepare();
@@ -39,7 +47,7 @@ bool checkOutputPorts(yarp::os::BufferedPort<yarp::os::Bottle>& port)
 {
     if(port.getOutputCount() == 0)
     {
-        yCDebug(MANAGERTUG) << "Port" << port.getName() << "not connected.";
+        yCDebug(HELPERS) << "Port" << port.getName() << "not connected.";
         return true;
     }
     return false;
@@ -49,7 +57,7 @@ bool checkInputPorts(yarp::os::BufferedPort<yarp::os::Bottle>& port)
 {
     if(port.getInputCount() == 0)
     {
-        yCDebug(MANAGERTUG) << "Port" << port.getName() << "not connected.";
+        yCDebug(HELPERS) << "Port" << port.getName() << "not connected.";
         return true;
     }
     return false;
@@ -59,7 +67,7 @@ bool checkPorts(yarp::os::RpcClient& port)
 {
     if(port.getOutputCount() == 0)
     {
-        yCDebug(MANAGERTUG) << "Port" << port.getName() << "not connected.";
+        yCDebug(HELPERS) << "Port" << port.getName() << "not connected.";
         return true;
     }
     return false;
