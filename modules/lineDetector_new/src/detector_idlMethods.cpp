@@ -139,7 +139,7 @@ bool Detector::detect_helper(const cv::Mat &inImgMat)
     int line_idx= m_line2idx.at(m_line);
     std::vector<int> ids;
     std::vector<std::vector<cv::Point2f> > corners;
-    cv::aruco::detectMarkers(inImgMat, &m_dictionary[line_idx],corners,ids);
+    cv::aruco::detectMarkers(inImgMat, m_dictionary[line_idx],corners,ids);
     if (ids.size()>0)
     {
         std::vector<std::vector<cv::Point2f> > rejected;

@@ -35,6 +35,7 @@ bool Detector::attach(RpcServer &source)
 /****************************************************************/
 bool Detector::configure(ResourceFinder &rf)
 {
+    yDebug() << rf.toString(); 
     //parameters
     std::string moduleName=rf.check("name", Value("lineDetector")).asString();
     setName(moduleName.c_str());
@@ -113,13 +114,15 @@ bool Detector::configure(ResourceFinder &rf)
     for(int i=0; i< m_nlines;i++)
     {
         m_board[i]=cv::aruco::GridBoard::create(m_nx[i], m_ny[i], m_marker_size[i], m_marker_dist[i], m_dictionary[i]);
+        yDebug()<<"done";
         m_lines_pose_world[i]=yarp::sig::Vector(7,0.0);
         m_lines_filter[i]=new iCub::ctrl::MedianFilter(m_line_filter_order,yarp::sig::Vector(7,0.0));
         m_lines_size[i]=yarp::sig::Vector(2,0.0);
         m_lines_size[i][0]=(m_marker_dist[i]+ m_marker_size[i])* m_nx[i];
         m_lines_size[i][1]= m_marker_size[i]* m_ny[i];
+        yDebug("33");
     }
-
+yDebug("3");
     m_rvec_v.resize(m_nlines);
     for(int i=0; i< m_nlines;i++)
     {
@@ -132,9 +135,9 @@ bool Detector::configure(ResourceFinder &rf)
         m_tvec_v[i] = cv::Vec3d(0.0, 0.0, 0.0);
     }
 
+yDebug("2");
     //configure the detector with corner refinement
-    m_detector_params = &cv::aruco::DetectorParameters();
-    m_detector_params->cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
+    m_detector_params.cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
 
     std::string camera_remote = "/depthCamera";
     m_cam_intrinsic=cv::Mat::eye(3,3,CV_64F);
@@ -211,7 +214,7 @@ bool Detector::configure(ResourceFinder &rf)
     //open the tf driver
     yarp::os::Property tfOpts;
     tfOpts.put("device", "frameTransformClient");
-    tfOpts.put("filexml_option", "ftc_pub_ros.xml");
+    tfOpts.put("filexml_option", "ftc_pub_ros2.xml");
     if (m_tf.open(tfOpts))
     {
         if (m_tf.view(m_itf))
