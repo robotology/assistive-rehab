@@ -81,6 +81,8 @@ class Navigator : public RFModule, public navController_IDL {
   Vector skeleton_location{zeros(3)};
 
   RpcClient navCmdPort;
+  RpcClient odomCmdPort; // To send the reset odometry command
+                         // since now it has to be sent to odometry_nws_yarp
   BufferedPort<OdometryData> navLocPort;
   BufferedPort<Bottle> navCtrlPort;
   BufferedPort<Bottle> opcPort;
@@ -171,6 +173,7 @@ class Navigator : public RFModule, public navController_IDL {
     {
       navCmdPort.open("/navController/base/cmd:rpc");
       navCtrlPort.open("/navController/base/ctrl:o");
+      odomCmdPort.open("/navController/base/odomCmd:o");
     }
     opcPort.open("/navController/opc:i");
     statePort.open("/navController/state:o");
@@ -196,7 +199,7 @@ class Navigator : public RFModule, public navController_IDL {
     if (Network::connect("/odometry2D_nws_yarp/odometry:o", navLocPort.getName()))
     {
       if(navCmdPort.asPort().isOpen() && !navCtrlPort.isClosed()){
-        if (Network::connect(navCmdPort.getName(), "/baseControl/rpc") &&
+        if (Network::connect(navCmdPort.getName(), "/baseControl/rpc") && Network::connect(odomCmdPort.getName(), "/odometry2D_nws_yarp/rpc") &&
         Network::connect(navCtrlPort.getName(), "/baseControl/input/command:i"))
         {
           Bottle cmd, rep;
@@ -588,11 +591,11 @@ class Navigator : public RFModule, public navController_IDL {
     bool ret = false;
     if (state == State::idle) {
       Bottle cmd, rep;
-      cmd.addString("reset_odometry");
+      cmd.addString("reset_odometry_RPC");
       yInfo() << "Odometry reset";
       if(!offline_mode)
       {
-        if (navCmdPort.write(cmd, rep)) {
+        if (odomCmdPort.write(cmd, rep)) {
           ret = (rep.size() > 0);
           if (ret) {
             robot_location.H0 = get_matrix(Location(x_0, y_0, theta_0));
