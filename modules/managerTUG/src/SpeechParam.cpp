@@ -1,9 +1,14 @@
-class SpeechParam
-{
-    ostringstream ss;
-public:
-    explicit SpeechParam(const int d) { ss<<d; }
-    explicit SpeechParam(const double g) { ss<<g; }
-    explicit SpeechParam(const string &s) { ss<<s; }
-    string get() const { return ss.str(); }
-};
+#include "SpeechParam.h"
+
+
+SpeechParam::SpeechParam(const int d) { ss<<d; }
+
+
+SpeechParam::SpeechParam(const double g) { ss<<g; }
+
+
+SpeechParam::SpeechParam(const std::string &s) { ss<<s; }
+
+
+std::string SpeechParam::get() const { return ss.str(); }
+

@@ -21,6 +21,10 @@ add_executable(${PROJECT_NAME}
     src/ObstacleManager.cpp 
     src/helpers.h 
     src/helpers.cpp 
+    src/Speech.h 
+    src/Speech.cpp 
+    src/SpeechParam.h 
+    src/SpeechParam.cpp 
     src/idl.thrift ${IDL_GEN_FILES} ${doc_files})
 target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} AssistiveRehab)

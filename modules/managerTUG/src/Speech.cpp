@@ -1,30 +1,39 @@
-class Speech
+#include "Speech.h"
+
+
+Speech::Speech(const std::string &key, const bool &wait=true, const bool &skip=true)
+    : key(key), wait(wait), skip(skip) { }
+
+
+void Speech::dontWait() { wait=false; }
+
+
+void Speech::dontSkip() { skip=false; }
+
+
+void Speech::setKey(const std::string &k) { key=k; }
+
+
+std::string Speech::getKey() const { return key; }
+
+
+void Speech::setParams(const std::vector<std::shared_ptr<SpeechParam>> &p) { this->params=p; }
+
+
+std::vector<std::shared_ptr<SpeechParam>> Speech::getParams() { return this->params; }
+
+
+bool Speech::hasToWait() const { return wait; }
+
+
+bool Speech::hasToSkip() const { return skip; }
+
+
+void Speech::reset()
 {
-    bool wait{true};
-    bool skip{true};
-    string key{""};
-    vector<shared_ptr<SpeechParam>> params;
-public:
-    explicit Speech(const string &key, const bool &wait=true, const bool &skip=true)
-        : key(key), wait(wait), skip(skip) { }
+    key.clear();
+    wait=true;
+    skip=true;
+    params.clear();
+}
 
-    void dontWait() { wait=false; }
-    void dontSkip() { skip=false; }
-
-    void setKey(const string &k) { key=k; }
-    string getKey() const { return key; }
-
-    void setParams(const vector<shared_ptr<SpeechParam>> &p) { this->params=p; }
-    vector<shared_ptr<SpeechParam>> getParams() { return this->params; }
-
-    bool hasToWait() const { return wait; }
-    bool hasToSkip() const { return skip; }
-    void reset()
-    {
-        key.clear();
-        wait=true;
-        skip=true;
-        params.clear();
-    }
-
-};
