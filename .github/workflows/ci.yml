@@ -66,7 +66,11 @@ jobs:
       shell: bash
       run: |
         cd ${GITHUB_WORKSPACE}
-        wget -O CMakeLists.txt.icub-main https://raw.githubusercontent.com/robotology/icub-main/devel/CMakeLists.txt
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          iwr -Uri https://raw.githubusercontent.com/robotology/icub-main/devel/CMakeLists.txt -OutFile CMakeLists.txt.icub-main
+        else
+          wget -O CMakeLists.txt.icub-main https://raw.githubusercontent.com/robotology/icub-main/devel/CMakeLists.txt
+        fi
         grep -m 1 YCM_REQUIRED_VERSION CMakeLists.txt.icub-main | sed "s/[^0-9.]//g" >> YCM_VERSION.txt
         grep -m 1 YARP_REQUIRED_VERSION CMakeLists.txt.icub-main | sed "s/[^0-9.]//g" >> YARP_VERSION.txt
         echo "ycm_version=$(cat YCM_VERSION.txt)" >> $GITHUB_ENV
