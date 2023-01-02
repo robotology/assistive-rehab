@@ -59,6 +59,7 @@ jobs:
     needs: [ publish_basic_image ]
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         image: [navigation, speech, gazebo]
     steps:
