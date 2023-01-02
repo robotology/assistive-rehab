@@ -17,7 +17,6 @@ RUN echo "fc"
 # Install modules for speech specific to FDG demo
 RUN cd ${PROJECTS_DIR}/assistive-rehab && \
     git fetch --all && git pull --rebase && \
-    git checkout feat/fakespeech  && \
     cd build && \
     cmake .. \
         -G "$CMAKE_GENERATOR" \
