@@ -6,7 +6,7 @@ on:
       superbuild_release:
         description: 'Robotology Superbuild Release'
         required: true
-        default: 'v2022.11.0'
+        default: 'v2022.05.2'
       build_type:
         type: choice
         description: 'Build Type'
