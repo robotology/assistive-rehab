@@ -61,7 +61,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: [navigation, speech]
+        image: [navigation, speech, speech-fake, openpose]
     steps:
       - name: Checkout repository 
         uses: actions/checkout@main
