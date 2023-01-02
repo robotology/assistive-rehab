@@ -1,7 +1,7 @@
 version: "3.7"
 
 x-fdg-navigation: &fdg-navigation
-  image: icubteamcode/fdg-navigation:v2022.05.2_sources
+  image: ghcr.io/robotology/assistive-rehab:v2022.05.2-navigation
   volumes:
     - "${HOME}/.config/yarp:/root/.config/yarp"
   network_mode: "host"

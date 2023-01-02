@@ -1,6 +1,6 @@
 version: "3.7"
 x-yarp-base: &yarp-base
-  image: icubteamcode/fdg-gazebo:v2022.05.2_sources
+  image: ghcr.io/robotology/assistive-rehab:v2022.05.2-gazebo
   environment:
     - DISPLAY=${DISPLAY}
     - QT_X11_NO_MITSHM=1
