@@ -1,6 +1,5 @@
-#docker build -t icubteamcode/fdg-basic:v2022.05.2_devel_sources .
-ARG SOURCE_IMG="icubteamcode/fdg-basic:v2022.05.2_sources"
-FROM $SOURCE_IMG as builder
+ARG SUPERBUILD_RELEASE="v2022.05.2"
+FROM ghcr.io/robotology/assistive-rehab:${SUPERBUILD_RELEASE}-basic as builder
 
 LABEL maintainer="valentina.vasco@iit.it, alexandre.gomespereira@iit.it, vadim.tikhanoff@iit.it" 
 
@@ -10,7 +9,6 @@ ARG BUILD_TYPE=Release
 ARG CMAKE_EXTRA_OPTIONS=-j8
 # ARG INSTALL_DIR="${PROJECTS_DIR}/robotology-superbuild/build/install/share/ICUBcontrib"
 ARG INSTALL_DIR="/usr/local"
-ARG SUPERBUILD_RELEASE="v2022.05.2"
 
 # Non-interactive installation mode
 ENV DEBIAN_FRONTEND=noninteractive

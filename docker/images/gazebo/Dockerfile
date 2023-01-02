@@ -1,4 +1,3 @@
-#docker build -t icubteamcode/fdg-gazebo:v2022.05.2_sources .
 ARG SOURCE_IMG=gazebo:libgazebo11-focal
 FROM $SOURCE_IMG as builder
 

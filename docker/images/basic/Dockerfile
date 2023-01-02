@@ -1,4 +1,3 @@
-#docker build -t icubteamcode/fdg-basic:v2022.05.2_sources .
 ARG SOURCE_IMG="ubuntu:focal"
 FROM $SOURCE_IMG as builder
 

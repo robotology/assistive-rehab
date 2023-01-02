@@ -1,6 +1,5 @@
-#docker build -t icubteamcode/fdg-navigation:v2022.05.2_sources .
-ARG SOURCE_IMG="icubteamcode/fdg-basic:v2022.05.2_sources" 
-FROM $SOURCE_IMG as builder
+ARG SUPERBUILD_RELEASE="v2022.05.2"
+FROM ghcr.io/robotology/assistive-rehab:${SUPERBUILD_RELEASE}-basic as builder
 
 LABEL maintainer="valentina.vasco@iit.it, alexandre.gomespereira@iit.it, vadim.tikhanoff@iit.it" 
 

@@ -1,6 +1,5 @@
-#docker build -t icubteamcode/fdg-openpose:v2022.05.2_sources .
-ARG FDG_SOURCE_IMG="icubteamcode/fdg-basic:v2022.05.2_sources"
-FROM $FDG_SOURCE_IMG as builder
+ARG SUPERBUILD_RELEASE="v2022.05.2"
+FROM ghcr.io/robotology/assistive-rehab:${SUPERBUILD_RELEASE}-basic as builder
 
 ARG PROJECTS_DIR=/projects
 ARG CMAKE_GENERATOR="Unix Makefiles"
