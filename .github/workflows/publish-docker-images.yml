@@ -6,18 +6,7 @@ on:
       superbuild_release:
         description: 'Robotology Superbuild Release'
         required: true
-        default: 'v2022.05.2'
-      images:
-        type: choice
-        description: 'Images to build'
-        options:
-        - 'all'
-        - 'basic'
-        - 'navigation'
-        - 'speech'
-        - 'gazebo'
-        required: true
-        default: 'all'
+        default: 'v2022.11.0'
       build_type:
         type: choice
         description: 'Build Type'
@@ -32,39 +21,71 @@ env:
   IMAGE_NAME: ${{ github.repository }}
         
 jobs:
-  publish:
+
+  publish_basic_image:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repository 
-      uses: actions/checkout@main
+      - name: Checkout repository 
+        uses: actions/checkout@main
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2.0.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v4.0.1
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=false
+            prefix=
+            suffix=
+      - name: Build and push image
+        uses: docker/build-push-action@v3.1.1
+        with:
+          context: ./docker/images/basic
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.superbuild_release }}-basic
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            SUPERBUILD_RELEASE=${{ inputs.superbuild_release }}
+            BUILD_TYPE=${{ inputs.build_type }}
 
-    - name: Log in to the Container registry
-      uses: docker/login-action@v2.0.0
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Extract metadata for Docker
-      id: meta
-      uses: docker/metadata-action@v4.0.1
-      with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-        flavor: |
-          latest=true
-          prefix=
-          suffix=
-
-    - name: Build and push Docker image
-      if: inputs.images == 'all' || inputs.images == 'basic' 
-      uses: docker/build-push-action@v3.1.1
-      with:
-        context: ./docker/images/basic
-        push: true
-        tags: |
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.superbuild_release }}
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:basic
-        labels: ${{ steps.meta.outputs.labels }}
-        build-args: |
-          SUPERBUILD_RELEASE=${{ inputs.superbuild_release }}
-          BUILD_TYPE=${{ inputs.build_type }}
+  publish_subsequent_images:
+    needs: [ publish_basic_image ]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image: [navigation, speech, gazebo]
+    steps:
+      - name: Checkout repository 
+        uses: actions/checkout@main
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2.0.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v4.0.1
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=false
+            prefix=
+            suffix=
+      - name: Build and push image
+        uses: docker/build-push-action@v3.1.1
+        with:
+          context: ./docker/images/${{ matrix.image }}
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.superbuild_release }}-${{ matrix.image }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            SUPERBUILD_RELEASE=${{ inputs.superbuild_release }}
+            BUILD_TYPE=${{ inputs.build_type }}

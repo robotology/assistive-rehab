@@ -1,6 +1,5 @@
-# docker build -t icubteamcode/fdg-fakespeech:v2022.05.2_fake_sources .
-ARG SPEECH_SOURCE_IMG="icubteamcode/fdg-speech:v2022.05.2_sources"
-FROM $SPEECH_SOURCE_IMG as speech_builder
+ARG SUPERBUILD_RELEASE="v2022.05.2"
+FROM ghcr.io/robotology/assistive-rehab:${SUPERBUILD_RELEASE}-basic as speech_builder
 
 ARG PROJECTS_DIR=/projects
 ARG CMAKE_GENERATOR="Unix Makefiles"
