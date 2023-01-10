@@ -1,7 +1,7 @@
 version: "3.7"
 
 x-yarp-openpose: &yarp-openpose
-  image: icubteamcode/fdg-openpose:v2022.05.2_sources
+  image: ghcr.io/robotology/assistive-rehab:v2022.05.2-openpose
   environment:
     - DISPLAY=${DISPLAY}
     - QT_X11_NO_MITSHM=1
@@ -25,4 +25,4 @@ services:
               capabilities: [gpu]
     command: sh -c "yarpOpenPose --model_folder /projects/openpose/models --img_resolution 424x240 --face_enable false --hand_enable false --num_scales 1"
 
-# docker run -it --network host --gpus all --mount type=bind,source=${HOME}/.config/yarp,target=/root/.config/yarp icubteamcode/fdg-openpose:v2022.05.2_sources bash
+# docker run -it --network host --gpus all --mount type=bind,source=${HOME}/.config/yarp,target=/root/.config/yarp ghcr.io/robotology/assistive-rehab:v2022.05.2-openpose bash
