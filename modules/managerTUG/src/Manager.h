@@ -103,7 +103,7 @@ private:
     ObstacleManager *obstacle_manager;
 public:
 
-    Manager()
+    Manager();
 
     bool attach(RpcServer &source) override;
     
