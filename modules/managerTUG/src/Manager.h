@@ -18,6 +18,15 @@
 
 #include "src/managerTUG_IDL.h"
 
+// local classes
+#include "AnswerManager.h"
+#include "HandManager.h"
+#include "helpers.h"
+#include "ObstacleManager.h"
+#include "Speech.h"
+#include "SpeechParam.h"
+#include "TriggerManager.h"
+
 namespace
 {
     YARP_LOG_COMPONENT(MANAGERTUG, "managerTUG")
@@ -38,7 +47,7 @@ private:
     double period;
     double pointing_time,arm_thresh;
     bool detect_hand_up;
-    yarp::sig::Vector starting_pose,
+    yarp::sig::Vector starting_pose;
     yarp::sig::Vector pointing_home,pointing_start,pointing_finish;
     bool simulation,lock;
     yarp::sig::Vector target_sim;
