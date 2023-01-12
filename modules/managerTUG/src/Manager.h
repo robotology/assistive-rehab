@@ -111,8 +111,10 @@ private:
 
     AnswerManager *answer_manager;
     HandManager *hand_manager;
-    TriggerManager *trig#ifndef MANAGERTUG_HANDMANAGER_H
-#define MANAGERTUG_HANDMANAGER_H
+    TriggerManager *trigger_manager;
+    ObstacleManager *obstacle_manager;
+public:
+
     Manager();
 
     bool attach(RpcServer &source) override;
