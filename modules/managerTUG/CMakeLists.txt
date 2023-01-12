@@ -17,10 +17,12 @@ add_executable(${PROJECT_NAME}
     src/AnswerManager.cpp 
     src/HandManager.h 
     src/HandManager.cpp 
-    src/ObstacleManager.h 
-    src/ObstacleManager.cpp 
     src/helpers.h 
     src/helpers.cpp 
+    src/Manager.h
+    src/Manager.cpp 
+    src/ObstacleManager.h 
+    src/ObstacleManager.cpp 
     src/Speech.h 
     src/Speech.cpp 
     src/SpeechParam.h 
