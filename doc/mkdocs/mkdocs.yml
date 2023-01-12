@@ -17,6 +17,8 @@ theme:
         # primary: blue grey
         accent: amber
     features:
+        - content.action.edit
+        - content.action.view
         - tabs
     icon:
         logo: material/robot
