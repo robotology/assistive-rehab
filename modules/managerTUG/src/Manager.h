@@ -23,7 +23,6 @@ namespace
     YARP_LOG_COMPONENT(MANAGERTUG, "managerTUG")
 }
 
-using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
 using namespace yarp::math;
@@ -66,16 +65,16 @@ private:
                        not_passed, 
                        finished } state;
     State prev_state;
-    string tag;
+    std::string tag;
     double t0,tstart,t;
     int encourage_cnt,reinforce_engage_cnt;
     int reinforce_obstacle_cnt;
-    unordered_map<string,string> speak_map;
-    unordered_map<string,int> speak_count_map;
+    std::unordered_map<std::string,std::string> speak_map;
+    std::unordered_map<std::string,int> speak_count_map;
     bool interrupting;
     mutex mtx;
     bool start_ex,ok_go,connected,params_set;
-    string success_status;
+    std::string success_status;
     bool test_finished;
 
     Vector finishline_pose;
@@ -108,15 +107,15 @@ public:
 
     bool attach(RpcServer &source) override;
     
-    bool load_speak(const string &context, const string &speak_file);
+    bool load_speak(const std::string &context, const std::string &speak_file);
 
     bool speak(Speech &s);
     
-    string get_sentence(string &value, const vector<shared_ptr<SpeechParam>> &p) const;
+    std::string get_sentence(std::string &value, const vector<shared_ptr<SpeechParam>> &p) const;
     
-    string get_animation();
+    std::string get_animation();
     
-    bool play_animation(const string &name);
+    bool play_animation(const std::string &name);
     
     bool play_from_last();
    
@@ -142,7 +141,7 @@ public:
 
     double get_measured_time() override;
 
-    string get_success_status() override;
+    std::string get_success_status() override;
 
     bool has_finished() override;
 
@@ -154,7 +153,7 @@ public:
 
     bool updateModule() override;
 
-    void follow(const string &follow_tag);
+    void follow(const std::string &follow_tag);
 
     void encourage(const double &timeout);
 
@@ -166,17 +165,17 @@ public:
 
     bool is_active();
 
-    string which_part();
+    std::string which_part();
 
-    bool point(const Vector &target, const string &part, const bool wait);
+    bool point(const Vector &target, const std::string &part, const bool wait);
 
-    bool opcRead(const string &t, Property &prop, const string &tval="");
+    bool opcRead(const std::string &t, Property &prop, const std::string &tval="");
 
     bool hasLine(Property &prop);
 
     bool getWorld(const Property &prop);
 
-    bool findLocked(string &t);
+    bool findLocked(std::string &t);
 
     bool interruptModule() override;
 
