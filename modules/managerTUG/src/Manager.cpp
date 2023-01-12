@@ -1572,7 +1572,7 @@ bool Manager::point(const Vector &target, const string &part, const bool wait)
 }
 
 
-bool Manager::opcRead(const string &t, Property &prop, const string &tval="")
+bool Manager::opcRead(const string &t, Property &prop, const string &tval)
 {
     if (opcPort.getInputCount()>0)
     {
