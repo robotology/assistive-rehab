@@ -1,7 +1,7 @@
 #include "Speech.h"
 
 
-Speech::Speech(const std::string &key, const bool &wait=true, const bool &skip=true)
+Speech::Speech(const std::string &key, const bool &wait, const bool &skip)
     : key(key), wait(wait), skip(skip) { }
 
 

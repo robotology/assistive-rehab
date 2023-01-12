@@ -1,8 +1,6 @@
 #ifndef MANAGERTUG_SPEECH_H
 #define MANAGERTUG_SPEECH_H
 
-
-
 #include <vector>
 #include <string>
 #include <memory>
@@ -17,7 +15,7 @@ class Speech
     std::string key{""};
     std::vector<std::shared_ptr<SpeechParam>> params;
 public:
-    explicit Speech(const std::string &key, const bool &wait, const bool &skip);
+    explicit Speech(const std::string &key, const bool &wait=true, const bool &skip=true);
 
     void dontWait();
 
