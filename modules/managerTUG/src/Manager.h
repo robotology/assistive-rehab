@@ -84,7 +84,7 @@ private:
     std::unordered_map<std::string,std::string> speak_map;
     std::unordered_map<std::string,int> speak_count_map;
     bool interrupting;
-    mutex mtx;
+    std::mutex mtx;
     bool start_ex,ok_go,connected,params_set;
     std::string success_status;
     bool test_finished;
@@ -123,7 +123,7 @@ public:
 
     bool speak(Speech &s);
     
-    std::string get_sentence(std::string &value, const vector<shared_ptr<SpeechParam>> &p) const;
+    std::string get_sentence(std::string &value, const std::vector<std::shared_ptr<SpeechParam>> &p) const;
     
     std::string get_animation();
     
