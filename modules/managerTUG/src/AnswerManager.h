@@ -1,3 +1,7 @@
+#ifndef MANAGERTUG_ANSWERMANAGER_H
+#define MANAGERTUG_ANSWERMANAGER_H
+
+
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/RpcClient.h>
 #include <unordered_map>
@@ -60,3 +64,5 @@ public:
 
     void reset();
 };
+
+#endif //MANAGERTUG_ANSWERMANAGER_H

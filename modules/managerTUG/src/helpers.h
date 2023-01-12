@@ -1,3 +1,6 @@
+#ifndef MANAGERTUG_HELPERS_H
+#define MANAGERTUG_HELPERS_H
+
 #include <string>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/RpcClient.h>
@@ -15,3 +18,4 @@ bool checkInputPorts(yarp::os::BufferedPort<yarp::os::Bottle>& port);
 bool checkPorts(yarp::os::RpcClient& port);
 
 
+#endif //MANAGERTUG_HELPERS_H

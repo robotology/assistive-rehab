@@ -1,9 +1,10 @@
+#ifndef MANAGERTUG_HANDMANAGER_H
+#define MANAGERTUG_HANDMANAGER_H
+
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/RpcClient.h>
 #include <AssistiveRehab/skeleton.h>
 #include <yarp/os/Thread.h>
-
-
 
 
 class HandManager : public yarp::os::Thread
@@ -36,3 +37,5 @@ public:
 
     bool is_raised(const std::string &p) const;
 };
+
+#endif //MANAGERTUG_HANDMANAGER_H

@@ -1,3 +1,6 @@
+#ifndef MANAGERTUG_OBSTACLEMANAGER_H
+#define MANAGERTUG_OBSTACLEMANAGER_H
+
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/os/LogStream.h>
@@ -35,3 +38,5 @@ public:
 
     void suspend();
 };
+
+#endif //MANAGERTUG_OBSTACLEMANAGER_H

@@ -1,3 +1,8 @@
+#ifndef MANAGERTUG_SPEECH_H
+#define MANAGERTUG_SPEECH_H
+
+
+
 #include <vector>
 #include <string>
 #include <memory>
@@ -32,3 +37,5 @@ public:
 
     void reset();
 };
+
+#endif //MANAGERTUG_SPEECH_H

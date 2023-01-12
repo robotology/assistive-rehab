@@ -1,3 +1,6 @@
+#ifndef MANAGERTUG_MANAGER_H
+#define MANAGERTUG_MANAGER_H
+
 #include <yarp/os/RFModule.h>
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/Network.h>
@@ -108,10 +111,8 @@ private:
 
     AnswerManager *answer_manager;
     HandManager *hand_manager;
-    TriggerManager *trigger_manager;
-    ObstacleManager *obstacle_manager;
-public:
-
+    TriggerManager *trig#ifndef MANAGERTUG_HANDMANAGER_H
+#define MANAGERTUG_HANDMANAGER_H
     Manager();
 
     bool attach(RpcServer &source) override;
@@ -190,3 +191,6 @@ public:
 
     bool close() override;
 };
+
+
+#endif //MANAGERTUG_MANAGER_H

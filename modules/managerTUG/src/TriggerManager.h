@@ -1,3 +1,6 @@
+#ifndef MANAGERTUG_TRIGGERMANAGER_H
+#define MANAGERTUG_TRIGGERMANAGER_H
+
 #include <yarp/os/Thread.h>
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/RpcClient.h>
@@ -55,3 +58,6 @@ public:
     void trigger();
     
 };
+
+
+#endif //MANAGERTUG_TRIGGERMANAGER_H
