@@ -1298,7 +1298,7 @@ bool Manager::writeStructToMat(const string& name, const Exercise* ex, mat_t *ma
 void Manager::createSubfield(matvar_t *submatvar, double *val, size_t *dims, const char *name)
 {
     matvar_t *subfield;
-    subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims,&val,MAT_F_DONT_COPY_DATA);
+    subfield=Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims,val,MAT_F_DONT_COPY_DATA);
     Mat_VarSetStructFieldByName(submatvar,name,0,subfield);
 }
 
