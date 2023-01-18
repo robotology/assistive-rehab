@@ -29,11 +29,8 @@
 #include <AssistiveRehab/skeleton.h>
 
 #include "src/managerTUG_IDL.h"
+#include "Manager.h"
 
-namespace
-{
-    YARP_LOG_COMPONENT(MANAGERTUG, "managerTUG")
-}
 
 using namespace std;
 using namespace yarp::os;
@@ -55,6 +52,6 @@ int main(int argc, char *argv[])
     rf.setDefaultConfigFile("config-it.ini");
     rf.configure(argc,argv);
 
-    // Manager manager;
-    // return manager.runModule(rf);
+    Manager manager;
+    return manager.runModule(rf);
 }
