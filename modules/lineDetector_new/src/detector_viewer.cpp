@@ -21,31 +21,67 @@ using namespace yarp::os;
 using namespace yarp::math;
 
 /****************************************************************/
-void Detector::create_line_tf(const std::string &line_tag)
+bool Detector::create_line_viewer(const std::string &line_tag)
 {
-    if (m_itf != nullptr)
+    int i= m_line2idx[line_tag];
+    double llen=(m_marker_dist[i]+ m_marker_size[i])* m_nx[i];
+    yarp::sig::Vector ax(4);
+    ax[0]= m_lines_pose_world[i][3];
+    ax[1]= m_lines_pose_world[i][4];
+    ax[2]= m_lines_pose_world[i][5];
+    ax[3]= m_lines_pose_world[i][6];
+    yarp::sig::Matrix R=axis2dcm(ax);
+    yarp::sig::Vector u=R.subcol(0,0,2);
+    yarp::sig::Vector p0(3);
+    p0[0]= m_lines_pose_world[i][0];
+    p0[1]= m_lines_pose_world[i][1];
+    p0[2]= m_lines_pose_world[i][2];
+    yarp::sig::Vector p1=p0+llen*u;
+    std::vector<int> color(3,0);
+    if(line_tag=="start-line")
     {
-        int i = m_line2idx[line_tag];
-        yarp::sig::Vector ax(4);
-        ax[0] = m_lines_pose_world[i][3];
-        ax[1] = m_lines_pose_world[i][4];
-        ax[2] = m_lines_pose_world[i][5];
-        ax[3] = m_lines_pose_world[i][6];
-        yarp::sig::Matrix R = axis2dcm(ax);
-        R[0][3] = m_lines_pose_world[i][0];
-        R[1][3] = m_lines_pose_world[i][1];
-        R[2][3] = m_lines_pose_world[i][2];
-        if (line_tag == "start-line") { m_itf->setTransformStatic("start-line-frame" , "odom",R); }
-        else if (line_tag == "finish-line") { m_itf->setTransformStatic("end-line-frame", "odom", R); }
+        color[0]=1;
     }
+    if(line_tag=="finish-line")
+    {
+        color[2]=1;
+    }
+    Bottle cmd,rep;
+    cmd.addString("create_line");
+    cmd.addString(line_tag);
+    cmd.addFloat64(p0[0]);
+    cmd.addFloat64(p0[1]);
+    cmd.addFloat64(p0[2]);
+    cmd.addFloat64(p1[0]);
+    cmd.addFloat64(p1[1]);
+    cmd.addFloat64(p1[2]);
+    cmd.addInt32(color[0]);
+    cmd.addInt32(color[1]);
+    cmd.addInt32(color[2]);
+    if(m_viewerPort.write(cmd,rep))
+    {
+        if(rep.get(0).asBool()==true)
+        {
+            yInfo()<<line_tag<<"created on the viewer";
+            return true;
+        }
+    }
+    return false;
 }
 
 /****************************************************************/
-void Detector::delete_line_tf(const std::string& line_tag)
+void Detector::delete_line_viewer(const std::string &l)
 {
-    if (m_itf != nullptr)
+    Bottle cmd,rep;
+    cmd.addString("delete_line");
+    cmd.addString(l);
+    if(m_viewerPort.write(cmd,rep))
     {
-        if (line_tag == "start-line") { m_itf->deleteTransform("start-line-frame","odom"); }
-        else if (line_tag == "finish-line") { m_itf->deleteTransform("end-line-frame", "odom"); }
+        if(rep.get(0).asVocab32()==Vocab32::encode("ok"))
+        {
+            yInfo()<<l<<"deleted on the viewer";
+            m_updated_line_viewer=false;
+        }
     }
 }
+
