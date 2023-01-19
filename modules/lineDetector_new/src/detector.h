@@ -36,7 +36,7 @@ class Detector : public RFModule, public lineDetector_IDL
     int m_nlines;
     int m_line_filter_order;
     std::vector< cv::Ptr <cv::aruco::Dictionary> > m_dictionary;
-    std::vector< cv::aruco::GridBoard* > m_board;
+    std::vector< cv::Ptr <cv::aruco::GridBoard> > m_board;
     cv::aruco::DetectorParameters m_detector_params;
     cv::Mat m_cam_intrinsic, m_cam_distortion;
     bool m_camera_configured;

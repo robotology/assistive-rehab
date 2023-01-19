@@ -143,7 +143,7 @@ bool Detector::detect_helper(const cv::Mat &inImgMat)
     if (ids.size()>0)
     {
         std::vector<std::vector<cv::Point2f> > rejected;
-        cv::aruco::GridBoard* curr_board= m_board[line_idx];
+        cv::Ptr<cv::aruco::GridBoard> curr_board= m_board[line_idx];
 
         //perform refinement
         cv::aruco::refineDetectedMarkers(inImgMat,curr_board,corners,ids,rejected, m_cam_intrinsic, m_cam_distortion);
