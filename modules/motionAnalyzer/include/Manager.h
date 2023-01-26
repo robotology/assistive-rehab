@@ -68,6 +68,8 @@ class Manager : public yarp::os::RFModule,
     double tend_session;
     bool finishedSession;
 
+    double period;
+
     bool starting;
 
     std::string skel_tag,template_tag;
