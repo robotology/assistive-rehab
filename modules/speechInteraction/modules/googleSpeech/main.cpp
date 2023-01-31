@@ -22,6 +22,7 @@
 #include <cmath>
 #include <chrono>
 #include <ctime>
+#include <mutex>
 
 #include <fstream>
 #include <iterator>
@@ -35,7 +36,6 @@
 #include <yarp/os/Time.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
-#include <yarp/os/Semaphore.h>
 #include <yarp/sig/SoundFile.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/sig/SoundFile.h>
@@ -60,7 +60,6 @@ class Processing : public yarp::os::TypedReaderCallback<yarp::sig::Sound>
     yarp::os::BufferedPort<yarp::os::Bottle> questionPort;
     yarp::os::BufferedPort<yarp::os::Bottle> statusPort;
     yarp::os::RpcClient audioCommand;
-    yarp::os::Mutex mutex;
 
     std::deque<yarp::sig::Sound> sounds;
 
@@ -96,10 +95,7 @@ public:
     }
 
     /********************************************************/
-    ~Processing()
-    {
-
-    };
+    ~Processing(){};
 
     /********************************************************/
     bool open()
@@ -111,9 +107,6 @@ public:
         audioCommand.open("/"+ moduleName + "/commands:rpc");
         questionPort.open("/"+ moduleName + "/question:o");
         statusPort.open("/"+ moduleName + "/status:o");
-
-        //yarp::os::Network::connect("/microphone/audio:o", port.getName());
-        //yarp::os::Network::connect(audioCommand.getName(), "/microphone/rpc");
 
         return true;
     }
@@ -143,7 +136,6 @@ public:
             }
             collectFrame(sound);
         }
-
         if(sendForQuery)
         {
             //unpack sound
@@ -189,7 +181,6 @@ public:
             targetPort.write();
             yDebug() << "done querying google";
         }
-
         yarp::os::Time::yield();
     }
 
@@ -273,11 +264,6 @@ public:
                 b.addString(alternative.transcript());
             }
         }
-        
-
-
-
-
         return b;
     }
 
@@ -319,6 +305,7 @@ public:
             yDebug() << "cmd.addString(stop)" << rep.toString().c_str();
         }*/
         getSounds = false;
+
         sendForQuery = true;
         return true;
     } 
@@ -330,11 +317,15 @@ class Module : public yarp::os::RFModule, public googleSpeech_IDL
     yarp::os::ResourceFinder    *rf;
     yarp::os::RpcServer         rpcPort;
 
+    std::mutex                  trigger_mutex;
+
     Processing                  *processing;
     friend class                processing;
 
     bool                        closing;
-
+    bool                        start_received;
+    bool                        stop_received;
+    
     /********************************************************/
     bool attach(yarp::os::RpcServer &source)
     {
@@ -343,7 +334,8 @@ class Module : public yarp::os::RFModule, public googleSpeech_IDL
 
 public:
     /********************************************************/
-    Module() : closing(false) { }
+    Module() : closing(false), start_received(false), 
+            stop_received(true) {}
 
     /********************************************************/
     bool configure(yarp::os::ResourceFinder &rf)
@@ -378,15 +370,29 @@ public:
     /**********************************************************/
     bool start()
     {
-        processing->start_acquisition();
-        return true;
+        std::lock_guard<std::mutex> trigger_guard(trigger_mutex);
+        if(!start_received && stop_received)
+        {
+            processing->start_acquisition();
+            start_received = true;
+            stop_received = false;
+            return true;
+        }
+        return false;
     }
 
     /**********************************************************/
     bool stop()
     {
-        processing->stop_acquisition();
-        return true;
+        std::lock_guard<std::mutex> trigger_guard(trigger_mutex);
+        if(!stop_received && start_received)
+        {
+            processing->stop_acquisition();
+            stop_received = true;
+            start_received = false;
+            return true;
+        }
+        return false;
     }
 
     /********************************************************/
