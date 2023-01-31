@@ -235,6 +235,11 @@ bool Manager::loadMotionList(ResourceFinder &rf)
                 if(!bExercise.isNull())
                 {
                     Bottle &bGeneralEx = bExercise.findGroup("general");
+
+                    if (!bGeneralEx.isNull()) {
+                        period = bGeneralEx.check("period",Value(period)).asFloat64();
+                    }
+
                     exercises[i]=loadExerciseList(bGeneralEx, ex_tag);
                     //for each exercise we can evaluate different metrics
                     //check which metric has to be evaluated for this exercise
@@ -1103,6 +1108,8 @@ bool Manager::configure(ResourceFinder &rf)
     if(!loadMotionList(rf))
         return false;
 
+    period = 0.1;
+
     out_folder=rf.getHomeContextPath();
     tstart=Time::now();
     nsession=0;
@@ -1162,7 +1169,7 @@ bool Manager::close()
 /********************************************************/
 double Manager::getPeriod()
 {
-    return 0.1;
+    return period;
 }
 
 /********************************************************/
