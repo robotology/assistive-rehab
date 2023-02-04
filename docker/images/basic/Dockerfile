@@ -3,7 +3,7 @@
 ARG SOURCE_IMG="ubuntu:jammy"
 FROM $SOURCE_IMG as builder
 
-LABEL maintainer="mattia.fussi@iit.it, ettore.landini@iit.it, marco.randazzo@iit.it steano.bernagozzi@iit.it"
+LABEL maintainer="mattia.fussi@iit.it, ettore.landini@iit.it, marco.randazzo@iit.it, steano.bernagozzi@iit.it"
 
 ARG PROJECTS_DIR=/projects
 ARG CMAKE_GENERATOR="Unix Makefiles"
