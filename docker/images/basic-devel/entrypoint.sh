@@ -3,6 +3,8 @@ set -e
 
 source /usr/local/share/robotology-superbuild/setup.sh
 
+source /opt/ros/humble/setup.bash
+
 echo "[ -r /usr/share/bash-completion/bash_completion   ] && . /usr/share/bash-completion/bash_completion" >> /root/.bashrc
 echo "source /usr/local/share/robotology-superbuild/setup.sh" >> /root/.bashrc
 
