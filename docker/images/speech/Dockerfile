@@ -1,16 +1,67 @@
-ARG SUPERBUILD_RELEASE="v2022.05.2"
-FROM ghcr.io/robotology/assistive-rehab:${SUPERBUILD_RELEASE}-basic as speech_builder
+# docker build -t ghcr.io/robotology/assistive-rehab:master-speech .
+
+ARG SOURCE_IMG="ubuntu:focal"
+FROM $SOURCE_IMG as builder
+
+LABEL maintainer="mattia.fussi@iit.it, ettore.landini@iit.it, marco.randazzo@iit.it steano.bernagozzi@iit.it" 
 
 ARG PROJECTS_DIR=/projects
 ARG CMAKE_GENERATOR="Unix Makefiles"
 ARG BUILD_TYPE=Release
-ARG CMAKE_EXTRA_OPTIONS=-j8
+ARG CMAKE_EXTRA_OPTIONS=-j10
+# ARG INSTALL_DIR="${PROJECTS_DIR}/robotology-superbuild/build/install/share/ICUBcontrib"
 ARG INSTALL_DIR="/usr/local"
-
-LABEL maintainer="valentina.vasco@iit.it, alexandre.gomespereira@iit.it, vadim.tikhanoff@iit.it" 
+ARG SUPERBUILD_RELEASE="master"
 
 # Non-interactive installation mode
 ENV DEBIAN_FRONTEND=noninteractive
+ENV QT_X11_NO_MITSHM 1
+ENV YARP_COLORED_OUTPUT=1
+
+# Dependencies
+RUN apt update && apt install -y \
+    git \
+    # motion analysis
+    libmatio-dev \
+    # depth compression
+    zlib1g \
+    # for event collection
+    libjsoncpp-dev \
+    software-properties-common \
+    wget \
+    vim \
+    gdb \
+    nano
+
+# Install superbuild with its dependencies
+RUN mkdir ${PROJECTS_DIR} && cd ${PROJECTS_DIR} &&\
+    git clone https://github.com/robotology/robotology-superbuild.git &&\
+    cd robotology-superbuild &&\
+    git checkout ${SUPERBUILD_RELEASE} &&\
+    ./scripts/install_apt_dependencies.sh &&\
+    mkdir build && cd build &&\
+    cmake .. \
+        -G "$CMAKE_GENERATOR" \
+        -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+        -DNON_INTERACTIVE_BUILD:BOOL=ON \
+        -DROBOTOLOGY_ENABLE_CORE:BOOL=ON \
+        -DYCM_USE_DEPRECATED:BOOL=OFF \
+        -DROBOTOLOGY_USES_GAZEBO=OFF \
+        # enable basic demos for speech
+        -DROBOTOLOGY_ENABLE_ICUB_BASIC_DEMOS=ON \ 
+        -DYCM_EP_INSTALL_DIR=${INSTALL_DIR} \
+        &&\
+    cmake --build . -- ${CMAKE_EXTRA_OPTIONS}
+
+# Install cer
+RUN cd ${PROJECTS_DIR} && git clone https://github.com/robotology/cer && \
+    cd cer && git checkout devel && \
+    mkdir build && cd build && \
+    cmake .. \
+        -G "$CMAKE_GENERATOR" \
+        -DENABLE_faceExpressionImage=ON && \
+    cmake --build . -- ${CMAKE_EXTRA_OPTIONS} && \
+    make ${CMAKE_EXTRA_OPTIONS}
 
 # Pre-requisites before intalling grpc
 RUN apt update &&\
@@ -41,7 +92,7 @@ RUN git clone -b v1.32.0 https://github.com/grpc/grpc.git &&\
 # Add the Cloud SDK distribution URI as a package source
 RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
 
-RUN apt install -y apt-transport-https ca-certificates gnupg
+RUN apt install -y apt-transport-https ca-certificates gnupg curl
 
 # Import the google cloud public key
 RUN curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
@@ -90,6 +141,20 @@ RUN apt update && apt install -y \
        && \
     rm -rf /var/lib/apt/lists/* 
 
+# Install assistive-rehab
+# required here as it is used for building robotSkeletonPublisher
+ENV CER_DIR=/projects/cer/build 
+RUN cd ${PROJECTS_DIR} && git clone https://github.com/robotology/assistive-rehab.git && \
+    cd assistive-rehab && \
+    mkdir build && cd build && \
+    cmake .. \
+        -G "$CMAKE_GENERATOR" \
+        -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+        -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
+        &&\
+    cmake --build . -- ${CMAKE_EXTRA_OPTIONS} && \
+    make install
+
 # Install speech   
 RUN cd ${PROJECTS_DIR}/robotology-superbuild/src/speech && \
     cmake . \
@@ -115,7 +180,7 @@ RUN cd ${PROJECTS_DIR}/assistive-rehab/modules/speechInteraction && \
     make install
 
 # Setup environment
-# ENV GOOGLE_APPLICATION_CREDENTIALS=/root/authorization/${FILE_INPUT}
+ENV GOOGLE_APPLICATION_CREDENTIALS=/root/authorization/${FILE_INPUT}
 # ENV auth activate-service-account --key-file=/root/authorization/${FILE_INPUT}
 # ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/yarp
 
