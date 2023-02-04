@@ -3,7 +3,7 @@
 ARG SUPERBUILD_RELEASE="master"
 FROM ghcr.io/robotology/assistive-rehab:${SUPERBUILD_RELEASE}-basic as builder
 
-LABEL maintainer="mattia.fussi@iit.it, ettore.landini@iit.it, marco.randazzo@iit.it steano.bernagozzi@iit.it" 
+LABEL maintainer="mattia.fussi@iit.it, ettore.landini@iit.it, marco.randazzo@iit.it, steano.bernagozzi@iit.it" 
 
 ARG PROJECTS_DIR=/projects
 ARG CMAKE_GENERATOR="Unix Makefiles"
