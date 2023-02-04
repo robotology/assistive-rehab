@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE robot PUBLIC "-//YARP//DTD yarprobotinterface 3.0//EN" "http://www.yarp.it/DTD/yarprobotinterfaceV3.0.dtd">
+ 
+<robot name="cer-realsense-camera" build="0" portprefix="" xmlns:xi="http://www.w3.org/2001/XInclude">
+    <devices>
+
+        <device xmlns:xi="http://www.w3.org/2001/XInclude" name="realsense2dev" type="realsense2">
+            <group name="SETTINGS">
+                <param name="depthResolution"> (640 480) </param>
+                <param name="rgbResolution">  (640 480) </param>
+                <param name="framerate"> 30             </param>
+                <param name="alignmentFrame">    RGB    </param>
+            </group>
+            <group name="HW_DESCRIPTION">
+                <param name="clipPlanes"> (0.2 10.0)</param>
+            </group>
+            <group name="QUANT_PARAM">
+                <param name="depth_quant"> 2 </param>
+                </group>
+            <param name="rotateImage180">true</param>
+        </device>
+
+        <device xmlns:xi="http://www.w3.org/2001/XInclude" name="RGBDWrapperyarp" type="rgbdSensor_nws_yarp">
+            <param name="period"> 0.05 </param>
+            <param name="name">    /depthCamera </param>
+            <action phase="startup" level="5" type="attach">
+                <paramlist name="networks">
+                    <elem name="subdevicergbd"> realsense2dev </elem>
+                </paramlist>
+            </action>
+            <action phase="shutdown" level="5" type="detach" />
+        </device>
+
+    </devices>
+</robot>
