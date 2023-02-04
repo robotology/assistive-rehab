@@ -42,7 +42,7 @@ services:
         yarp wait /depthCamera/rgbImage:o
         yarp wait /depthCamera/depthImage:o
         yarp wait /opc/rpc
-        skeletonRetriever --depth::enable true --depth::kernel-size 8  --depth::iterations 1 --depth::min-distance 0.6 --depth::max-distance 6.0 --filtering::filter-keypoint-order 12
+        skeletonRetriever --depth::enable true --depth::kernel-size 8  --depth::iterations 1 --depth::min-distance 0.6 --depth::max-distance 6.0 --filtering::filter-keypoint-order 8
 
   skeletonLocker:
     <<: *fdg-basic
@@ -87,7 +87,7 @@ services:
 
   navController:
     <<: *fdg-basic
-    command: sh -c "yarp wait /baseControl/rpc; yarp wait /odometry2D_nws_yarp/odometry:o; yarp wait /baseControl/input/command:i; navController --velocity-linear-magnitude 0.6 --velocity-angular-saturation 15.0 --distance-target 1.8"
+    command: sh -c "yarp wait /baseControl/rpc; yarp wait /odometry2D_nws_yarp/odometry:o; yarp wait /baseControl/input/command:i; navController --velocity-linear-magnitude 0.3 --velocity-angular-saturation 15.0 --distance-target 1.8"
 
   obstacleDetector:
     <<: *fdg-basic
