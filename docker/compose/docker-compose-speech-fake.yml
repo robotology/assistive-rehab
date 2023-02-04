@@ -1,6 +1,6 @@
 version: "3.7"
 x-fdg-speech: &fdg-speech
-  image: ghcr.io/robotology/assistive-rehab:v2022.05.2-speech-fake
+  image: ghcr.io/robotology/assistive-rehab:master-speech-fake
   environment:
     - DISPLAY=${DISPLAY}
     - QT_X11_NO_MITSHM=1

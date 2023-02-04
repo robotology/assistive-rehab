@@ -23,7 +23,7 @@ x-yarp-openpose: &yarp-openpose
 
 # Create alias for container running assistive-rehab modules
 x-fdg-basic: &fdg-basic
-  image: ghcr.io/robotology/assistive-rehab:master-basic-devel
+  image: ghcr.io/robotology/assistive-rehab:master-basic
   environment:
     - DISPLAY=${DISPLAY}
     - QT_X11_NO_MITSHM=1
