@@ -23,4 +23,4 @@ x-fdg-speech: &fdg-speech
 services:
   yarprunSpeech:
     <<: *fdg-speech
-    command: sh -c "yarp run --server /container --log googleSpeech"
+    command: sh -c "yarp run --server /container-speech --log"
