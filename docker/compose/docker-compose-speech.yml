@@ -1,6 +1,6 @@
 version: "3.7"
 x-fdg-speech: &fdg-speech
-  image: ghcr.io/robotology/assistive-rehab:v2022.05.2-speech
+  image: ghcr.io/robotology/assistive-rehab:master-speech
   environment:
     - DISPLAY=${DISPLAY}
     - QT_X11_NO_MITSHM=1
@@ -21,30 +21,6 @@ x-fdg-speech: &fdg-speech
 # docker run --rm -it --network host --device /dev/snd -e PULSE_SERVER=unix:${XDG_RUNTIME_DIR}/pulse/native -v ${XDG_RUNTIME_DIR}/pulse/native:${XDG_RUNTIME_DIR}/pulse/native -v ~/.config/pulse/cookie:/root/.config/pulse/cookie --group-add $(getent group audio | cut -d: -f3) --privileged --env FILE_INPUT=google-key.json --mount type=bind,source=${HOME}/teamcode/key,target=/root/authorization --mount type=bind,source=${HOME}/.config/yarp,target=/root/.config/yarp ghcr.io/robotology/assistive-rehab:v2022.05.2-speech bash
 
 services:
-  node-button.js:
+  yarprunSpeech:
     <<: *fdg-speech
-    command: sh -c "yarp wait /managerTUG/cmd:rpc; cd /projects/assistive-rehab/app/scripts; /root/.nvm/versions/node/v14.17.0/bin/node node-button.js --host 0.0.0.0 --listenPort 80"
-  
-  # microphone:
-  #   <<: *fdg-speech
-  #   command: sh -c "yarpdev --device AudioRecorderWrapper --subdevice portaudioRecorder --name /microphone --min_samples_over_network 4000 --max_samples_over_network 4000 --AUDIO_BASE::channels 1 --AUDIO_BASE::samples 16000 --AUDIO_BASE::rate 16000"
-
-  googleSpeech:
-    <<: *fdg-speech
-    command: sh -c "googleSpeech --language_code it-IT"
-  
-  googleSpeechProcess:
-    <<: *fdg-speech
-    command: sh -c "googleSpeechProcess"
-
-  yconnect_0:
-    <<: *fdg-speech
-    command: sh -c "yarp wait /microphone/audio:o; yarp wait /googleSpeech/sound:i; yarp connect /microphone/audio:o /googleSpeech/sound:i fast_tcp"
-
-  yconnect_1:
-    <<: *fdg-speech
-    command: sh -c "yarp wait /googleSpeech/commands:rpc; yarp wait /microphone/rpc; yarp connect /googleSpeech/commands:rpc /microphone/rpc fast_tcp"
-
-  yconnect_2:
-    <<: *fdg-speech
-    command: sh -c "yarp wait /googleSpeech/result:o; yarp wait /googleSpeechProcess/text:i; yarp connect /googleSpeech/result:o /googleSpeechProcess/text:i fast_tcp"
+    command: sh -c "yarp run --server /container-speech --log"

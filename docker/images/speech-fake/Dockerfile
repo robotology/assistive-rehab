@@ -1,4 +1,4 @@
-ARG SUPERBUILD_RELEASE="v2022.05.2"
+ARG SUPERBUILD_RELEASE="master"
 FROM ghcr.io/robotology/assistive-rehab:${SUPERBUILD_RELEASE}-basic as speech_builder
 
 ARG PROJECTS_DIR=/projects
@@ -7,7 +7,7 @@ ARG BUILD_TYPE=Release
 ARG CMAKE_EXTRA_OPTIONS=-j8
 ARG INSTALL_DIR="/usr/local"
 
-LABEL maintainer="valentina.vasco@iit.it, alexandre.gomespereira@iit.it, vadim.tikhanoff@iit.it" 
+LABEL maintainer="mattia.fussi@iit.it, ettore.landini@iit.it, marco.randazzo@iit.it steano.bernagozzi@iit.it" 
 
 # Non-interactive installation mode
 ENV DEBIAN_FRONTEND=noninteractive
