@@ -40,37 +40,44 @@
 
    <!--> Robot joints <!-->
     <module>
-        <name>yarpdatadumper --name /dump/robot-left-arm --rxTime --txTime</name>
+        <name>yarpdatadumper</name>
+        <parameters>--name /dump/robot-left-arm --rxTime --txTime</parameters>
         <node>localhost</node>
     </module>
 
     <module>
-        <name>yarpdatadumper --name /dump/robot-left-wrist-tripod --rxTime --txTime</name>
+        <name>yarpdatadumper</name>
+        <parameters>--name /dump/robot-left-arm --rxTime --txTime</parameters>
         <node>localhost</node>
     </module>
 
     <module>
-        <name>yarpdatadumper --name /dump/robot-right-arm --rxTime --txTime</name>
+        <name>yarpdatadumper</name>
+        <parameters>--name /dump/robot-left-arm --rxTime --txTime</parameters>
         <node>localhost</node>
     </module>
 
     <module>
-        <name>yarpdatadumper --name /dump/robot-right-wrist-tripod --rxTime --txTime</name>
+        <name>yarpdatadumper</name>
+        <parameters>--name /dump/robot-left-arm --rxTime --txTime</parameters>
         <node>localhost</node>
     </module>
 
     <module>
-        <name>yarpdatadumper --name /dump/robot-head --rxTime --txTime</name>
+        <name>yarpdatadumper</name>
+        <parameters>--name /dump/robot-left-arm --rxTime --txTime</parameters>
         <node>localhost</node>
     </module>
 
     <module>
-        <name>yarpdatadumper --name /dump/robot-torso --rxTime --txTime</name>
+        <name>yarpdatadumper</name>
+        <parameters>--name /dump/robot-left-arm --rxTime --txTime</parameters>
         <node>localhost</node>
     </module>
 
     <module>
-        <name>yarpdatadumper --name /dump/robot-torso-tripod --rxTime --txTime</name>
+        <name>yarpdatadumper</name>
+        <parameters> --name /dump/robot-torso-tripod --rxTime --txTime</parameters>
         <node>localhost</node>
     </module>
 

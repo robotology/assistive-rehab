@@ -1,15 +1,16 @@
 <application>
 <name>Assistive Rehabilitation TUG Setup App</name>
-    <module>
-        <name>yarpdev</name>
-        <parameters>--device speech --lingware-context speech --default-language it-IT --robot r1 --pitch 80 --speed 110</parameters>
-        <node>r1-face</node>
-    </module>
 
     <module>
         <name>yarpdev</name>
         <parameters>--device AudioRecorderWrapper --subdevice portaudioRecorder --name /microphone --min_samples_over_network 4000 --max_samples_over_network 4000 --AUDIO_BASE::channels 1 --AUDIO_BASE::samples 16000 --AUDIO_BASE::rate 16000</parameters>
         <node>r1-torso</node>
+    </module>
+
+    <module>
+        <name>yarpdev</name>
+        <parameters>--device speech --lingware-context speech --default-language it-IT --robot r1 --pitch 80 --speed 110</parameters>
+        <node>r1-face</node>
     </module>
 
     <module>
@@ -25,14 +26,31 @@
     </module>
 
     <module>
+        <name>faceExpressionImage</name>
+        <node>r1-face</node>
+    </module>
+
+     <module>
+        <name>googleSpeech</name>
+        <parameters>--language_code it-IT</parameters>
+        <node>container-speech</node>
+    </module>
+
+     <module>
+        <name>googleSpeechProcess</name>
+        <node>container-speech</node>
+    </module>
+
+    <module>
         <name>yarprobotinterface</name>
-        <parameters>--context AssistiveRehab --from realsense2_640x480.ini</parameters>
+        <parameters>--context AssistiveRehab --config realsense2_remote_etapas_640x480.xml</parameters>
         <node>r1-torso</node>
     </module>
 
     <module>
-        <name>faceExpressionImage</name>
-        <node>r1-face</node>
+        <name>joystickCtrl</name>
+        <parameters>--context AssistiveRehab --from jostick_trigger_8bitdo.ini</parameters>
+        <node>r1-console</node>
     </module>
 
     <module>
@@ -68,7 +86,7 @@
     <connection>
         <from>/joystickCtrl:o</from>
         <to>/baseControl/input/joystick:i</to>
-        <protocol>fast_tcp</protocol>
+        <protocol>tcp+recv.portmonitor+type.dll+file.joy2vel</protocol>
     </connection>
 
     <connection>
@@ -290,6 +308,24 @@
     <connection>
         <from>/managerTUG/speech:rpc</from>
         <to>/iSpeak/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/microphone/audio:o</from>
+        <to>/googleSpeech/sound:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/googleSpeech/commands:rpc</from>
+        <to>/microphone/cmd:rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/googleSpeech/result:o</from>
+        <to>/googleSpeechProcess/text:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
