@@ -42,7 +42,7 @@ services:
         yarp wait /depthCamera/rgbImage:o
         yarp wait /depthCamera/depthImage:o
         yarp wait /opc/rpc
-        skeletonRetriever --depth::enable true --depth::kernel-size 8  --depth::iterations 1 --depth::min-distance 0.6 --depth::max-distance 6.0 --filtering::filter-keypoint-order 8
+        skeletonRetriever --general::period 0.01 --depth::enable true --depth::kernel-size 4  --depth::iterations 3 --depth::min-distance 0.6 --depth::max-distance 6.0 --filtering::filter-keypoint-order 4
 
   skeletonLocker:
     <<: *fdg-basic
@@ -58,7 +58,7 @@ services:
 
   motionAnalyzer:
     <<: *fdg-basic
-    command: sh -c "motionAnalyzer"
+    command: sh -c "motionAnalyzer --step_0::median_filter_window 2"
 
   managerTUG:
     <<: *fdg-basic
