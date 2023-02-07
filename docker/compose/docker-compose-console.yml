@@ -31,7 +31,7 @@ services:
 
   lineDetector:
     <<: *fdg-basic
-    command: sh -c "yarp wait /depthCamera/rgbImage:o; lineDetector --camera::remote /depthCamera"
+    command: sh -c "source /opt/ros/humble/setup.bash; yarp wait /depthCamera/rgbImage:o; lineDetector --camera::remote /cer/realsense_repeater"
 
   skeletonRetriever:
     <<: *fdg-basic
@@ -58,7 +58,7 @@ services:
 
   motionAnalyzer:
     <<: *fdg-basic
-    command: sh -c "motionAnalyzer --step_0::median_filter_window 2"
+    command: sh -c "motionAnalyzer --general::period 0.01 --step_0::median_filter_window 2"
 
   managerTUG:
     <<: *fdg-basic
