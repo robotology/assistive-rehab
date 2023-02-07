@@ -58,7 +58,7 @@ services:
 
   motionAnalyzer:
     <<: *fdg-basic
-    command: sh -c "motionAnalyzer --step_0::median_filter_window 2"
+    command: sh -c "motionAnalyzer --general::period 0.01 --step_0::median_filter_window 2"
 
   managerTUG:
     <<: *fdg-basic
