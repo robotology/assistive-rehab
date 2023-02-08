@@ -1,12 +1,12 @@
 version: "3.7"
 
 x-fdg-basic: &fdg-basic
-  image: ghcr.io/robotology/assistive-rehab:master-basic
+  image: ghcr.io/robotology/assistive-rehab:master-basic-fdg-demo
   environment:
     - DISPLAY=${DISPLAY}
     - QT_X11_NO_MITSHM=1
     - XAUTHORITY=/root/.Xauthority
-    - YARP_DATA_DIRS=${YARP_DATA_DIRS}:/projects/yarp-devices-ros2/build/share/yarp/
+    - YARP_DATA_DIRS=${YARP_DATA_DIRS}:/projects/yarp-devices-ros2/build/share/yarp/:/usr/local/lib/yarp:/projects/yarp-devices-ros2/build/share/yarp/:/projects/yarp-devices-ros2/build/share/yarp-devices-ros2
   volumes:
     - "/tmp/.X11-unix:/tmp/.X11-unix"
     - "${XAUTHORITY}:/root/.Xauthority"
@@ -19,7 +19,7 @@ x-fdg-basic: &fdg-basic
 services:
   yarprunConsole:
     <<: *fdg-basic
-    command: sh -c "yarprun --server /r1-console --log"
+    command: sh -c "yarprun --server /container-console --log"
 
   objectsPropertiesCollector:
     <<: *fdg-basic
@@ -31,7 +31,7 @@ services:
 
   lineDetector:
     <<: *fdg-basic
-    command: sh -c "yarp wait /depthCamera/rgbImage:o; lineDetector --camera::remote /depthCamera"
+    command: bash -c "source /opt/ros/humble/setup.bash; lineDetector --camera::remote /cer/realsense_repeater"
 
   skeletonRetriever:
     <<: *fdg-basic
@@ -42,7 +42,7 @@ services:
         yarp wait /depthCamera/rgbImage:o
         yarp wait /depthCamera/depthImage:o
         yarp wait /opc/rpc
-        skeletonRetriever --depth::enable true --depth::kernel-size 8  --depth::iterations 1 --depth::min-distance 0.6 --depth::max-distance 6.0 --filtering::filter-keypoint-order 8
+        skeletonRetriever --general::period 0.01 --camera::fov '(43 70)' --depth::enable true --depth::kernel-size 4  --depth::iterations 3 --depth::min-distance 0.6 --depth::max-distance 6.0 --filtering::filter-keypoint-order 4
 
   skeletonLocker:
     <<: *fdg-basic
@@ -58,7 +58,7 @@ services:
 
   motionAnalyzer:
     <<: *fdg-basic
-    command: sh -c "motionAnalyzer"
+    command: sh -c "motionAnalyzer --general::period 0.01 --step_0::median_filter_window 2"
 
   managerTUG:
     <<: *fdg-basic
@@ -78,7 +78,7 @@ services:
         yarp wait /ctpservice/left_arm/rpc
         yarp wait /ctpservice/right_arm/rpc
         yarp wait /obstacleDetector/obstacle:o
-        managerTUG --lock false --max-timeout 30.0 --engage-azimuth "(50.0 160.0)" --starting-pose "(2 -4.0 110.0)"
+        managerTUG --lock false --max-timeout 30.0 --engage-azimuth "(50.0 160.0)" --starting-pose "(0.5 -4.8 90.0)"
 
   gazeController:
     <<: *fdg-basic

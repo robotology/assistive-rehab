@@ -4,7 +4,7 @@
    <!--> Camera <!-->
     <module>
         <name>yarpdatadumper</name>
-        <parameters>--name /skeletonDumper/skeletons-img --type image_jpg --rxTime --txTime</parameters>
+        <parameters>--name /dump/skeletons-img --type image_jpg --rxTime --txTime</parameters>
         <node>localhost</node>
     </module>
 
@@ -47,31 +47,31 @@
 
     <module>
         <name>yarpdatadumper</name>
-        <parameters>--name /dump/robot-left-arm --rxTime --txTime</parameters>
+        <parameters>--name /dump/robot-left-wrist-tripod --rxTime --txTime</parameters>
         <node>localhost</node>
     </module>
 
     <module>
         <name>yarpdatadumper</name>
-        <parameters>--name /dump/robot-left-arm --rxTime --txTime</parameters>
+        <parameters>--name /dump/robot-right-arm --rxTime --txTime</parameters>
         <node>localhost</node>
     </module>
 
     <module>
         <name>yarpdatadumper</name>
-        <parameters>--name /dump/robot-left-arm --rxTime --txTime</parameters>
+        <parameters>--name /dump/robot-right-wrist-tripod --rxTime --txTime</parameters>
         <node>localhost</node>
     </module>
 
     <module>
         <name>yarpdatadumper</name>
-        <parameters>--name /dump/robot-left-arm --rxTime --txTime</parameters>
+        <parameters>--name /dump/robot-head --rxTime --txTime</parameters>
         <node>localhost</node>
     </module>
 
     <module>
         <name>yarpdatadumper</name>
-        <parameters>--name /dump/robot-left-arm --rxTime --txTime</parameters>
+        <parameters>--name /dump/robot-torso --rxTime --txTime</parameters>
         <node>localhost</node>
     </module>
 
@@ -81,17 +81,29 @@
         <node>localhost</node>
     </module>
 
+    <module>
+        <name>yarpdatadumper</name>
+        <parameters> --name /dump/lidar --rxTime --txTime</parameters>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpdatadumper</name>
+        <parameters> --name /dump/skeletonretriever --rxTime --txTime</parameters>
+        <node>localhost</node>
+    </module>
+    
    <!--> Connection Camera <!-->
     <connection>
-        <from>/depthCamera/rgbImage:o</from>
+	<from>/cer/realsense_repeater/rgbImage:o</from>
         <to>/yarpOpenPose/image:i</to>
-        <protocol>mjpeg</protocol>
+        <protocol>fast_tcp+send.portmonitor+type.dll+file.image_rotation+option_rotate.rotate_cw</protocol>
     </connection>
 
     <connection>
-        <from>/depthCamera/depthImage:o</from>
+        <from>/cer/realsense_repeater/depthImage:o</from>
         <to>/yarpOpenPose/float:i</to>
-        <protocol>fast_tcp+send.portmonitor+file.depthimage_compression_zlib+recv.portmonitor+file.depthimage_compression_zlib+type.dll</protocol>
+        <protocol>fast_tcp+send.portmonitor+type.dll+file.image_rotation_d+option_rotate.rotate_cw</protocol>
     </connection>
 
     <connection>
@@ -101,9 +113,9 @@
     </connection>
 
     <connection>
-        <from>/yarpOpenPose/image:o</from>
+        <from>/cer/realsense_repeater/rgbImage:o</from>
         <to>/dump/skeletons-img</to>
-        <protocol>mjpeg</protocol>
+        <protocol>fast_tcp+send.portmonitor+type.dll+file.image_rotation+option_rotate.rotate_cw</protocol>
     </connection>
 
     <connection>
@@ -113,9 +125,15 @@
     </connection>
 
     <connection>
-        <from>/yarpOpenPose/float:o</from>
-        <to>/dump/depth</to>
+        <from>/skeletonRetriever/viewer:o</from>
+        <to>/dump/skeletonretriever</to>
         <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer/realsense_repeater/depthImage:o</from>
+        <to>/dump/depth</to>
+        <protocol>fast_tcp+send.portmonitor+type.dll+file.image_rotation_d+option_rotate.rotate_cw</protocol>
     </connection>
 
     <connection>
@@ -133,6 +151,12 @@
     <connection>
         <from>/cer_gaze-controller/state:o</from>
         <to>/dump/gaze-save</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer/laser/front:o</from>
+        <to>/dump/lidar</to>
         <protocol>fast_tcp</protocol>
     </connection>
 
