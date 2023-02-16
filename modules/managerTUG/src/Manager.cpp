@@ -1300,6 +1300,14 @@ bool Manager::updateModule()
     if (state==State::line_crossed)
     {
         prev_state=state;
+
+        if(human_state=="out_of_bounds")
+        {
+            state=obstacle_manager->hasObstacle()
+                ? State::obstacle : State::out_of_bounds;
+            reinforce_obstacle_cnt=0;
+            yInfo()<<"Stop!";
+        }
         //detect when the person seats down
         if(human_state=="sitting")
         {

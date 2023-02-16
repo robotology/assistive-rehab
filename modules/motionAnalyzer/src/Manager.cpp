@@ -204,6 +204,7 @@ Exercise* Manager::loadExerciseList(const Bottle &bGeneral, const string &ex_tag
         double D=bGeneral.find("vel_estimator_D").asFloat64();
         finishline_thresh=bGeneral.find("finish-line-thresh").asFloat64();
         standing_thresh=bGeneral.find("standing-thresh").asFloat64();
+        _max_finish_line_overrun = bGeneral.find("max-finish-line-overrun").asFloat64();
         double distance=bGeneral.check("distance",Value(6.0)).asFloat64();
         double time_high=bGeneral.check("time-high",Value(10.0)).asFloat64();
         double time_medium=bGeneral.check("time-medium",Value(20.0)).asFloat64();
@@ -893,10 +894,10 @@ bool Manager::isSitting()
 }
 
 /********************************************************/
-bool Manager::hasCrossedFinishLine()
+bool Manager::hasCrossedLine(std::vector<double>& line)
 {
 
-    if(line_pose.size() < 1) 
+    if(line.size() < 1) 
     {
         yWarning() << "Finish line vector empty";
         return false;
@@ -908,15 +909,15 @@ bool Manager::hasCrossedFinishLine()
     Vector foot_left=skeletonIn[KeyPointTag::ankle_left]->getPoint();
 
     Vector lp_world(3);
-    lp_world[0]=line_pose[0];
-    lp_world[1]=line_pose[1];
-    lp_world[2]=line_pose[2];
+    lp_world[0]=line[0];
+    lp_world[1]=line[1];
+    lp_world[2]=line[2];
 
     Vector line_ori(4);
-    line_ori[0]=line_pose[3];
-    line_ori[1]=line_pose[4];
-    line_ori[2]=line_pose[5];
-    line_ori[3]=line_pose[6];
+    line_ori[0]=line[3];
+    line_ori[1]=line[4];
+    line_ori[2]=line[5];
+    line_ori[3]=line[6];
     Matrix lOri=axis2dcm(line_ori);
     Vector line_x=lOri.getCol(0);
     line_x.pop_back();
@@ -940,6 +941,18 @@ bool Manager::hasCrossedFinishLine()
 
     return (dist_fr_line<finishline_thresh && dist_fl_line<finishline_thresh);
     // return (dist_hip_line<finishline_thresh);
+}
+
+bool Manager::hasCrossedFinishLine()
+{
+    return hasCrossedLine(line_pose);
+}
+
+bool Manager::hasMovedAwayFromFinishLine()
+{
+    std::vector<double> line_pose_plus_overrun = this->line_pose;
+    line_pose_plus_overrun[1] += _max_finish_line_overrun;
+    return hasCrossedLine(line_pose_plus_overrun);
 }
 
 /********************************************************/
@@ -1051,7 +1064,11 @@ void Manager::updateState()
     }
     else if (hasCrossedFinishLine())
     {
-        state=State::crossed;
+       state=State::crossed;
+    }
+    else if(hasMovedAwayFromFinishLine())
+    {
+        state=State::out_of_bounds;
     }
     else if (isSitting())
     {
