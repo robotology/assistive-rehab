@@ -955,6 +955,18 @@ bool Manager::hasMovedAwayFromFinishLine()
     return hasCrossedLine(line_pose_plus_overrun);
 }
 
+bool Manager::hasCrossedFinishLine()
+{
+    return hasCrossedLine(line_pose);
+}
+
+bool Manager::hasMovedAwayFromFinishLine()
+{
+    std::vector<double> line_pose_plus_overrun = this->line_pose;
+    line_pose_plus_overrun[1] += _max_finish_line_overrun;
+    return hasCrossedLine(line_pose_plus_overrun);
+}
+
 /********************************************************/
 bool Manager::setLinePose(const vector<double> &line_pose)
 {

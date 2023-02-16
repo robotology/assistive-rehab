@@ -130,7 +130,7 @@ class Manager : public yarp::os::RFModule,
     void getSkeleton();
     bool isStanding();
     bool isSitting();
-    bool hasCrossedLine(double line);
+    bool hasCrossedLine(std::vector<double>& line);
     bool hasCrossedFinishLine();
     bool hasMovedAwayFromFinishLine();
     yarp::os::Property publishState();
