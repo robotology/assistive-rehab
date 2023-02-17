@@ -16,7 +16,7 @@ using namespace yarp::os;
 TriggerManager::TriggerManager(ResourceFinder &rf_, const bool &simulation_, const string &sentence_) : 
     PeriodicThread(0.5),
     rf(rf_), simulation(simulation_), sentence(sentence_), first_trigger(true),
-    last_start_trigger(true), got_trigger(false), freezing(false), t0(Time::now()),
+    last_start_trigger(true), got_trigger(false), frozen(false), t0(Time::now()),
     t(Time::now())
 {
     min_timeout=rf.check("min-timeout",Value(1.0)).asFloat64();
@@ -59,7 +59,7 @@ void TriggerManager::run()
             {
                 trigger_speech("start");
             }
-            freezing=true;
+            frozen=true;
             t0=t;
             return;
         }
@@ -76,7 +76,7 @@ void TriggerManager::run()
                 {
                     trigger_speech("stop");
                 }
-                freezing=false;
+                frozen=false;
             }
             else //if last was a stop trigger
             {
@@ -91,7 +91,7 @@ void TriggerManager::run()
                 {
                     trigger_speech("start");
                 }
-                freezing=true;
+                frozen=true;
             }
             t0=t;
         }
@@ -116,7 +116,7 @@ void TriggerManager::run()
             {
                 trigger_speech("stop");
             }
-            freezing=false;
+            frozen=false;
             t0=t;
         }
     }
@@ -125,13 +125,13 @@ void TriggerManager::run()
 
 bool TriggerManager::freeze() const
 {
-    return freezing;
+    return frozen;
 }
 
 
 bool TriggerManager::restore() const
 {
-    return !freezing;
+    return !frozen;
 }
 
 

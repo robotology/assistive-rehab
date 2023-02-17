@@ -22,7 +22,7 @@ private:
     yarp::os::RpcClient *gazeboPort;
     bool first_trigger;
     bool last_start_trigger;
-    bool got_trigger,freezing;
+    bool got_trigger,frozen;
     std::string sentence;
     std::mutex mtx;
 

@@ -175,7 +175,7 @@ public:
 
     bool start_collection();
 
-    bool set_analyzer_param(const std::string & option, const std::string & arg, Bottle & reply);
+    bool set_analyzer_param(const std::string & option, const std::string & arg);
 
     void set_walking_speed(const Bottle &r);
 
