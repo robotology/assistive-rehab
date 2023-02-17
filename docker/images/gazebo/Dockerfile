@@ -1,17 +1,15 @@
-# docker build -t ghcr.io/robotology/assistive-rehab:master-gazebo .
-
 ARG SOURCE_IMG=gazebo:libgazebo11-focal
 FROM $SOURCE_IMG as builder
 
-LABEL maintainer="mattia.fussi@iit.it, ettore.landini@iit.it, marco.randazzo@iit.it, steano.bernagozzi@iit.it"
+LABEL maintainer="valentina.vasco@iit.it, alexandre.gomespereira@iit.it, vadim.tikhanoff@iit.it" 
 
 ARG PROJECTS_DIR=/projects
 ARG CMAKE_GENERATOR="Unix Makefiles"
 ARG BUILD_TYPE=Release
-ARG CMAKE_EXTRA_OPTIONS=-j9
+ARG CMAKE_EXTRA_OPTIONS=-j8
 ARG INSTALL_DIR="/usr/local"
 #option for superbuild
-ARG SUPERBUILD_RELEASE="master"
+ARG SUPERBUILD_RELEASE="v2022.05.2"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -22,11 +20,7 @@ RUN mkdir /etc/bash_completion.d/ && \
     apt-utils \
     bash-completion \
     wget \
-    software-properties-common \
-    vim \
-    nano \
-    curl \
-    gdb
+    software-properties-common
 
 # Clone relevant repos
 RUN mkdir ${PROJECTS_DIR} && cd ${PROJECTS_DIR} &&\
@@ -94,7 +88,7 @@ RUN cd ${PROJECTS_DIR}/cer && \
     cmake --build . -- ${CMAKE_EXTRA_OPTIONS} 
     
 # Install navigation
-RUN cd ${PROJECTS_DIR}/navigation && git checkout master &&\
+RUN cd ${PROJECTS_DIR}/navigation && git checkout 2c3834b4db013961c1dce3264e2388ed2ed6c297 &&\
     mkdir build && cd build &&\
     cmake .. \
         -G "$CMAKE_GENERATOR" \
