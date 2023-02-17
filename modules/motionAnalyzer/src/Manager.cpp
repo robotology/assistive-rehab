@@ -904,9 +904,9 @@ bool Manager::hasCrossedLine(std::vector<double>& line)
 
     }
 
-    Vector hip=skeletonIn[KeyPointTag::hip_center]->getPoint();
-    //Vector foot_right=skeletonIn[KeyPointTag::ankle_right]->getPoint();
-    //Vector foot_left=skeletonIn[KeyPointTag::ankle_left]->getPoint();
+    //Vector hip=skeletonIn[KeyPointTag::hip_center]->getPoint();
+    Vector foot_right=skeletonIn[KeyPointTag::ankle_right]->getPoint();
+    Vector foot_left=skeletonIn[KeyPointTag::ankle_left]->getPoint();
 
     Vector lp_world(3);
     lp_world[0]=line[0];
@@ -922,25 +922,25 @@ bool Manager::hasCrossedLine(std::vector<double>& line)
     Vector line_x=lOri.getCol(0);
     line_x.pop_back();
 
-    //Vector hip_lp=lp_world-hip;
-    //Vector pline=lp_world+line_x;
-    //Vector v1=lp_world-pline;
-    //double dist_hip_line=norm(cross(v1,hip_lp))/norm(v1);
-    double dist_hip_line=hip[1]-lp_world[1];
-    yInfo()<<"dist hip line"<<dist_hip_line;
-
-    // Vector fr_lp=lp_world-foot_right;
-    // Vector fl_lp=lp_world-foot_left;
+    // Vector hip_lp=lp_world-hip;
     // Vector pline=lp_world+line_x;
-    // //Vector v1=lp_world-pline;
-    // Vector v1= line_x -lp_world //?
-    // double dist_fr_line=norm(cross(v1,fr_lp))/norm(v1);
-    // double dist_fl_line=norm(cross(v1,fl_lp))/norm(v1);
-    // yInfo()<<"dist foot right line"<<dist_fr_line;
-    // yInfo()<<"dist foot left line"<<dist_fl_line;
+    // Vector v1=lp_world-pline;
+    // double dist_hip_line=norm(cross(v1,hip_lp))/norm(v1);
+    // double dist_hip_line=hip[1]-lp_world[1];
+    // yInfo()<<"dist hip line"<<dist_hip_line;
 
-    //return (dist_fr_line<finishline_thresh && dist_fl_line<finishline_thresh);
-    return (dist_hip_line<finishline_thresh);
+    Vector fr_lp=lp_world-foot_right;
+    Vector fl_lp=lp_world-foot_left;
+    Vector pline=lp_world+line_x;
+    Vector v1=lp_world-pline;
+    // Vector v1= line_x -lp_world //?
+    double dist_fr_line=norm(cross(v1,fr_lp))/norm(v1);
+    double dist_fl_line=norm(cross(v1,fl_lp))/norm(v1);
+    yInfo()<<"dist foot right line"<<dist_fr_line;
+    yInfo()<<"dist foot left line"<<dist_fl_line;
+
+    return (dist_fr_line<finishline_thresh && dist_fl_line<finishline_thresh);
+    // return (dist_hip_line<finishline_thresh);
 }
 
 bool Manager::hasCrossedFinishLine()
