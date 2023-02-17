@@ -111,8 +111,8 @@ private:
     RpcClient collectorPort;
     BufferedPort<Bottle> obstaclePort;
 
-    AnswerManager *answer_manager;
-    HandManager *hand_manager;
+    std::unique_ptr<AnswerManager> answer_manager;
+    std::unique_ptr<HandManager> hand_manager;
     std::unique_ptr<TriggerManager> trigger_manager;
     std::unique_ptr<ObstacleManager> obstacle_manager;
 public:

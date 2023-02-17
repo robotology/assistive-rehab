@@ -578,7 +578,7 @@ bool Manager::configure(ResourceFinder &rf)
 
     attach(cmdPort);
 
-    answer_manager=new AnswerManager(module_name,speak_map,simulation);
+    answer_manager= std::make_unique<AnswerManager>(module_name,speak_map,simulation);
     if (!answer_manager->open())
     {
         yError()<<"Could not open question manager";
@@ -588,7 +588,7 @@ bool Manager::configure(ResourceFinder &rf)
 
     if(detect_hand_up)
     {
-        hand_manager=new HandManager(module_name,arm_thresh);
+        hand_manager = std::make_unique<HandManager>(module_name,arm_thresh);
         if (!hand_manager->start())
         {
             yError()<<"Could not start hand manager";
@@ -1130,6 +1130,7 @@ bool Manager::updateModule()
 
             state = obstacle_manager->hasObstacle()
                     ? State::obstacle : State::starting;
+            reinforce_obstacle_cnt=0;
         }
     }
 
@@ -1705,11 +1706,9 @@ bool Manager::close()
 {
     answer_manager->interrupt();
     answer_manager->close();
-    delete answer_manager;
     if (detect_hand_up)
     {
         hand_manager->stop();
-        delete hand_manager;
     }
     else
     {
