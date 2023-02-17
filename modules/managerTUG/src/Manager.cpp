@@ -1498,7 +1498,18 @@ bool Manager::set_analyzer_param(const std::string & option, const std::string &
     cmd.addString(option);
     cmd.addString(arg);
 
-    return analyzerPort.write(cmd, reply);
+    if (!analyzerPort.write(cmd, reply))
+    {
+        yCWarning(MANAGERTUG) << "Could not ask" << option << arg << "to motionAnalyzer!";
+        return false;
+    }
+
+    if(!reply.get(0).asBool())
+    {
+        yCWarning(MANAGERTUG) << "Request" << option << arg << "returned failure!";
+    }
+
+    return true;
 }
 
 void Manager::set_walking_speed(const Bottle &r)
