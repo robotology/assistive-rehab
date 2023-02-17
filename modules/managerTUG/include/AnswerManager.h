@@ -1,11 +1,8 @@
-#ifndef MANAGERTUG_ANSWERMANAGER_H
-#define MANAGERTUG_ANSWERMANAGER_H
-
+#pragma once
 
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/RpcClient.h>
 #include <unordered_map>
-
 
 class AnswerManager: public yarp::os::BufferedPort<yarp::os::Bottle>
 {
@@ -64,5 +61,3 @@ public:
 
     void reset();
 };
-
-#endif //MANAGERTUG_ANSWERMANAGER_H

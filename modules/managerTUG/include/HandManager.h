@@ -1,5 +1,4 @@
-#ifndef MANAGERTUG_HANDMANAGER_H
-#define MANAGERTUG_HANDMANAGER_H
+#pragma once
 
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/RpcClient.h>
@@ -37,5 +36,3 @@ public:
 
     bool is_raised(const std::string &p) const;
 };
-
-#endif //MANAGERTUG_HANDMANAGER_H

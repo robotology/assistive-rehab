@@ -23,7 +23,6 @@ bool Manager::attach(RpcServer &source)
     return yarp().attachAsServer(source);
 }
 
-
 bool Manager::load_speak(const string &context, const string &speak_file)
 {
     ResourceFinder rf_speak;
@@ -132,7 +131,7 @@ string Manager::get_sentence(string &value, const vector<shared_ptr<SpeechParam>
     else
     {
         value_ext=value;
-    }        
+    }
     return value_ext;
 }
 
@@ -381,8 +380,19 @@ bool Manager::start()
 bool Manager::trigger()
 {
     lock_guard<mutex> lg(mtx);
-    trigger_manager->trigger();
-    return true;
+
+    if (state == State::questions)
+    {
+        if(trigger_manager->isRunning())
+        {
+            trigger_manager->trigger();
+            return true;
+        }
+        yCWarning(MANAGERTUG) << "TriggerManager thread is not running!";
+        return false;
+    }
+    yCInfo(MANAGERTUG) << "Ignoring trigger because state is not \"questions\"";
+    return false;
 }
 
 
@@ -565,6 +575,7 @@ bool Manager::configure(ResourceFinder &rf)
         gazeboPort.open("/"+module_name+"/gazebo:rpc");
     }
     obstaclePort.open("/"+module_name+"/obstacle:i");
+
     attach(cmdPort);
 
     answer_manager=new AnswerManager(module_name,speak_map,simulation);
@@ -587,19 +598,21 @@ bool Manager::configure(ResourceFinder &rf)
     }
     else
     {
-        trigger_manager=new TriggerManager(rf,simulation,speak_map["asking"]);
-        if (!trigger_manager->start())
+        trigger_manager = std::make_unique<TriggerManager>(rf,simulation,speak_map["asking"]);
+        trigger_manager->setPorts(&triggerPort,&speechStreamPort,&gazeboPort);
+
+        if (!trigger_manager->start()) // attempt to start
         {
-            yError()<<"Could not open trigger manager";
+            yError()<<"Could not start trigger manager thread";
             return false;
         }
-        trigger_manager->setPorts(&triggerPort,&speechStreamPort,&gazeboPort);
+        trigger_manager->suspend(); // suspend until we are ready to take questions
     }
 
-    obstacle_manager=new ObstacleManager(module_name,&obstaclePort);
+    obstacle_manager = std::make_unique<ObstacleManager>(module_name,&obstaclePort);
     if (!obstacle_manager->start())
     {
-        yError()<<"Could not open obstacle manager";
+        yError()<<"Could not start obstacle manager thread";
         return false;
     }
 
@@ -625,7 +638,7 @@ double Manager::getPeriod()
 bool Manager::updateModule() 
 {
 
-    yCDebug(MANAGERTUG) << "Current state:" << static_cast<int>(state);
+    yCDebugThrottle(MANAGERTUG, 10) << "Current state:" << static_cast<int>(state);
 
     lock_guard<mutex> lg(mtx);
 
@@ -689,7 +702,7 @@ bool Manager::updateModule()
 
     if (state==State::obstacle)
     {
-        yCDebug(MANAGERTUG) << "Entering state::obstacle";
+        yCDebug(MANAGERTUG) << "Entering State::obstacle";
         if (reinforce_obstacle_cnt==0)
         {
             if (simulation)
@@ -770,7 +783,7 @@ bool Manager::updateModule()
                 }
             }
             state=State::frozen;
-                yCDebug(MANAGERTUG) << "Entering state::frozen";
+            yCDebug(MANAGERTUG) << "Entering State::frozen";
 
         }
     }
@@ -812,7 +825,7 @@ bool Manager::updateModule()
 
     if (state==State::idle)
     {
-        yCDebug(MANAGERTUG) << "Entering state::idle";
+        yCDebug(MANAGERTUG) << "Entering State::idle";
         prev_state=state;
         if (Time::now()-t0>10.0)
         {
@@ -832,7 +845,7 @@ bool Manager::updateModule()
     if (state>=State::follow)
     {
         yCDebug(MANAGERTUG) <<
-        "Entering BEYOND state::follow: follow_tag:" << follow_tag  << "tag:" << tag;
+        "Entering BEYOND State::follow: follow_tag:" << follow_tag  << "tag:" << tag;
         if (follow_tag!=tag)
         {
             yCDebug(MANAGERTUG) << "Skeleton Disengaged";
@@ -848,7 +861,7 @@ bool Manager::updateModule()
 
     if (state==State::lock)
     {
-        yCDebug(MANAGERTUG) << "Entering state::lock";
+        yCDebug(MANAGERTUG) << "Entering State::lock";
         prev_state=state;
         if (!follow_tag.empty())
         {
@@ -868,7 +881,7 @@ bool Manager::updateModule()
 
     if (state==State::seek_locked)
     {
-        yCDebug(MANAGERTUG) << "Entering state::seek_skeleton";
+        yCDebug(MANAGERTUG) << "Entering State::seek_skeleton";
         prev_state=state;
         if (findLocked(follow_tag) && is_follow_tag_ahead)
         {
@@ -878,7 +891,7 @@ bool Manager::updateModule()
 
     if (state==State::seek_skeleton)
     {
-        yCDebug(MANAGERTUG) << "Entering state::seek_skeleton";
+        yCDebug(MANAGERTUG) << "Entering State::seek_skeleton";
         prev_state=state;
         if (!follow_tag.empty() && is_follow_tag_ahead)
         {
@@ -888,7 +901,7 @@ bool Manager::updateModule()
 
     if (state==State::follow)
     {
-        yCDebug(MANAGERTUG) << "Entering state::follow";
+        yCDebug(MANAGERTUG) << "Entering State::follow";
         prev_state=state;
         if (simulation)
         {
@@ -918,8 +931,8 @@ bool Manager::updateModule()
                     Speech s("accepted");
                     speak(s);
                     s.reset();
-                    s.setKey("questions");
-                    speak(s);
+                    //s.setKey("questions");
+                    //sspeak(s);
                     if (detect_hand_up)
                     {
                         hand_manager->set_tag(tag);
@@ -947,70 +960,62 @@ bool Manager::updateModule()
 
     if (state==State::engaged)
     {
-        yCDebug(MANAGERTUG) << "Entering state::engaged";
+        yCDebug(MANAGERTUG) << "Entering State::engaged";
         prev_state=state;
         answer_manager->wakeUp();
-        Bottle cmd,rep;
+        Bottle cmd, reply;
         cmd.addString("setLinePose");
         cmd.addList().read(finishline_pose);
-        if(analyzerPort.write(cmd,rep))
+        bool result;
+        result = analyzerPort.write(cmd, reply);
+
+        if(result)
         {
             yInfo()<<"Set finish line to motionAnalyzer";
-            cmd.clear();
-            rep.clear();
-            cmd.addString("loadExercise");
-            cmd.addString("tug");
-            if (analyzerPort.write(cmd,rep))
+
+            result = set_analyzer_param("loadExercise", "tug", reply);
+
+            if (result)
             {
-                bool ack=rep.get(0).asBool();
+                bool ack = reply.get(0).asBool();
                 if (ack)
                 {
                     cmd.clear();
-                    rep.clear();
+                    reply.clear();
                     cmd.addString("listMetrics");
-                    if (analyzerPort.write(cmd,rep))
+                    if (analyzerPort.write(cmd,reply))
                     {
-                        Bottle &metrics=*rep.get(0).asList();
-                        if (metrics.size()>0)
+                        Bottle &metrics=*reply.get(0).asList();
+                        if (metrics.size() > 0)
                         {
-                            string metric="step_0";//select_randomly(metrics);
-                            yInfo()<<"Selected metric:"<<metric;
-                            cmd.clear();
-                            rep.clear();
-                            cmd.addString("selectMetric");
-                            cmd.addString(metric);
-                            if (analyzerPort.write(cmd,rep))
+                            result = set_analyzer_param("selectMetric", "step_0", reply);
+
+                            if (result)
                             {
-                                ack=rep.get(0).asBool();
+                                ack=reply.get(0).asBool();
                                 if(ack)
                                 {
                                     cmd.clear();
-                                    rep.clear();
+                                    reply.clear();
                                     cmd.addString("listMetricProps");
-                                    if (analyzerPort.write(cmd,rep))
+                                    if (analyzerPort.write(cmd,reply))
                                     {
-                                        Bottle &props=*rep.get(0).asList();
-                                        if (props.size()>0)
+                                        Bottle &props=*reply.get(0).asList();
+                                        if (props.size() > 0)
                                         {
-                                            string prop="step_distance";//select_randomly(props);
-                                            yInfo()<<"Selected prop:"<<prop;
-                                            cmd.clear();
-                                            rep.clear();
-                                            cmd.addString("selectMetricProp");
-                                            cmd.addString(prop);
-                                            if (analyzerPort.write(cmd,rep))
+                                            result = set_analyzer_param("selectMetricProp", "step_distance", reply);
+                                            yInfo()<<"Selected prop: step_distance";
+
+                                            if (result)
                                             {
-                                                ack=rep.get(0).asBool();
+                                                ack=reply.get(0).asBool();
                                                 if(ack)
                                                 {
-                                                    cmd.clear();
-                                                    rep.clear();
-                                                    cmd.addString("selectSkel");
-                                                    cmd.addString(tag);
-                                                    yInfo()<<"Selecting skeleton"<<tag;
-                                                    if (analyzerPort.write(cmd,rep))
+                                                    result = set_analyzer_param("selectSkel", tag, reply);
+                                                    yInfo() << "Selected skeleton" << tag;
+                                                    if (result)
                                                     {
-                                                        if (rep.get(0).asVocab32()==ok)
+                                                        if (reply.get(0).asVocab32()==ok)
                                                         {
                                                             state=obstacle_manager->hasObstacle()
                                                                     ? State::obstacle : State::point_start;
@@ -1032,7 +1037,7 @@ bool Manager::updateModule()
 
     if (state==State::point_start)
     {
-        yCDebug(MANAGERTUG) << "Entering state::point_start";
+        yCDebug(MANAGERTUG) << "Entering State::point_start";
         prev_state=state;
         string part=which_part();
         if (simulation)
@@ -1068,7 +1073,7 @@ bool Manager::updateModule()
 
     if (state==State::explain)
     {
-        yCDebug(MANAGERTUG) << "Entering state::explain";
+        yCDebug(MANAGERTUG) << "Entering State::explain";
         prev_state=state;
         Speech s("explain-start");
         speak(s);
@@ -1090,7 +1095,7 @@ bool Manager::updateModule()
 
     if (state==State::reach_line)
     {
-        yCDebug(MANAGERTUG) << "Entering state::reach_line";
+        yCDebug(MANAGERTUG) << "Entering State::reach_line";
         prev_state=state;
         bool navigating=true;
         Bottle cmd,rep;
@@ -1141,7 +1146,7 @@ bool Manager::updateModule()
 
     if (state==State::point_line)
     {
-        yCDebug(MANAGERTUG) << "Entering state::point_line";
+        yCDebug(MANAGERTUG) << "Entering State::point_line";
         prev_state=state;
         string part=which_part();
         point(pointing_finish,part,false);
@@ -1157,10 +1162,33 @@ bool Manager::updateModule()
         reinforce_obstacle_cnt=0;
     }
 
+    if (state == State::questions)
+    {
+        yCDebug(MANAGERTUG) << "Entering State::question";
+        Speech s("questions");
+        speak(s);
+
+        if(!question_time_active)
+        {
+            question_time_active = true;
+            question_time_tstart = Time::now();
+            if(trigger_manager->isSuspended()) trigger_manager->start();
+        }
+
+        if(Time::now() - question_time_tstart > 60.0)
+        {
+            question_time_active = false;
+            if(trigger_manager->isRunning()) trigger_manager->suspend();
+
+            state = obstacle_manager->hasObstacle()
+                    ? State::obstacle : State::starting;
+        }
+    }
+
     if (state==State::starting)
     {
-        yCDebug(MANAGERTUG) << "Entering state::starting";
-        prev_state=state;
+        yCDebug(MANAGERTUG) << "Entering State::starting";
+        prev_state = state;
         Bottle cmd,rep;
         cmd.addString("track_skeleton");
         cmd.addString(tag);
@@ -1325,7 +1353,7 @@ bool Manager::updateModule()
 
     if (state==State::finished)
     {
-        yCDebug(MANAGERTUG) << "Entering state::finished";
+        yCDebug(MANAGERTUG) << "Entering State::finished";
         t=Time::now()-tstart;
         prev_state=state;
         yInfo()<<"Test finished in"<<t<<"seconds";
@@ -1349,7 +1377,7 @@ bool Manager::updateModule()
 
     if (state==State::not_passed)
     {
-        yCDebug(MANAGERTUG) << "Entering state::not_passed";
+        yCDebug(MANAGERTUG) << "Entering State::not_passed";
         t=Time::now()-tstart;
         prev_state=state;
         Bottle cmd,rep;
@@ -1369,8 +1397,6 @@ bool Manager::updateModule()
         collectorPort.write(cmd, rep);
         disengage();
     }
-
-    yCDebug(MANAGERTUG) << "Finishing UpdateModule";
 
     return true;
 }
@@ -1464,6 +1490,16 @@ bool Manager::start_collection()
     return false;
 }
 
+bool Manager::set_analyzer_param(const std::string & option, const std::string & arg, Bottle & reply)
+{
+    Bottle cmd,rep;
+
+    cmd.clear();
+    cmd.addString(option);
+    cmd.addString(arg);
+
+    return analyzerPort.write(cmd, reply);
+}
 
 void Manager::set_walking_speed(const Bottle &r)
 {
@@ -1705,10 +1741,8 @@ bool Manager::close()
     else
     {
         trigger_manager->stop();
-        delete trigger_manager;
     }
     obstacle_manager->stop();
-    delete obstacle_manager;
     analyzerPort.close();
     speechRpcPort.close();
     attentionPort.close();

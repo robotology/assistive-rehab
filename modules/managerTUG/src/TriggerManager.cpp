@@ -13,7 +13,8 @@ using namespace std;
 using namespace yarp::os;
 
 
-TriggerManager::TriggerManager(ResourceFinder &rf_, const bool &simulation_, const string &sentence_) :
+TriggerManager::TriggerManager(ResourceFinder &rf_, const bool &simulation_, const string &sentence_) : 
+    PeriodicThread(0.5),
     rf(rf_), simulation(simulation_), sentence(sentence_), first_trigger(true),
     last_start_trigger(true), got_trigger(false), freezing(false), t0(Time::now()),
     t(Time::now())
@@ -35,23 +36,52 @@ void TriggerManager::setPorts(RpcClient *triggerPort, BufferedPort<Bottle> *spee
     this->gazeboPort=gazeboPort;
 }
 
-
 void TriggerManager::run()
 {
-    while(!isStopping())
-    {
-        lock_guard<mutex> lg(mtx);
-        double dt_from_last=t-t0;
-        double time_elapsed=Time::now()-t;
+    lock_guard<mutex> lg(mtx);
+    double dt_from_last=t-t0;
+    double time_elapsed=Time::now()-t;
 
-        //if we received a trigger
-        if (got_trigger)
+    //if we received a trigger
+    if (got_trigger)
+    {
+        got_trigger=false;
+        if (first_trigger)
         {
-            got_trigger=false;
-            if (first_trigger)
+            //if it's the first trigger, we assume it's a start
+            first_trigger=false;
+            if (simulation)
             {
-                //if it's the first trigger, we assume it's a start
-                first_trigger=false;
+                pause_actor();
+                reply(sentence,false,*speechPort);
+            }
+            else
+            {
+                trigger_speech("start");
+            }
+            freezing=true;
+            t0=t;
+            return;
+        }
+
+        //if trigger occurs after the minimum timeout
+        if (dt_from_last>=min_timeout)
+        {
+            //if last was a start trigger
+            if (last_start_trigger)
+            {
+                //we send a stop
+                last_start_trigger=false;
+                if (!simulation)
+                {
+                    trigger_speech("stop");
+                }
+                freezing=false;
+            }
+            else //if last was a stop trigger
+            {
+                //we send a start
+                last_start_trigger=true;
                 if (simulation)
                 {
                     pause_actor();
@@ -62,65 +92,32 @@ void TriggerManager::run()
                     trigger_speech("start");
                 }
                 freezing=true;
-                t0=t;
-                continue;
             }
-
-            //if trigger occurs after the minimum timeout
-            if (dt_from_last>=min_timeout)
-            {
-                //if last was a start trigger
-                if (last_start_trigger)
-                {
-                    //we send a stop
-                    last_start_trigger=false;
-                    if (!simulation)
-                    {
-                        trigger_speech("stop");
-                    }
-                    freezing=false;
-                }
-                else //if last was a stop trigger
-                {
-                    //we send a start
-                    last_start_trigger=true;
-                    if (simulation)
-                    {
-                        pause_actor();
-                        reply(sentence,false,*speechPort);
-                    }
-                    else
-                    {
-                        trigger_speech("start");
-                    }
-                    freezing=true;
-                }
-                t0=t;
-            }
-            else
-            {
-                yCInfo(TRIGGERMANAGER)<<"Trigger occurred before min timeout";
-                yCInfo(TRIGGERMANAGER)<<"Discarding trigger";
-            }
-            continue;
+            t0=t;
         }
-
-        //if we haven't received a trigger in the last max_timeout seconds
-        //and last trigger received was a start
-        if (last_start_trigger)
+        else
         {
-            //we send a stop
-            if (time_elapsed>max_timeout)
+            yCInfo(TRIGGERMANAGER)<<"Trigger occurred before min timeout";
+            yCInfo(TRIGGERMANAGER)<<"Discarding trigger";
+        }
+        return;
+    }
+
+    //if we haven't received a trigger in the last max_timeout seconds
+    //and last trigger received was a start
+    if (last_start_trigger)
+    {
+        //we send a stop
+        if (time_elapsed>max_timeout)
+        {
+            last_start_trigger=false;
+            yCInfo(TRIGGERMANAGER)<<"Exceeded max timeout";
+            if (!simulation)
             {
-                last_start_trigger=false;
-                yCInfo(TRIGGERMANAGER)<<"Exceeded max timeout";
-                if (!simulation)
-                {
-                    trigger_speech("stop");
-                }
-                freezing=false;
-                t0=t;
+                trigger_speech("stop");
             }
+            freezing=false;
+            t0=t;
         }
     }
 }

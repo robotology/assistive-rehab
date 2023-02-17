@@ -1,7 +1,6 @@
-#ifndef MANAGERTUG_TRIGGERMANAGER_H
-#define MANAGERTUG_TRIGGERMANAGER_H
+#pragma once
 
-#include <yarp/os/Thread.h>
+#include <yarp/os/PeriodicThread.h>
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/RpcClient.h>
 #include <yarp/os/BufferedPort.h>
@@ -9,7 +8,7 @@
 #include <string>
 
 
-class TriggerManager: public yarp::os::Thread
+class TriggerManager: public yarp::os::PeriodicThread
 {
 private:
     yarp::os::ResourceFinder rf;
@@ -58,6 +57,3 @@ public:
     void trigger();
     
 };
-
-
-#endif //MANAGERTUG_TRIGGERMANAGER_H
