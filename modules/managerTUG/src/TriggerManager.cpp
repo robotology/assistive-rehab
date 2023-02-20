@@ -16,7 +16,7 @@ using namespace yarp::os;
 TriggerManager::TriggerManager(ResourceFinder &rf_, const bool &simulation_, const string &sentence_) : 
     PeriodicThread(0.5),
     rf(rf_), simulation(simulation_), sentence(sentence_), first_trigger(true),
-    last_start_trigger(true), got_trigger(false), frozen(false), t0(Time::now()),
+    last_start_trigger(true), got_trigger(false), asked_to_freeze(false), t0(Time::now()),
     t(Time::now())
 {
     min_timeout=rf.check("min-timeout",Value(1.0)).asFloat64();
@@ -59,7 +59,7 @@ void TriggerManager::run()
             {
                 trigger_speech("start");
             }
-            frozen=true;
+            asked_to_freeze=true;
             t0=t;
             return;
         }
@@ -76,7 +76,7 @@ void TriggerManager::run()
                 {
                     trigger_speech("stop");
                 }
-                frozen=false;
+                asked_to_freeze=false;
             }
             else //if last was a stop trigger
             {
@@ -91,7 +91,7 @@ void TriggerManager::run()
                 {
                     trigger_speech("start");
                 }
-                frozen=true;
+                asked_to_freeze=true;
             }
             t0=t;
         }
@@ -116,24 +116,17 @@ void TriggerManager::run()
             {
                 trigger_speech("stop");
             }
-            frozen=false;
+            asked_to_freeze=false;
             t0=t;
         }
     }
 }
 
 
-bool TriggerManager::freeze() const
+bool TriggerManager::has_asked_to_freeze() const
 {
-    return frozen;
+    return asked_to_freeze;
 }
-
-
-bool TriggerManager::restore() const
-{
-    return !frozen;
-}
-
 
 bool TriggerManager::pause_actor()
 {
@@ -184,4 +177,10 @@ void TriggerManager::trigger()
     yCInfo(TRIGGERMANAGER)<<"Got button trigger from the previous after"<<t-t0<<"seconds";
 }
 
-
+void TriggerManager::threadRelease()
+{
+    yCDebug(TRIGGERMANAGER) << "stop";
+    triggerPort->close();
+    speechPort->close();
+    gazeboPort->close();
+}

@@ -78,8 +78,7 @@ bool Manager::load_speak(const string &context, const string &speak_file)
 bool Manager::speak(Speech &s)
 {
     //if a question was received, we wait until an answer is given, before speaking
-    bool received_question=trigger_manager->freeze();
-    if (received_question)
+    if (trigger_manager->has_asked_to_freeze())
     {
         bool can_speak=false;
         yCInfo(MANAGERTUG)<<"Replying to question first";
@@ -757,7 +756,7 @@ bool Manager::updateModule()
 
     if (state > State::frozen)
     {
-        if (trigger_manager->freeze())
+        if (trigger_manager->has_asked_to_freeze())
         {
             prev_state=state;
             if (prev_state==State::reach_line)
@@ -1219,7 +1218,7 @@ bool Manager::updateModule()
         }
         else
         {
-            if (!trigger_manager->freeze())
+            if (!trigger_manager->has_asked_to_freeze())
             {
                 set_walking_speed(rep);
             }
@@ -1551,8 +1550,7 @@ bool Manager::point(const Vector &target, const string &part, const bool wait)
     }
 
     //if a question was received, we wait until an answer is given, before pointing
-    bool received_question=trigger_manager->freeze();
-    if (received_question && wait)
+    if (trigger_manager->has_asked_to_freeze() && wait)
     {
         bool can_point=false;
         yCInfo(MANAGERTUG)<<"Replying to question first";

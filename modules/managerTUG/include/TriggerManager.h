@@ -22,7 +22,7 @@ private:
     yarp::os::RpcClient *gazeboPort;
     bool first_trigger;
     bool last_start_trigger;
-    bool got_trigger,frozen;
+    bool got_trigger, asked_to_freeze;
     std::string sentence;
     std::mutex mtx;
 
@@ -33,27 +33,25 @@ public:
 
 
     ~TriggerManager();
-    
-    void setPorts(yarp::os::RpcClient *triggerPort, 
-                  yarp::os::BufferedPort<yarp::os::Bottle> *speechPort, 
+
+    void setPorts(yarp::os::RpcClient *triggerPort,
+                  yarp::os::BufferedPort<yarp::os::Bottle> *speechPort,
                   yarp::os::RpcClient *gazeboPort);
 
 
     void run() override;
 
 
-    bool freeze() const;
-
-
-    bool restore() const;
-
+    bool has_asked_to_freeze() const;
 
     bool pause_actor();
 
 
     bool trigger_speech(const std::string &s);
-    
+
 
     void trigger();
-    
+
+    void threadRelease() override;
+
 };

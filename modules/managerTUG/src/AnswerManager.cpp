@@ -57,16 +57,15 @@ void AnswerManager::setExerciseParams(const double &distance, const double &time
 
 bool AnswerManager::open()
 {
-    yCDebug(ANSWERMANAGER) << "open";
     this->useCallback();
     BufferedPort<yarp::os::Bottle >::open("/"+module_name+"/answer:i");
+    yCDebug(ANSWERMANAGER) << "Opened port";
     return true;
 }
 
 
 bool AnswerManager::connected()
 {
-    yCDebugThrottle(ANSWERMANAGER, 5) << "answer_manager input count" << this->getInputCount();
     if(this->getInputCount() == 0)
     {
         yCDebugThrottle(ANSWERMANAGER, 5) << this->getName() << "not connected.";
