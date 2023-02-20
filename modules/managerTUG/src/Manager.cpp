@@ -33,12 +33,12 @@ bool Manager::load_speak(const string &context, const string &speak_file)
     Bottle &bGroup=rf_speak.findGroup("general");
     if (bGroup.isNull())
     {
-        yError()<<"Unable to find group \"general\"";
+        yCError(MANAGERTUG)<<"Unable to find group \"general\"";
         return false;
     }
     if (!bGroup.check("num-sections") || !bGroup.check("laser-adverb"))
     {
-        yError()<<"Unable to find key \"num-sections\" || \"laser-adverb\"";
+        yCError(MANAGERTUG)<<"Unable to find key \"num-sections\" || \"laser-adverb\"";
         return false;
     }
     int num_sections=bGroup.find("num-sections").asInt32();
@@ -57,12 +57,12 @@ bool Manager::load_speak(const string &context, const string &speak_file)
         {
             string msg="Unable to find section";
             msg+="\""+section.str()+"\"";
-            yError()<<msg;
+            yCError(MANAGERTUG)<<msg;
             return false;
         }
         if (!bSection.check("key") || !bSection.check("value"))
         {
-            yError()<<"Unable to find key \"key\" and/or \"value\"";
+            yCError(MANAGERTUG)<<"Unable to find key \"key\" and/or \"value\"";
             return false;
         }
         string key=bSection.find("key").asString();
@@ -335,7 +335,7 @@ bool Manager::start()
     lock_guard<mutex> lg(mtx);
     if (!connected)
     {
-        yError()<<"Not connected";
+        yCError(MANAGERTUG)<<"Not connected";
         return false;
     }
     // if (simulation)
@@ -550,7 +550,7 @@ bool Manager::configure(ResourceFinder &rf)
     {
         string msg="Unable to locate file";
         msg+="\""+speak_file+"\"";
-        yError()<<msg;
+        yCError(MANAGERTUG)<<msg;
         return false;
     }
 
@@ -580,7 +580,7 @@ bool Manager::configure(ResourceFinder &rf)
     answer_manager= std::make_unique<AnswerManager>(module_name,speak_map,simulation);
     if (!answer_manager->open())
     {
-        yError()<<"Could not open question manager";
+        yCError(MANAGERTUG)<<"Could not open question manager";
         return false;
     }
     answer_manager->setPorts(&speechStreamPort,&speechRpcPort,&gazeboPort);
@@ -590,7 +590,7 @@ bool Manager::configure(ResourceFinder &rf)
         hand_manager = std::make_unique<HandManager>(module_name,arm_thresh);
         if (!hand_manager->start())
         {
-            yError()<<"Could not start hand manager";
+            yCError(MANAGERTUG)<<"Could not start hand manager";
             return false;
         }
         hand_manager->setPorts(&opcPort,&triggerPort);
@@ -602,7 +602,7 @@ bool Manager::configure(ResourceFinder &rf)
 
         if (!trigger_manager->start()) // attempt to start
         {
-            yError()<<"Could not start trigger manager thread";
+            yCError(MANAGERTUG)<<"Could not start trigger manager thread";
             return false;
         }
         trigger_manager->suspend(); // suspend until we are ready to take questions
@@ -611,7 +611,7 @@ bool Manager::configure(ResourceFinder &rf)
     obstacle_manager = std::make_unique<ObstacleManager>(module_name,&obstaclePort);
     if (!obstacle_manager->start())
     {
-        yError()<<"Could not start obstacle manager thread";
+        yCError(MANAGERTUG)<<"Could not start obstacle manager thread";
         return false;
     }
 
@@ -647,7 +647,7 @@ bool Manager::updateModule()
             checkPorts(rightarmPort) || checkInputPorts(opcPort) ||
             checkInputPorts(obstaclePort) || !answer_manager->connected())
     {
-        yCInfoThrottle(MANAGERTUG, 5) << "ManagerTUG not connected";
+        yCWarningThrottle(MANAGERTUG, 5) << "ManagerTUG not connected";
         connected=false;
         return true;
     }
@@ -1137,6 +1137,10 @@ bool Manager::updateModule()
                 if(trigger_manager->isRunning())
                     trigger_manager->suspend();
 
+                s.reset();
+                s.setKey("questions-over");
+                speak(s);
+
                 state = obstacle_manager->hasObstacle()
                         ? State::obstacle : State::starting;
                 reinforce_obstacle_cnt=0;
@@ -1213,14 +1217,14 @@ bool Manager::updateModule()
         {
             if (is_active())
             {
-                set_walking_speed(rep);
+                get_walking_speed(rep);
             }
         }
         else
         {
             if (!trigger_manager->has_asked_to_freeze())
             {
-                set_walking_speed(rep);
+                get_walking_speed(rep);
             }
         }
         human_state=rep.find("human-state").asString();
@@ -1485,12 +1489,12 @@ bool Manager::set_analyzer_param(const std::string & option, const std::string &
     return true;
 }
 
-void Manager::set_walking_speed(const Bottle &r)
+void Manager::get_walking_speed(const Bottle &r)
 {
     if (Bottle *b=r.get(0).find("step_0").asList())
     {
         double speed=b->find("speed").asFloat64();
-        answer_manager->setSpeed(speed);
+        answer_manager->setMeasuredSpeed(speed);
 //            yCInfo(MANAGERTUG)<<"Human moving at"<<speed<<"m/s";
     }
 }
@@ -1669,7 +1673,7 @@ bool Manager::getWorld(const Property &prop)
             }
         }
     }
-    yError()<<"Could not configure world";
+    yCError(MANAGERTUG)<<"Could not configure world";
     return false;
 }
 

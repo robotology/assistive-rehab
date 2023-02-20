@@ -159,7 +159,7 @@ void AnswerManager::suspend()
 }
 
 
-void AnswerManager::setSpeed(const double &s)
+void AnswerManager::setMeasuredSpeed(const double &s)
 {
     this->speed=s;
 }

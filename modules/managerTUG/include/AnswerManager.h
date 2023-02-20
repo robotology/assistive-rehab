@@ -53,7 +53,7 @@ public:
 
     void suspend();
 
-    void setSpeed(const double &speed);
+    void setMeasuredSpeed(const double &speed);
 
     std::string getAnswer(const yarp::os::Bottle &answer);
 

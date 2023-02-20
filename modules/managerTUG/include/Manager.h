@@ -176,7 +176,7 @@ public:
 
     bool set_analyzer_param(const std::string & option, const std::string & arg);
 
-    void set_walking_speed(const Bottle &r);
+    void get_walking_speed(const Bottle &r);
 
     bool is_active();
 
