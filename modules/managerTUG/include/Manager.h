@@ -79,7 +79,6 @@ private:
     State prev_state;
     std::string tag;
     double t0,tstart,t;
-    bool question_time_active;
     double question_time_tstart;
     int encourage_cnt,reinforce_engage_cnt;
     int reinforce_obstacle_cnt;

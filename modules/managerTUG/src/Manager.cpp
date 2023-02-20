@@ -755,9 +755,8 @@ bool Manager::updateModule()
         }
     }
 
-    if (state>State::frozen)
+    if (state > State::frozen)
     {
-        yCDebug(MANAGERTUG) << "State BEYOND frozen:" << static_cast<int>(state);
         if (trigger_manager->freeze())
         {
             prev_state=state;
@@ -825,7 +824,7 @@ bool Manager::updateModule()
 
     if (state==State::idle)
     {
-        yCDebug(MANAGERTUG) << "Entering State::idle";
+        yCDebugOnce(MANAGERTUG) << "Entering State::idle";
         prev_state=state;
         if (Time::now()-t0>10.0)
         {
@@ -844,7 +843,7 @@ bool Manager::updateModule()
 
     if (state>=State::follow)
     {
-        yCDebug(MANAGERTUG) <<
+        yCDebugOnce(MANAGERTUG) <<
         "Entering BEYOND State::follow: follow_tag:" << follow_tag  << "tag:" << tag;
         if (follow_tag!=tag)
         {
@@ -861,7 +860,7 @@ bool Manager::updateModule()
 
     if (state==State::lock)
     {
-        yCDebug(MANAGERTUG) << "Entering State::lock";
+        yCDebugOnce(MANAGERTUG) << "Entering State::lock";
         prev_state=state;
         if (!follow_tag.empty())
         {
@@ -881,7 +880,7 @@ bool Manager::updateModule()
 
     if (state==State::seek_locked)
     {
-        yCDebug(MANAGERTUG) << "Entering State::seek_skeleton";
+        yCDebugOnce(MANAGERTUG) << "Entering State::seek_skeleton";
         prev_state=state;
         if (findLocked(follow_tag) && is_follow_tag_ahead)
         {
@@ -891,7 +890,7 @@ bool Manager::updateModule()
 
     if (state==State::seek_skeleton)
     {
-        yCDebug(MANAGERTUG) << "Entering State::seek_skeleton";
+        yCDebugOnce(MANAGERTUG) << "Entering State::seek_skeleton";
         prev_state=state;
         if (!follow_tag.empty() && is_follow_tag_ahead)
         {
@@ -901,7 +900,7 @@ bool Manager::updateModule()
 
     if (state==State::follow)
     {
-        yCDebug(MANAGERTUG) << "Entering State::follow";
+        yCDebugOnce(MANAGERTUG) << "Entering State::follow";
         prev_state=state;
         if (simulation)
         {
@@ -960,7 +959,7 @@ bool Manager::updateModule()
 
     if (state==State::engaged)
     {
-        yCDebug(MANAGERTUG) << "Entering State::engaged";
+        yCDebugOnce(MANAGERTUG) << "Entering State::engaged";
         prev_state = state;
         answer_manager->wakeUp();
         Bottle cmd, reply;
@@ -985,7 +984,7 @@ bool Manager::updateModule()
 
     if (state==State::point_start)
     {
-        yCDebug(MANAGERTUG) << "Entering State::point_start";
+        yCDebugOnce(MANAGERTUG) << "Entering State::point_start";
         prev_state=state;
         string part=which_part();
         if (simulation)
@@ -1021,7 +1020,7 @@ bool Manager::updateModule()
 
     if (state==State::explain)
     {
-        yCDebug(MANAGERTUG) << "Entering State::explain";
+        yCDebugOnce(MANAGERTUG) << "Entering State::explain";
         prev_state=state;
         Speech s("explain-start");
         speak(s);
@@ -1043,7 +1042,7 @@ bool Manager::updateModule()
 
     if (state==State::reach_line)
     {
-        yCDebug(MANAGERTUG) << "Entering State::reach_line";
+        yCDebugOnce(MANAGERTUG) << "Entering State::reach_line";
         prev_state=state;
         bool navigating=true;
         Bottle cmd,rep;
@@ -1094,7 +1093,7 @@ bool Manager::updateModule()
 
     if (state==State::point_line)
     {
-        yCDebug(MANAGERTUG) << "Entering State::point_line";
+        yCDebugOnce(MANAGERTUG) << "Entering State::point_line";
         prev_state=state;
         string part=which_part();
         point(pointing_finish,part,false);
@@ -1112,31 +1111,43 @@ bool Manager::updateModule()
 
     if (state == State::questions)
     {
-        yCDebug(MANAGERTUG) << "Entering State::question";
-        Speech s("questions");
+        yCDebugOnce(MANAGERTUG) << "Entering State::questions";
+
+        bool is_entered_question_time = prev_state != state;
+
+        prev_state = state;
+        Speech s("questions"); // "Se vuoi farmi una domanda, premi il ..."
         speak(s);
 
-        if(!question_time_active)
+        if(is_entered_question_time)
         {
-            question_time_active = true;
             question_time_tstart = Time::now();
-            if(trigger_manager->isSuspended()) trigger_manager->start();
+            if(trigger_manager->isSuspended())
+                trigger_manager->start();
         }
-
-        if(Time::now() - question_time_tstart > 60.0)
+        else
         {
-            question_time_active = false;
-            if(trigger_manager->isRunning()) trigger_manager->suspend();
+            if(answer_manager->hasReplied())
+            {
+                answer_manager->reset();
+                question_time_tstart = Time::now();
+            }
 
-            state = obstacle_manager->hasObstacle()
-                    ? State::obstacle : State::starting;
-            reinforce_obstacle_cnt=0;
+            if(Time::now() - question_time_tstart > 10.0)
+            {
+                if(trigger_manager->isRunning())
+                    trigger_manager->suspend();
+
+                state = obstacle_manager->hasObstacle()
+                        ? State::obstacle : State::starting;
+                reinforce_obstacle_cnt=0;
+            }
         }
     }
 
     if (state==State::starting)
     {
-        yCDebug(MANAGERTUG) << "Entering State::starting";
+        yCDebugOnce(MANAGERTUG) << "Entering State::starting";
         prev_state = state;
         Bottle cmd,rep;
         cmd.addString("track_skeleton");
