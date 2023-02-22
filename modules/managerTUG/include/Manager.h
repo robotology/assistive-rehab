@@ -56,6 +56,7 @@ private:
     std::string human_state;
     std::vector<std::string> laser_adverb;
     std::vector<double> engage_distance,engage_azimuth;
+    double _exercise_timeout;
 
     const int ok=Vocab32::encode("ok");
     const int fail=Vocab32::encode("fail");

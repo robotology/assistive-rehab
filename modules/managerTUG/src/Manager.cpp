@@ -457,6 +457,7 @@ bool Manager::configure(ResourceFinder &rf)
 {
     module_name=rf.check("name",Value("managerTUG")).asString();
     period=rf.check("period",Value(0.1)).asFloat64();
+    _exercise_timeout = rf.check("exercise-timeout",Value(15)).asFloat64();
     speak_file=rf.check("speak-file",Value("speak-it")).asString();
     arm_thresh=rf.check("arm-thresh",Value(0.6)).asFloat64();
     detect_hand_up=rf.check("detect-hand-up",Value(false)).asBool();
@@ -1248,21 +1249,7 @@ bool Manager::updateModule()
         }
         else
         {
-            if((Time::now()-t0)>20.0)
-            {
-                if(++encourage_cnt<=1)
-                {
-                    Speech s("encourage",false);
-                    speak(s);
-                    t0=Time::now();
-                }
-                else
-                {
-                    state=obstacle_manager->hasObstacle()
-                            ? State::obstacle : State::not_passed;
-                    reinforce_obstacle_cnt=0;
-                }
-            }
+            encourage(20.0);
         }
     }
 
