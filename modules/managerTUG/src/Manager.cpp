@@ -11,10 +11,11 @@ Manager::Manager() :
     start_ex(false),
     state(State::idle),
     interrupting(false),
-    world_configured(false),
-    ok_go(false),
+    world_configured(false), 
+    ok_go(false), 
     connected(false),
-    params_set(false)
+    params_set(false),
+    _was_person_out_of_bounds{false}
 { }
 
 
@@ -1303,19 +1304,25 @@ bool Manager::updateModule()
 
         if(human_state=="out_of_bounds")
         {
-            state=obstacle_manager->hasObstacle()
-                ? State::obstacle : State::out_of_bounds;
-            reinforce_obstacle_cnt=0;
-            yInfo()<<"Stop!";
+            _was_person_out_of_bounds = true;
+            yInfo()<<"Person is out of bounds!";
         }
         //detect when the person seats down
         if(human_state=="sitting")
         {
+            State next_state;
+            if(_was_person_out_of_bounds)
+            {
+                next_state = State::not_passed;
+            }
+            else
+            {
+                next_state = State::finished;
+            }
             state=obstacle_manager->hasObstacle()
-                    ? State::obstacle : State::finished;
+                    ? State::obstacle : next_state;
             reinforce_obstacle_cnt=0;
-            t=Time::now()-tstart;
-            yCInfo(MANAGERTUG)<<"Stop!";
+            yInfo()<<"Stop!";
         }
         else
         {
@@ -1349,8 +1356,7 @@ bool Manager::updateModule()
 
     if (state==State::not_passed)
     {
-        yCDebug(MANAGERTUG) << "Entering State::not_passed";
-        t=Time::now()-tstart;
+        yCDebug(MANAGERTUG) << "Entering state::not_passed";
         prev_state=state;
         Bottle cmd,rep;
         cmd.addString("stop");
@@ -1358,7 +1364,14 @@ bool Manager::updateModule()
         Speech s("end",true,false);
         speak(s);
         s.reset();
-        s.setKey("assess-low");
+        if(_was_person_out_of_bounds)
+        {
+            s.setKey("assess-out-of-bounds");
+        }
+        else
+        {
+            s.setKey("assess-low");
+        }
         speak(s);
         s.reset();
         s.setKey("greetings");
@@ -1369,6 +1382,8 @@ bool Manager::updateModule()
         collectorPort.write(cmd, rep);
         disengage();
     }
+
+    yCDebug(MANAGERTUG) << "Finishing UpdateModule";
 
     return true;
 }

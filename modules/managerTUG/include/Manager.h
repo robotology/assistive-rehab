@@ -59,13 +59,14 @@ private:
 
     const int ok=Vocab32::encode("ok");
     const int fail=Vocab32::encode("fail");
-    enum class State { stopped,
-                       idle,
-                       obstacle,
-                       lock,
-                       seek_locked,
-                       seek_skeleton,
-                       follow, frozen,
+    
+    enum class State { stopped, 
+                       idle, 
+                       obstacle, 
+                       lock, 
+                       seek_locked, 
+                       seek_skeleton, 
+                       follow, frozen, 
                        assess_standing,
                        assess_crossing,
                        line_crossed,
@@ -77,6 +78,8 @@ private:
                        not_passed,
                        finished } state;
     State prev_state;
+    bool _was_person_out_of_bounds;
+
     std::string tag;
     double t0,tstart,t;
     double question_time_tstart;
