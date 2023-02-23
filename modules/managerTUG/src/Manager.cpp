@@ -921,40 +921,7 @@ bool Manager::updateModule()
         }
         else
         {
-            Bottle cmd,rep;
-            cmd.addString("is_with_raised_hand");
-            cmd.addString(tag);
-            if (attentionPort.write(cmd,rep))
-            {
-                if (rep.get(0).asVocab32()==ok)
-                {
-                    Speech s("accepted");
-                    speak(s);
-                    s.reset();
-                    //s.setKey("questions");
-                    //sspeak(s);
-                    if (detect_hand_up)
-                    {
-                        hand_manager->set_tag(tag);
-                    }
-                    state=State::engaged;
-                }
-                else if (Time::now()-t0>10.0)
-                {
-                    if (++reinforce_engage_cnt<=1)
-                    {
-                        Speech s("reinforce-engage");
-                        speak(s);
-                        t0=Time::now();
-                    }
-                    else
-                    {
-                        Speech s("disengaged");
-                        speak(s);
-                        disengage();
-                    }
-                }
-            }
+           confirmWithRaisedHand(State::engaged);
         }
     }
 
@@ -1144,10 +1111,17 @@ bool Manager::updateModule()
                 speak(s);
 
                 state = obstacle_manager->hasObstacle()
-                        ? State::obstacle : State::starting;
+                        ? State::obstacle : State::wait_to_start;
                 reinforce_obstacle_cnt=0;
             }
         }
+    }
+
+    if (state==State::wait_to_start)
+    {
+        yCDebugOnce(MANAGERTUG) << "Entering State::wait_to_start";
+        prev_state = state;
+        confirmWithRaisedHand(State::starting);
     }
 
     if (state==State::starting)
@@ -1760,4 +1734,41 @@ bool Manager::close()
     }
     obstaclePort.close();
     return true;
+}
+
+void Manager::confirmWithRaisedHand(State next_state)
+{
+    //TODO: magari gli facciamo dire altre frasi anzichè le stesse di prima
+    Bottle cmd,rep;
+    cmd.addString("is_with_raised_hand");
+    cmd.addString(tag);
+    if (attentionPort.write(cmd,rep))
+    {
+        if (rep.get(0).asVocab32()==ok) //Mano alzata?
+        {
+            Speech s("accepted");
+            speak(s);
+            s.reset();
+            if (detect_hand_up)
+            {
+                hand_manager->set_tag(tag);
+            }
+            state=next_state;
+        }
+        else if (Time::now()-t0>10.0)
+        {
+            if (++reinforce_engage_cnt<=1)
+            {
+                Speech s("reinforce-engage");
+                speak(s);
+                t0=Time::now();
+            }
+            else
+            {
+                Speech s("disengaged");
+                speak(s);
+                disengage();
+            }
+        }
+    }
 }

@@ -75,6 +75,7 @@ private:
                        explain, point_line,
                        reach_line,
                        questions,
+                       wait_to_start,
                        starting,
                        not_passed,
                        finished } state;
@@ -199,4 +200,6 @@ public:
     bool interruptModule() override;
 
     bool close() override;
+
+    void confirmWithRaisedHand(State next_state);
 };
