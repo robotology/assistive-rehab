@@ -214,7 +214,8 @@ yDebug("2");
     //open the tf driver
     yarp::os::Property tfOpts;
     tfOpts.put("device", "frameTransformClient");
-    tfOpts.put("filexml_option", "ftc_pub_ros2.xml");
+    tfOpts.put("testxml_from", "ftc_pub_ros2.xml");
+    tfOpts.put("testxml_context", "ros2_frameTransform_config");
     if (m_tf.open(tfOpts))
     {
         if (m_tf.view(m_itf))
