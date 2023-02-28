@@ -43,7 +43,7 @@
 
     <module>
         <name>yarprobotinterface</name>
-        <parameters>--context AssistiveRehab --config realsense2_remote_etapas_640x480.xml</parameters>
+        <parameters>--context AssistiveRehab --config realsense2_remote_etapas_l515.xml</parameters>
         <node>r1-torso</node>
     </module>
 
@@ -81,6 +81,18 @@
         <name>yarpscope</name>
         <parameters>--context AssistiveRehab --xml motionAnalyzer-scope.xml</parameters>
         <node>r1-console</node>
+    </module>
+    
+    <module>
+        <name>yarprobotinterface</name>
+        <parameters>--config /home/user1/tour-guide-robot/app/navigation2/conf/robotInterface/realsenseRepeater.xml</parameters>
+        <node>server1</node>
+    </module>
+
+    <module>
+        <name>yarpOpenPose</name>
+        <parameters>--context openPoseStuff --from yarpOpenPose_1p7.ini</parameters>
+        <node>server1</node>
     </module>
 
     <connection>

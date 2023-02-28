@@ -21,7 +21,9 @@ ENV CER_DIR=/projects/cer/build
 RUN cd ${PROJECTS_DIR} &&  \
     cd assistive-rehab && \
     rm -rf build/ && \
-    git checkout feat/dockerfiles && \
+    git remote add fbrand https://github.com/fbrand-new/assistive-rehab.git && \
+    git fetch --all && \
+    git checkout develop && \
     git pull --rebase && mkdir build && \
     cd build && \
     cmake .. \

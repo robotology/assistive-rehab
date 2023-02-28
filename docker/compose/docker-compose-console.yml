@@ -1,7 +1,7 @@
 version: "3.7"
 
 x-fdg-basic: &fdg-basic
-  image: ghcr.io/robotology/assistive-rehab:master-basic-fdg-demo
+  image: ghcr.io/robotology/assistive-rehab:master-basic-devel
   environment:
     - DISPLAY=${DISPLAY}
     - QT_X11_NO_MITSHM=1
@@ -19,7 +19,7 @@ x-fdg-basic: &fdg-basic
 services:
   yarprunConsole:
     <<: *fdg-basic
-    command: sh -c "yarprun --server /container-console --log"
+    command: sh -c "source /opt/ros/humble/setup.bash; yarprun --server /container-console --log"
 
   objectsPropertiesCollector:
     <<: *fdg-basic
@@ -78,7 +78,7 @@ services:
         yarp wait /ctpservice/left_arm/rpc
         yarp wait /ctpservice/right_arm/rpc
         yarp wait /obstacleDetector/obstacle:o
-        managerTUG --lock false --max-timeout 30.0 --engage-azimuth "(50.0 160.0)" --starting-pose "(0.5 -4.8 90.0)"
+        managerTUG --lock false --max-timeout 30.0 --engage-azimuth "(50.0 160.0)" --starting-pose "(0.5 -3.3 90.0)"
 
   gazeController:
     <<: *fdg-basic
