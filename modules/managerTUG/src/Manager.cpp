@@ -1317,16 +1317,16 @@ bool Manager::updateModule()
     if (state==State::finished)
     {
         yCDebug(MANAGERTUG) << "Entering State::finished";
-        t=Time::now()-tstart;
+        //t=Time::now()-tstart;
         prev_state=state;
-        yCInfo(MANAGERTUG)<<"Test finished in"<<t<<"seconds";
-        vector<shared_ptr<SpeechParam>> p;
-        p.push_back(shared_ptr<SpeechParam>(new SpeechParam(round(t*10.0)/10.0)));
+        yCInfo(MANAGERTUG)<<"Test finished";
+        //vector<shared_ptr<SpeechParam>> p;
+        //p.push_back(shared_ptr<SpeechParam>(new SpeechParam(round(t*10.0)/10.0)));
         Bottle cmd,rep;
         cmd.addString("stop");
         analyzerPort.write(cmd,rep);
         Speech s("assess-high");
-        s.setParams(p);
+        //s.setParams(p);
         speak(s);
         s.reset();
         s.setKey("greetings");
