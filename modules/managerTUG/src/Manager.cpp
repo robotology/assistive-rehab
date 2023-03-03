@@ -7,14 +7,14 @@ using namespace yarp::math;
 using namespace assistive_rehab;
 
 
-Manager::Manager() : 
-    start_ex(false), 
-    state(State::idle), 
+Manager::Manager() :
+    start_ex(false),
+    state(State::idle),
     interrupting(false),
-    world_configured(false), 
-    ok_go(false), 
-    connected(false), 
-    params_set(false) 
+    world_configured(false),
+    ok_go(false),
+    connected(false),
+    params_set(false)
 { }
 
 
@@ -330,7 +330,7 @@ bool Manager::remove_locked()
 }
 
 
-bool Manager::start() 
+bool Manager::start()
 {
     lock_guard<mutex> lg(mtx);
     if (!connected)
@@ -395,7 +395,7 @@ bool Manager::trigger()
 }
 
 
-bool Manager::set_target(const double x, const double y, const double theta) 
+bool Manager::set_target(const double x, const double y, const double theta)
 {
     lock_guard<mutex> lg(mtx);
     if (!simulation)
@@ -420,28 +420,28 @@ bool Manager::set_target(const double x, const double y, const double theta)
 }
 
 
-double Manager::get_measured_time() 
+double Manager::get_measured_time()
 {
     lock_guard<mutex> lg(mtx);
     return t;
 }
 
 
-string Manager::get_success_status() 
+string Manager::get_success_status()
 {
     lock_guard<mutex> lg(mtx);
     return success_status;
 }
 
-    
-bool Manager::has_finished() 
+
+bool Manager::has_finished()
 {
     lock_guard<mutex> lg(mtx);
     return test_finished;
 }
 
 
-bool Manager::stop() 
+bool Manager::stop()
 {
     lock_guard<mutex> lg(mtx);
     bool ret=disengage() && send_stop(attentionPort);
@@ -452,7 +452,7 @@ bool Manager::stop()
 }
 
 
-bool Manager::configure(ResourceFinder &rf) 
+bool Manager::configure(ResourceFinder &rf)
 {
     module_name=rf.check("name",Value("managerTUG")).asString();
     period=rf.check("period",Value(0.1)).asFloat64();
@@ -628,13 +628,13 @@ bool Manager::configure(ResourceFinder &rf)
 }
 
 
-double Manager::getPeriod() 
+double Manager::getPeriod()
 {
     return period;
 }
 
 
-bool Manager::updateModule() 
+bool Manager::updateModule()
 {
 
     yCDebugThrottle(MANAGERTUG, 10) << "Current state:" << static_cast<int>(state);
@@ -1708,13 +1708,13 @@ bool Manager::findLocked(string &t)
 }
 
 
-bool Manager::interruptModule() 
+bool Manager::interruptModule()
 {
     interrupting=true;
     return true;
 }
 
-    
+
 bool Manager::close()
 {
     answer_manager->interrupt();
@@ -1750,6 +1750,3 @@ bool Manager::close()
     obstaclePort.close();
     return true;
 }
-
-
-
