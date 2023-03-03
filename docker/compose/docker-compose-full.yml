@@ -64,6 +64,6 @@ services:
 
   yarprunOpenpose:
     <<: *fdg-basic
-    command: sh -c "yarprun --server /container-openpose --log"
+    command: sh -c "yarprun --server /container-openpose"
 
 
