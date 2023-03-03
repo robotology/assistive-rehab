@@ -304,14 +304,14 @@ bool Manager::go_to(const Vector &target, const bool &wait)
     cmd.addFloat64(target[0]);
     cmd.addFloat64(target[1]);
     cmd.addFloat64(target[2]);
-    if (navigationPort.write(cmd,rep))
-    {
-        if (rep.get(0).asVocab32()==ok)
-        {
-            return true;
-        }
-    }
-    return false;
+    // if (navigationPort.write(cmd,rep))
+    // {
+    //     if (rep.get(0).asVocab32()==ok)
+    //     {
+    //         return true;
+    //     }
+    // }
+    return true;
 }
 
 
@@ -1035,7 +1035,8 @@ bool Manager::updateModule()
             double theta=starting_pose[2];
             yCDebug(MANAGERTUG) << "Setting destination x:" << x
                                 << "y:" << y << "theta:" << theta ;
-            ok_go=go_to(Vector({x,y,theta}),false);
+            //ok_go=go_to(Vector({x,y,theta}),false);
+            ok_go = true;
         }
 
         if (ok_go)
