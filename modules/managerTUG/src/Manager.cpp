@@ -1273,8 +1273,8 @@ bool Manager::updateModule()
             state=obstacle_manager->hasObstacle()
                     ? State::obstacle : State::line_crossed;
             reinforce_obstacle_cnt=0;
-            Speech s("line-crossed");
-            speak(s);
+            // Speech s("line-crossed");
+            // speak(s);
             encourage_cnt=0;
             t0=Time::now();
         }
