@@ -128,7 +128,7 @@
    time-medium                    20.0
    vel_estimator_N                100
    vel_estimator_D                5.0
-   max-finish-line-overrun        1
+   max-finish-line-overrun        0.3
    \endcode
 
    with:

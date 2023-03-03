@@ -86,13 +86,13 @@
     <module>
         <name>yarprobotinterface</name>
         <parameters>--config /home/user1/tour-guide-robot/app/navigation2/conf/robotInterface/realsenseRepeater.xml</parameters>
-        <node>server1</node>
+        <node>container-openpose</node>
     </module>
 
     <module>
         <name>yarpOpenPose</name>
         <parameters>--context openPoseStuff --from yarpOpenPose_1p7.ini</parameters>
-        <node>server1</node>
+        <node>container-openpose</node>
     </module>
 
     <connection>

@@ -39,6 +39,12 @@
         <name>googleSpeechProcess</name>
         <node>container-speech</node>
     </module>
+    
+    <module>
+        <name>yarprobotinterface</name>
+        <parameters>--context AssistiveRehab --config realsense2_remote_etapas_l515.xml</parameters>
+        <node>r1-torso</node>
+    </module>
 
     <module>
         <name>yarprobotinterface</name>
@@ -47,148 +53,140 @@
     </module>
 
     <module>
-        <name>joystickCtrl</name>
-        <parameters>--context AssistiveRehab --from jostick_trigger_8bitdo.ini</parameters>
-        <node>r1-console</node>
-    </module>
-
-    <module>
-        <name>yarprobotinterface</name>
         <parameters>--config /home/user1/tour-guide-robot/app/navigation2/conf/robotInterface/realsenseRepeater.xml</parameters>
-        <node>server1</node>
+        <node>container-openpose</node>
     </module>
 
     <module>
         <name>yarpOpenPose</name>
         <parameters>--context openPoseStuff --from yarpOpenPose_1p7_480x640.ini</parameters>
-        <node>server1</node>
+        <node>container-openpose</node>
+    </module>
+
+    <module>
+        <name>joystickCtrl</name>
+        <parameters>--context AssistiveRehab --from jostick_trigger_8bitdo.ini</parameters>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>objectsPropertiesCollector</name>
         <parameters>--name opc --no-load-db --no-save-db --sync-bc 0.1</parameters>
-        <node>r1-console</node>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>skeletonViewer</name>
         <parameters>--x 1120 --y 10 --show-floor on --camera-viewup '(1.0 0.0 0.0)' --camera-position '(-4.0 -2.0 8.0)' --camera-focalpoint '(0.0 -2.0 0.0)' --grid-resolution '(100 100)'</parameters>
-        <node>r1-console</node>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>lineDetector</name>
-        <parameters>--camera::remote /cer/realsense_repeater/</parameters>
-        <node>r1-console</node>
+        <parameters>--camera::remote /cer/realsense_repeater</parameters>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>skeletonRetriever</name>
-        <parameters>--depth::enable true --camera::fov '(43 70)' --depth::kernel-size 8  --depth::iterations 1 --depth::min-distance 0.5 --depth::max-distance 6.0 --filter-keypoint-order 8</parameters>
-        <node>r1-console</node>
+        <parameters>--depth::enable true --depth::kernel-size 8  --depth::iterations 1 --depth::min-distance 0.5 --depth::max-distance 6.0 --filter-keypoint-order 8</parameters>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>skeletonLocker</name>
         <parameters></parameters>
-        <node>r1-console</node>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>robotSkeletonPublisher</name>
         <parameters>--robot cer</parameters>
-        <node>r1-console</node>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>attentionManager</name>
         <parameters>--frame world</parameters>
-        <node>r1-console</node>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>motionAnalyzer</name>
         <parameters></parameters>
-        <node>r1-console</node>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>managerTUG</name>
         <parameters>--lock false --max-timeout 30.0 --engage-azimuth "(50.0 160.0)" --starting-pose "(2 -4.0 110.0)</parameters>
-        <node>r1-console</node>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>cer_gaze-controller</name>
         <parameters>--cameras::file /projects/cer/build/share/CER/contexts/cameraCalibration/cerEyes_480x640.ini</parameters>
-        <node>r1-console</node>
+        <node>container-console</node>
     </module>
 
     <module>
         <name> navController</name>
         <parameters>--velocity-angular-saturation 15.0 --distance-target 1.8</parameters>
-        <node>r1-console</node>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>obstacleDetector</name>
         <parameters>--robot cer --dist-obstacle 0.6</parameters>
-        <node>r1-console</node>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>ctpService</name>
         <parameters> --robot cer --part right_arm</parameters>
-        <node>r1-console</node>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>ctpService</name>
         <parameters>--robot cer --part left_arm</parameters>
-        <node>r1-console</node>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>eventCollector</name>
         <parameters></parameters>
-        <node>r1-console</node>
-    </module>
-
-    <module>
-        <name>/root/.nvm/versions/node/v14.17.0/bin/node</name>
-        <parameters>node-button.js --host 0.0.0.0 --listenPort 80</parameters>
-        <workdir>/projects/assistive-rehab/app/scripts</workdir>
-        <node>container-speech</node>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>yarpview</name>
         <parameters>--name /viewer/depth --x 10 --y 40 --p 50</parameters>
-        <node>r1-console</node>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>yarpview</name>
         <parameters>--name /viewer/skeleton --x 380 --y 40 --p 50</parameters>
-        <node>r1-console</node>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>yarpview</name>
         <parameters>--name /viewer/line --x 770 --y 40 --p 50</parameters>
-        <node>r1-console</node>
+        <node>container-console</node>
     </module>
 
     <module>
        <name>yarpview</name>
        <parameters>--name /viewer/obstacles --w 400 --h 400 --p 50 --compact</parameters>
-       <node>r1-console</node>
+       <node>container-console</node>
     </module>
 
     <module>
         <name>yarpscope</name>
         <parameters>--context AssistiveRehab --xml motionAnalyzer-scope.xml</parameters>
-        <node>r1-console</node>
+        <node>container-console</node>
     </module>
 
     <connection>

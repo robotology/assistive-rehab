@@ -304,6 +304,7 @@ bool Manager::go_to(const Vector &target, const bool &wait)
     cmd.addFloat64(target[0]);
     cmd.addFloat64(target[1]);
     cmd.addFloat64(target[2]);
+    // TODO[fbrand]: this is a temporary hack to disallow movements
     // if (navigationPort.write(cmd,rep))
     // {
     //     if (rep.get(0).asVocab32()==ok)
@@ -1035,6 +1036,7 @@ bool Manager::updateModule()
             double theta=starting_pose[2];
             yCDebug(MANAGERTUG) << "Setting destination x:" << x
                                 << "y:" << y << "theta:" << theta ;
+            //TODO: this is a temporary hack to disallow movements
             //ok_go=go_to(Vector({x,y,theta}),false);
             ok_go = true;
         }
@@ -1074,7 +1076,7 @@ bool Manager::updateModule()
         s.dontWait();
         speak(s);
         state=obstacle_manager->hasObstacle()
-                ? State::obstacle : State::starting;
+                ? State::obstacle : State::questions;
         reinforce_obstacle_cnt=0;
     }
 
@@ -1132,9 +1134,10 @@ bool Manager::updateModule()
         Bottle cmd,rep;
         cmd.addString("track_skeleton");
         cmd.addString(tag);
-        if (navigationPort.write(cmd,rep))
+        //TODO[fbrand]: these are temporary hacks to disallow movements
+        if (true || navigationPort.write(cmd,rep))
         {
-            if (rep.get(0).asVocab32()==ok)
+            if (true || rep.get(0).asVocab32()==ok)
             {
                 cmd.clear();
                 rep.clear();
