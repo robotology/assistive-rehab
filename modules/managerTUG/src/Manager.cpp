@@ -603,7 +603,7 @@ bool Manager::configure(ResourceFinder &rf)
         trigger_manager = std::make_unique<TriggerManager>(rf,simulation,speak_map["asking"]);
         trigger_manager->setPorts(&triggerPort,&speechStreamPort,&gazeboPort);
 
-        if (!trigger_manager->start()) // attempt to start
+        if (!trigger_manager->start())
         {
             yCError(MANAGERTUG)<<"Could not start trigger manager thread";
             return false;
@@ -757,37 +757,37 @@ bool Manager::updateModule()
         }
     }
 
-    if (state > State::frozen)
-    {
-        if (trigger_manager->has_asked_to_freeze())
-        {
-            prev_state=state;
-            if (prev_state==State::reach_line)
-            {
-                Bottle cmd,rep;
-                cmd.addString("is_navigating");
-                if (navigationPort.write(cmd,rep))
-                {
-                    if (rep.get(0).asVocab32()==ok)
-                    {
-                        cmd.clear();
-                        rep.clear();
-                        cmd.addString("stop");
-                        if (navigationPort.write(cmd,rep))
-                        {
-                            if (rep.get(0).asVocab32()==ok)
-                            {
-                                yCInfo(MANAGERTUG)<<"Frozen navigation";
-                            }
-                        }
-                    }
-                }
-            }
-            state=State::frozen;
-            yCDebug(MANAGERTUG) << "Entering State::frozen";
+    // if (state > State::frozen)
+    // {
+    //     if (trigger_manager->has_asked_to_freeze())
+    //     {
+    //         prev_state=state;
+    //         if (prev_state==State::reach_line)
+    //         {
+    //             Bottle cmd,rep;
+    //             cmd.addString("is_navigating");
+    //             if (navigationPort.write(cmd,rep))
+    //             {
+    //                 if (rep.get(0).asVocab32()==ok)
+    //                 {
+    //                     cmd.clear();
+    //                     rep.clear();
+    //                     cmd.addString("stop");
+    //                     if (navigationPort.write(cmd,rep))
+    //                     {
+    //                         if (rep.get(0).asVocab32()==ok)
+    //                         {
+    //                             yCInfo(MANAGERTUG)<<"Frozen navigation";
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //         state=State::frozen;
+    //         yCDebug(MANAGERTUG) << "Entering State::frozen";
 
-        }
-    }
+    //     }
+    // }
 
     if (state>=State::obstacle)
     {
@@ -797,10 +797,10 @@ bool Manager::updateModule()
         }
         else
         {
-            if (state!=State::frozen)
-            {
+            //if (state!=State::frozen)
+            //{
                 state=prev_state;
-            }
+            //}
         }
     }
 
@@ -849,7 +849,7 @@ bool Manager::updateModule()
         "Entering BEYOND State::follow: follow_tag:" << follow_tag  << "tag:" << tag;
         if (follow_tag!=tag)
         {
-            yCDebug(MANAGERTUG) << "Skeleton Disengaged";
+            yCWarning(MANAGERTUG) << "Skeleton Disengaged";
             Bottle cmd,rep;
             cmd.addString("stop");
             analyzerPort.write(cmd,rep);
@@ -1082,19 +1082,24 @@ bool Manager::updateModule()
 
     if (state == State::questions)
     {
-        yCDebugOnce(MANAGERTUG) << "Entering State::questions";
+        yCDebug(MANAGERTUG) << "Entering State::questions";
 
         bool is_entered_question_time = prev_state != state;
 
         prev_state = state;
-        Speech s("questions"); // "Se vuoi farmi una domanda, premi il ..."
-        speak(s);
+
+        Speech s("explain-questions"); // "Se vuoi farmi una domanda, premi il ..."
 
         if(is_entered_question_time)
         {
+            speak(s);
+
             question_time_tstart = Time::now();
             if(trigger_manager->isSuspended())
-                trigger_manager->start();
+            {
+                yCDebug(MANAGERTUG) << "Question time start";
+                trigger_manager->resume();
+            }
         }
         else
         {
@@ -1104,10 +1109,14 @@ bool Manager::updateModule()
                 question_time_tstart = Time::now();
             }
 
-            if(Time::now() - question_time_tstart > 10.0)
+            if(Time::now() - question_time_tstart > 15.0)
             {
-                if(trigger_manager->isRunning())
+                yCDebug(MANAGERTUG) << "Question time over, proceeding";
+                if(trigger_manager->isRunning()) {
                     trigger_manager->suspend();
+                }
+                
+                yCDebug(MANAGERTUG) << "Thread suspended successfully";                
 
                 s.reset();
                 s.setKey("questions-over");
@@ -1208,7 +1217,7 @@ bool Manager::updateModule()
             }
         }
         human_state=rep.find("human-state").asString();
-        yCInfo(MANAGERTUG)<<"Human state"<<human_state;
+        yCDebugThrottle(MANAGERTUG, 10)<<"Human state"<<human_state;
     }
 
     if (state==State::assess_standing)
@@ -1347,9 +1356,6 @@ bool Manager::updateModule()
         collectorPort.write(cmd, rep);
         disengage();
     }
-
-    yCDebug(MANAGERTUG) << "Finishing UpdateModule";
-
     return true;
 }
 
