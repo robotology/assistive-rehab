@@ -48,11 +48,6 @@
 
     <module>
         <name>yarprobotinterface</name>
-        <parameters>--context AssistiveRehab --config realsense2_remote_etapas_l515.xml</parameters>
-        <node>r1-torso</node>
-    </module>
-
-    <module>
         <parameters>--config /home/user1/tour-guide-robot/app/navigation2/conf/robotInterface/realsenseRepeater.xml</parameters>
         <node>container-openpose</node>
     </module>
@@ -89,7 +84,7 @@
 
     <module>
         <name>skeletonRetriever</name>
-        <parameters>--depth::enable true --depth::kernel-size 8  --depth::iterations 1 --depth::min-distance 0.5 --depth::max-distance 6.0 --filter-keypoint-order 8</parameters>
+        <parameters> --camera::fov "(43 70)"  --depth::enable true --depth::kernel-size 8  --depth::iterations 1 --depth::min-distance 0.5 --depth::max-distance 6.0 --filter-keypoint-order 8</parameters>
         <node>container-console</node>
     </module>
 
@@ -119,7 +114,7 @@
 
     <module>
         <name>managerTUG</name>
-        <parameters>--lock false --max-timeout 30.0 --engage-azimuth "(50.0 160.0)" --starting-pose "(2 -4.0 110.0)</parameters>
+        <parameters>--lock false --max-timeout 30.0 --engage-azimuth "(50.0 160.0)" --starting-pose "(2 -4.0 110.0)"</parameters>
         <node>container-console</node>
     </module>
 
