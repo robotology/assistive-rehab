@@ -1,5 +1,5 @@
 <application>
-<name>Assistive Rehabilitation TUG Manual App</name>
+<name>Assistive Rehabilitation TUG Full App</name>
     <module>
         <name>yarpdev</name>
         <parameters>--device AudioRecorderWrapper --subdevice portaudioRecorder --name /microphone --min_samples_over_network 4000 --max_samples_over_network 4000 --AUDIO_BASE::channels 1 --AUDIO_BASE::samples 16000 --AUDIO_BASE::rate 16000</parameters>
