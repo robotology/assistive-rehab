@@ -11,10 +11,11 @@ Manager::Manager() :
     start_ex(false),
     state(State::idle),
     interrupting(false),
-    world_configured(false),
-    ok_go(false),
+    world_configured(false), 
+    ok_go(false), 
     connected(false),
-    params_set(false)
+    params_set(false),
+    _was_person_out_of_bounds{false}
 { }
 
 
@@ -303,14 +304,15 @@ bool Manager::go_to(const Vector &target, const bool &wait)
     cmd.addFloat64(target[0]);
     cmd.addFloat64(target[1]);
     cmd.addFloat64(target[2]);
-    if (navigationPort.write(cmd,rep))
-    {
-        if (rep.get(0).asVocab32()==ok)
-        {
-            return true;
-        }
-    }
-    return false;
+    // TODO[fbrand]: this is a temporary hack to disallow movements
+    // if (navigationPort.write(cmd,rep))
+    // {
+    //     if (rep.get(0).asVocab32()==ok)
+    //     {
+    //         return true;
+    //     }
+    // }
+    return true;
 }
 
 
@@ -456,6 +458,7 @@ bool Manager::configure(ResourceFinder &rf)
 {
     module_name=rf.check("name",Value("managerTUG")).asString();
     period=rf.check("period",Value(0.1)).asFloat64();
+    _exercise_timeout = rf.check("exercise-timeout",Value(15)).asFloat64();
     speak_file=rf.check("speak-file",Value("speak-it")).asString();
     arm_thresh=rf.check("arm-thresh",Value(0.6)).asFloat64();
     detect_hand_up=rf.check("detect-hand-up",Value(false)).asBool();
@@ -600,7 +603,7 @@ bool Manager::configure(ResourceFinder &rf)
         trigger_manager = std::make_unique<TriggerManager>(rf,simulation,speak_map["asking"]);
         trigger_manager->setPorts(&triggerPort,&speechStreamPort,&gazeboPort);
 
-        if (!trigger_manager->start()) // attempt to start
+        if (!trigger_manager->start())
         {
             yCError(MANAGERTUG)<<"Could not start trigger manager thread";
             return false;
@@ -754,37 +757,37 @@ bool Manager::updateModule()
         }
     }
 
-    if (state > State::frozen)
-    {
-        if (trigger_manager->has_asked_to_freeze())
-        {
-            prev_state=state;
-            if (prev_state==State::reach_line)
-            {
-                Bottle cmd,rep;
-                cmd.addString("is_navigating");
-                if (navigationPort.write(cmd,rep))
-                {
-                    if (rep.get(0).asVocab32()==ok)
-                    {
-                        cmd.clear();
-                        rep.clear();
-                        cmd.addString("stop");
-                        if (navigationPort.write(cmd,rep))
-                        {
-                            if (rep.get(0).asVocab32()==ok)
-                            {
-                                yCInfo(MANAGERTUG)<<"Frozen navigation";
-                            }
-                        }
-                    }
-                }
-            }
-            state=State::frozen;
-            yCDebug(MANAGERTUG) << "Entering State::frozen";
+    // if (state > State::frozen)
+    // {
+    //     if (trigger_manager->has_asked_to_freeze())
+    //     {
+    //         prev_state=state;
+    //         if (prev_state==State::reach_line)
+    //         {
+    //             Bottle cmd,rep;
+    //             cmd.addString("is_navigating");
+    //             if (navigationPort.write(cmd,rep))
+    //             {
+    //                 if (rep.get(0).asVocab32()==ok)
+    //                 {
+    //                     cmd.clear();
+    //                     rep.clear();
+    //                     cmd.addString("stop");
+    //                     if (navigationPort.write(cmd,rep))
+    //                     {
+    //                         if (rep.get(0).asVocab32()==ok)
+    //                         {
+    //                             yCInfo(MANAGERTUG)<<"Frozen navigation";
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //         state=State::frozen;
+    //         yCDebug(MANAGERTUG) << "Entering State::frozen";
 
-        }
-    }
+    //     }
+    // }
 
     if (state>=State::obstacle)
     {
@@ -794,10 +797,10 @@ bool Manager::updateModule()
         }
         else
         {
-            if (state!=State::frozen)
-            {
+            //if (state!=State::frozen)
+            //{
                 state=prev_state;
-            }
+            //}
         }
     }
 
@@ -846,7 +849,7 @@ bool Manager::updateModule()
         "Entering BEYOND State::follow: follow_tag:" << follow_tag  << "tag:" << tag;
         if (follow_tag!=tag)
         {
-            yCDebug(MANAGERTUG) << "Skeleton Disengaged";
+            yCWarning(MANAGERTUG) << "Skeleton Disengaged";
             Bottle cmd,rep;
             cmd.addString("stop");
             analyzerPort.write(cmd,rep);
@@ -919,40 +922,7 @@ bool Manager::updateModule()
         }
         else
         {
-            Bottle cmd,rep;
-            cmd.addString("is_with_raised_hand");
-            cmd.addString(tag);
-            if (attentionPort.write(cmd,rep))
-            {
-                if (rep.get(0).asVocab32()==ok)
-                {
-                    Speech s("accepted");
-                    speak(s);
-                    s.reset();
-                    //s.setKey("questions");
-                    //sspeak(s);
-                    if (detect_hand_up)
-                    {
-                        hand_manager->set_tag(tag);
-                    }
-                    state=State::engaged;
-                }
-                else if (Time::now()-t0>10.0)
-                {
-                    if (++reinforce_engage_cnt<=1)
-                    {
-                        Speech s("reinforce-engage");
-                        speak(s);
-                        t0=Time::now();
-                    }
-                    else
-                    {
-                        Speech s("disengaged");
-                        speak(s);
-                        disengage();
-                    }
-                }
-            }
+           confirmWithRaisedHand(State::engaged);
         }
     }
 
@@ -1066,7 +1036,9 @@ bool Manager::updateModule()
             double theta=starting_pose[2];
             yCDebug(MANAGERTUG) << "Setting destination x:" << x
                                 << "y:" << y << "theta:" << theta ;
-            ok_go=go_to(Vector({x,y,theta}),false);
+            //TODO: this is a temporary hack to disallow movements
+            //ok_go=go_to(Vector({x,y,theta}),false);
+            ok_go = true;
         }
 
         if (ok_go)
@@ -1104,25 +1076,30 @@ bool Manager::updateModule()
         s.dontWait();
         speak(s);
         state=obstacle_manager->hasObstacle()
-                ? State::obstacle : State::starting;
+                ? State::obstacle : State::questions;
         reinforce_obstacle_cnt=0;
     }
 
     if (state == State::questions)
     {
-        yCDebugOnce(MANAGERTUG) << "Entering State::questions";
+        yCDebug(MANAGERTUG) << "Entering State::questions";
 
         bool is_entered_question_time = prev_state != state;
 
         prev_state = state;
-        Speech s("questions"); // "Se vuoi farmi una domanda, premi il ..."
-        speak(s);
+
+        Speech s("explain-questions"); // "Se vuoi farmi una domanda, premi il ..."
 
         if(is_entered_question_time)
         {
+            speak(s);
+
             question_time_tstart = Time::now();
             if(trigger_manager->isSuspended())
-                trigger_manager->start();
+            {
+                yCDebug(MANAGERTUG) << "Question time start";
+                trigger_manager->resume();
+            }
         }
         else
         {
@@ -1132,20 +1109,31 @@ bool Manager::updateModule()
                 question_time_tstart = Time::now();
             }
 
-            if(Time::now() - question_time_tstart > 10.0)
+            if(Time::now() - question_time_tstart > 15.0)
             {
-                if(trigger_manager->isRunning())
+                yCDebug(MANAGERTUG) << "Question time over, proceeding";
+                if(trigger_manager->isRunning()) {
                     trigger_manager->suspend();
+                }
+                
+                yCDebug(MANAGERTUG) << "Thread suspended successfully";                
 
                 s.reset();
                 s.setKey("questions-over");
                 speak(s);
 
                 state = obstacle_manager->hasObstacle()
-                        ? State::obstacle : State::starting;
+                        ? State::obstacle : State::wait_to_start;
                 reinforce_obstacle_cnt=0;
             }
         }
+    }
+
+    if (state==State::wait_to_start)
+    {
+        yCDebugOnce(MANAGERTUG) << "Entering State::wait_to_start";
+        prev_state = state;
+        confirmWithRaisedHand(State::starting);
     }
 
     if (state==State::starting)
@@ -1155,9 +1143,10 @@ bool Manager::updateModule()
         Bottle cmd,rep;
         cmd.addString("track_skeleton");
         cmd.addString(tag);
-        if (navigationPort.write(cmd,rep))
+        //TODO[fbrand]: these are temporary hacks to disallow movements
+        if (true || navigationPort.write(cmd,rep))
         {
-            if (rep.get(0).asVocab32()==ok)
+            if (true || rep.get(0).asVocab32()==ok)
             {
                 cmd.clear();
                 rep.clear();
@@ -1228,7 +1217,7 @@ bool Manager::updateModule()
             }
         }
         human_state=rep.find("human-state").asString();
-        yCInfo(MANAGERTUG)<<"Human state"<<human_state;
+        yCDebugThrottle(MANAGERTUG, 10)<<"Human state"<<human_state;
     }
 
     if (state==State::assess_standing)
@@ -1243,24 +1232,11 @@ bool Manager::updateModule()
             reinforce_obstacle_cnt=0;
             encourage_cnt=0;
             t0=Time::now();
+            tstart=t0; //The exercises really starts when the person is standing
         }
         else
         {
-            if((Time::now()-t0)>20.0)
-            {
-                if(++encourage_cnt<=1)
-                {
-                    Speech s("encourage",false);
-                    speak(s);
-                    t0=Time::now();
-                }
-                else
-                {
-                    state=obstacle_manager->hasObstacle()
-                            ? State::obstacle : State::not_passed;
-                    reinforce_obstacle_cnt=0;
-                }
-            }
+            encourage(20.0);
         }
     }
 
@@ -1299,14 +1275,28 @@ bool Manager::updateModule()
     if (state==State::line_crossed)
     {
         prev_state=state;
+
+        if(human_state=="out_of_bounds")
+        {
+            _was_person_out_of_bounds = true;
+            yInfo()<<"Person is out of bounds!";
+        }
         //detect when the person seats down
         if(human_state=="sitting")
         {
+            State next_state;
+            if(_was_person_out_of_bounds)
+            {
+                next_state = State::not_passed;
+            }
+            else
+            {
+                next_state = State::finished;
+            }
             state=obstacle_manager->hasObstacle()
-                    ? State::obstacle : State::finished;
+                    ? State::obstacle : next_state;
             reinforce_obstacle_cnt=0;
-            t=Time::now()-tstart;
-            yCInfo(MANAGERTUG)<<"Stop!";
+            yInfo()<<"Stop!";
         }
         else
         {
@@ -1340,8 +1330,7 @@ bool Manager::updateModule()
 
     if (state==State::not_passed)
     {
-        yCDebug(MANAGERTUG) << "Entering State::not_passed";
-        t=Time::now()-tstart;
+        yCDebug(MANAGERTUG) << "Entering state::not_passed";
         prev_state=state;
         Bottle cmd,rep;
         cmd.addString("stop");
@@ -1349,7 +1338,14 @@ bool Manager::updateModule()
         Speech s("end",true,false);
         speak(s);
         s.reset();
-        s.setKey("assess-low");
+        if(_was_person_out_of_bounds)
+        {
+            s.setKey("assess-out-of-bounds");
+        }
+        else
+        {
+            s.setKey("assess-low");
+        }
         speak(s);
         s.reset();
         s.setKey("greetings");
@@ -1360,7 +1356,6 @@ bool Manager::updateModule()
         collectorPort.write(cmd, rep);
         disengage();
     }
-
     return true;
 }
 
@@ -1430,8 +1425,8 @@ void Manager::start_interaction()
             state=obstacle_manager->hasObstacle()
                     ? State::obstacle : State::assess_standing;
             reinforce_obstacle_cnt=0;
-            t0=tstart=Time::now();
-            yCInfo(MANAGERTUG)<<"Start!";
+            t0=Time::now();
+            yInfo()<<"Start!";
         }
     }
 }
@@ -1749,4 +1744,41 @@ bool Manager::close()
     }
     obstaclePort.close();
     return true;
+}
+
+void Manager::confirmWithRaisedHand(State next_state)
+{
+    //TODO: magari gli facciamo dire altre frasi anzichè le stesse di prima
+    Bottle cmd,rep;
+    cmd.addString("is_with_raised_hand");
+    cmd.addString(tag);
+    if (attentionPort.write(cmd,rep))
+    {
+        if (rep.get(0).asVocab32()==ok) //Mano alzata?
+        {
+            Speech s("accepted");
+            speak(s);
+            s.reset();
+            if (detect_hand_up)
+            {
+                hand_manager->set_tag(tag);
+            }
+            state=next_state;
+        }
+        else if (Time::now()-t0>10.0)
+        {
+            if (++reinforce_engage_cnt<=1)
+            {
+                Speech s("reinforce-engage");
+                speak(s);
+                t0=Time::now();
+            }
+            else
+            {
+                Speech s("disengaged");
+                speak(s);
+                disengage();
+            }
+        }
+    }
 }

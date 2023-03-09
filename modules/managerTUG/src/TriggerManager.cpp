@@ -97,8 +97,7 @@ void TriggerManager::run()
         }
         else
         {
-            yCInfo(TRIGGERMANAGER)<<"Trigger occurred before min timeout";
-            yCInfo(TRIGGERMANAGER)<<"Discarding trigger";
+            yCInfo(TRIGGERMANAGER)<<"Trigger occurred before min timeout, discarding";
         }
         return;
     }
@@ -179,8 +178,9 @@ void TriggerManager::trigger()
 
 void TriggerManager::threadRelease()
 {
-    yCDebug(TRIGGERMANAGER) << "stop";
+    yCDebug(TRIGGERMANAGER) << "Releasing thread TriggerManager";
     triggerPort->close();
     speechPort->close();
     gazeboPort->close();
 }
+

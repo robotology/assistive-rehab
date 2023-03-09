@@ -128,6 +128,7 @@
    time-medium                    20.0
    vel_estimator_N                100
    vel_estimator_D                5.0
+   max-finish-line-overrun        0.3
    \endcode
 
    with:
@@ -138,6 +139,7 @@
    - `time-high`: the time the user should take to travel `distance` and get a medium score [s];
    - `vel_estimator_N`: maximum length of the window used to estimate the shoulder height speed;
    - `vel_estimator_D`: threshold applied to the linear estimator.
+   - `max-finish-line-overrun`: maximum allowed overrun with respect to the finish line [m];
 
    For this exercise we compute the range of motion of six joints and the step parameters, specifically step length, step width, cadence and speed.
    The sections describing the range of motion metrics are the same defined in \ref sec-abduction.

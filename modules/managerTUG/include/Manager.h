@@ -56,16 +56,18 @@ private:
     std::string human_state;
     std::vector<std::string> laser_adverb;
     std::vector<double> engage_distance,engage_azimuth;
+    double _exercise_timeout;
 
     const int ok=Vocab32::encode("ok");
     const int fail=Vocab32::encode("fail");
-    enum class State { stopped,
-                       idle,
-                       obstacle,
-                       lock,
-                       seek_locked,
-                       seek_skeleton,
-                       follow, frozen,
+    
+    enum class State { stopped, 
+                       idle, 
+                       obstacle, 
+                       lock, 
+                       seek_locked, 
+                       seek_skeleton, 
+                       follow, frozen, 
                        assess_standing,
                        assess_crossing,
                        line_crossed,
@@ -73,10 +75,13 @@ private:
                        explain, point_line,
                        reach_line,
                        questions,
+                       wait_to_start,
                        starting,
                        not_passed,
                        finished } state;
     State prev_state;
+    bool _was_person_out_of_bounds;
+
     std::string tag;
     double t0,tstart,t;
     double question_time_tstart;
@@ -195,4 +200,6 @@ public:
     bool interruptModule() override;
 
     bool close() override;
+
+    void confirmWithRaisedHand(State next_state);
 };

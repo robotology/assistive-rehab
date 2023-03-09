@@ -6,7 +6,7 @@ x-fdg-basic: &fdg-basic
     - DISPLAY=${DISPLAY}
     - QT_X11_NO_MITSHM=1
     - XAUTHORITY=/root/.Xauthority
-    - YARP_DATA_DIRS=${YARP_DATA_DIRS}:/projects/yarp-devices-ros2/build/share/yarp/
+    - YARP_DATA_DIRS=${YARP_DATA_DIRS}:/projects/yarp-devices-ros2/build/share/yarp/:/usr/local/lib/yarp:/projects/yarp-devices-ros2/build/share/yarp/:/projects/yarp-devices-ros2/build/share/yarp-devices-ros2
   volumes:
     - "/tmp/.X11-unix:/tmp/.X11-unix"
     - "${XAUTHORITY}:/root/.Xauthority"
@@ -18,7 +18,7 @@ x-fdg-basic: &fdg-basic
   privileged: true
 
 x-fdg-openpose: &fdg-openpose
-  image: elandini84/r1images:r1OpenPose_devel
+  image: elandini84/r1images:r1OpenPose_fdg
   environment:
     - DISPLAY=${DISPLAY}
     - QT_X11_NO_MITSHM=1
@@ -63,7 +63,14 @@ services:
     command: sh -c "yarprun --server /container-console --log"
 
   yarprunOpenpose:
-    <<: *fdg-basic
+    <<: *fdg-openpose
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     command: sh -c "yarprun --server /container-openpose"
 
 

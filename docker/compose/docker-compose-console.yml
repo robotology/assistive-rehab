@@ -31,7 +31,7 @@ services:
 
   lineDetector:
     <<: *fdg-basic
-    command: bash -c "source /opt/ros/humble/setup.bash; lineDetector --camera::remote /cer/realsense_repeater"
+    command: sh -c "source /opt/ros/humble/setup.bash; yarp wait /depthCamera/rgbImage:o; lineDetector --camera::remote /cer/realsense_repeater"
 
   skeletonRetriever:
     <<: *fdg-basic

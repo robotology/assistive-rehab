@@ -30,6 +30,7 @@
     <param default="(4.5,0.0,0,0)" desc="Sets the target the actor has to reach during the TUG (only is simulation is true).">target-sim</param>
     <param default="(0.0,2.0)" desc="User engaged within this distance, wrt start line (m).">engage-distance</param>
     <param default="(80.0 110.0)" desc="User engaged within this field of view, wrt start line (degrees).">engage-azimuth</param>
+    <param default="15.0" desc="Exercise timeout">exercise-timeout</param>
   </arguments>
 
   <authors>
