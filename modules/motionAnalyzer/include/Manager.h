@@ -43,7 +43,7 @@ class Manager : public yarp::os::RFModule,
     yarp::os::RpcClient navPort;
     yarp::os::BufferedPort<yarp::os::Bottle> scopePort;
 
-    enum class State { idle, sitting, standing, crossed } state;
+    enum class State { idle, sitting, standing, crossed, out_of_bounds} state;
     bool standing;
 
     yarp::os::ResourceFinder *rf;
@@ -83,6 +83,7 @@ class Manager : public yarp::os::RFModule,
     yarp::sig::Vector shoulder_height;
     iCub::ctrl::AWLinEstimator *lin_est_shoulder;
     double shoulder_center_height_vel,standing_thresh,finishline_thresh;
+    double _max_finish_line_overrun;
     std::vector<double> line_pose;
     yarp::sig::Matrix world_frame;
 
@@ -129,7 +130,9 @@ class Manager : public yarp::os::RFModule,
     void getSkeleton();
     bool isStanding();
     bool isSitting();
+    bool hasCrossedLine(std::vector<double>& line);
     bool hasCrossedFinishLine();
+    bool hasMovedAwayFromFinishLine();
     yarp::os::Property publishState();
     void updateState();
     void estimate();

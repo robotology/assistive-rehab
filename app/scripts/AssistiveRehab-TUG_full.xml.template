@@ -1,35 +1,14 @@
 <application>
-<name>Assistive Rehabilitation TUG App</name>
+<name>Assistive Rehabilitation TUG Full App</name>
     <module>
-        <name>node-button.js</name>
-        <parameters></parameters>
-        <deployer>js</deployer>
-        <node>localhost</node>
-        <dependencies>
-            <port timeout="10">/managerTUG/cmd:rpc</port>
-        </dependencies>
+        <name>yarpdev</name>
+        <parameters>--device AudioRecorderWrapper --subdevice portaudioRecorder --name /microphone --min_samples_over_network 4000 --max_samples_over_network 4000 --AUDIO_BASE::channels 1 --AUDIO_BASE::samples 16000 --AUDIO_BASE::rate 16000</parameters>
+        <node>r1-torso</node>
     </module>
 
     <module>
         <name>yarpdev</name>
         <parameters>--device speech --lingware-context speech --default-language it-IT --robot r1 --pitch 80 --speed 110</parameters>
-        <node>r1-face</node>
-    </module>
-
-    <module>
-        <name>yarpdev</name>
-        <parameters>--device faceDisplayServer</parameters>
-        <node>r1-face</node>
-    </module>
-
-    <module>
-        <name>yarpdev</name>
-        <parameters>--context AssistiveRehab --from realsense2.ini</parameters>
-        <node>r1-torso1</node>
-    </module>
-
-     <module>
-        <name>faceExpressionImage</name>
         <node>r1-face</node>
     </module>
 
@@ -40,141 +19,188 @@
     </module>
 
     <module>
+        <name>yarpdev</name>
+        <parameters>--device faceDisplayServer</parameters>
+        <node>r1-face</node>
+    </module>
+
+    <module>
+        <name>faceExpressionImage</name>
+        <node>r1-face</node>
+    </module>
+
+    <module>
+        <name>googleSpeech</name>
+        <parameters>--language_code it-IT</parameters>
+        <node>container-speech</node>
+    </module>
+
+    <module>
+        <name>googleSpeechProcess</name>
+        <node>container-speech</node>
+    </module>
+    
+    <module>
+        <name>yarprobotinterface</name>
+        <parameters>--context AssistiveRehab --config realsense2_remote_etapas_l515.xml</parameters>
+        <node>r1-torso</node>
+    </module>
+
+    <module>
+        <name>yarprobotinterface</name>
+        <parameters>--config /home/user1/tour-guide-robot/app/navigation2/conf/robotInterface/realsenseRepeater.xml</parameters>
+        <node>container-openpose</node>
+    </module>
+
+    <module>
         <name>yarpOpenPose</name>
-        <parameters></parameters>
-        <node>r1-cuda-linux</node>
+        <parameters>--context openPoseStuff --from yarpOpenPose_1p7_480x640.ini</parameters>
+        <node>container-openpose</node>
     </module>
 
     <module>
-       <name>objectsPropertiesCollector</name>
-       <parameters>--name opc --no-load-db --no-save-db --sync-bc 0.1</parameters>
-       <node>r1-console-linux</node>
+        <name>joystickCtrl</name>
+        <parameters>--context AssistiveRehab --from jostick_trigger_8bitdo.ini</parameters>
+        <node>container-console</node>
     </module>
 
     <module>
-       <name>skeletonRetriever</name>
-       <parameters>--depth::kernel-size 4 --depth::iterations 3 --depth::min-distance 0.5 --depth::max-distance 10.0</parameters>
-       <dependencies>
-          <port timeout="5">/opc/rpc</port>
-       </dependencies>
-       <node>r1-console-linux</node>
+        <name>objectsPropertiesCollector</name>
+        <parameters>--name opc --no-load-db --no-save-db --sync-bc 0.1</parameters>
+        <node>container-console</node>
     </module>
 
     <module>
-       <name>skeletonLocker</name>
-       <node>r1-console-linux</node>
-    </module>
-
-    <module>
-       <name>attentionManager</name>
-       <parameters>--frame world</parameters>
-       <node>r1-console-linux</node>
-    </module>
-
-    <module>
-       <name>robotSkeletonPublisher</name>
-       <parameters></parameters>
-       <node>r1-console-linux</node>
-    </module>
-
-    <module>
-       <name>navController</name>
-       <parameters>--velocity-angular-saturation 15.0</parameters>
-       <dependencies>
-         <port>/baseControl/rpc</port>
-         <port>/odometry2D_nws_yarp/odometry:o</port>
-         <port>/baseControl/input/command:i</port>
-       </dependencies>
-       <node>r1-console-linux</node>
-    </module>
-
-    <module>
-       <name>cer_gaze-controller</name>
-       <parameters>--cameras::context cameraCalibration --cameras::file cerEyes_320x240.ini --joints-limits::pitch "(-20.0 20.0)" --joints-limits::yaw "(-40.0 40.0)"</parameters>
-       <ensure>
-          <wait when="stop">3</wait>
-       </ensure>
-       <node>r1-base</node>
-    </module>
-
-    <module>
-       <name>motionAnalyzer</name>
-       <parameters></parameters>
-       <node>r1-console-linux</node>
+        <name>skeletonViewer</name>
+        <parameters>--x 1120 --y 10 --show-floor on --camera-viewup '(1.0 0.0 0.0)' --camera-position '(-4.0 -2.0 8.0)' --camera-focalpoint '(0.0 -2.0 0.0)' --grid-resolution '(100 100)'</parameters>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>lineDetector</name>
-        <parameters></parameters>
-        <node>r1-console-linux</node>
+        <parameters>--camera::remote /cer/realsense_repeater</parameters>
+        <node>container-console</node>
     </module>
 
     <module>
-       <name>obstacleDetector</name>
-       <parameters></parameters>
-       <dependencies>
-         <port timeout="15">/navController/rpc</port>
-       </dependencies>
-       <node>r1-console-linux</node>
+        <name>skeletonRetriever</name>
+        <parameters> --camera::fov "(43 70)"  --depth::enable true --depth::kernel-size 8  --depth::iterations 1 --depth::min-distance 0.5 --depth::max-distance 6.0 --filter-keypoint-order 8</parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>skeletonLocker</name>
+        <parameters></parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>robotSkeletonPublisher</name>
+        <parameters>--robot cer</parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>attentionManager</name>
+        <parameters>--frame world</parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>motionAnalyzer</name>
+        <parameters></parameters>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>managerTUG</name>
-        <node>r1-console-linux</node>
+        <parameters>--lock false --max-timeout 30.0 --engage-azimuth "(50.0 160.0)" --starting-pose "(2 -4.0 110.0)"</parameters>
+        <node>container-console</node>
     </module>
 
     <module>
-        <name>eventCollector</name>
-        <node>r1-console-linux</node>
+        <name>cer_gaze-controller</name>
+        <parameters>--cameras::file /projects/cer/build/share/CER/contexts/cameraCalibration/cerEyes_480x640.ini</parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name> navController</name>
+        <parameters>--velocity-angular-saturation 15.0 --distance-target 1.8</parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>obstacleDetector</name>
+        <parameters>--robot cer --dist-obstacle 0.6</parameters>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>ctpService</name>
-        <parameters>--robot cer --part right_arm</parameters>
-        <node>r1-console-linux</node>
+        <parameters> --robot cer --part right_arm</parameters>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>ctpService</name>
         <parameters>--robot cer --part left_arm</parameters>
-        <node>r1-console-linux</node>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>eventCollector</name>
+        <parameters></parameters>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>yarpview</name>
-        <parameters>--name /viewer/depth --x 10 --y 40 --p 50 --compact</parameters>
-        <node>r1-display-linux</node>
+        <parameters>--name /viewer/depth --x 10 --y 40 --p 50</parameters>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>yarpview</name>
-        <parameters>--name /viewer/skeleton --x 380 --y 40 --p 50 --compact</parameters>
-        <node>r1-display-linux</node>
+        <parameters>--name /viewer/skeleton --x 380 --y 40 --p 50</parameters>
+        <node>container-console</node>
     </module>
 
     <module>
         <name>yarpview</name>
-        <parameters>--name /viewer/line --x 770 --y 40 --p 50 --compact</parameters>
-        <node>r1-display-linux</node>
+        <parameters>--name /viewer/line --x 770 --y 40 --p 50</parameters>
+        <node>container-console</node>
     </module>
 
     <module>
        <name>yarpview</name>
        <parameters>--name /viewer/obstacles --w 400 --h 400 --p 50 --compact</parameters>
-       <node>localhost</node>
+       <node>container-console</node>
     </module>
 
     <module>
-        <name>skeletonViewer</name>
-        <parameters>--x 1120 --y 10 --show-floor on --camera-viewup "(1.0 0.0 0.0)" --camera-position "(-4.0 -2.0 8.0)" --camera-focalpoint "(0.0 -2.0 0.0)"</parameters>
-        <node>r1-display-linux</node>
+        <name>yarpscope</name>
+        <parameters>--context AssistiveRehab --xml motionAnalyzer-scope.xml</parameters>
+        <node>container-console</node>
     </module>
 
-    <module>
-       <name>yarpscope</name>
-       <parameters>--x 100 --y 400 --dx 1000 --dy 600 --context AssistiveRehab --xml motionAnalyzer-scope.xml</parameters>
-       <node>r1-display-linux</node>
-    </module>
+    <connection>
+        <from>/joystickCtrl:o</from>
+        <to>/baseControl/input/joystick:i</to>
+        <protocol>tcp+recv.portmonitor+type.dll+file.joy2vel</protocol>
+    </connection>
+
+    <connection>
+        <from>/iSpeak/speech-dev/rpc</from>
+        <to>/r1/speech:rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/iSpeak/r1:rpc</from>
+        <to>/faceExpressionImage/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
 
     <connection>
         <from>/faceExpressionImage/image:o</from>
@@ -195,21 +221,21 @@
     </connection>
 
     <connection>
-        <from>/depthCamera/rgbImage:o</from>
+        <from>/cer/realsense_repeater/rgbImage:o</from>
         <to>/yarpOpenPose/image:i</to>
-        <protocol>mjpeg</protocol>
+        <protocol>fast_tcp+send.portmonitor+type.dll+file.image_rotation+options_rotate.rotate_cw</protocol>
     </connection>
 
     <connection>
-        <from>/depthCamera/depthImage:o</from>
+        <from>/cer/realsense_repeater/depthImage:o</from>
         <to>/yarpOpenPose/float:i</to>
-        <protocol>fast_tcp+send.portmonitor+file.depthimage_compression_zfp+recv.portmonitor+file.depthimage_compression_zfp+type.dll</protocol>
+        <protocol>fast_tcp+send.portmonitor+type.dll+file.image_rotation_d+options_rotate.rotate_cw</protocol>
     </connection>
 
     <connection>
         <from>/yarpOpenPose/float:o</from>
         <to>/skeletonRetriever/depth:i</to>
-        <protocol>fast_tcp+send.portmonitor+file.depthimage_compression_zfp+recv.portmonitor+file.depthimage_compression_zfp+type.dll</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
     <connection>
@@ -267,9 +293,9 @@
     </connection>
 
     <connection>
-        <from>/depthCamera/rgbImage:o</from>
+        <from>/cer/realsense_repeater/rgbImage:o</from>
         <to>/lineDetector/img:i</to>
-        <protocol>mjpeg</protocol>
+        <protocol>fast_tcp+send.portmonitor+type.dll+file.image_rotation+options_rotate.rotate_cw</protocol>
     </connection>
 
     <connection>
@@ -303,7 +329,7 @@
     </connection>
 
     <connection>
-        <from>/depthCamera/depthImage:o</from>
+        <from>/yarpOpenPose/float:o</from>
         <to>/viewer/depth</to>
         <protocol>fast_tcp+recv.portmonitor+type.dll+file.depthimage_to_mono</protocol>
     </connection>
@@ -345,6 +371,12 @@
     </connection>
 
     <connection>
+        <from>/skeletonRetriever/viewer:o</from>
+        <to>/skeletonViewer:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
         <from>/opc/broadcast:o</from>
         <to>/navController/opc:i</to>
         <protocol>fast_tcp</protocol>
@@ -361,6 +393,12 @@
         <to>/motionAnalyzer/cmd</to>
         <protocol>fast_tcp</protocol>
     </connection>
+    
+    <connection>
+        <from>/motionAnalyzer/nav:cmd</from>
+        <to>/navController/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
 
     <connection>
         <from>/managerTUG/speech:o</from>
@@ -375,6 +413,24 @@
     </connection>
 
     <connection>
+        <from>/microphone/audio:o</from>
+        <to>/googleSpeech/sound:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/googleSpeech/commands:rpc</from>
+        <to>/microphone/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/googleSpeech/result:o</from>
+        <to>/googleSpeechProcess/text:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
         <from>/managerTUG/navigation:rpc</from>
         <to>/navController/rpc</to>
         <protocol>fast_tcp</protocol>
@@ -383,12 +439,6 @@
     <connection>
         <from>/managerTUG/locker:rpc</from>
         <to>/skeletonLocker/rpc</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/googleSpeech/question:o</from>
-        <to>/managerTUG/question:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
 

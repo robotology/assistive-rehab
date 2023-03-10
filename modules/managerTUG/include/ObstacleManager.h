@@ -1,5 +1,4 @@
-#ifndef MANAGERTUG_OBSTACLEMANAGER_H
-#define MANAGERTUG_OBSTACLEMANAGER_H
+#pragma once
 
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/PeriodicThread.h>
@@ -8,8 +7,6 @@
 #include "helpers.h"
 
 #include <mutex>
-
-
 
 class ObstacleManager : public yarp::os::PeriodicThread
 {
@@ -38,5 +35,3 @@ public:
 
     void suspend();
 };
-
-#endif //MANAGERTUG_OBSTACLEMANAGER_H

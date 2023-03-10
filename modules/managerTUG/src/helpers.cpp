@@ -47,7 +47,7 @@ bool checkOutputPorts(yarp::os::BufferedPort<yarp::os::Bottle>& port)
 {
     if(port.getOutputCount() == 0)
     {
-        yCDebug(HELPERS) << "Port" << port.getName() << "not connected.";
+        yCWarningThrottle(HELPERS, 1) << "Port" << port.getName() << "not connected.";
         return true;
     }
     return false;
@@ -57,7 +57,7 @@ bool checkInputPorts(yarp::os::BufferedPort<yarp::os::Bottle>& port)
 {
     if(port.getInputCount() == 0)
     {
-        yCDebug(HELPERS) << "Port" << port.getName() << "not connected.";
+        yCWarningThrottle(HELPERS, 1) << "Port" << port.getName() << "not connected.";
         return true;
     }
     return false;
@@ -67,7 +67,7 @@ bool checkPorts(yarp::os::RpcClient& port)
 {
     if(port.getOutputCount() == 0)
     {
-        yCDebug(HELPERS) << "Port" << port.getName() << "not connected.";
+        yCWarningThrottle(HELPERS, 1) << "Port" << port.getName() << "not connected.";
         return true;
     }
     return false;
