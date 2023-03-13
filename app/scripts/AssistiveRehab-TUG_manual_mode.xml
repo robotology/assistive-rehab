@@ -54,7 +54,7 @@
 
     <module>
         <name>yarpOpenPose</name>
-        <parameters>--context openPoseStuff --from yarpOpenPose_1p7_480x640.ini</parameters>
+        <parameters>--context openPoseStuff --from yarpOpenPose_1p7.ini</parameters>
         <node>container-openpose</node>
     </module>
 

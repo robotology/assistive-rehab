@@ -459,6 +459,8 @@ bool Manager::configure(ResourceFinder &rf)
     module_name=rf.check("name",Value("managerTUG")).asString();
     period=rf.check("period",Value(0.1)).asFloat64();
     _exercise_timeout = rf.check("exercise-timeout",Value(15)).asFloat64();
+    _questions_timeout = rf.check("questions-timeout",Value(15)).asFloat64();
+    _raising_hand_timeout = rf.check("raising-hand-timeout",Value(8)).asFloat64();
     speak_file=rf.check("speak-file",Value("speak-it")).asString();
     arm_thresh=rf.check("arm-thresh",Value(0.6)).asFloat64();
     detect_hand_up=rf.check("detect-hand-up",Value(false)).asBool();
@@ -1082,7 +1084,7 @@ bool Manager::updateModule()
 
     if (state == State::questions)
     {
-        yCDebug(MANAGERTUG) << "Entering State::questions";
+        yCDebugOnce(MANAGERTUG) << "Entering State::questions";
 
         bool is_entered_question_time = prev_state != state;
 
@@ -1109,7 +1111,7 @@ bool Manager::updateModule()
                 question_time_tstart = Time::now();
             }
 
-            if(Time::now() - question_time_tstart > 15.0)
+            if(Time::now() - question_time_tstart >  _questions_timeout)
             {
                 yCDebug(MANAGERTUG) << "Question time over, proceeding";
                 if(trigger_manager->isRunning()) {
@@ -1133,6 +1135,7 @@ bool Manager::updateModule()
     {
         yCDebugOnce(MANAGERTUG) << "Entering State::wait_to_start";
         prev_state = state;
+        t0 = 0;
         confirmWithRaisedHand(State::starting);
     }
 
@@ -1236,7 +1239,7 @@ bool Manager::updateModule()
         }
         else
         {
-            encourage(20.0);
+            encourage(_exercise_timeout/2);
         }
     }
 
@@ -1267,7 +1270,7 @@ bool Manager::updateModule()
             }
             else
             {
-                encourage(20.0);
+                encourage(_exercise_timeout/2);
             }
         }
     }
@@ -1300,7 +1303,7 @@ bool Manager::updateModule()
         }
         else
         {
-            encourage(30.0);
+            encourage(_exercise_timeout/2);
         }
     }
 
@@ -1754,7 +1757,7 @@ void Manager::confirmWithRaisedHand(State next_state)
     cmd.addString(tag);
     if (attentionPort.write(cmd,rep))
     {
-        if (rep.get(0).asVocab32()==ok) //Mano alzata?
+        if (rep.get(0).asVocab32()==ok)
         {
             Speech s("accepted");
             speak(s);
@@ -1765,7 +1768,7 @@ void Manager::confirmWithRaisedHand(State next_state)
             }
             state=next_state;
         }
-        else if (Time::now()-t0>10.0)
+        else if (Time::now()-t0 > _raising_hand_timeout)
         {
             if (++reinforce_engage_cnt<=1)
             {
@@ -1775,7 +1778,8 @@ void Manager::confirmWithRaisedHand(State next_state)
             }
             else
             {
-                Speech s("disengaged");
+                //TODO: secondo fbrand sarebbe meglio dire altro al posto di "ti ho perso" in questa occasione
+                Speech s("disengaged"); 
                 speak(s);
                 disengage();
             }

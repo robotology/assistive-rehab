@@ -205,6 +205,7 @@ Exercise* Manager::loadExerciseList(const Bottle &bGeneral, const string &ex_tag
         finishline_thresh=bGeneral.find("finish-line-thresh").asFloat64();
         standing_thresh=bGeneral.find("standing-thresh").asFloat64();
         _max_finish_line_overrun = bGeneral.find("max-finish-line-overrun").asFloat64();
+        _max_reasonable_ankles_dist = bGeneral.find("max-reasonable-ankles-dist").asFloat64();
         double distance=bGeneral.check("distance",Value(6.0)).asFloat64();
         double time_high=bGeneral.check("time-high",Value(10.0)).asFloat64();
         double time_medium=bGeneral.check("time-medium",Value(20.0)).asFloat64();
@@ -856,6 +857,10 @@ Property Manager::publishState()
     {
         p.put("human-state", "crossed");
     }
+    else if (state==State::out_of_bounds)
+    {
+        p.put("human-state", "out_of_bounds");
+    }
     else if (state==State::sitting)
     {
         p.put("human-state", "sitting");
@@ -905,8 +910,8 @@ bool Manager::hasCrossedLine(std::vector<double>& line)
     }
 
     Vector hip=skeletonIn[KeyPointTag::hip_center]->getPoint();
-    //Vector foot_right=skeletonIn[KeyPointTag::ankle_right]->getPoint();
-    //Vector foot_left=skeletonIn[KeyPointTag::ankle_left]->getPoint();
+    Vector foot_right=skeletonIn[KeyPointTag::ankle_right]->getPoint();
+    Vector foot_left=skeletonIn[KeyPointTag::ankle_left]->getPoint();
 
     Vector lp_world(3);
     lp_world[0]=line[0];
@@ -922,25 +927,34 @@ bool Manager::hasCrossedLine(std::vector<double>& line)
     Vector line_x=lOri.getCol(0);
     line_x.pop_back();
 
-    //Vector hip_lp=lp_world-hip;
-    //Vector pline=lp_world+line_x;
-    //Vector v1=lp_world-pline;
-    //double dist_hip_line=norm(cross(v1,hip_lp))/norm(v1);
+    ////Vector hip_lp=lp_world-hip;
+    ////Vector pline=lp_world+line_x;
+    ////Vector v1=lp_world-pline;
+    ////double dist_hip_line=norm(cross(v1,hip_lp))/norm(v1);
     double dist_hip_line=hip[1]-lp_world[1];
+
+    ////Vector fr_lp=lp_world-foot_right;
+    ////Vector fl_lp=lp_world-foot_left;
+    ////Vector pline=lp_world+line_x;
+    ////Vector v1=lp_world-pline;
+    ////Vector v1= line_x -lp_world; //?
+    ////double dist_fr_line=norm(cross(v1,fr_lp))/norm(v1);
+    ////double dist_fl_line=norm(cross(v1,fl_lp))/norm(v1);
+    double dist_fr_line=foot_right[1]-lp_world[1];
+    double dist_fl_line=foot_left[1]-lp_world[1];
+    yInfo()<<"dist foot right line"<<dist_fr_line;
+    yInfo()<<"dist foot left line"<<dist_fl_line;
     yInfo()<<"dist hip line"<<dist_hip_line;
 
-    // Vector fr_lp=lp_world-foot_right;
-    // Vector fl_lp=lp_world-foot_left;
-    // Vector pline=lp_world+line_x;
-    // //Vector v1=lp_world-pline;
-    // Vector v1= line_x -lp_world //?
-    // double dist_fr_line=norm(cross(v1,fr_lp))/norm(v1);
-    // double dist_fl_line=norm(cross(v1,fl_lp))/norm(v1);
-    // yInfo()<<"dist foot right line"<<dist_fr_line;
-    // yInfo()<<"dist foot left line"<<dist_fl_line;
-
-    //return (dist_fr_line<finishline_thresh && dist_fl_line<finishline_thresh);
-    return (dist_hip_line<finishline_thresh);
+    //If feet are too far apart then something probably broke in ankle detection
+    if(abs(foot_right[1]-foot_left[1]) > _max_reasonable_ankles_dist) 
+    {
+        return dist_hip_line < finishline_thresh;
+    }
+    else
+    {
+        return (dist_fr_line<finishline_thresh && dist_fl_line<finishline_thresh);
+    }
 }
 
 bool Manager::hasCrossedFinishLine()
@@ -951,7 +965,7 @@ bool Manager::hasCrossedFinishLine()
 bool Manager::hasMovedAwayFromFinishLine()
 {
     std::vector<double> line_pose_plus_overrun = this->line_pose;
-    line_pose_plus_overrun[1] += _max_finish_line_overrun;
+    line_pose_plus_overrun[1] -= _max_finish_line_overrun;
     return hasCrossedLine(line_pose_plus_overrun);
 }
 
@@ -1065,15 +1079,16 @@ void Manager::updateState()
     else if (hasCrossedFinishLine())
     {
        state=State::crossed;
-    }
-    else if(hasMovedAwayFromFinishLine())
-    {
-        state=State::out_of_bounds;
+       if(hasMovedAwayFromFinishLine())
+        {
+            state=State::out_of_bounds;
+        }
     }
     else if (isSitting())
     {
         state=State::sitting;
     }
+    //yDebug()<< "state:" << static_cast<int>(state);
 }
 
 /********************************************************/

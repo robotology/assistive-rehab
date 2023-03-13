@@ -57,6 +57,8 @@ private:
     std::vector<std::string> laser_adverb;
     std::vector<double> engage_distance,engage_azimuth;
     double _exercise_timeout;
+    double _questions_timeout;
+    double _raising_hand_timeout;
 
     const int ok=Vocab32::encode("ok");
     const int fail=Vocab32::encode("fail");

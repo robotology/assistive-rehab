@@ -83,7 +83,7 @@ class Manager : public yarp::os::RFModule,
     yarp::sig::Vector shoulder_height;
     iCub::ctrl::AWLinEstimator *lin_est_shoulder;
     double shoulder_center_height_vel,standing_thresh,finishline_thresh;
-    double _max_finish_line_overrun;
+    double _max_finish_line_overrun, _max_reasonable_ankles_dist;
     std::vector<double> line_pose;
     yarp::sig::Matrix world_frame;
 
