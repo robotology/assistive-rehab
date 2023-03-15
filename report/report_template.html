@@ -1,0 +1,286 @@
+<!-- #######  HEY, I AM THE SOURCE EDITOR! #########-->
+<h1 style="color: #5e9ca0;">ETAPAS- Use Case2</h1>
+<h2 style="color: #5e9ca0;"><span style="text-decoration: underline;">TUG report through R1 platform</span></h2>
+<p>This report is a result of the Use Case 2 in ETAPAS European project. The Use Case focuses on robot-mediated rehabilitation applied in the context of high in<span style="font-weight: 400;">tensity and repetitive therapy based on the TUG (Timed Up and Go) exercise.</span></p>
+<p><span style="font-weight: 400;">The autonomous platform will be evaluated in terms of:&nbsp;</span></p>
+<ul>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">correspondence between traditional TUG test with data acquired by the therapists by mean of a stopwatch and data acquired by R1</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">correspondence between traditional TUG test with data acquired by commercial IMU and data acquired by R1</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">correspondence between kinematic data acquired by commercial IMU and by R1 during TUG</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">perception of use of R1 robot for TUG test, both from therapists and from healthy subjects participating in this trial, in terms of usability, acceptance and perceived usefulness through questionnaires.</span></li>
+</ul>
+<p><span style="font-weight: 400; background-color: #ccffcc;">***********************************************************************************************************************************</span></p>
+<table class="editorDemoTable" style="height: 64px; width: 539px;">
+<tbody>
+<tr style="height: 20 ptx;">
+<td style="width: 123.233px; height: 22px;"><strong>Subject ID:</strong></td>
+<td style="width: 399.767px; height: 22px;">{{subject_id}}</td>
+</tr>
+<tr style="height: 20 ptx;">
+<td style="width: 123.233px; height: 22px;"><strong># trial:</strong></td>
+<td style="width: 399.767px; height: 22px;">{{num_trial}}</td>
+</tr>
+<tr style="height: 20 ptx;">
+<td style="width: 123.233px; height: 20px;"><strong>Date:</strong></td>
+<td style="width: 399.767px; height: 20px;">{{date}}</td>
+</tr>
+</tbody>
+</table>
+<p><span style="font-weight: 400; background-color: #ccffcc;">***********************************************************************************************************************************</span></p>
+<table class="editorDemoTable" style="height: 67px; width: 1053px;">
+<tbody>
+<tr style="height: 20 ptx;">
+<td style="width: 416.4px; height: 22px;">
+<h2 style="color: #2e6c80;">Full TUG metrics:</h2>
+<table class="editorDemoTable" style="height: 202px; width: 425px;">
+<tbody>
+<tr style="height: 25ptx;">
+<td style="width: 250.15px; height: 18px;"><strong># Steps:</strong></td>
+<td style="width: 158.85px; height: 18px;">{{full_steps}}</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 250.15px; height: 18px;"><strong>Walking time:</strong></td>
+<td style="width: 158.85px; height: 18px;">{{full_walking_time}} s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 250.15px; height: 22px;"><strong>TUG time:</strong></td>
+<td style="width: 158.85px; height: 22px;">{{full_TUG_time}} s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 250.15px; height: 22px;"><strong>Mean step length:</strong></td>
+<td style="width: 158.85px; height: 22px;">{{mean_step_length}} m</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 250.15px; height: 22px;"><strong>Mean step width:</strong></td>
+<td style="width: 158.85px; height: 22px;">{{mean_step_width}} m</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 250.15px; height: 18px;"><strong>Frequency:</strong></td>
+<td style="width: 158.85px; height: 18px;">{{full_frequency}} steps/s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 250.15px; height: 22px;"><strong>Velocity:</strong></td>
+<td style="width: 158.85px; height: 22px;">{{full_speed}} m/s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 250.15px; height: 22px;"><strong>Acceleration:</strong></td>
+<td style="width: 158.85px; height: 22px;">{{full_acceleration}} m/s^2</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 250.15px; height: 20px;"><strong>Velocity in z-axis:</strong></td>
+<td style="width: 158.85px; height: 20px;">{{full_speed_z}} m/s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 250.15px; height: 18px;"><strong>Acceleration in z-axis:</strong></td>
+<td style="width: 158.85px; height: 18px;">{{full_acceleration_z}} m/s^2</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td style="width: 303.3px;"><img src= "./images/EsempioFasiTUG.png"/></td>
+<td style="width: 311.3px; height: 22px;">&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><span style="font-weight: 400; background-color: #ccffcc;">***********************************************************************************************************************************</span></p>
+<p>In the following tables, a detailed analysis of each TUG phase is provided.</p>
+<table class="editorDemoTable" style="height: 69px; width: 704px;">
+<tbody>
+<tr style="height: 25ptx;">
+<td style="width: 371.567px; height: 22px;">
+<h2 style="color: #2e6c80;">Standing phase:</h2>
+<table class="editorDemoTable" style="height: 60px; width: 539px;">
+<tbody>
+<tr style="height: 25ptx;">
+<td style="width: 206.4px; height: 22px;"><strong>Execution time:</strong></td>
+<td style="width: 316.6px; height: 22px;">{{standing_time}} s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 206.4px; height: 20px;"><strong>Velocity in z-axis:</strong></td>
+<td style="width: 316.6px; height: 20px;">{{standing_speed_z}} m/s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 206.4px; height: 18px;"><strong>Acceleration in z-axis:</strong></td>
+<td style="width: 316.6px; height: 18px;">{{standing_acceleration_z}} m/s^2</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td style="width: 316.433px; height: 22px;">
+<h2 style="color: #2e6c80;">Sitting phase:</h2>
+<table class="editorDemoTable" style="height: 60px; width: 539px;">
+<tbody>
+<tr style="height: 25ptx;">
+<td style="width: 240.467px; height: 22px;"><strong>Execution time:</strong></td>
+<td style="width: 282.533px; height: 22px;">{{sitting_time}} s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 240.467px; height: 20px;"><strong>Velocity in z-axis:</strong></td>
+<td style="width: 282.533px; height: 20px;">{{sitting_speed_z}} m/s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 240.467px; height: 18px;"><strong>Acceleration in z-axis:</strong></td>
+<td style="width: 282.533px; height: 18px;">{{sitting_acceleration_z}} m/s^2</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<p>&nbsp;</p>
+<table class="editorDemoTable" style="height: 69px; width: 704px;">
+<tbody>
+<tr style="height: 25ptx;">
+<td style="width: 371.567px; height: 22px;">
+<h2 style="color: #2e6c80;">Walking forward phase:</h2>
+<table class="editorDemoTable" style="height: 204px; width: 538px;">
+<tbody>
+<tr style="height: 25ptx;">
+<td style="width: 211.4px;"><strong># Steps:</strong></td>
+<td style="width: 310.6px;">{{walk_f_steps}}</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 211.4px;"><strong>Execution time:</strong></td>
+<td style="width: 310.6px;">{{walk_f_time}} s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 211.4px;"><strong>Frequency:</strong></td>
+<td style="width: 310.6px;">{{walk_f_frequency}} steps/s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 211.4px;"><strong>Velocity:</strong></td>
+<td style="width: 310.6px;">{{walk_f_speed}} m/s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 211.4px; height: 22px;"><strong>Acceleration:</strong></td>
+<td style="width: 310.6px; height: 22px;">{{walk_f_acceleration}} m/s^2</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 211.4px; height: 20px;"><strong>Velocity in z-axis:</strong></td>
+<td style="width: 310.6px; height: 20px;">{{walk_f_speed_z}} m/s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 211.4px; height: 18px;"><strong>Acceleration in z-axis:</strong></td>
+<td style="width: 310.6px; height: 18px;">{{walk_f_acceleration_z}} m/s^2</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td style="width: 316.433px; height: 22px;">
+<h2 style="color: #2e6c80;">Walking backward phase:</h2>
+<table class="editorDemoTable" style="height: 204px; width: 538px;">
+<tbody>
+<tr style="height: 25ptx;">
+<td style="width: 224.95px;"><strong># Steps:</strong></td>
+<td style="width: 297.05px;">{{walk_b_steps}}</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 224.95px;"><strong>Execution time:</strong></td>
+<td style="width: 297.05px;">{{walk_b_time}} s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 224.95px;"><strong>Frequency:</strong></td>
+<td style="width: 297.05px;">{{walk_b_frequency}} steps/s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 224.95px;"><strong>Velocity:</strong></td>
+<td style="width: 297.05px;">{{walk_b_speed}} m/s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 224.95px; height: 22px;"><strong>Acceleration:</strong></td>
+<td style="width: 297.05px; height: 22px;">{{walk_b_acceleration}} m/s^2</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 224.95px; height: 20px;"><strong>Velocity in z-axis:</strong></td>
+<td style="width: 297.05px; height: 20px;">{{walk_b_speed_z}} m/s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 224.95px; height: 18px;"><strong>Acceleration in z-axis:</strong></td>
+<td style="width: 297.05px; height: 18px;">{{walk_b_acceleration_z}} m/s^2</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<p>&nbsp;</p>
+<table class="editorDemoTable" style="height: 69px; width: 704px;">
+<tbody>
+<tr style="height: 25ptx;">
+<td style="width: 371.567px; height: 22px;">
+<h2 style="color: #2e6c80;">Turning-1 phase:</h2>
+<table class="editorDemoTable" style="height: 204px; width: 538px;">
+<tbody>
+<tr style="height: 25ptx;">
+<td style="width: 211.4px;"><strong># Steps:</strong></td>
+<td style="width: 310.6px;">{{turn1_steps}}</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 211.4px;"><strong>Execution time:</strong></td>
+<td style="width: 310.6px;">{{turn1_time}} s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 211.4px;"><strong>Frequency:</strong></td>
+<td style="width: 310.6px;">{{turn1_frequency}} steps/s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 211.4px;"><strong>Velocity:</strong></td>
+<td style="width: 310.6px;">{{turn1_speed}} m/s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 211.4px; height: 22px;"><strong>Acceleration:</strong></td>
+<td style="width: 310.6px; height: 22px;">{{turn1_acceleration}} m/s^2</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 211.4px; height: 20px;"><strong>Velocity in z-axis:</strong></td>
+<td style="width: 310.6px; height: 20px;">{{turn1_speed_z}} m/s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 211.4px; height: 18px;"><strong>Acceleration in z-axis:</strong></td>
+<td style="width: 310.6px; height: 18px;">{{turn1_acceleration_z}} m/s^2</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td style="width: 316.433px; height: 22px;">
+<h2 style="color: #2e6c80;">Turning-2 phase:</h2>
+<table class="editorDemoTable" style="height: 204px; width: 538px;">
+<tbody>
+<tr style="height: 25ptx;">
+<td style="width: 224.95px;"><strong># Steps:</strong></td>
+<td style="width: 297.05px;">{{turn2_steps}}</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 224.95px;"><strong>Execution time:</strong></td>
+<td style="width: 297.05px;">{{turn2_time}} s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 224.95px;"><strong>Frequency:</strong></td>
+<td style="width: 297.05px;">{{turn2_frequency}} steps/s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 224.95px;"><strong>Velocity:</strong></td>
+<td style="width: 297.05px;">{{turn2_speed}} m/s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 224.95px; height: 22px;"><strong>Acceleration:</strong></td>
+<td style="width: 297.05px; height: 22px;">{{turn2_acceleration}} m/s^2</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 224.95px; height: 20px;"><strong>Velocity in z-axis:</strong></td>
+<td style="width: 297.05px; height: 20px;">{{turn2_speed_z}} m/s</td>
+</tr>
+<tr style="height: 25ptx;">
+<td style="width: 224.95px; height: 18px;"><strong>Acceleration in z-axis:</strong></td>
+<td style="width: 297.05px; height: 18px;">{{turn2_acceleration_z}} m/s^2</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 style="color: #2e6c80;">&nbsp;</h2>
+<p>&nbsp;</p>

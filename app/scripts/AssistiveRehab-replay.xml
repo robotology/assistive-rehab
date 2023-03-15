@@ -9,7 +9,7 @@
 
     <module>
        <name>skeletonRetriever</name>
-       <parameters>--camera::fov "(86 57)" --depth::enable false --depth::kernel-size 3  --depth::iterations 1 --depth::min-distance 0.5 --depth::max-distance 6.0 --filter-keypoint-order 4</parameters>
+       <parameters>--camera::fov "(43 55)" --depth::enable false --depth::kernel-size 3  --depth::iterations 1 --depth::min-distance 0.5 --depth::max-distance 6.0 --filter-keypoint-order 4</parameters>
        <dependencies>
           <port timeout="5">/opc/rpc</port>
        </dependencies>
@@ -24,7 +24,7 @@
 
     <module>
        <name>navController</name>
-       <parameters>--velocity-angular-saturation 15.0 --distance-target 2.5</parameters>
+       <parameters>--velocity-angular-saturation 15.0 --distance-target 2.5 --offline_mode 1 --no_odom_data 1 </parameters>
        <node>container</node>
     </module>
 
@@ -59,7 +59,7 @@
     </module>
 
     <connection>
-        <from>/yarpOpenPose/float:o</from>
+        <from>/cer/realsense_repeater/depthImage:o</from>
         <to>/skeletonRetriever/depth:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
@@ -77,13 +77,13 @@
     </connection>
 
     <connection>
-        <from>/yarpOpenPose/float:o</from>
+        <from>/cer/realsense_repeater/depthImage:o</from>
         <to>/viewer/depth</to>
         <protocol>fast_tcp+recv.portmonitor+type.dll+file.depthimage_to_mono</protocol>
     </connection>
 
     <connection>
-        <from>/yarpOpenPose/image:o</from>
+        <from>/cer/realsense_repeater/rgbImage:o</from>
         <to>/viewer/skeleton</to>
         <protocol>mjpeg</protocol>
     </connection>
