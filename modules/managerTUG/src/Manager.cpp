@@ -674,13 +674,15 @@ bool Manager::updateModule()
     }
     connected=true;
 
-    //get finish line
-    Property l;
-    if (hasLine(l))
+    //get lines
+    Property finish_line;
+    Property start_line;
+
+    if (hasLine(finish_line, "finish-line") && hasLine(start_line,"start-line"))
     {
         if (!world_configured)
         {
-            getWorld(l);
+            getWorld(finish_line,start_line);
         }
     }
     else
@@ -933,11 +935,13 @@ bool Manager::updateModule()
         yCDebugOnce(MANAGERTUG) << "Entering State::engaged";
         prev_state = state;
         answer_manager->wakeUp();
-        Bottle cmd, reply;
-        cmd.addString("setLinePose");
+        Bottle cmd, cmd2, reply, reply2;
+        cmd.addString("setFinishLinePose");
         cmd.addList().read(finishline_pose);
+        cmd2.addString("setStartLinePose");
+        cmd2.addList().read(startline_pose);
 
-        if(analyzerPort.write(cmd, reply))
+        if(analyzerPort.write(cmd, reply) && analyzerPort.write(cmd2,reply2))
         {
             yCInfo(MANAGERTUG) << "Set finish line to motionAnalyzer";
             if (set_analyzer_param("loadExercise", "tug") &&
@@ -1627,9 +1631,9 @@ bool Manager::opcRead(const string &t, Property &prop, const string &tval)
 }
 
 
-bool Manager::hasLine(Property &prop)
+bool Manager::hasLine(Property &prop, std::string line)
 {
-    bool ret=opcRead("finish-line",prop);
+    bool ret=opcRead(line,prop);
     if (ret)
     {
         return true;
@@ -1639,25 +1643,74 @@ bool Manager::hasLine(Property &prop)
 }
 
 
-bool Manager::getWorld(const Property &prop)
+bool Manager::getWorld(const Property &prop_finish_line, const Property &prop_start_line)
 {
     if (opcPort.getInputCount()>0)
     {
-        Bottle *line=prop.find("finish-line").asList();
-        if (Bottle *lp_bottle=line->find("pose_world").asList())
+        Bottle *finish_line=prop_finish_line.find("finish-line").asList();
+        yDebug() << prop_finish_line.toString();
+        Bottle *start_line=prop_start_line.find("start-line").asList();
+        Bottle *lp_bottle_finish=finish_line->find("pose_world").asList();
+        if(lp_bottle_finish)
         {
-            if(lp_bottle->size()>=7)
+            if(lp_bottle_finish->size()>=7)
             {
                 finishline_pose.resize(7);
-                finishline_pose[0]=lp_bottle->get(0).asFloat64();
-                finishline_pose[1]=lp_bottle->get(1).asFloat64();
-                finishline_pose[2]=lp_bottle->get(2).asFloat64();
-                finishline_pose[3]=lp_bottle->get(3).asFloat64();
-                finishline_pose[4]=lp_bottle->get(4).asFloat64();
-                finishline_pose[5]=lp_bottle->get(5).asFloat64();
-                finishline_pose[6]=lp_bottle->get(6).asFloat64();
+                finishline_pose[0]=lp_bottle_finish->get(0).asFloat64();
+                finishline_pose[1]=lp_bottle_finish->get(1).asFloat64();
+                finishline_pose[2]=lp_bottle_finish->get(2).asFloat64();
+                finishline_pose[3]=lp_bottle_finish->get(3).asFloat64();
+                finishline_pose[4]=lp_bottle_finish->get(4).asFloat64();
+                finishline_pose[5]=lp_bottle_finish->get(5).asFloat64();
+                finishline_pose[6]=lp_bottle_finish->get(6).asFloat64();
                 yCInfo(MANAGERTUG)<<"Finish line wrt world frame"<<finishline_pose.toString();
-                if (Bottle *lp_length=line->find("size").asList())
+                if (Bottle *lp_length=finish_line->find("size").asList())
+                {
+                    if (lp_length->size()>=2)
+                    {
+                        line_length=lp_length->get(0).asFloat64();
+                        yCInfo(MANAGERTUG)<<"with length"<<line_length;
+                        yCInfo(MANAGERTUG)<<"World configured";
+                        world_configured=true;
+                        //return true;
+                    }
+                }
+            }
+        }
+        else 
+        {
+            yDebug() << "Finish line pose_world not found";
+            return false;
+        }
+
+        yDebug() << "0";
+        if(start_line)
+        {
+            yDebug() << "Not null";
+        }
+        else{
+            yDebug() << "Actually null";
+        }
+        Bottle *lp_bottle_start=start_line->find("pose_world").asList();
+        yDebug() << "0b";
+
+        if(lp_bottle_start)
+        {
+            yDebug() << "1";
+            if(lp_bottle_start->size()>=7)
+            {
+                yDebug() << "2";
+                startline_pose.resize(7);
+                yDebug() << "3";
+                startline_pose[0]=lp_bottle_start->get(0).asFloat64();
+                startline_pose[1]=lp_bottle_start->get(1).asFloat64();
+                startline_pose[2]=lp_bottle_start->get(2).asFloat64();
+                startline_pose[3]=lp_bottle_start->get(3).asFloat64();
+                startline_pose[4]=lp_bottle_start->get(4).asFloat64();
+                startline_pose[5]=lp_bottle_start->get(5).asFloat64();
+                startline_pose[6]=lp_bottle_start->get(6).asFloat64();
+                yCInfo(MANAGERTUG)<<"Start line wrt world frame"<<startline_pose.toString();
+                if (Bottle *lp_length=start_line->find("size").asList())
                 {
                     if (lp_length->size()>=2)
                     {
@@ -1670,7 +1723,13 @@ bool Manager::getWorld(const Property &prop)
                 }
             }
         }
+        else 
+        {
+            yDebug() << "Start line pose_world not found";
+            return false;
+        }
     }
+
     yCError(MANAGERTUG)<<"Could not configure world";
     return false;
 }

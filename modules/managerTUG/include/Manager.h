@@ -98,6 +98,7 @@ private:
     bool test_finished;
 
     Vector finishline_pose;
+    Vector startline_pose;
     double line_length;
     bool world_configured;
 
@@ -193,9 +194,9 @@ public:
 
     bool opcRead(const std::string &t, Property &prop, const std::string &tval="");
 
-    bool hasLine(Property &prop);
+    bool hasLine(Property &prop, std::string line);
 
-    bool getWorld(const Property &prop);
+    bool getWorld(const Property &prop_finish_line, const Property &prop_start_line);
 
     bool findLocked(std::string &t);
 

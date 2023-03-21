@@ -162,6 +162,12 @@
 
     <module>
         <name>yarpview</name>
+        <parameters>--name /viewer/depth2 --x 10 --y 40 --p 50</parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>yarpview</name>
         <parameters>--name /viewer/skeleton --x 380 --y 40 --p 50</parameters>
         <node>container-console</node>
     </module>
@@ -331,6 +337,12 @@
     <connection>
         <from>/yarpOpenPose/float:o</from>
         <to>/viewer/depth</to>
+        <protocol>fast_tcp+recv.portmonitor+type.dll+file.depthimage_to_mono</protocol>
+    </connection>
+    
+    <connection>
+        <from>/skeletonRetriever/depth:o</from>
+        <to>/viewer/depth2</to>
         <protocol>fast_tcp+recv.portmonitor+type.dll+file.depthimage_to_mono</protocol>
     </connection>
 

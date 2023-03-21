@@ -241,6 +241,7 @@ bool Manager::loadMotionList(ResourceFinder &rf)
                     if (!bGeneralEx.isNull()) {
                         period = bGeneralEx.check("period",Value(period)).asFloat64();
                     }
+                    yInfo() << "period" << period;
 
                     exercises[i]=loadExerciseList(bGeneralEx, ex_tag);
                     //for each exercise we can evaluate different metrics
@@ -959,24 +960,38 @@ bool Manager::hasCrossedLine(std::vector<double>& line)
 
 bool Manager::hasCrossedFinishLine()
 {
-    return hasCrossedLine(line_pose);
+    return hasCrossedLine(finish_line_pose);
+}
+
+bool Manager::hasCrossedStartLine()
+{
+    return !hasCrossedLine(start_line_pose); //line_pose?
 }
 
 bool Manager::hasMovedAwayFromFinishLine()
 {
-    std::vector<double> line_pose_plus_overrun = this->line_pose;
+    std::vector<double> line_pose_plus_overrun = this->finish_line_pose;
     line_pose_plus_overrun[1] -= _max_finish_line_overrun;
     return hasCrossedLine(line_pose_plus_overrun);
 }
 
 /********************************************************/
-bool Manager::setLinePose(const vector<double> &line_pose)
+bool Manager::setFinishLinePose(const vector<double> &finish_line_pose)
 {
     lock_guard<mutex> lg(mtx);
-    this->line_pose=line_pose;
+    yDebug() << "finish_line_pose" << finish_line_pose;
+    this->finish_line_pose=finish_line_pose;
     return true;
 }
 
+
+bool Manager::setStartLinePose(const vector<double> &start_line_pose)
+{
+    lock_guard<mutex> lg(mtx);
+    yDebug() << "finish_line_pose" << start_line_pose;
+    this->start_line_pose=start_line_pose;
+    return true;
+}
 /********************************************************/
 void Manager::getSkeleton()
 {
@@ -1084,7 +1099,7 @@ void Manager::updateState()
             state=State::out_of_bounds;
         }
     }
-    else if (isSitting())
+    else if (hasCrossedStartLine() && isSitting())
     {
         state=State::sitting;
     }
@@ -1226,6 +1241,11 @@ bool Manager::updateModule()
                     if (curr_exercise->getName()==ExerciseTag::tug)
                     {
                         updateState();
+                        if(prev_state!=state){
+                            yDebug() << "prev_state" << static_cast<int>(prev_state);
+                            yDebug() << "state" << static_cast<int>(state);
+                        }
+                        prev_state = state;
                     }
                     estimate();
                 }
