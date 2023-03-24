@@ -332,7 +332,7 @@ bool Manager::remove_locked()
 }
 
 
-bool Manager::start()
+bool Manager::start(const bool complete, const std::string& name)
 {
     lock_guard<mutex> lg(mtx);
     if (!connected)
@@ -374,6 +374,8 @@ bool Manager::start()
     success_status="not_passed";
     test_finished=false;
     obstacle_manager->wakeUp();
+    m_complete = complete;
+    m_name = name;
     return start_ex;
 }
 
@@ -569,6 +571,7 @@ bool Manager::configure(ResourceFinder &rf)
     collectorPort.open("/"+module_name+"/collector:rpc");
     cmdPort.open("/"+module_name+"/cmd:rpc");
     opcPort.open("/"+module_name+"/opc:i");
+    opcRpcPort.open("/"+module_name+"/opc:rpc");
     if (lock)
     {
         lockerPort.open("/"+module_name+"/locker:rpc");
@@ -592,6 +595,7 @@ bool Manager::configure(ResourceFinder &rf)
 
     if(detect_hand_up)
     {
+        yDebug() << " hand manager started";
         hand_manager = std::make_unique<HandManager>(module_name,arm_thresh);
         if (!hand_manager->start())
         {
@@ -832,6 +836,7 @@ bool Manager::updateModule()
     {
         yCDebugOnce(MANAGERTUG) << "Entering State::idle";
         prev_state=state;
+        _was_person_out_of_bounds = false;
         if (Time::now()-t0>10.0)
         {
             if (lock)
@@ -949,9 +954,15 @@ bool Manager::updateModule()
                 set_analyzer_param("selectMetricProp", "step_distance") &&
                 set_analyzer_param("selectSkel", tag))
             {
-                    state = obstacle_manager->hasObstacle()
-                            ? State::obstacle : State::point_start;
-                    reinforce_obstacle_cnt=0;
+                if(obstacle_manager->hasObstacle())
+                {
+                    state = State::obstacle ;
+                }
+                else
+                {
+                    state = !m_complete ? State::starting : State::point_start; //point_start skippabile
+                }
+                reinforce_obstacle_cnt=0;
             }
         }
 
@@ -1382,8 +1393,10 @@ void Manager::follow(const string &follow_tag)
             if (!simulation)
             {
                 vector<shared_ptr<SpeechParam>> p;
-                p.push_back(shared_ptr<SpeechParam>(new SpeechParam(tag[0]!='#'?tag:string(""))));
-                Speech s("invite-start");
+                //p.push_back(shared_ptr<SpeechParam>(new SpeechParam(tag[0]!='#'?tag:string(""))));
+                p.push_back(std::make_shared<SpeechParam>(m_name));
+                std::string invite_start = m_complete ? "invite-start" : "invite-start-short";
+                Speech s(invite_start);
                 s.setParams(p);
                 speak(s);
                 s.reset();
@@ -1734,6 +1747,39 @@ bool Manager::getWorld(const Property &prop_finish_line, const Property &prop_st
     return false;
 }
 
+bool Manager::opcRpcDel()
+{   
+    // First ask skeleton id to be removed
+    Bottle cmdAsk,repAsk;
+    int id = -1;
+    bool esitoAsk = false;
+    cmdAsk.addVocab32("ask");
+    Bottle &plAsk=cmdAsk.addList().addList();
+    plAsk.addString("skeleton");
+    if (opcRpcPort.write(cmdAsk,repAsk))
+    {
+        esitoAsk = (repAsk.get(0).asVocab32()==Vocab32::encode("ack"));
+        if (!esitoAsk) 
+            yError()<<"opc error";
+        else
+            id = repAsk.get(1).asList()->get(1).asList()->get(0).asInt32();
+    }
+
+    // Then delete the skeleton
+    Bottle cmdDel,repDel;
+    bool esitoDel = false;
+    cmdDel.addVocab32("del");
+    Bottle &plDel=cmdDel.addList().addList();
+    plDel.addString("id");
+    plDel.addInt32(id);
+    if (opcRpcPort.write(cmdDel,repDel))
+    {
+        esitoDel = (repDel.get(0).asVocab32()==Vocab32::encode("ack"));
+    }
+
+    return esitoDel;
+}
+
 
 bool Manager::findLocked(string &t)
 {
@@ -1793,6 +1839,8 @@ bool Manager::close()
     rightarmPort.close();
     speechStreamPort.close();
     collectorPort.close();
+    opcRpcDel();
+    opcRpcPort.close();
     opcPort.close();
     cmdPort.close();
     if (lock)

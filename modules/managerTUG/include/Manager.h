@@ -96,6 +96,8 @@ private:
     bool start_ex,ok_go,connected,params_set;
     std::string success_status;
     bool test_finished;
+    bool m_complete; //Decides whether the exercise loop should be complete or shorten it.
+    std::string m_name; //Name of the person to pass during start
 
     Vector finishline_pose;
     Vector startline_pose;
@@ -116,6 +118,7 @@ private:
     RpcClient triggerPort;
     RpcClient gazeboPort;
     RpcClient collectorPort;
+    RpcClient opcRpcPort;
     BufferedPort<Bottle> obstaclePort;
 
     std::unique_ptr<AnswerManager> answer_manager;
@@ -154,7 +157,7 @@ public:
 
     bool remove_locked();
 
-    bool start() override;
+    bool start(const bool complete=true, const std::string& name="") override;
 
     bool trigger() override;
 
@@ -197,6 +200,8 @@ public:
     bool hasLine(Property &prop, std::string line);
 
     bool getWorld(const Property &prop_finish_line, const Property &prop_start_line);
+
+    bool opcRpcDel();
 
     bool findLocked(std::string &t);
 

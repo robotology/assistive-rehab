@@ -236,14 +236,14 @@ class Attention : public RFModule, public attentionManager_IDL
             (*s)[KeyPointTag::hand_left]->isUpdated())
         {
             if (k*(((*s)[KeyPointTag::elbow_left]->getPoint()[dir]-
-                    (*s)[KeyPointTag::hand_left]->getPoint()[dir]))>0)
+                    (*s)[KeyPointTag::hand_left]->getPoint()[dir]))>0.15)
                 return true;
         }
         if ((*s)[KeyPointTag::elbow_right]->isUpdated() &&
             (*s)[KeyPointTag::hand_right]->isUpdated())
         {
             if (k*(((*s)[KeyPointTag::elbow_right]->getPoint()[dir]-
-                    (*s)[KeyPointTag::hand_right]->getPoint()[dir]))>0)
+                    (*s)[KeyPointTag::hand_right]->getPoint()[dir]))>0.15)
                 return true;
         }
         return false;

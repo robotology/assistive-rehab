@@ -224,7 +224,7 @@
         <from>/iSpeak/r1:rpc</from>
         <to>/faceExpressionImage/rpc</to>
         <protocol>fast_tcp</protocol>
-    </connection>
+    </connection>>
 
     <connection>
         <from>/cer/realsense_repeater/rgbImage:o</from>
@@ -252,6 +252,12 @@
 
     <connection>
         <from>/skeletonRetriever/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/opc:rpc</from>
         <to>/opc/rpc</to>
         <protocol>fast_tcp</protocol>
     </connection>

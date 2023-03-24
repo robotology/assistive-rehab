@@ -693,28 +693,33 @@ class Retriever : public RFModule
     /****************************************************************/
     bool update_gaze_frame()
     {
-        if (Property* p=gazePort.read(false))
-        {
-            if (Bottle* b=p->find("depth_rgb").asList())
+        Property* p;
+        if (p=gazePort.read(false)) {
+            while(gazePort.getPendingReads() > 0) {
+                p=gazePort.read(false);
+            }
             {
-                if (b->size()>=7)
+                if (Bottle* b=p->find("depth_rgb").asList())
                 {
-                    Vector pos(3);
-                    for (size_t i=0; i<pos.length(); i++)
+                    if (b->size()>=7)
                     {
-                        pos[i]=b->get(i).asFloat64();
-                    }
+                        Vector pos(3);
+                        for (size_t i=0; i<pos.length(); i++)
+                        {
+                            pos[i]=b->get(i).asFloat64();
+                        }
 
-                    Vector ax(4);
-                    for (size_t i=0; i<ax.length(); i++)
-                    {
-                        ax[i]=b->get(pos.length()+i).asFloat64();
-                    }
+                        Vector ax(4);
+                        for (size_t i=0; i<ax.length(); i++)
+                        {
+                            ax[i]=b->get(pos.length()+i).asFloat64();
+                        }
 
-                    gazeFrame=axis2dcm(ax);
-                    gazeFrame.setSubcol(pos,0,3);
-                    gazeFrameUpdated=true;
-                    return true;
+                        gazeFrame=axis2dcm(ax);
+                        gazeFrame.setSubcol(pos,0,3);
+                        gazeFrameUpdated=true;
+                        return true;
+                    }
                 }
             }
         }
@@ -973,6 +978,15 @@ class Retriever : public RFModule
                     }
                 }
 
+                // yDebug() << "dt" << dt;
+                // yDebug() << "Number of new accepted skeletons: " << new_accepted_skeletons.size(); //new_skeletons at each frame: we expect 1 at a time.
+                // for(auto& i: new_accepted_skeletons)
+                //     yDebug() << i.get()->skeleton.get()->getTag();
+                // yDebug() << "Number of skeletons in memory before update" << skeletons.size();
+                // for(auto& i: skeletons)
+                //     yDebug() << i.get()->skeleton.get()->getTag();
+                
+
                 // update existing skeletons / create new skeletons
                 if (!new_accepted_skeletons.empty())
                 {
@@ -1009,6 +1023,11 @@ class Retriever : public RFModule
                     enforce_tag_uniqueness_pending(pending);
                     viewerUpdate(viewer_remove_tags);
                 }
+
+                // yDebug() << "Number of skeletons in memory after update" << skeletons.size();
+                // for(auto& i: skeletons)
+                //     yDebug() << i.get()->skeleton.get()->getTag();
+
             }
         }
 

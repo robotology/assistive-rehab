@@ -21,7 +21,7 @@ service managerTUG_IDL
     * Start the interaction.
     * @return true/false on success/failure.
     */
-   bool start();
+   bool start(1:bool complete=true, 2:string name="");
 
    /**
     * Stop the interaction.
