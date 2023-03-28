@@ -305,15 +305,15 @@ bool Manager::go_to(const Vector &target, const bool &wait)
     cmd.addFloat64(target[1]);
     cmd.addFloat64(target[2]);
     // TODO[fbrand]: this is a temporary hack to disallow movements
-    // if (navigationPort.write(cmd,rep))
-    // {
-    //     if (rep.get(0).asVocab32()==ok)
-    //     {
-    //         return true;
-    //     }
-    // }
+    if (navigationPort.write(cmd,rep))
+    {
+        if (rep.get(0).asVocab32()==ok)
+        {
+            return true;
+        }
+    }
     return true;
-}
+} 
 
 
 bool Manager::remove_locked()
@@ -891,7 +891,7 @@ bool Manager::updateModule()
 
     if (state==State::seek_locked)
     {
-        yCDebugOnce(MANAGERTUG) << "Entering State::seek_skeleton";
+        yCDebugOnce(MANAGERTUG) << "Entering State::seek_locked";
         prev_state=state;
         if (findLocked(follow_tag) && is_follow_tag_ahead)
         {
@@ -960,13 +960,58 @@ bool Manager::updateModule()
                 }
                 else
                 {
-                    state = !m_complete ? State::starting : State::point_start; //point_start skippabile
+                    state = !m_complete ? State::starting : State::rotate_to_point_start;
                 }
                 reinforce_obstacle_cnt=0;
             }
         }
-
     }
+
+
+    if(state == State::rotate_to_point_start)
+    {
+        yCDebugOnce(MANAGERTUG) << "Entering state rotate_to_point_start";
+        prev_state = state;
+        bool navigating=true;
+        Bottle cmd,rep;
+        cmd.addString("is_navigating");
+        if (navigationPort.write(cmd,rep))
+        {
+            if (rep.get(0).asVocab32()!=ok)
+            {
+                navigating=false;
+            }
+        }
+        if(!navigating)
+        {
+            const Vector robot_location = getRobotLocation();
+            const double angle = getAngleToStartLine(robot_location)*180/M_PI;
+            Vector destination = robot_location;
+            destination[2] = angle; //The destination is simply a rotation from the current position
+            ok_go = go_to(destination,false);
+            navigating = true;
+        }
+        if(ok_go)
+        {
+            yDebug() << "Rotating";
+            Time::delay(getPeriod());
+            cmd.clear();
+            rep.clear();
+            cmd.addString("is_navigating");
+            if (navigationPort.write(cmd,rep))
+            {
+                if (rep.get(0).asVocab32()!=ok)
+                {
+                    yCInfo(MANAGERTUG)<<"Rotated to point start";
+                    ok_go=false;
+                    state=obstacle_manager->hasObstacle()
+                            ? State::obstacle : State::point_start;
+                    reinforce_obstacle_cnt=0;
+                }
+            }
+        }
+    }
+
 
     if (state==State::point_start)
     {
@@ -1054,8 +1099,8 @@ bool Manager::updateModule()
             yCDebug(MANAGERTUG) << "Setting destination x:" << x
                                 << "y:" << y << "theta:" << theta ;
             //TODO: this is a temporary hack to disallow movements
-            //ok_go=go_to(Vector({x,y,theta}),false);
-            ok_go = true;
+            ok_go=go_to(Vector({x,y,theta}),false);
+            //ok_go = true;
         }
 
         if (ok_go)
@@ -1162,9 +1207,9 @@ bool Manager::updateModule()
         cmd.addString("track_skeleton");
         cmd.addString(tag);
         //TODO[fbrand]: these are temporary hacks to disallow movements
-        if (true || navigationPort.write(cmd,rep))
+        if ( navigationPort.write(cmd,rep))
         {
-            if (true || rep.get(0).asVocab32()==ok)
+            if (rep.get(0).asVocab32()==ok)
             {
                 cmd.clear();
                 rep.clear();
@@ -1198,7 +1243,7 @@ bool Manager::updateModule()
                     else
                     {
                         start_interaction();
-                        start_collection();
+                        start_collection(); //TODO: move before vocal interaction
                     }
                 }
             }
@@ -1558,6 +1603,41 @@ string Manager::which_part()
     }
 
     return part;
+}
+
+yarp::sig::Vector Manager::getRobotLocation()
+{
+    Bottle cmd,rep;
+    double x,y,theta;
+    cmd.addString("get_state");
+
+    if (navigationPort.write(cmd,rep))
+    {
+        Bottle *robotState=rep.get(0).asList();
+        if (Bottle *loc=robotState->find("robot-location").asList())
+        {
+            x=loc->get(0).asFloat64();
+            y=loc->get(1).asFloat64();
+            theta=loc->get(2).asFloat64();
+        }
+    }
+    //TODO: manage the error
+
+
+    return yarp::sig::Vector({x,y,theta});
+}
+
+double Manager::getAngleToStartLine(Vector robot_location)
+{
+    yarp::sig::Matrix R=axis2dcm(startline_pose.subVector(3,6));
+    yarp::sig::Vector u=R.subcol(0,0,2);
+    yarp::sig::Vector p0=startline_pose.subVector(0,2);
+    yarp::sig::Vector p1=p0+line_length*u;
+                double line_center=(p0[0]+p1[0])/2;
+    double angle = atan2(-robot_location[1]+p0[1], //delta y
+                        -robot_location[0]+line_center); //delta x
+  
+    return angle;
 }
 
 

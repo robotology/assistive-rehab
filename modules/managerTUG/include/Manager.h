@@ -73,7 +73,7 @@ private:
                        assess_standing,
                        assess_crossing,
                        line_crossed,
-                       engaged, point_start,
+                       engaged, rotate_to_point_start, point_start,
                        explain, point_line,
                        reach_line,
                        questions,
@@ -210,4 +210,8 @@ public:
     bool close() override;
 
     void confirmWithRaisedHand(State next_state);
+
+    Vector getRobotLocation();
+
+    double getAngleToStartLine(Vector robot_location);
 };

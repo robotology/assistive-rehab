@@ -699,7 +699,7 @@ class Retriever : public RFModule
                 p=gazePort.read(false);
             }
             {
-                if (Bottle* b=p->find("depth_rgb").asList())
+                if (Bottle* b=p->find("depth_center").asList())
                 {
                     if (b->size()>=7)
                     {
