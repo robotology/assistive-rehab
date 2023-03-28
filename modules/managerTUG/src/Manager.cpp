@@ -577,7 +577,8 @@ bool Manager::configure(ResourceFinder &rf)
         gazeboPort.open("/"+module_name+"/gazebo:rpc");
     }
     obstaclePort.open("/"+module_name+"/obstacle:i");
-
+    skeletonErrorPort.open("/"+module_name+"/skeletonError:o");
+    
     attach(cmdPort);
 
     answer_manager= std::make_unique<AnswerManager>(module_name,speak_map,simulation);
@@ -856,6 +857,12 @@ bool Manager::updateModule()
             Speech s("disengaged");
             speak(s);
             disengage();
+
+            //send an error to the event collector
+            Bottle skel_err_bot;
+            skel_err_bot.addInt32(tag);
+            skeletonErrorPort.write(skel_err_bot);
+
             return true;
         }
     }
@@ -1743,6 +1750,7 @@ bool Manager::close()
         gazeboPort.close();
     }
     obstaclePort.close();
+    skeletonErrorPort.close();
     return true;
 }
 
@@ -1776,6 +1784,12 @@ void Manager::confirmWithRaisedHand(State next_state)
             else
             {
                 Speech s("disengaged");
+
+                //send an error to the event collector
+                Bottle skel_err_bot;
+                skel_err_bot.addInt32(tag);
+                skeletonErrorPort.write(skel_err_bot);
+
                 speak(s);
                 disengage();
             }

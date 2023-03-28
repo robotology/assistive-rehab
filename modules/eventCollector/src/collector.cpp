@@ -12,9 +12,11 @@
 
 /**
  * Instructions of use:
- * This module has 3 ports:
+ * This module has the following ports:
  *  - /eventCollector/speech:i               - this port receives strings from googleSpeech module
  *  - /eventCollector/speech-processing:i    - this port receives strings from googleSpeechProcessing module
+ *  - /eventCollector/obstacle:i             - this port receives strings from obstacle(?) module
+ *  - /eventCollector/skeleton:i             - this port receives strings from skeleton(?) module
  *  - /eventCollector/cmd                    - this port controls the flow of the module
  * 
  * To use this module, you must first ensure all ports are connected. 
@@ -55,6 +57,7 @@ class Collector : public RFModule, public eventCollector_IDL
     RpcServer rpcPort;
     BufferedPort<Bottle> googleSpeechPort;
     BufferedPort<Bottle> googleProcessPort;
+    BufferedPort<Bottle> skeletonPort;
     BufferedPort<Bottle> obstacleDetectorPort;
     //vector<string> speech_events;
     //vector<string> speech_process_events;
@@ -62,6 +65,7 @@ class Collector : public RFModule, public eventCollector_IDL
     Json::Value jsonRoot;
     Json::Value jsonTrialInstance;
     Json::Value jsonNavErrorMessage;
+    Json::Value jsonSkeletonErrorMessage;
     Json::Value jsonSpeechErrorMessage;
     bool started;
     bool got_speech;
@@ -94,6 +98,7 @@ public:
         googleSpeechPort.open(("/" + getName() + "/speech:i").c_str());
         googleProcessPort.open(("/" + getName() + "/speech-process:i").c_str()); 
         obstacleDetectorPort.open(("/" + getName() + "/obstacle:i").c_str());
+        skeletonPort.open(("/" + getName() + "/skeleton:i").c_str());
 
         rpcPort.open(("/" + getName() + "/cmd").c_str());
         attach(rpcPort);
@@ -115,6 +120,7 @@ public:
         googleSpeechPort.interrupt();
         googleProcessPort.interrupt();
         obstacleDetectorPort.interrupt();
+        skeletonPort.interrupt();
         rpcPort.interrupt();
         yInfo() << "Interrupted module";
         return true;
@@ -130,6 +136,7 @@ public:
         googleSpeechPort.close();
         googleProcessPort.close();
         obstacleDetectorPort.close();
+        skeletonPort.close();
         rpcPort.close();
         yInfo() << "Closed ports";
         return true;
@@ -154,6 +161,7 @@ public:
         Bottle *speech=googleSpeechPort.read(false);
         Bottle *speech_process=googleProcessPort.read(false);
         Bottle *obstacle = obstacleDetectorPort.read(false);
+        Bottle *skeleton = skeletonPort.read(false);
 
         if (speech)
         {
@@ -218,6 +226,20 @@ public:
             }
         }
  
+        if(skeleton)
+        {
+            if(skeleton->size()>0)
+            {
+                yDebug()<<"skeleton bottle:" << skeleton->toString();
+                string content="skeleton-misdetection:" + skeleton->get(0).asString();
+                yDebug()<<"content:"<<content;
+
+                jsonSkeletonErrorMessage["skeleton-misdetection-event-time"] = yarp::os::Time::now() - timeFromStart;
+                jsonSkeletonErrorMessage["skeleton-misdetection"] = content;
+                jsonTrialInstance["skeleton"]["error-messages"].append(jsonSkeletonErrorMessage);
+            }
+        }
+
         return true;
     }
 
@@ -225,16 +247,27 @@ public:
     bool save_data()
     {
         lock_guard<mutex> lg(mtx);
+
         auto time = std::time(nullptr);
         auto tm = *std::localtime(&time);
         std::ostringstream date_stream;
         date_stream << std::put_time(&tm, "%d-%m-%Y %H-%M-%S");
+        std::ostringstream date_stream_compact;
+        date_stream_compact << std::put_time(&tm, "%d%m%Y-%H%M%S");
+        
         jsonTrialInstance["Stop-Time"] = date_stream.str();
 
         // we had the trial instance to the trial list when we stop a trial
         jsonRoot["Trial"].append(jsonTrialInstance);
 
-        outputFileName = outfolder + "/collected_events_user" + skeletonTag + ".json";
+#if 0
+        // set the output filename as the skeletonTag. Beware: file will be overwritten by a new skeleton with the same id!
+        outputFileName = outfolder + "/collectedEvents_user" + skeletonTag + ".json";
+#else
+        // set the output filename as the date+skeletonTag. No overwrites are possibile
+        outputFileName = outfolder + "/collectedEvents_date" + date_stream_compact.str() + "_user" + skeletonTag + ".json";
+#endif
+
         yInfo() << "Saving events in" << outputFileName;
         std::ofstream output_doc(outputFileName.c_str(), std::ofstream::binary);
         output_doc << jsonRoot;
