@@ -220,7 +220,7 @@ class Step(Metric):
         self.durata= durata
 
 
-    def compute(self,skeleton, subj_id, num_trial):
+    def compute(self,skeleton, subj_id, num_trial, pth):
         
         in_stand_idx, in_wf_idx, fin_wf_idx, fin_turn1_idx, fin_wb_idx, fin_turn2_idx, fin_sit_idx = compute_timing(skeleton, self.durata)
         timing_vec= [in_stand_idx, in_wf_idx, fin_wf_idx, fin_turn1_idx, fin_wb_idx, fin_turn2_idx, fin_sit_idx]
@@ -319,7 +319,10 @@ class Step(Metric):
         results['Full TUG']['speed_z']=self.speed_z
         results['Full TUG']['acceleration_z']=self.speed_z/self.ex_time 
 
-        f = open(f'subj{subj_id}_tr{num_trial}_metrics.pkl',"wb")
+        filename= os.path.join(pth,'metrics.pkl')
+        print(filename)
+        print(results)
+        f = open(filename,"wb")
         pickle.dump(results,f)
         f.close()
                
@@ -356,14 +359,23 @@ def compute_timing(skeleton, durata):
 
     ### Alzata ###
 
+    # print(acc_hipCenter_z)
+    # print("ciao")
+    # print(acc_hipCenter_y)
+    # print(acc_shoulCenter_y)
+
     # L'alzata inizia quando noto un'accelerazione in z del centro delle spalle e, 
     # contemporaneamente, una crescita della distanza in y tra il centro delle spalle 
     # e il centro delle anche (perche' ci si spinge in avanti, verso l'alto).
     init_mean= np.mean(acc_hipCenter_z[0:dur])
     init_std= np.std(acc_hipCenter_z[0:dur])
+    #print(acc_hipCenter_z)
+    #plt.plot(acc_hipCenter_z)
+    #print(init_std)
     cond1 = np.where(np.abs((acc_hipCenter_z-init_mean)/init_std) > nsigma)[0]
     cond2=np.where(np.diff(np.sign(acc_hipCenter_y-acc_shoulCenter_y)))[0]
-
+    # print(cond1)
+    # print(cond2)
     in_stand_idx= np.intersect1d(cond1,cond2)[0]
 
     #in_stand_idx= cond1[0]
@@ -397,8 +409,8 @@ def compute_timing(skeleton, durata):
     diff_acc_x=acc_shoulRight_x-acc_shoulLeft_x
     cond1= np.array(np.where(diff_acc_x>0))[0]
 
-    rfoot_cross3m = np.array(np.where(skeleton.getKeypoint("ankleRight")[:,1]<-3.))[0]#
-    lfoot_cross3m = np.array(np.where(skeleton.getKeypoint("ankleLeft")[:,1]<-3.))[0]#
+    rfoot_cross3m = np.array(np.where(skeleton.getKeypoint("ankleRight")[:,1]<-2.5))[0]#
+    lfoot_cross3m = np.array(np.where(skeleton.getKeypoint("ankleLeft")[:,1]<-2.5))[0]#
     if rfoot_cross3m[0]<lfoot_cross3m[0]:
         foot_cross3m = rfoot_cross3m
     else:

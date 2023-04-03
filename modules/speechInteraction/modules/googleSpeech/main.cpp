@@ -246,6 +246,7 @@ public:
             b.clear();
         }
         else {
+            yDebug() << "Sending everything ok to bottle";
             outStatus.addString("everything ok");
         }
         statusPort.write();

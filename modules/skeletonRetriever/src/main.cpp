@@ -694,32 +694,31 @@ class Retriever : public RFModule
     bool update_gaze_frame()
     {
         Property* p;
-        if (p=gazePort.read(false)) {
-            while(gazePort.getPendingReads() > 0) {
-                p=gazePort.read(false);
-            }
+        if (p=gazePort.read(false)) 
+        {
+            if (Bottle* b=p->find("depth_center").asList())
             {
-                if (Bottle* b=p->find("depth_center").asList())
+                Stamp stamp;
+                gazePort.getEnvelope(stamp);
+                //cout << fixed << stamp.getTime();
+                if (b->size()>=7)
                 {
-                    if (b->size()>=7)
+                    Vector pos(3);
+                    for (size_t i=0; i<pos.length(); i++)
                     {
-                        Vector pos(3);
-                        for (size_t i=0; i<pos.length(); i++)
-                        {
-                            pos[i]=b->get(i).asFloat64();
-                        }
-
-                        Vector ax(4);
-                        for (size_t i=0; i<ax.length(); i++)
-                        {
-                            ax[i]=b->get(pos.length()+i).asFloat64();
-                        }
-
-                        gazeFrame=axis2dcm(ax);
-                        gazeFrame.setSubcol(pos,0,3);
-                        gazeFrameUpdated=true;
-                        return true;
+                        pos[i]=b->get(i).asFloat64();
                     }
+
+                    Vector ax(4);
+                    for (size_t i=0; i<ax.length(); i++)
+                    {
+                        ax[i]=b->get(pos.length()+i).asFloat64();
+                    }
+
+                    gazeFrame=axis2dcm(ax);
+                    gazeFrame.setSubcol(pos,0,3);
+                    gazeFrameUpdated=true;
+                    return true;
                 }
             }
         }
@@ -961,6 +960,9 @@ class Retriever : public RFModule
         // handle skeletons acquired from detector
         if (Bottle *b1=skeletonsPort.read(false))
         {
+            auto w = dcm2rpy(gazeFrame);
+            //yDebug() << w.toString(); // << " "<< b1->toString();
+
             if (Bottle *b2=b1->get(0).asList())
             {
                 // acquire skeletons with sufficient number of key-points
@@ -973,6 +975,32 @@ class Retriever : public RFModule
                         shared_ptr<MetaSkeleton> s=create(b3);
                         if (isValid(s))
                         {
+                            //yDebug() << s.get()->skeleton.get()->keypoints[0].getPoint().toString();
+                            //SkeletonStd k = ;
+                          //  std::string sss = std::string("head");
+                            auto l = s->skeleton;
+                            auto p = applyTransform(l);
+
+                            yDebug() << w.toString() << " " << (*p)["head"]->getPoint().toString() <<
+                                        (*l)["head"]->getPoint().toString() <<
+                                        rootFrame[0][0] << 
+                                        rootFrame[0][1] << 
+                                        rootFrame[0][2] <<
+                                        rootFrame[0][3] <<
+                                        rootFrame[1][0] <<
+                                        rootFrame[1][1] <<
+                                        rootFrame[1][2] <<
+                                        rootFrame[1][3] <<
+                                        rootFrame[2][0] <<
+                                        rootFrame[2][1] <<
+                                        rootFrame[2][2] <<
+                                        rootFrame[2][3] <<
+                                        rootFrame[3][0] <<
+                                        rootFrame[3][1] <<
+                                        rootFrame[3][2] <<
+                                        rootFrame[3][3];
+
+                          //  yDebug() << *(s->skeleton)[std::string("head")]->getPoint().toString();
                             new_accepted_skeletons.push_back(s);
                         }
                     }

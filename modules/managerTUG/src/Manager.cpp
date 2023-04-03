@@ -239,6 +239,7 @@ bool Manager::disengage()
 {
     bool ret=false;
     ok_go=false;
+    has_started_interaction=false;
     answer_manager->suspend();
     obstacle_manager->suspend();
     for (auto it=speak_map.begin(); it!=speak_map.end(); it++)
@@ -246,6 +247,7 @@ bool Manager::disengage()
         string key=it->first;
         speak_count_map[key]=0;
     }
+    Time::delay(5); //5 seconds delay before disengaging to gather better data
     send_stop(analyzerPort);
     if (simulation)
     {
@@ -296,22 +298,23 @@ void Manager::resume_animation()
 
 bool Manager::go_to(const Vector &target, const bool &wait)
 {
-    Bottle cmd,rep;
-    if (wait)
-        cmd.addString("go_to_wait");
-    else
-        cmd.addString("go_to_dontwait");
-    cmd.addFloat64(target[0]);
-    cmd.addFloat64(target[1]);
-    cmd.addFloat64(target[2]);
-    // TODO[fbrand]: this is a temporary hack to disallow movements
-    if (navigationPort.write(cmd,rep))
-    {
-        if (rep.get(0).asVocab32()==ok)
-        {
-            return true;
-        }
-    }
+    //TODO: temporary hack to disallow movements
+    // Bottle cmd,rep;
+    // if (wait)
+    //     cmd.addString("go_to_wait");
+    // else
+    //     cmd.addString("go_to_dontwait");
+    // cmd.addFloat64(target[0]);
+    // cmd.addFloat64(target[1]);
+    // cmd.addFloat64(target[2]);
+    // // TODO[fbrand]: this is a temporary hack to disallow movements
+    // if (navigationPort.write(cmd,rep))
+    // {
+    //     if (rep.get(0).asVocab32()==ok)
+    //     {
+    //         return true;
+    //     }
+    // }
     return true;
 } 
 
@@ -582,6 +585,7 @@ bool Manager::configure(ResourceFinder &rf)
         gazeboPort.open("/"+module_name+"/gazebo:rpc");
     }
     obstaclePort.open("/"+module_name+"/obstacle:i");
+    skeletonErrorPort.open("/"+module_name+"/skeletonError:o");
 
     attach(cmdPort);
 
@@ -633,6 +637,7 @@ bool Manager::configure(ResourceFinder &rf)
     params_set=false;
     reinforce_obstacle_cnt=0;
     t0=tstart=Time::now();
+    has_started_interaction = false;
     return true;
 }
 
@@ -864,7 +869,13 @@ bool Manager::updateModule()
             analyzerPort.write(cmd,rep);
             Speech s("disengaged");
             speak(s);
+            
+            //send an error to the event collector
+            Bottle &skel_err_bot = skeletonErrorPort.prepare();
+            skel_err_bot.addString(tag);
+            skeletonErrorPort.write();
             disengage();
+
             return true;
         }
     }
@@ -913,32 +924,6 @@ bool Manager::updateModule()
     {
         yCDebugOnce(MANAGERTUG) << "Entering State::follow";
         prev_state=state;
-        if (simulation)
-        {
-            vector<shared_ptr<SpeechParam>> p;
-            p.push_back((shared_ptr<SpeechParam>(new SpeechParam(tag[0]!='#'?tag:string("")))));
-            Speech s("engage-start");
-            s.setParams(p);
-            speak(s);
-            s.reset();
-            s.setKey("questions-sim");
-            speak(s);
-            if (detect_hand_up)
-            {
-                hand_manager->set_tag(tag);
-            }
-            state=State::engaged;
-        }
-        else
-        {
-           confirmWithRaisedHand(State::engaged);
-        }
-    }
-
-    if (state==State::engaged)
-    {
-        yCDebugOnce(MANAGERTUG) << "Entering State::engaged";
-        prev_state = state;
         answer_manager->wakeUp();
         Bottle cmd, cmd2, reply, reply2;
         cmd.addString("setFinishLinePose");
@@ -958,13 +943,49 @@ bool Manager::updateModule()
                 {
                     state = State::obstacle ;
                 }
-                else
-                {
-                    state = !m_complete ? State::starting : State::rotate_to_point_start;
-                }
                 reinforce_obstacle_cnt=0;
             }
         }
+        if (simulation)
+        {
+            vector<shared_ptr<SpeechParam>> p;
+            p.push_back((shared_ptr<SpeechParam>(new SpeechParam(tag[0]!='#'?tag:string("")))));
+            Speech s("engage-start");
+            s.setParams(p);
+            speak(s);
+            s.reset();
+            s.setKey("questions-sim");
+            speak(s);
+            if (detect_hand_up)
+            {
+                hand_manager->set_tag(tag);
+            }
+            state=State::engaged;
+        }
+        else
+        {
+            if(!m_complete)
+            {
+                if(!has_started_interaction)
+                {
+                    start_interaction();
+                    has_started_interaction = true;
+                }
+                confirmWithRaisedHand(State::starting);
+            }
+            else
+            {
+                confirmWithRaisedHand(State::rotate_to_point_start);
+            }
+            
+        }
+    }
+
+    if (state==State::engaged)
+    {
+        yCDebugOnce(MANAGERTUG) << "Entering State::engaged";
+        prev_state = state;
+
     }
 
 
@@ -975,7 +996,8 @@ bool Manager::updateModule()
         bool navigating=true;
         Bottle cmd,rep;
         cmd.addString("is_navigating");
-        if (navigationPort.write(cmd,rep))
+        //TODO: fbrand temporary hack to disallow movements
+        if (true || navigationPort.write(cmd,rep))
         {
             if (rep.get(0).asVocab32()!=ok)
             {
@@ -1154,6 +1176,7 @@ bool Manager::updateModule()
 
         if(is_entered_question_time)
         {
+            start_collection();
             speak(s);
 
             question_time_tstart = Time::now();
@@ -1196,6 +1219,12 @@ bool Manager::updateModule()
         yCDebugOnce(MANAGERTUG) << "Entering State::wait_to_start";
         prev_state = state;
         t0 = 0;
+        if(!has_started_interaction)
+        {
+            start_interaction();
+            has_started_interaction = true;
+        }
+        
         confirmWithRaisedHand(State::starting);
     }
 
@@ -1207,9 +1236,9 @@ bool Manager::updateModule()
         cmd.addString("track_skeleton");
         cmd.addString(tag);
         //TODO[fbrand]: these are temporary hacks to disallow movements
-        if ( navigationPort.write(cmd,rep))
+        if (true || navigationPort.write(cmd,rep))
         {
-            if (rep.get(0).asVocab32()==ok)
+            if (true || rep.get(0).asVocab32()==ok)
             {
                 cmd.clear();
                 rep.clear();
@@ -1242,8 +1271,11 @@ bool Manager::updateModule()
                     }
                     else
                     {
-                        start_interaction();
-                        start_collection(); //TODO: move before vocal interaction
+                        state=obstacle_manager->hasObstacle()
+                            ? State::obstacle : State::assess_standing;
+                        reinforce_obstacle_cnt=0;
+                        t0=Time::now();
+                         //TODO: move before vocal interaction
                     }
                 }
             }
@@ -1330,7 +1362,7 @@ bool Manager::updateModule()
             }
             else
             {
-                encourage(_exercise_timeout/2);
+                encourage(_exercise_timeout);
             }
         }
     }
@@ -1363,7 +1395,7 @@ bool Manager::updateModule()
         }
         else
         {
-            encourage(_exercise_timeout/2);
+            encourage(_exercise_timeout);
         }
     }
 
@@ -1483,15 +1515,11 @@ void Manager::start_interaction()
     Bottle cmd,rep;
     cmd.addString("start");
     cmd.addInt32(0);
-    if (analyzerPort.write(cmd,rep))
+    if(analyzerPort.write(cmd,rep))
     {
-        if (rep.get(0).asVocab32()==ok)
+        if (rep.get(0).asVocab32()!=ok)
         {
-            state=obstacle_manager->hasObstacle()
-                    ? State::obstacle : State::assess_standing;
-            reinforce_obstacle_cnt=0;
-            t0=Time::now();
-            yInfo()<<"Start!";
+            yError() << "Motion analyzer failed to start";
         }
     }
 }
@@ -1933,6 +1961,7 @@ bool Manager::close()
         gazeboPort.close();
     }
     obstaclePort.close();
+    skeletonErrorPort.close();
     return true;
 }
 
@@ -1967,6 +1996,13 @@ void Manager::confirmWithRaisedHand(State next_state)
             {
                 //TODO: secondo fbrand sarebbe meglio dire altro al posto di "ti ho perso" in questa occasione
                 Speech s("disengaged"); 
+
+                //send an error to the event collector
+                Bottle &skel_err_bot = skeletonErrorPort.prepare();
+                skel_err_bot.addString(tag);
+                yDebug() << "skel error tag" << tag;
+                skeletonErrorPort.write();
+
                 speak(s);
                 disengage();
             }

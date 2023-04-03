@@ -103,6 +103,7 @@ private:
     Vector startline_pose;
     double line_length;
     bool world_configured;
+    bool has_started_interaction;
 
     //ports
     RpcClient analyzerPort;
@@ -120,6 +121,7 @@ private:
     RpcClient collectorPort;
     RpcClient opcRpcPort;
     BufferedPort<Bottle> obstaclePort;
+    BufferedPort<Bottle> skeletonErrorPort;
 
     std::unique_ptr<AnswerManager> answer_manager;
     std::unique_ptr<HandManager> hand_manager;

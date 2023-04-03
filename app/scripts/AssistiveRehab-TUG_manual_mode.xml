@@ -531,4 +531,10 @@
         <to>/eventCollector/obstacle:i</to>
         <protocol>fast_tcp</protocol>
     </connection>
+
+    <connection>
+        <from>/managerTUG/skeletonError:o</from>
+        <to>/eventCollector/skeleton:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
 </application>
