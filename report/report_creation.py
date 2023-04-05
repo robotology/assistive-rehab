@@ -2,6 +2,7 @@ import jinja2
 import pdfkit
 from datetime import datetime
 import pickle
+import os
 
 
 def create_pdf_report(subj_id, num_trial, date, pth):
@@ -30,7 +31,8 @@ def create_pdf_report(subj_id, num_trial, date, pth):
                'turn1_acceleration_z': str(format(results['Turning1']['acceleration_z'],'.2f')),
                'turn2_steps': results['Turning2']['nsteps'], 'turn2_time': str(format(results['Turning2']['ex_time'],'.2f')), 'turn2_frequency': str(format(results['Turning2']['frequency'],'.2f')), 
                'turn2_speed': str(format(results['Turning2']['speed'],'.2f')), 'turn2_acceleration': str(format(results['Turning2']['acceleration'],'.2f')), 'turn2_speed_z': str(format(results['Turning2']['speed_z'],'.2f')), 
-               'turn2_acceleration_z': str(format(results['Turning2']['acceleration_z'],'.2f'))}#, 'image': image}
+               'turn2_acceleration_z': str(format(results['Turning2']['acceleration_z'],'.2f')),
+               'image_path': os.path.join(pth,'TUG_phases_analysis.png')}#, 'image': image}
 
     template_loader = jinja2.FileSystemLoader('./')
     template_env = jinja2.Environment(loader=template_loader)
@@ -42,7 +44,7 @@ def create_pdf_report(subj_id, num_trial, date, pth):
     config = pdfkit.configuration(wkhtmltopdf='/usr/bin/wkhtmltopdf')
     output_pdf = f'{pth}/R1_TUG_report.pdf'
     #pdfkit.from_string(output_text, output_pdf, configuration=config, css='style.css')
-    pdfkit.from_string(output_text, output_pdf, configuration=config)
+    pdfkit.from_string(output_text, output_pdf, configuration=config, options={"enable-local-file-access": ""})
 
 
 

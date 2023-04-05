@@ -465,7 +465,7 @@ bool Manager::configure(ResourceFinder &rf)
     period=rf.check("period",Value(0.1)).asFloat64();
     _exercise_timeout = rf.check("exercise-timeout",Value(15)).asFloat64();
     _questions_timeout = rf.check("questions-timeout",Value(15)).asFloat64();
-    _raising_hand_timeout = rf.check("raising-hand-timeout",Value(8)).asFloat64();
+    _raising_hand_timeout = rf.check("raising-hand-timeout",Value(20)).asFloat64();
     speak_file=rf.check("speak-file",Value("speak-it")).asString();
     arm_thresh=rf.check("arm-thresh",Value(0.6)).asFloat64();
     detect_hand_up=rf.check("detect-hand-up",Value(false)).asBool();
@@ -1218,7 +1218,7 @@ bool Manager::updateModule()
     {
         yCDebugOnce(MANAGERTUG) << "Entering State::wait_to_start";
         prev_state = state;
-        t0 = 0;
+        t0 = Time::now();
         if(!has_started_interaction)
         {
             start_interaction();

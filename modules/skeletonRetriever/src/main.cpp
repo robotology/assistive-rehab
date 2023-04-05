@@ -693,14 +693,10 @@ class Retriever : public RFModule
     /****************************************************************/
     bool update_gaze_frame()
     {
-        Property* p;
-        if (p=gazePort.read(false)) 
+        if (Property* p=gazePort.read(false))
         {
-            if (Bottle* b=p->find("depth_center").asList())
+            if (Bottle* b=p->find("depth_rgb").asList())
             {
-                Stamp stamp;
-                gazePort.getEnvelope(stamp);
-                //cout << fixed << stamp.getTime();
                 if (b->size()>=7)
                 {
                     Vector pos(3);
@@ -960,9 +956,6 @@ class Retriever : public RFModule
         // handle skeletons acquired from detector
         if (Bottle *b1=skeletonsPort.read(false))
         {
-            auto w = dcm2rpy(gazeFrame);
-            //yDebug() << w.toString(); // << " "<< b1->toString();
-
             if (Bottle *b2=b1->get(0).asList())
             {
                 // acquire skeletons with sufficient number of key-points
@@ -975,45 +968,10 @@ class Retriever : public RFModule
                         shared_ptr<MetaSkeleton> s=create(b3);
                         if (isValid(s))
                         {
-                            //yDebug() << s.get()->skeleton.get()->keypoints[0].getPoint().toString();
-                            //SkeletonStd k = ;
-                          //  std::string sss = std::string("head");
-                            auto l = s->skeleton;
-                            auto p = applyTransform(l);
-
-                            yDebug() << w.toString() << " " << (*p)["head"]->getPoint().toString() <<
-                                        (*l)["head"]->getPoint().toString() <<
-                                        rootFrame[0][0] << 
-                                        rootFrame[0][1] << 
-                                        rootFrame[0][2] <<
-                                        rootFrame[0][3] <<
-                                        rootFrame[1][0] <<
-                                        rootFrame[1][1] <<
-                                        rootFrame[1][2] <<
-                                        rootFrame[1][3] <<
-                                        rootFrame[2][0] <<
-                                        rootFrame[2][1] <<
-                                        rootFrame[2][2] <<
-                                        rootFrame[2][3] <<
-                                        rootFrame[3][0] <<
-                                        rootFrame[3][1] <<
-                                        rootFrame[3][2] <<
-                                        rootFrame[3][3];
-
-                          //  yDebug() << *(s->skeleton)[std::string("head")]->getPoint().toString();
                             new_accepted_skeletons.push_back(s);
                         }
                     }
                 }
-
-                // yDebug() << "dt" << dt;
-                // yDebug() << "Number of new accepted skeletons: " << new_accepted_skeletons.size(); //new_skeletons at each frame: we expect 1 at a time.
-                // for(auto& i: new_accepted_skeletons)
-                //     yDebug() << i.get()->skeleton.get()->getTag();
-                // yDebug() << "Number of skeletons in memory before update" << skeletons.size();
-                // for(auto& i: skeletons)
-                //     yDebug() << i.get()->skeleton.get()->getTag();
-                
 
                 // update existing skeletons / create new skeletons
                 if (!new_accepted_skeletons.empty())
@@ -1051,11 +1009,6 @@ class Retriever : public RFModule
                     enforce_tag_uniqueness_pending(pending);
                     viewerUpdate(viewer_remove_tags);
                 }
-
-                // yDebug() << "Number of skeletons in memory after update" << skeletons.size();
-                // for(auto& i: skeletons)
-                //     yDebug() << i.get()->skeleton.get()->getTag();
-
             }
         }
 
