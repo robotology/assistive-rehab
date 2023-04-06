@@ -236,14 +236,14 @@ class Attention : public RFModule, public attentionManager_IDL
             (*s)[KeyPointTag::hand_left]->isUpdated())
         {
             if (k*(((*s)[KeyPointTag::elbow_left]->getPoint()[dir]-
-                    (*s)[KeyPointTag::hand_left]->getPoint()[dir]))>0)
+                    (*s)[KeyPointTag::hand_left]->getPoint()[dir]))>0.15)
                 return true;
         }
         if ((*s)[KeyPointTag::elbow_right]->isUpdated() &&
             (*s)[KeyPointTag::hand_right]->isUpdated())
         {
             if (k*(((*s)[KeyPointTag::elbow_right]->getPoint()[dir]-
-                    (*s)[KeyPointTag::hand_right]->getPoint()[dir]))>0)
+                    (*s)[KeyPointTag::hand_right]->getPoint()[dir]))>0.15)
                 return true;
         }
         return false;
@@ -361,15 +361,18 @@ class Attention : public RFModule, public attentionManager_IDL
     /****************************************************************/
     bool set_gaze_T(const double T) const
     {
-        Bottle cmd,rep;
-        cmd.addVocab32("set");
-        cmd.addString("T");
-        cmd.addFloat64(T);
-        if (gazeCmdPort.write(cmd,rep))
-        {
-            return (rep.get(0).asVocab32()==ack);
-        }
-        return false;
+        //TODO: temporary hack to fix the gaze
+        // Bottle cmd,rep;
+        // cmd.addVocab32("set");
+        // cmd.addString("T");
+        // cmd.addFloat64(T);
+        // if (gazeCmdPort.write(cmd,rep))
+        // {
+        //     return (rep.get(0).asVocab32()==ack);
+        // }
+        // return false;
+
+        return true;
     }
 
     /****************************************************************/
@@ -389,41 +392,44 @@ class Attention : public RFModule, public attentionManager_IDL
         }
         options.put("target-location",loc.get(0));
 
-        Bottle cmd,rep;
-        cmd.addVocab32("look");
-        cmd.addList().read(options);
-        if (gazeCmdPort.write(cmd,rep))
-        {
-            return (rep.get(0).asVocab32()==ack);
-        }
-        return false;
+        //TODO: fbrand temporary hack to fix the gaze
+        // Bottle cmd,rep;
+        // cmd.addVocab32("look");
+        // cmd.addList().read(options);
+        // if (gazeCmdPort.write(cmd,rep))
+        // {
+        //     return (rep.get(0).asVocab32()==ack);
+        // }
+        // return false;
+        return true;
     }
 
     /****************************************************************/
     bool wait_motion_done()
     {
-        Bottle cmd;
-        cmd.addVocab32("get");
-        cmd.addVocab32("done");
+        // Bottle cmd;
+        // cmd.addVocab32("get");
+        // cmd.addVocab32("done");
 
-        const double t0=Time::now();
-        while (Time::now()-t0<T)
-        {
-            Time::delay(getPeriod());
+        // const double t0=Time::now();
+        // while (Time::now()-t0<T)
+        // {
+        //     Time::delay(getPeriod());
 
-            Bottle rep;
-            if (gazeCmdPort.write(cmd,rep))
-            {
-                if (rep.get(0).asVocab32()==ack)
-                {
-                    if (rep.get(1).asInt32()>0)
-                    {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
+        //     Bottle rep;
+        //     if (gazeCmdPort.write(cmd,rep))
+        //     {
+        //         if (rep.get(0).asVocab32()==ack)
+        //         {
+        //             if (rep.get(1).asInt32()>0)
+        //             {
+        //                 return true;
+        //             }
+        //         }
+        //     }
+        // }
+        // return false;
+        return true;
     }
 
     /****************************************************************/

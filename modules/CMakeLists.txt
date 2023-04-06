@@ -2,7 +2,8 @@
 # All Rights Reserved.
 # Authors: Ugo Pattacini <ugo.pattacini@iit.it>
 
-add_subdirectory(lineDetector_new)
+#add_subdirectory(lineDetector_new)
+add_subdirectory(lineDetector)
 add_subdirectory(motionAnalyzer)
 add_subdirectory(skeletonViewer)
 add_subdirectory(skeletonRetriever)

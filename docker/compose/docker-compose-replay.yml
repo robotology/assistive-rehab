@@ -32,8 +32,8 @@ x-fdg-basic: &fdg-basic
     - "/tmp/.X11-unix:/tmp/.X11-unix"
     - "${XAUTHORITY}:/root/.Xauthority"
     - "${HOME}/.config/yarp:/root/.config/yarp"
-    - "${HOME}/skld:/root/skeletonDumper"
-    - "${HOME}/etapas-results/motion-analysis:/root/.local/share/yarp/contexts/motionAnalyzer" #for saving the results from motionAnalyzer
+    - "${HOME}/dev_iit/assistive-rehab/data_exp/:/root/skeletonDumper"
+    - "${HOME}/dev_iit/assistive-rehab/data_exp/file_mat:/root/.local/share/yarp/contexts/motionAnalyzer" #for saving the results from motionAnalyzer
   network_mode: "host"
   privileged: true
 

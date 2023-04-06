@@ -136,8 +136,9 @@ service motionAnalyzer_IDL
    * @param pose of the finish line.
    * @return true/false on success/failure.
    */
-   bool setLinePose(1:list<double> line_pose);
-
+   bool setStartLinePose(1:list<double> start_line_pose);
+   bool setFinishLinePose(1:list<double> finish_line_pose);
+   
    /**
    * Retrieve motion analysis result.
    * @return a property-like object containing the result of the analysis.

@@ -57,6 +57,8 @@ private:
     std::vector<std::string> laser_adverb;
     std::vector<double> engage_distance,engage_azimuth;
     double _exercise_timeout;
+    double _questions_timeout;
+    double _raising_hand_timeout;
 
     const int ok=Vocab32::encode("ok");
     const int fail=Vocab32::encode("fail");
@@ -71,7 +73,7 @@ private:
                        assess_standing,
                        assess_crossing,
                        line_crossed,
-                       engaged, point_start,
+                       engaged, rotate_to_point_start, point_start,
                        explain, point_line,
                        reach_line,
                        questions,
@@ -94,10 +96,14 @@ private:
     bool start_ex,ok_go,connected,params_set;
     std::string success_status;
     bool test_finished;
+    bool m_complete; //Decides whether the exercise loop should be complete or shorten it.
+    std::string m_name; //Name of the person to pass during start
 
     Vector finishline_pose;
+    Vector startline_pose;
     double line_length;
     bool world_configured;
+    bool has_started_interaction;
 
     //ports
     RpcClient analyzerPort;
@@ -113,7 +119,9 @@ private:
     RpcClient triggerPort;
     RpcClient gazeboPort;
     RpcClient collectorPort;
+    RpcClient opcRpcPort;
     BufferedPort<Bottle> obstaclePort;
+    BufferedPort<Bottle> skeletonErrorPort;
 
     std::unique_ptr<AnswerManager> answer_manager;
     std::unique_ptr<HandManager> hand_manager;
@@ -151,7 +159,7 @@ public:
 
     bool remove_locked();
 
-    bool start() override;
+    bool start(const bool complete=true, const std::string& name="") override;
 
     bool trigger() override;
 
@@ -191,9 +199,11 @@ public:
 
     bool opcRead(const std::string &t, Property &prop, const std::string &tval="");
 
-    bool hasLine(Property &prop);
+    bool hasLine(Property &prop, std::string line);
 
-    bool getWorld(const Property &prop);
+    bool getWorld(const Property &prop_finish_line, const Property &prop_start_line);
+
+    bool opcRpcDel();
 
     bool findLocked(std::string &t);
 
@@ -202,4 +212,8 @@ public:
     bool close() override;
 
     void confirmWithRaisedHand(State next_state);
+
+    Vector getRobotLocation();
+
+    double getAngleToStartLine(Vector robot_location);
 };

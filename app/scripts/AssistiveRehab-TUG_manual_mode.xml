@@ -1,0 +1,540 @@
+<application>
+<name>Assistive Rehabilitation TUG Manual App</name>
+    <module>
+        <name>yarpdev</name>
+        <parameters>--device AudioRecorderWrapper --subdevice portaudioRecorder --name /microphone --min_samples_over_network 4000 --max_samples_over_network 4000 --AUDIO_BASE::channels 1 --AUDIO_BASE::samples 16000 --AUDIO_BASE::rate 16000</parameters>
+        <node>r1-torso</node>
+    </module>
+
+    <module>
+        <name>yarpdev</name>
+        <parameters>--device speech --lingware-context speech --default-language it-IT --robot r1 --pitch 80 --speed 110</parameters>
+        <node>r1-face</node>
+    </module>
+
+    <module>
+        <name>iSpeak</name>
+        <parameters>--package speech-dev</parameters>
+        <node>r1-face</node>
+    </module>
+
+    <module>
+        <name>yarpdev</name>
+        <parameters>--device faceDisplayServer</parameters>
+        <node>r1-face</node>
+    </module>
+
+    <module>
+        <name>faceExpressionImage</name>
+        <node>r1-face</node>
+    </module>
+
+    <module>
+        <name>googleSpeech</name>
+        <parameters>--language_code it-IT</parameters>
+        <node>container-speech</node>
+    </module>
+
+    <module>
+        <name>googleSpeechProcess</name>
+        <node>container-speech</node>
+    </module>
+    
+    <module>
+        <name>yarprobotinterface</name>
+        <parameters>--context AssistiveRehab --config realsense2_remote_etapas_l515.xml</parameters>
+        <node>r1-torso</node>
+    </module>
+
+    <module>
+        <name>yarprobotinterface</name>
+        <parameters>--config /home/user1/tour-guide-robot/app/navigation2/conf/robotInterface/realsenseRepeater.xml</parameters>
+        <node>container-openpose</node>
+    </module>
+
+    <module>
+        <name>yarpOpenPose</name>
+        <parameters>--context openPoseStuff --from yarpOpenPose_1p7.ini</parameters>
+        <node>container-openpose</node>
+    </module>
+
+    <module>
+        <name>joystickCtrl</name>
+        <parameters>--context AssistiveRehab --from jostick_trigger_8bitdo.ini</parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>objectsPropertiesCollector</name>
+        <parameters>--name opc --no-load-db --no-save-db --sync-bc 0.1</parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>skeletonViewer</name>
+        <parameters>--x 1120 --y 10 --show-floor on --camera-viewup '(1.0 0.0 0.0)' --camera-position '(-4.0 -2.0 8.0)' --camera-focalpoint '(0.0 -2.0 0.0)' --grid-resolution '(100 100)'</parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>lineDetector</name>
+        <parameters>--camera::remote /cer/realsense_repeater</parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>skeletonRetriever</name>
+        <parameters> --camera::fov "(43 70)"  --depth::enable true --depth::kernel-size 8  --depth::iterations 1 --depth::min-distance 0.5 --depth::max-distance 6.0 --filter-keypoint-order 8</parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>skeletonLocker</name>
+        <parameters></parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>robotSkeletonPublisher</name>
+        <parameters>--robot cer</parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>attentionManager</name>
+        <parameters>--frame world</parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>motionAnalyzer</name>
+        <parameters></parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>managerTUG</name>
+        <parameters>--lock false --max-timeout 30.0 --engage-azimuth "(50.0 160.0)" --starting-pose "(2 -4.0 110.0)"</parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>cer_gaze-controller</name>
+        <parameters>--cameras::file /projects/cer/build/share/CER/contexts/cameraCalibration/cerEyes_480x640.ini</parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name> navController</name>
+        <parameters>--velocity-angular-saturation 15.0 --distance-target 1.8</parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>obstacleDetector</name>
+        <parameters>--robot cer --dist-obstacle 0.6</parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>ctpService</name>
+        <parameters> --robot cer --part right_arm</parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>ctpService</name>
+        <parameters>--robot cer --part left_arm</parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>eventCollector</name>
+        <parameters></parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>yarpview</name>
+        <parameters>--name /viewer/depth --x 10 --y 40 --p 50</parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>yarpview</name>
+        <parameters>--name /viewer/depth2 --x 10 --y 40 --p 50</parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>yarpview</name>
+        <parameters>--name /viewer/skeleton --x 380 --y 40 --p 50</parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+        <name>yarpview</name>
+        <parameters>--name /viewer/line --x 770 --y 40 --p 50</parameters>
+        <node>container-console</node>
+    </module>
+
+    <module>
+       <name>yarpview</name>
+       <parameters>--name /viewer/obstacles --w 400 --h 400 --p 50 --compact</parameters>
+       <node>container-console</node>
+    </module>
+
+    <module>
+        <name>yarpscope</name>
+        <parameters>--context AssistiveRehab --xml motionAnalyzer-scope.xml</parameters>
+        <node>container-console</node>
+    </module>
+
+    <connection>
+        <from>/joystickCtrl:o</from>
+        <to>/baseControl/input/joystick:i</to>
+        <protocol>tcp+recv.portmonitor+type.dll+file.joy2vel</protocol>
+    </connection>
+
+    <connection>
+        <from>/iSpeak/speech-dev/rpc</from>
+        <to>/r1/speech:rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/iSpeak/r1:rpc</from>
+        <to>/faceExpressionImage/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/faceExpressionImage/image:o</from>
+        <to>/robot/faceDisplay/image:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/iSpeak/speech-dev/rpc</from>
+        <to>/r1/speech:rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/iSpeak/r1:rpc</from>
+        <to>/faceExpressionImage/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>>
+
+    <connection>
+        <from>/cer/realsense_repeater/rgbImage:o</from>
+        <to>/yarpOpenPose/image:i</to>
+        <protocol>fast_tcp+send.portmonitor+type.dll+file.image_rotation+options_rotate.rotate_cw</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer/realsense_repeater/depthImage:o</from>
+        <to>/yarpOpenPose/float:i</to>
+        <protocol>fast_tcp+send.portmonitor+type.dll+file.image_rotation_d+options_rotate.rotate_cw</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/float:o</from>
+        <to>/skeletonRetriever/depth:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/target:o</from>
+        <to>/skeletonRetriever/skeletons:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonRetriever/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer_gaze-controller/state:o</from>
+        <to>/skeletonRetriever/gaze:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/navController/state:o</from>
+        <to>/skeletonRetriever/nav:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/opc/broadcast:o</from>
+        <to>/skeletonLocker/opc:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonLocker/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/opc/broadcast:o</from>
+        <to>/attentionManager/opc:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/attentionManager/gaze/cmd:rpc</from>
+        <to>/cer_gaze-controller/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer_gaze-controller/state:o</from>
+        <to>/attentionManager/gaze/state:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer/realsense_repeater/rgbImage:o</from>
+        <to>/lineDetector/img:i</to>
+        <protocol>fast_tcp+send.portmonitor+type.dll+file.image_rotation+options_rotate.rotate_cw</protocol>
+    </connection>
+
+    <connection>
+        <from>/cer_gaze-controller/state:o</from>
+        <to>/lineDetector/gaze/state:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/lineDetector/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/lineDetector/nav:rpc</from>
+        <to>/navController/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/lineDetector/viewer:rpc</from>
+        <to>/skeletonViewer:rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/motionAnalyzer/opc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/float:o</from>
+        <to>/viewer/depth</to>
+        <protocol>fast_tcp+recv.portmonitor+type.dll+file.depthimage_to_mono</protocol>
+    </connection>
+    
+    <connection>
+        <from>/skeletonRetriever/depth:o</from>
+        <to>/viewer/depth2</to>
+        <protocol>fast_tcp+recv.portmonitor+type.dll+file.depthimage_to_mono</protocol>
+    </connection>
+
+    <connection>
+        <from>/lineDetector/img:o</from>
+        <to>/viewer/line</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/yarpOpenPose/image:o</from>
+        <to>/viewer/skeleton</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/robotSkeletonPublisher/opc:rpc</from>
+        <to>/opc/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/navController/state:o</from>
+        <to>/robotSkeletonPublisher/nav:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/robotSkeletonPublisher/viewer:o</from>
+        <to>/skeletonViewer:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonLocker/viewer:o</from>
+        <to>/skeletonViewer:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/skeletonRetriever/viewer:o</from>
+        <to>/skeletonViewer:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/opc/broadcast:o</from>
+        <to>/navController/opc:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/attention:rpc</from>
+        <to>/attentionManager/cmd:rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/analyzer:rpc</from>
+        <to>/motionAnalyzer/cmd</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+    
+    <connection>
+        <from>/motionAnalyzer/nav:cmd</from>
+        <to>/navController/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/speech:o</from>
+        <to>/iSpeak</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/speech:rpc</from>
+        <to>/iSpeak/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/microphone/audio:o</from>
+        <to>/googleSpeech/sound:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/googleSpeech/commands:rpc</from>
+        <to>/microphone/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/googleSpeech/result:o</from>
+        <to>/googleSpeechProcess/text:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/navigation:rpc</from>
+        <to>/navController/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/locker:rpc</from>
+        <to>/skeletonLocker/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/googleSpeechProcess/result:o</from>
+        <to>/managerTUG/answer:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/opc/broadcast:o</from>
+        <to>/managerTUG/opc:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/trigger:rpc</from>
+        <to>/googleSpeech/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/left_arm:rpc</from>
+        <to>/ctpservice/left_arm/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/right_arm:rpc</from>
+        <to>/ctpservice/right_arm/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/collector:rpc</from>
+        <to>/eventCollector/cmd</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/obstacleDetector/obstacle:o</from>
+        <to>/managerTUG/obstacle:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/obstacleDetector/nav:rpc</from>
+        <to>/navController/rpc</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/obstacleDetector/viewer:o</from>
+        <to>/viewer/obstacles</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/googleSpeech/status:o</from>
+        <to>/eventCollector/speech:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/googleSpeechProcess/status:o</from>
+        <to>/eventCollector/speech-process:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/obstacleDetector/obstacle:o</from>
+        <to>/eventCollector/obstacle:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/managerTUG/skeletonError:o</from>
+        <to>/eventCollector/skeleton:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+</application>

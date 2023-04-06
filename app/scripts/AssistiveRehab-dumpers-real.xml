@@ -94,11 +94,11 @@
     </module>
     
    <!--> Connection Camera <!-->
-    <connection>
+    <!-- <connection>
 	<from>/cer/realsense_repeater/rgbImage:o</from>
         <to>/yarpOpenPose/image:i</to>
         <protocol>fast_tcp+send.portmonitor+type.dll+file.image_rotation+option_rotate.rotate_cw</protocol>
-    </connection>
+    </connection> -->
 
     <connection>
         <from>/cer/realsense_repeater/depthImage:o</from>

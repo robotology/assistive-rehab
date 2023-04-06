@@ -239,6 +239,7 @@ bool Manager::disengage()
 {
     bool ret=false;
     ok_go=false;
+    has_started_interaction=false;
     answer_manager->suspend();
     obstacle_manager->suspend();
     for (auto it=speak_map.begin(); it!=speak_map.end(); it++)
@@ -246,6 +247,7 @@ bool Manager::disengage()
         string key=it->first;
         speak_count_map[key]=0;
     }
+    Time::delay(5); //5 seconds delay before disengaging to gather better data
     send_stop(analyzerPort);
     if (simulation)
     {
@@ -296,15 +298,16 @@ void Manager::resume_animation()
 
 bool Manager::go_to(const Vector &target, const bool &wait)
 {
-    Bottle cmd,rep;
-    if (wait)
-        cmd.addString("go_to_wait");
-    else
-        cmd.addString("go_to_dontwait");
-    cmd.addFloat64(target[0]);
-    cmd.addFloat64(target[1]);
-    cmd.addFloat64(target[2]);
-    // TODO[fbrand]: this is a temporary hack to disallow movements
+    //TODO: temporary hack to disallow movements
+    // Bottle cmd,rep;
+    // if (wait)
+    //     cmd.addString("go_to_wait");
+    // else
+    //     cmd.addString("go_to_dontwait");
+    // cmd.addFloat64(target[0]);
+    // cmd.addFloat64(target[1]);
+    // cmd.addFloat64(target[2]);
+    // // TODO[fbrand]: this is a temporary hack to disallow movements
     // if (navigationPort.write(cmd,rep))
     // {
     //     if (rep.get(0).asVocab32()==ok)
@@ -313,7 +316,7 @@ bool Manager::go_to(const Vector &target, const bool &wait)
     //     }
     // }
     return true;
-}
+} 
 
 
 bool Manager::remove_locked()
@@ -332,7 +335,7 @@ bool Manager::remove_locked()
 }
 
 
-bool Manager::start()
+bool Manager::start(const bool complete, const std::string& name)
 {
     lock_guard<mutex> lg(mtx);
     if (!connected)
@@ -374,6 +377,8 @@ bool Manager::start()
     success_status="not_passed";
     test_finished=false;
     obstacle_manager->wakeUp();
+    m_complete = complete;
+    m_name = name;
     return start_ex;
 }
 
@@ -459,6 +464,8 @@ bool Manager::configure(ResourceFinder &rf)
     module_name=rf.check("name",Value("managerTUG")).asString();
     period=rf.check("period",Value(0.1)).asFloat64();
     _exercise_timeout = rf.check("exercise-timeout",Value(15)).asFloat64();
+    _questions_timeout = rf.check("questions-timeout",Value(15)).asFloat64();
+    _raising_hand_timeout = rf.check("raising-hand-timeout",Value(20)).asFloat64();
     speak_file=rf.check("speak-file",Value("speak-it")).asString();
     arm_thresh=rf.check("arm-thresh",Value(0.6)).asFloat64();
     detect_hand_up=rf.check("detect-hand-up",Value(false)).asBool();
@@ -567,6 +574,7 @@ bool Manager::configure(ResourceFinder &rf)
     collectorPort.open("/"+module_name+"/collector:rpc");
     cmdPort.open("/"+module_name+"/cmd:rpc");
     opcPort.open("/"+module_name+"/opc:i");
+    opcRpcPort.open("/"+module_name+"/opc:rpc");
     if (lock)
     {
         lockerPort.open("/"+module_name+"/locker:rpc");
@@ -577,6 +585,7 @@ bool Manager::configure(ResourceFinder &rf)
         gazeboPort.open("/"+module_name+"/gazebo:rpc");
     }
     obstaclePort.open("/"+module_name+"/obstacle:i");
+    skeletonErrorPort.open("/"+module_name+"/skeletonError:o");
 
     attach(cmdPort);
 
@@ -590,6 +599,7 @@ bool Manager::configure(ResourceFinder &rf)
 
     if(detect_hand_up)
     {
+        yDebug() << " hand manager started";
         hand_manager = std::make_unique<HandManager>(module_name,arm_thresh);
         if (!hand_manager->start())
         {
@@ -627,6 +637,7 @@ bool Manager::configure(ResourceFinder &rf)
     params_set=false;
     reinforce_obstacle_cnt=0;
     t0=tstart=Time::now();
+    has_started_interaction = false;
     return true;
 }
 
@@ -672,13 +683,15 @@ bool Manager::updateModule()
     }
     connected=true;
 
-    //get finish line
-    Property l;
-    if (hasLine(l))
+    //get lines
+    Property finish_line;
+    Property start_line;
+
+    if (hasLine(finish_line, "finish-line") && hasLine(start_line,"start-line"))
     {
         if (!world_configured)
         {
-            getWorld(l);
+            getWorld(finish_line,start_line);
         }
     }
     else
@@ -828,6 +841,7 @@ bool Manager::updateModule()
     {
         yCDebugOnce(MANAGERTUG) << "Entering State::idle";
         prev_state=state;
+        _was_person_out_of_bounds = false;
         if (Time::now()-t0>10.0)
         {
             if (lock)
@@ -855,7 +869,13 @@ bool Manager::updateModule()
             analyzerPort.write(cmd,rep);
             Speech s("disengaged");
             speak(s);
+            
+            //send an error to the event collector
+            Bottle &skel_err_bot = skeletonErrorPort.prepare();
+            skel_err_bot.addString(tag);
+            skeletonErrorPort.write();
             disengage();
+
             return true;
         }
     }
@@ -882,7 +902,7 @@ bool Manager::updateModule()
 
     if (state==State::seek_locked)
     {
-        yCDebugOnce(MANAGERTUG) << "Entering State::seek_skeleton";
+        yCDebugOnce(MANAGERTUG) << "Entering State::seek_locked";
         prev_state=state;
         if (findLocked(follow_tag) && is_follow_tag_ahead)
         {
@@ -904,6 +924,28 @@ bool Manager::updateModule()
     {
         yCDebugOnce(MANAGERTUG) << "Entering State::follow";
         prev_state=state;
+        answer_manager->wakeUp();
+        Bottle cmd, cmd2, reply, reply2;
+        cmd.addString("setFinishLinePose");
+        cmd.addList().read(finishline_pose);
+        cmd2.addString("setStartLinePose");
+        cmd2.addList().read(startline_pose);
+
+        if(analyzerPort.write(cmd, reply) && analyzerPort.write(cmd2,reply2))
+        {
+            yCInfo(MANAGERTUG) << "Set finish line to motionAnalyzer";
+            if (set_analyzer_param("loadExercise", "tug") &&
+                set_analyzer_param("selectMetric", "step_0") &&
+                set_analyzer_param("selectMetricProp", "step_distance") &&
+                set_analyzer_param("selectSkel", tag))
+            {
+                if(obstacle_manager->hasObstacle())
+                {
+                    state = State::obstacle ;
+                }
+                reinforce_obstacle_cnt=0;
+            }
+        }
         if (simulation)
         {
             vector<shared_ptr<SpeechParam>> p;
@@ -922,7 +964,20 @@ bool Manager::updateModule()
         }
         else
         {
-           confirmWithRaisedHand(State::engaged);
+            if(!m_complete)
+            {
+                if(!has_started_interaction)
+                {
+                    start_interaction();
+                    has_started_interaction = true;
+                }
+                confirmWithRaisedHand(State::starting);
+            }
+            else
+            {
+                confirmWithRaisedHand(State::rotate_to_point_start);
+            }
+            
         }
     }
 
@@ -930,26 +985,55 @@ bool Manager::updateModule()
     {
         yCDebugOnce(MANAGERTUG) << "Entering State::engaged";
         prev_state = state;
-        answer_manager->wakeUp();
-        Bottle cmd, reply;
-        cmd.addString("setLinePose");
-        cmd.addList().read(finishline_pose);
-
-        if(analyzerPort.write(cmd, reply))
-        {
-            yCInfo(MANAGERTUG) << "Set finish line to motionAnalyzer";
-            if (set_analyzer_param("loadExercise", "tug") &&
-                set_analyzer_param("selectMetric", "step_0") &&
-                set_analyzer_param("selectMetricProp", "step_distance") &&
-                set_analyzer_param("selectSkel", tag))
-            {
-                    state = obstacle_manager->hasObstacle()
-                            ? State::obstacle : State::point_start;
-                    reinforce_obstacle_cnt=0;
-            }
-        }
 
     }
+
+
+    if(state == State::rotate_to_point_start)
+    {
+        yCDebugOnce(MANAGERTUG) << "Entering state rotate_to_point_start";
+        prev_state = state;
+        bool navigating=true;
+        Bottle cmd,rep;
+        cmd.addString("is_navigating");
+        //TODO: fbrand temporary hack to disallow movements
+        if (true || navigationPort.write(cmd,rep))
+        {
+            if (rep.get(0).asVocab32()!=ok)
+            {
+                navigating=false;
+            }
+        }
+        if(!navigating)
+        {
+            const Vector robot_location = getRobotLocation();
+            const double angle = getAngleToStartLine(robot_location)*180/M_PI;
+            Vector destination = robot_location;
+            destination[2] = angle; //The destination is simply a rotation from the current position
+            ok_go = go_to(destination,false);
+            navigating = true;
+        }
+        if(ok_go)
+        {
+            yDebug() << "Rotating";
+            Time::delay(getPeriod());
+            cmd.clear();
+            rep.clear();
+            cmd.addString("is_navigating");
+            if (navigationPort.write(cmd,rep))
+            {
+                if (rep.get(0).asVocab32()!=ok)
+                {
+                    yCInfo(MANAGERTUG)<<"Rotated to point start";
+                    ok_go=false;
+                    state=obstacle_manager->hasObstacle()
+                            ? State::obstacle : State::point_start;
+                    reinforce_obstacle_cnt=0;
+                }
+            }
+        }
+    }
+
 
     if (state==State::point_start)
     {
@@ -1037,8 +1121,8 @@ bool Manager::updateModule()
             yCDebug(MANAGERTUG) << "Setting destination x:" << x
                                 << "y:" << y << "theta:" << theta ;
             //TODO: this is a temporary hack to disallow movements
-            //ok_go=go_to(Vector({x,y,theta}),false);
-            ok_go = true;
+            ok_go=go_to(Vector({x,y,theta}),false);
+            //ok_go = true;
         }
 
         if (ok_go)
@@ -1082,7 +1166,7 @@ bool Manager::updateModule()
 
     if (state == State::questions)
     {
-        yCDebug(MANAGERTUG) << "Entering State::questions";
+        yCDebugOnce(MANAGERTUG) << "Entering State::questions";
 
         bool is_entered_question_time = prev_state != state;
 
@@ -1092,6 +1176,7 @@ bool Manager::updateModule()
 
         if(is_entered_question_time)
         {
+            start_collection();
             speak(s);
 
             question_time_tstart = Time::now();
@@ -1109,7 +1194,7 @@ bool Manager::updateModule()
                 question_time_tstart = Time::now();
             }
 
-            if(Time::now() - question_time_tstart > 15.0)
+            if(Time::now() - question_time_tstart >  _questions_timeout)
             {
                 yCDebug(MANAGERTUG) << "Question time over, proceeding";
                 if(trigger_manager->isRunning()) {
@@ -1133,6 +1218,13 @@ bool Manager::updateModule()
     {
         yCDebugOnce(MANAGERTUG) << "Entering State::wait_to_start";
         prev_state = state;
+        t0 = Time::now();
+        if(!has_started_interaction)
+        {
+            start_interaction();
+            has_started_interaction = true;
+        }
+        
         confirmWithRaisedHand(State::starting);
     }
 
@@ -1179,8 +1271,11 @@ bool Manager::updateModule()
                     }
                     else
                     {
-                        start_interaction();
-                        start_collection();
+                        state=obstacle_manager->hasObstacle()
+                            ? State::obstacle : State::assess_standing;
+                        reinforce_obstacle_cnt=0;
+                        t0=Time::now();
+                         //TODO: move before vocal interaction
                     }
                 }
             }
@@ -1236,7 +1331,7 @@ bool Manager::updateModule()
         }
         else
         {
-            encourage(20.0);
+            encourage(_exercise_timeout/2);
         }
     }
 
@@ -1267,7 +1362,7 @@ bool Manager::updateModule()
             }
             else
             {
-                encourage(20.0);
+                encourage(_exercise_timeout);
             }
         }
     }
@@ -1300,7 +1395,7 @@ bool Manager::updateModule()
         }
         else
         {
-            encourage(30.0);
+            encourage(_exercise_timeout);
         }
     }
 
@@ -1375,8 +1470,10 @@ void Manager::follow(const string &follow_tag)
             if (!simulation)
             {
                 vector<shared_ptr<SpeechParam>> p;
-                p.push_back(shared_ptr<SpeechParam>(new SpeechParam(tag[0]!='#'?tag:string(""))));
-                Speech s("invite-start");
+                //p.push_back(shared_ptr<SpeechParam>(new SpeechParam(tag[0]!='#'?tag:string(""))));
+                p.push_back(std::make_shared<SpeechParam>(m_name));
+                std::string invite_start = m_complete ? "invite-start" : "invite-start-short";
+                Speech s(invite_start);
                 s.setParams(p);
                 speak(s);
                 s.reset();
@@ -1418,15 +1515,11 @@ void Manager::start_interaction()
     Bottle cmd,rep;
     cmd.addString("start");
     cmd.addInt32(0);
-    if (analyzerPort.write(cmd,rep))
+    if(analyzerPort.write(cmd,rep))
     {
-        if (rep.get(0).asVocab32()==ok)
+        if (rep.get(0).asVocab32()!=ok)
         {
-            state=obstacle_manager->hasObstacle()
-                    ? State::obstacle : State::assess_standing;
-            reinforce_obstacle_cnt=0;
-            t0=Time::now();
-            yInfo()<<"Start!";
+            yError() << "Motion analyzer failed to start";
         }
     }
 }
@@ -1540,6 +1633,41 @@ string Manager::which_part()
     return part;
 }
 
+yarp::sig::Vector Manager::getRobotLocation()
+{
+    Bottle cmd,rep;
+    double x,y,theta;
+    cmd.addString("get_state");
+
+    if (navigationPort.write(cmd,rep))
+    {
+        Bottle *robotState=rep.get(0).asList();
+        if (Bottle *loc=robotState->find("robot-location").asList())
+        {
+            x=loc->get(0).asFloat64();
+            y=loc->get(1).asFloat64();
+            theta=loc->get(2).asFloat64();
+        }
+    }
+    //TODO: manage the error
+
+
+    return yarp::sig::Vector({x,y,theta});
+}
+
+double Manager::getAngleToStartLine(Vector robot_location)
+{
+    yarp::sig::Matrix R=axis2dcm(startline_pose.subVector(3,6));
+    yarp::sig::Vector u=R.subcol(0,0,2);
+    yarp::sig::Vector p0=startline_pose.subVector(0,2);
+    yarp::sig::Vector p1=p0+line_length*u;
+                double line_center=(p0[0]+p1[0])/2;
+    double angle = atan2(-robot_location[1]+p0[1], //delta y
+                        -robot_location[0]+line_center); //delta x
+  
+    return angle;
+}
+
 
 bool Manager::point(const Vector &target, const string &part, const bool wait)
 {
@@ -1624,9 +1752,9 @@ bool Manager::opcRead(const string &t, Property &prop, const string &tval)
 }
 
 
-bool Manager::hasLine(Property &prop)
+bool Manager::hasLine(Property &prop, std::string line)
 {
-    bool ret=opcRead("finish-line",prop);
+    bool ret=opcRead(line,prop);
     if (ret)
     {
         return true;
@@ -1636,25 +1764,74 @@ bool Manager::hasLine(Property &prop)
 }
 
 
-bool Manager::getWorld(const Property &prop)
+bool Manager::getWorld(const Property &prop_finish_line, const Property &prop_start_line)
 {
     if (opcPort.getInputCount()>0)
     {
-        Bottle *line=prop.find("finish-line").asList();
-        if (Bottle *lp_bottle=line->find("pose_world").asList())
+        Bottle *finish_line=prop_finish_line.find("finish-line").asList();
+        yDebug() << prop_finish_line.toString();
+        Bottle *start_line=prop_start_line.find("start-line").asList();
+        Bottle *lp_bottle_finish=finish_line->find("pose_world").asList();
+        if(lp_bottle_finish)
         {
-            if(lp_bottle->size()>=7)
+            if(lp_bottle_finish->size()>=7)
             {
                 finishline_pose.resize(7);
-                finishline_pose[0]=lp_bottle->get(0).asFloat64();
-                finishline_pose[1]=lp_bottle->get(1).asFloat64();
-                finishline_pose[2]=lp_bottle->get(2).asFloat64();
-                finishline_pose[3]=lp_bottle->get(3).asFloat64();
-                finishline_pose[4]=lp_bottle->get(4).asFloat64();
-                finishline_pose[5]=lp_bottle->get(5).asFloat64();
-                finishline_pose[6]=lp_bottle->get(6).asFloat64();
+                finishline_pose[0]=lp_bottle_finish->get(0).asFloat64();
+                finishline_pose[1]=lp_bottle_finish->get(1).asFloat64();
+                finishline_pose[2]=lp_bottle_finish->get(2).asFloat64();
+                finishline_pose[3]=lp_bottle_finish->get(3).asFloat64();
+                finishline_pose[4]=lp_bottle_finish->get(4).asFloat64();
+                finishline_pose[5]=lp_bottle_finish->get(5).asFloat64();
+                finishline_pose[6]=lp_bottle_finish->get(6).asFloat64();
                 yCInfo(MANAGERTUG)<<"Finish line wrt world frame"<<finishline_pose.toString();
-                if (Bottle *lp_length=line->find("size").asList())
+                if (Bottle *lp_length=finish_line->find("size").asList())
+                {
+                    if (lp_length->size()>=2)
+                    {
+                        line_length=lp_length->get(0).asFloat64();
+                        yCInfo(MANAGERTUG)<<"with length"<<line_length;
+                        yCInfo(MANAGERTUG)<<"World configured";
+                        world_configured=true;
+                        //return true;
+                    }
+                }
+            }
+        }
+        else 
+        {
+            yDebug() << "Finish line pose_world not found";
+            return false;
+        }
+
+        yDebug() << "0";
+        if(start_line)
+        {
+            yDebug() << "Not null";
+        }
+        else{
+            yDebug() << "Actually null";
+        }
+        Bottle *lp_bottle_start=start_line->find("pose_world").asList();
+        yDebug() << "0b";
+
+        if(lp_bottle_start)
+        {
+            yDebug() << "1";
+            if(lp_bottle_start->size()>=7)
+            {
+                yDebug() << "2";
+                startline_pose.resize(7);
+                yDebug() << "3";
+                startline_pose[0]=lp_bottle_start->get(0).asFloat64();
+                startline_pose[1]=lp_bottle_start->get(1).asFloat64();
+                startline_pose[2]=lp_bottle_start->get(2).asFloat64();
+                startline_pose[3]=lp_bottle_start->get(3).asFloat64();
+                startline_pose[4]=lp_bottle_start->get(4).asFloat64();
+                startline_pose[5]=lp_bottle_start->get(5).asFloat64();
+                startline_pose[6]=lp_bottle_start->get(6).asFloat64();
+                yCInfo(MANAGERTUG)<<"Start line wrt world frame"<<startline_pose.toString();
+                if (Bottle *lp_length=start_line->find("size").asList())
                 {
                     if (lp_length->size()>=2)
                     {
@@ -1667,9 +1844,48 @@ bool Manager::getWorld(const Property &prop)
                 }
             }
         }
+        else 
+        {
+            yDebug() << "Start line pose_world not found";
+            return false;
+        }
     }
+
     yCError(MANAGERTUG)<<"Could not configure world";
     return false;
+}
+
+bool Manager::opcRpcDel()
+{   
+    // First ask skeleton id to be removed
+    Bottle cmdAsk,repAsk;
+    int id = -1;
+    bool esitoAsk = false;
+    cmdAsk.addVocab32("ask");
+    Bottle &plAsk=cmdAsk.addList().addList();
+    plAsk.addString("skeleton");
+    if (opcRpcPort.write(cmdAsk,repAsk))
+    {
+        esitoAsk = (repAsk.get(0).asVocab32()==Vocab32::encode("ack"));
+        if (!esitoAsk) 
+            yError()<<"opc error";
+        else
+            id = repAsk.get(1).asList()->get(1).asList()->get(0).asInt32();
+    }
+
+    // Then delete the skeleton
+    Bottle cmdDel,repDel;
+    bool esitoDel = false;
+    cmdDel.addVocab32("del");
+    Bottle &plDel=cmdDel.addList().addList();
+    plDel.addString("id");
+    plDel.addInt32(id);
+    if (opcRpcPort.write(cmdDel,repDel))
+    {
+        esitoDel = (repDel.get(0).asVocab32()==Vocab32::encode("ack"));
+    }
+
+    return esitoDel;
 }
 
 
@@ -1731,6 +1947,8 @@ bool Manager::close()
     rightarmPort.close();
     speechStreamPort.close();
     collectorPort.close();
+    opcRpcDel();
+    opcRpcPort.close();
     opcPort.close();
     cmdPort.close();
     if (lock)
@@ -1743,6 +1961,7 @@ bool Manager::close()
         gazeboPort.close();
     }
     obstaclePort.close();
+    skeletonErrorPort.close();
     return true;
 }
 
@@ -1754,7 +1973,7 @@ void Manager::confirmWithRaisedHand(State next_state)
     cmd.addString(tag);
     if (attentionPort.write(cmd,rep))
     {
-        if (rep.get(0).asVocab32()==ok) //Mano alzata?
+        if (rep.get(0).asVocab32()==ok)
         {
             Speech s("accepted");
             speak(s);
@@ -1765,7 +1984,7 @@ void Manager::confirmWithRaisedHand(State next_state)
             }
             state=next_state;
         }
-        else if (Time::now()-t0>10.0)
+        else if (Time::now()-t0 > _raising_hand_timeout)
         {
             if (++reinforce_engage_cnt<=1)
             {
@@ -1775,7 +1994,15 @@ void Manager::confirmWithRaisedHand(State next_state)
             }
             else
             {
-                Speech s("disengaged");
+                //TODO: secondo fbrand sarebbe meglio dire altro al posto di "ti ho perso" in questa occasione
+                Speech s("disengaged"); 
+
+                //send an error to the event collector
+                Bottle &skel_err_bot = skeletonErrorPort.prepare();
+                skel_err_bot.addString(tag);
+                yDebug() << "skel error tag" << tag;
+                skeletonErrorPort.write();
+
                 speak(s);
                 disengage();
             }
