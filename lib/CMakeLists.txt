@@ -14,7 +14,7 @@ add_library(${PROJECT_NAME} ${${PROJECT_NAME}_SRC} ${${PROJECT_NAME}_HDR})
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${${PROJECT_NAME}_VERSION}
                                       PUBLIC_HEADER "${${PROJECT_NAME}_HDR}")
 
-target_link_libraries(${PROJECT_NAME} PUBLIC ${YARP_LIBRARIES} PRIVATE ${OpenCV_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${YARP_LIBRARIES} PRIVATE ${OpenCV_LIBS})
 
 target_include_directories(${PROJECT_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
                                                   "$<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}>")
