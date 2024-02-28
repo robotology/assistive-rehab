@@ -6,6 +6,6 @@ Assistive and Rehabilitative Robotics
 
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/511bd2be08fc4873a2ba4854fe14882f)](https://www.codacy.com/gh/robotology/assistive-rehab/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=robotology/assistive-rehab&amp;utm_campaign=Badge_Grade)
 ![ci](https://github.com/robotology/assistive-rehab/workflows/Continuous%20Integration/badge.svg)
-![gh-pages](https://github.com/robotology/assistive-rehab/workflows/GitHub%20Pages/badge.svg)
+[![GitHub Pages](https://github.com/robotology/assistive-rehab/actions/workflows/gh-pages.yml/badge.svg)](https://github.com/robotology/assistive-rehab/actions/workflows/gh-pages.yml)
 
 Check out the [website 🌐](https://robotology.github.io/assistive-rehab/doc/mkdocs/site)
